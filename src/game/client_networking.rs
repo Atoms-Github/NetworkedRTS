@@ -2,7 +2,6 @@
 use crate::network::networking_structs::*;
 use crate::network::networking_message_types::*;
 use crate::network::networking_utils::*;
-use std::net::SocketAddr;
 
 
 use tokio::codec::{FramedRead, FramedWrite};
@@ -12,6 +11,10 @@ use tokio_io::*;
 
 
 use std::io::{BufReader, Write};
+
+use crate::network::*;
+use futures::stream::Stream;
+use futures::future::Future;
 
 
 pub struct HandshakeResponse{
@@ -38,10 +41,32 @@ pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
     write_half.write(&connection_init_bytes[..]);
 
 
+    let stream = FramedRead::new(read_half, dans_codec::Bytes);
+
+
+    let mut stream_iterator = stream.wait();
+    let first_item_read : Vec<u8> = Iterator::next(&mut stream_iterator).unwrap().unwrap(); // Not sure how well this will work. :)
+
+
+    let received = bincode::deserialize::<NetMessageType>(&first_item_read[..]).unwrap();
+
+
+
+    let mut player_id = -1;
+    match received{
+        NetMessageType::ConnectionInitResponse(response) => {
+            println!("Successfully read handshake response!");
+            player_id = response.assigned_player_id;
+        },
+        _ => {
+            println!("First item read from server after handshake request wasn't a handshake response!");
+        },
+    }
+
 
 
     HandshakeResponse{
-        player_id: -1
+        player_id
     }
 }
 
