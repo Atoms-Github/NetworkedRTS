@@ -6,7 +6,8 @@ use std::collections::HashMap;
 use crate::players::inputs::InputState;
 use crate::ecs::world::*;
 
-type PlayerID = i16;
+pub type PlayerID = i16;
+pub type FrameIndex = i16;
 
 
 
