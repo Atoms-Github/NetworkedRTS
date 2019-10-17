@@ -1,0 +1,20 @@
+[package]
+name = "literal_poggy_source"
+version = "0.1.0"
+authors = ["Tom <tomullender@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ggez = "0.5"
+nalgebra = {version = "0.18", features = ["mint", "serde-serialize"] }
+bincode = "1.1.4"
+futures = "0.1.29"
+bytes = "0.4.12"
+
+rand = "0.7"
+tokio = "0.1.21"
+tokio-io = "0.1"
+tokio-core = "0.1"
+serde = { version = "1.0", features = ["derive"] }
