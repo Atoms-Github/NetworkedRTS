@@ -3,7 +3,6 @@ use tokio::net::TcpStream;
 use std::time::Duration;
 use futures::future::Future;
 
-
 pub fn stall_thread_until_connection_success(target_ip : &String) -> TcpStream{
     let addr = target_ip.to_string().parse::<SocketAddr>().unwrap();
 
