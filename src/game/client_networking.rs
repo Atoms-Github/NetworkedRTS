@@ -55,14 +55,15 @@ pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
 
 
 
-    let mut player_id = -1;
+    let mut player_id;
     match received{
         NetMessageType::ConnectionInitResponse(response) => {
             println!("Successfully read handshake response!");
             player_id = response.assigned_player_id;
         },
         _ => {
-            println!("First item read from server after handshake request wasn't a handshake response!");
+            panic!("First item read from server after handshake request wasn't a handshake response!");
+            //TODO let mut player_id = 0;
         },
     }
 

@@ -1,4 +1,4 @@
-
+#![feature(core_intrinsics)]
 use std::env;
 
 
@@ -19,23 +19,35 @@ use crate::game::server::*;
 
 fn main() {
     println!("STARTING.");
-    let args: Vec<String> = env::args().collect();
+    let mut args: Vec<String> = env::args().collect();
 
-    if args.len() >= 2 {
-        match args[1].to_lowercase().as_ref() { // args[0] is the exe name.
-            "client" => {
-                client_main();
-            }
-            "server" => {
-                server_main();
-            }
-            _ => {
-                println!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
-                client_main();
-            }
+    args.reverse();
+    let exe_name = args.pop();
+    let launch_type = args.pop().expect("'client'/'server' argument not specified!");
+    let ip = match args.pop() {
+        Some(ip_str) => {
+            ip_str
         }
-    } else {
-        println!("Server/client argument not specified. Starting as client.");
-        client_main();
+        _ => {
+            let default = "192.168.0.10".to_string();
+            println!("Connection/hosting IP not specified! Using {}", default);
+            default
+        }
+    }; // args.pop().or_else().expect("Connection/hosting IP not specified!");
+
+
+    match launch_type.to_lowercase().as_ref() {
+        "client" => {
+            client_main(&ip);
+        }
+        "server" => {
+            server_main(&ip);
+        }
+        _ => {
+            println!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
+            client_main(&ip);
+        }
     }
+
+
 }

@@ -1,6 +1,17 @@
 // Yes, it uses get_position as both a function call and a variable. There wasn't any other way to do it while maintaining auto-completion.
 
 
+pub struct TestWoah{
+    pub field: i32
+}
+
+#[macro_export]
+macro_rules! foo_test {
+    () => ()
+}
+
+
+#[macro_export]
 macro_rules! create_system {
 	($system:ident | $internal_system:ident | $($var_name:ident : $sty:ty),+ | $($var_name2:ident : $sty2:ty),* | $($extra_arg_name:ident : $extra_arg_ty:ty),*) => {
         pub fn $internal_system (

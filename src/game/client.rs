@@ -13,7 +13,15 @@ use ggez::input::keyboard::KeyCode;
 use crate::game::client_networking::perform_handshake;
 use tokio::net::TcpStream;
 use tokio::io::WriteHalf;
-use std::borrow::Borrow;
+
+use crate::systems::position::{PositionComp, secret_position_system};
+use crate::systems::velocity::*;
+use crate::systems::render::*;
+use crate::systems::velocityWithInput::*;
+use crate::systems::size::*;
+
+use crate::ecs::world::*;
+use crate::ecs::system_macro::*;
 
 struct ClientMainState {
     game_state_head: GameState,
@@ -22,7 +30,8 @@ struct ClientMainState {
     all_frames: InputFramesStorage,
     my_player_id: PlayerID,
     client_message_box: MessageBox,
-    network_oh_my_omies_mode: bool
+    network_oh_my_omies_mode: bool,
+    my_current_input_state: InputState,
 }
 impl ClientMainState{
     pub fn new(socket_write: WriteHalf<TcpStream>, my_player_id: PlayerID) -> ClientMainState{
@@ -30,10 +39,11 @@ impl ClientMainState{
             game_state_head: GameState::new(),
             game_state_tail: GameState::new(),
             socket_write,
-            all_frames: vec![],
+            all_frames: InputFramesStorage::new(),
             my_player_id,
             client_message_box: MessageBox::new(),
-            network_oh_my_omies_mode: false
+            network_oh_my_omies_mode: false,
+            my_current_input_state: InputState::new()
         }
     }
 }
@@ -68,22 +78,11 @@ impl EventHandler for ClientMainState {
             let messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
 
-            for message in &*messages_guard{
+            for message in &*messages_guard{ // TODO - fancy vector filter to remove all these after processing them.
                 match message{
                     NetMessageType::ConnectionInitQuery(_) => {},
                     NetMessageType::InputsUpdate(inputs_update) => {
-                        // TODO - fancy vector filter to remove all these after processing them.
-
-                        let last_history_frame_index = self.all_frames.frames.len();
-                        self.all_frames.blanks_up_to_index(last_frame_index);
-                        for frame_index_to_twenty in 0..inputs_update.input_states.len() {
-                            // TODO - Use fancy vector clone section method.
-
-                            let frame_history_index = inputs_update.frame_index + frame_index_to_twenty;
-
-                            self.all_frames.frames.get_mut(frame_history_index)
-                                .unwrap().inputs.insert(inputs_update.player_id, inputs_update.input_states.get(frame_index_to_twenty).unwrap());
-                        }
+                        self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, inputs_update.input_states);
                     },
                     NetMessageType::ConnectionInitResponse(_) => {},
                 }
@@ -130,7 +129,7 @@ impl EventHandler for ClientMainState {
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods) {
-        self.keys_pressed.insert(keycode, false);
+        self.my_current_input_state.keys_pressed.insert(keycode, false);
     }
 }
 

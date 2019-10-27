@@ -7,6 +7,7 @@ use crate::ecs::system_macro::*;
 use ggez::Context;
 use ggez::graphics::DrawParam;
 use ggez::graphics;
+use crate::create_system;
 
 create_system!( render_system | secret_render_system
 	| my_position: PositionComp, my_render: RenderComp, my_size: SizeComp

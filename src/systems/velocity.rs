@@ -3,6 +3,8 @@ use std::any::TypeId;
 use crate::systems::position::PositionComp;
 use crate::systems::render::RenderComp;
 use crate::ecs::world::*;
+use crate::create_system;
+
 
 create_system!( velocity_system | secret_velocity_system
 	| my_position:PositionComp, my_velocity:VelocityComp

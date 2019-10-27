@@ -37,8 +37,17 @@ pub struct InputFramesStorage{
 
 
 impl InputFramesStorage{
-    pub fn insert_frames(player_id: PlayerID, starting_index: usize, data: [InputState, 20]){
+    pub fn new() -> InputFramesStorage{
+        InputFramesStorage{
+            frames: vec![]
+        }
+    }
+    pub fn insert_frames(&mut self, player_id: PlayerID, starting_index: usize, input_states: [InputState; 20]){
+        self.blanks_up_to_index(starting_index + input_states.len());
 
+        for (current_index, input_state) in input_states.iter().enumerate(){ // TODO - Use fancy vector clone section method.
+            self.frames[current_index].inputs.insert(player_id, *input_state);
+        }
     }
     pub fn blanks_up_to_index(&mut self, target_index: usize){
         let number_to_add = target_index - self.frames.len() + 1;
@@ -58,9 +67,6 @@ pub struct MessageBox{
 }
 
 impl MessageBox{
-
-
-
 
     pub fn init_message_box_filling(&self, connection_readable: &mut FramedRead<ReadHalf<TcpStream>, Bytes>){ // TODO - investigate why a reference is good enough.
         let message_box_mutex = Arc::clone(&self.items); // However this works :)
