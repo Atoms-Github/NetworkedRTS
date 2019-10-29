@@ -24,7 +24,6 @@ pub fn stall_thread_until_connection_success(target_ip : &String) -> TcpStream{
             },
         }
     }
-
     let mut connection = connection_maybe.unwrap(); // Already checked valid earlier.
     return connection;
 }
