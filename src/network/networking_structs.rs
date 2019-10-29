@@ -73,22 +73,20 @@ impl MessageBox{
         let message_box_mutex = Arc::clone(&self.items); // However this works :)
 
 
-//        let tokio_task = connection_readable.for_each( move |data| { TODO - fix move issue.
-//            let deserialized = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
-//
-//            let nabbed = message_box_mutex; // Moves the arc in to lamda?
-//            {
-//                let mut mutex_lock= Mutex::lock(&nabbed).unwrap();
-//                mutex_lock.push(deserialized);
-//
-//                std::mem::drop(mutex_lock);
-//            }
-//            Ok(())
-//        }).map_err(|error|{
-//            println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
-//        });
-//
-//        tokio::run(tokio_task);
+        let tokio_task = connection_readable.for_each( move |data| {
+            let deserialized = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
+            {
+                let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
+                mutex_lock.push(deserialized);
+
+                std::mem::drop(mutex_lock);
+            }
+            Ok(())
+        }).map_err(|error|{
+            println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
+        });
+
+        tokio::run(tokio_task);
 
     }
     pub fn new() -> MessageBox{
