@@ -42,11 +42,12 @@ impl InputFramesStorage{
             frames: vec![]
         }
     }
-    pub fn insert_frames(&mut self, player_id: PlayerID, starting_index: usize, input_states: [InputState; 20]){
+    pub fn insert_frames(&mut self, player_id: PlayerID, starting_index: usize, input_states: &[InputState; 20]){
         self.blanks_up_to_index(starting_index + input_states.len());
 
+
         for (current_index, input_state) in input_states.iter().enumerate(){ // TODO - Use fancy vector clone section method.
-            self.frames[current_index].inputs.insert(player_id, *input_state);
+            self.frames[current_index].inputs.insert(player_id, input_state.clone()); // TODO - Use moves instead of clone.
         }
     }
     pub fn blanks_up_to_index(&mut self, target_index: usize){
@@ -68,25 +69,26 @@ pub struct MessageBox{
 
 impl MessageBox{
 
-    pub fn init_message_box_filling(&self, connection_readable: &mut FramedRead<ReadHalf<TcpStream>, Bytes>){ // TODO - investigate why a reference is good enough.
+    pub fn init_message_box_filling(&self, connection_readable: FramedRead<ReadHalf<TcpStream>, Bytes>){
         let message_box_mutex = Arc::clone(&self.items); // However this works :)
 
-        connection_readable.for_each( move |data| {
-            let deserialized = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
 
-            let nabbed = message_box_mutex; // Moves the arc in to lamda?
-            {
-                let mut mutex_lock= Mutex::lock(&nabbed).unwrap();
-                mutex_lock.push(deserialized);
-
-                std::mem::drop(mutex_lock);
-            }
-            Ok(())
-        }).map_err(|error|{
-            println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
-        });
-
-        tokio::run(connection_readable);
+//        let tokio_task = connection_readable.for_each( move |data| { TODO - fix move issue.
+//            let deserialized = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
+//
+//            let nabbed = message_box_mutex; // Moves the arc in to lamda?
+//            {
+//                let mut mutex_lock= Mutex::lock(&nabbed).unwrap();
+//                mutex_lock.push(deserialized);
+//
+//                std::mem::drop(mutex_lock);
+//            }
+//            Ok(())
+//        }).map_err(|error|{
+//            println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
+//        });
+//
+//        tokio::run(tokio_task);
 
     }
     pub fn new() -> MessageBox{

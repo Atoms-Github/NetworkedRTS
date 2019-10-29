@@ -62,9 +62,8 @@ pub fn client_main(connection_target_ip: &String) -> GameResult{
 
     let mut client_main_state = &mut ClientMainState::new(handshake_result.socket_write, handshake_result.player_id);//ctx)?;
 
-    client_main_state.client_message_box.init_message_box_filling(&mut handshake_result.socket_read);
-//    thread::spawn(|| net_input_transfers::keep_sending_inputs(thread_ip_sending, stdin_tx, local_players_mutex_cloned));
-    
+    client_main_state.client_message_box.init_message_box_filling(handshake_result.socket_read);
+
     event::run(ctx, events_loop, client_main_state)
 }
 
@@ -78,11 +77,11 @@ impl EventHandler for ClientMainState {
             let messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
 
-            for message in &*messages_guard{ // TODO - fancy vector filter to remove all these after processing them.
+            for message in (*messages_guard).iter(){ // TODO - fancy vector filter to remove all these after processing them.
                 match message{
                     NetMessageType::ConnectionInitQuery(_) => {},
                     NetMessageType::InputsUpdate(inputs_update) => {
-                        self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, inputs_update.input_states);
+                        self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
                     },
                     NetMessageType::ConnectionInitResponse(_) => {},
                 }
@@ -98,15 +97,13 @@ impl EventHandler for ClientMainState {
 
         let mut pending = PendingEntities::new();
 
-        secret_render_system(&self.world, &mut pending,
-                             &mut self.storage.position_s,
-                             &mut self.storage.render_s,
-                             &mut self.storage.size_s,
+        secret_render_system(&self.game_state_head.world, &mut pending,
+                             &mut self.game_state_head.storages.position_s,
+                             &mut self.game_state_head.storages.render_s,
+                             &mut self.game_state_head.storages.size_s,
                              ctx);
 
-
-
-        self.world.update_entities(&mut self.storage, pending);
+        self.game_state_head.world.update_entities(&mut self.game_state_head.storages, pending); // TODO ask Richard if this is really needed after calling render.
 
         graphics::present(ctx)?;
 
@@ -120,7 +117,8 @@ impl EventHandler for ClientMainState {
         _keymod: KeyMods,
         _repeat: bool,
     ) {
-        self.keys_pressed.insert(keycode, true);
+
+        self.my_current_input_state.keys_pressed.insert(keycode as usize, true);
 
         match keycode {
             KeyCode::Escape => event::quit(ctx),
@@ -129,7 +127,7 @@ impl EventHandler for ClientMainState {
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods) {
-        self.my_current_input_state.keys_pressed.insert(keycode, false);
+        self.my_current_input_state.keys_pressed.insert(keycode as usize, false);
     }
 }
 

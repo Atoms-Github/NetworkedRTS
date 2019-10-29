@@ -18,6 +18,11 @@ use futures::future::Future;
 use crate::network::dans_codec::Bytes;
 
 
+use std::iter;
+use tokio::prelude::*; // 0.1.15
+
+
+
 pub struct HandshakeResponse{
     pub player_id: PlayerID,
     pub socket_read: FramedRead<ReadHalf<TcpStream>, Bytes>,
@@ -25,10 +30,18 @@ pub struct HandshakeResponse{
 }
 
 
+fn example() -> impl Stream<Item = i32, Error = ()> {
+    stream::iter_ok(iter::repeat(42))
+}
+
+
+
 pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
+
     println!("Initializing connection to {}", target_ip);
 
     let mut connection = stall_thread_until_connection_success(target_ip);
+    let mut connection_dcwct = stall_thread_until_connection_success(target_ip);
 
     println!("Successfully made contact with {}! Sending initialization data.", target_ip);
 
@@ -39,23 +52,38 @@ pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
     );
 
     let (mut read_half, mut write_half) = connection.split();
+    let (mut read_half_dcwct, mut write_half_dcwct) = connection_dcwct.split();
 
     let connection_init_bytes = bincode::serialize(&connection_init_query).unwrap();
     write_half.write(&connection_init_bytes[..]);
 
 
     let stream = FramedRead::new(read_half, dans_codec::Bytes);
+    let stream_dcwct = FramedRead::new(read_half_dcwct, dans_codec::Bytes);
 
-    let mut stream_iterator = stream.wait();
-    let first_item_read : Vec<u8> = Iterator::next(&mut stream_iterator).unwrap().unwrap(); // Not sure how well this will work. :)
 
-    
+//    stream.readv(); TODO: Investigate these two options.
+//    stream.take();
 
+
+    let mut runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
+    let r = runtime.block_on(stream.into_future());
+    if let Ok((v, _)) = r {
+        println!("{:?}", v);
+    }
+
+
+
+//    let mut stream_iterator = stream.wait();
+//    let meme = Iterator::next(&mut stream_iterator).unwrap();
+
+//    let first_item_read : Vec<u8> = meme.unwrap(); // TODO: Test :) Not sure how well this will work.
+
+    let first_item_read : Vec<u8> = vec![];
     let received = bincode::deserialize::<NetMessageType>(&first_item_read[..]).unwrap();
 
 
-
-    let mut player_id;
+    let player_id;
     match received{
         NetMessageType::ConnectionInitResponse(response) => {
             println!("Successfully read handshake response!");
@@ -69,9 +97,10 @@ pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
 
     HandshakeResponse{
         player_id,
-        socket_read: stream,
+        socket_read: stream_dcwct,
         socket_write: write_half,
     }
+
 }
 
 

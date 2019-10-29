@@ -13,10 +13,10 @@ create_system!( velocityWithInput_system | secret_velocityWithInput_system
 	| players_input: &InputsFrame
 );
 
-fn velocityWithInput_system(d: &mut Data, e: Entity, controllers: &InputsFrame) {
-    let controller = controllers.get(e.my_velocityWithInput(d).owner_id).unwrap();
-    e.my_velocity(d).x = 1.0 * controller.input_state.directional.x as f32;
-    e.my_velocity(d).y = 1.0 * -controller.input_state.directional.y as f32;
+fn velocityWithInput_system(d: &mut Data, e: Entity, player_inputs: &InputsFrame) {
+//    let controller = controllers.get(e.my_velocityWithInput(d).owner_id).unwrap();
+//    e.my_velocity(d).x = 1.0 * controller.input_state.directional.x as f32;
+//    e.my_velocity(d).y = 1.0 * -controller.input_state.directional.y as f32;
 
 }
 
