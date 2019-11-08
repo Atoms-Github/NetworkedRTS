@@ -6,6 +6,14 @@ use std::collections::HashMap;
 use crate::players::inputs::InputState;
 use crate::ecs::world::*;
 use crate::network::networking_message_types::NetMessageType;
+
+use crate::systems::position::{PositionComp, secret_position_system};
+use crate::systems::velocity::*;
+use crate::systems::render::*;
+use crate::systems::velocityWithInput::*;
+use crate::systems::size::*;
+
+
 use std::sync::{Arc, Mutex};
 use tokio::io::ReadHalf;
 use tokio::net::TcpStream;
@@ -15,6 +23,7 @@ use tokio::codec::FramedRead;
 use futures::stream::*;
 use futures::future::*;
 use std::borrow::BorrowMut;
+use ggez::graphics;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -26,6 +35,28 @@ pub struct GameState{
     pub storages: Storages,
     pub frame_count: i32,
 }
+
+impl GameState{
+    pub fn new() -> GameState{
+        GameState{
+            world: World::new(),
+            storages: Storages::new(),
+            frame_count: 0
+        }
+    }
+    pub fn simulate_tick(&mut self, inputs_info: &InputsFrame, delta: f32){
+        let mut pending = PendingEntities::new();
+
+        secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
+        secret_velocity_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
+        secret_velocity_with_inputs_system(&self.world, &mut pending, &mut self.storages.velocity_s,
+        &mut self.storages.velocityWithInput_s, inputs_info);
+
+        self.world.update_entities(&mut self.storages, pending);
+    }
+}
+
+
 
 pub struct InputsFrame{
     pub inputs: HashMap<PlayerID, InputState>
@@ -97,16 +128,3 @@ impl MessageBox{
 }
 
 
-impl GameState{
-    pub fn new() -> GameState{
-        GameState{
-            world: World::new(),
-            storages: Storages::new(),
-            frame_count: 0
-        }
-    }
-
-    pub fn simulate_tick(inputs_info: &InputsFrame, delta: f32){
-
-    }
-}

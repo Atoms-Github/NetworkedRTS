@@ -5,7 +5,6 @@ use std::thread;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::network::networking_structs::*;
-use crate::network::networking_utils::*;
 use crate::network::networking_message_types::*;
 use crate::players::inputs::*;
 use ggez::event::{EventHandler, KeyMods};
@@ -14,11 +13,7 @@ use crate::game::client_networking::perform_handshake;
 use tokio::net::TcpStream;
 use tokio::io::WriteHalf;
 
-use crate::systems::position::{PositionComp, secret_position_system};
-use crate::systems::velocity::*;
 use crate::systems::render::*;
-use crate::systems::velocityWithInput::*;
-use crate::systems::size::*;
 
 use crate::ecs::world::*;
 use crate::ecs::system_macro::*;

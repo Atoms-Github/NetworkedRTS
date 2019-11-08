@@ -4,20 +4,26 @@ use crate::ecs::world::*;
 use crate::systems::velocity::VelocityComp;
 use crate::create_system;
 use crate::network::networking_structs::*;
+use ggez::input::keyboard::KeyCode;
 
 //use crate::inputs::input_structs::*;
 
-create_system!( velocityWithInput_system | secret_velocityWithInput_system
-	| my_velocity: VelocityComp, my_velocityWithInput: velocityWithInputComp
+create_system!( velocity_with_inputs_system | secret_velocity_with_inputs_system
+	| my_velocity: VelocityComp, my_velocity_with_input_comp: velocityWithInputComp
 	|
 	| players_input: &InputsFrame
 );
 
-fn velocityWithInput_system(d: &mut Data, e: Entity, player_inputs: &InputsFrame) {
-//    let controller = controllers.get(e.my_velocityWithInput(d).owner_id).unwrap();
-//    e.my_velocity(d).x = 1.0 * controller.input_state.directional.x as f32;
-//    e.my_velocity(d).y = 1.0 * -controller.input_state.directional.y as f32;
 
+const MOVEMENT_SPEED: f32 = 2.0;
+
+
+fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &InputsFrame) {
+    let my_inputs = player_inputs.inputs.get(&e.my_velocity_with_input_comp(d).owner_id).expect("Unit tried to be controlled by input but didn't have owned by player comp.");
+
+    let (directional_x, directional_y) = my_inputs.get_directional();
+    e.my_velocity(d).x = MOVEMENT_SPEED * directional_x;
+    e.my_velocity(d).y = MOVEMENT_SPEED * directional_y;
 }
 
 #[derive(Debug, Clone)]

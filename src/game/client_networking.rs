@@ -64,9 +64,9 @@ pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
     let mut stream = FramedRead::new(read_half, dans_codec::Bytes);
 //    let mut stream_dcwct = FramedRead::new(read_half_dcwct, dans_codec::Bytes);
 
-    let mut response = stream.poll().expect("Error reading handshake result.");
+    let response = stream.poll().expect("Error reading handshake result.");
 
-    let mut data : Vec<u8>;
+    let data : Vec<u8>;
     loop {
         match response {
             Async::Ready(item) => {
@@ -74,7 +74,6 @@ pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
                 break;
             }
             Async::NotReady => {
-
                 // Keep looping.
             },
         }
@@ -95,8 +94,7 @@ pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
 
 //    let first_item_read : Vec<u8> = meme.unwrap(); // TODO: Test :) Not sure how well this will work.
 
-    let first_item_read : Vec<u8> = vec![];
-    let received = bincode::deserialize::<NetMessageType>(&first_item_read[..]).unwrap();
+    let received = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
 
 
     let player_id;
