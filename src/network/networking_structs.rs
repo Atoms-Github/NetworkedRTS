@@ -117,7 +117,7 @@ impl MessageBox{
             println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
         });
 
-        tokio::run(tokio_task);
+        tokio::spawn(tokio_task);
 
     }
     pub fn new() -> MessageBox{
