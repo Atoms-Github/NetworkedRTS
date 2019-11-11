@@ -25,6 +25,10 @@ use futures::future::*;
 use std::borrow::BorrowMut;
 use ggez::graphics;
 
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc;
+
+
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
 
@@ -117,12 +121,32 @@ impl MessageBox{
             println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
         });
 
-        tokio::spawn(tokio_task);
-
+        let spawned = tokio::spawn(tokio_task);
     }
     pub fn new() -> MessageBox{
         MessageBox{
             items: Arc::new(Mutex::new(vec![]))
+        }
+    }
+}
+
+
+
+
+
+//pub fn SplitTheSplitBoi<T>(items_for_first: usize, input: Stream){
+//
+//}
+
+pub struct SplittySplitBoi{
+
+}
+
+
+impl SplittySplitBoi{
+    pub fn new() -> SplittySplitBoi{
+        SplittySplitBoi{
+
         }
     }
 }

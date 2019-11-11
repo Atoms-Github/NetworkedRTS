@@ -43,23 +43,30 @@ impl ClientMainState{
     }
 }
 
-pub fn client_main(connection_target_ip: &String) -> GameResult{
-    println!("Starting as client.");
+pub fn client_main(connection_target_ip: &String){
+    let local_connection_target_ip = connection_target_ip.clone();
+    tokio::run(futures::lazy(move || {
+        println!("Starting as client.");
+        let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
+            .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
+            .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path("");
 
-    let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
-        .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
-        .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path("");
+        let (ctx, events_loop) = &mut cb.build().unwrap();
 
-    let (ctx, events_loop) = &mut cb.build()?;
+        let mut handshake_result = perform_handshake(&local_connection_target_ip);
+        println!("Handshake successful.");
 
-    let mut handshake_result = perform_handshake(connection_target_ip);
-    println!("Handshake successful.");
+        let mut client_main_state = &mut ClientMainState::new(handshake_result.socket_write, handshake_result.player_id);//ctx)?;
 
-    let mut client_main_state = &mut ClientMainState::new(handshake_result.socket_write, handshake_result.player_id);//ctx)?;
+        client_main_state.client_message_box.init_message_box_filling(handshake_result.socket_read);
 
-    client_main_state.client_message_box.init_message_box_filling(handshake_result.socket_read);
+        let result = event::run(ctx, events_loop, client_main_state);
+        Ok(())
+    }));
 
-    event::run(ctx, events_loop, client_main_state)
+
+
+
 }
 
 impl EventHandler for ClientMainState {
