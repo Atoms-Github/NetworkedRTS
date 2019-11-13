@@ -14,6 +14,7 @@ use tokio::net::TcpStream;
 use tokio::io::WriteHalf;
 
 use crate::systems::render::*;
+use futures::future::lazy;
 
 use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
@@ -43,6 +44,10 @@ impl ClientMainState{
     }
 }
 
+use futures::future::Future;
+use tokio_threadpool::ThreadPool;
+use futures::future::poll_fn;
+
 pub fn client_main(connection_target_ip: &String){
     let local_connection_target_ip = connection_target_ip.clone();
     
@@ -57,16 +62,53 @@ pub fn client_main(connection_target_ip: &String){
         let (ctx, events_loop) = &mut cb.build().unwrap();
 
 
-        let mut handshake_result = connect_and_send_handshake(&local_connection_target_ip);
+        let mut handshake_result_future = connect_and_send_handshake(&local_connection_target_ip);
+        let spicy_task = handshake_result_future.map_err(|e|{
+            println!("Error yote.");
+        }).and_then(|handshake_response|{
+
+            println!("Meme1");
+            let pool = ThreadPool::new();
+            pool.spawn(lazy(move || {
+                // Because `blocking` returns `Poll`, it is intended to be used
+                // from the context of a `Future` implementation. Since we don't
+                // have a complicated requirement, we can use `poll_fn` in this
+                // case.
+                poll_fn(move || {
+                    tokio_threadpool::blocking(|| {
+                        let welcome_message = handshake_response.welcome_messages_channel.recv().unwrap();
+                        match &welcome_message{
+                            NetMessageType::ConnectionInitResponse(response) => {
+                                println!("My player ID is: {}", response.assigned_player_id);
+                            },
+                            _ => {
+                                panic!("How/why was a non connection init message sent in the welcome messages channel?");
+                            },
+                        }
+
+
+                    }).map_err(|_| panic!("the threadpool shut down"))
+                })
+            }));
+            println!("Meme2");
+
+//            let mut client_main_state = &mut ClientMainState::new(handshake_result_future.write, handshake_result_future.player_id);//ctx)?;
+//            client_main_state.client_message_box.blocking_fill_message_box(handshake_result_future.socket_read);
+
+            println!("Meme3");
+
+
+//            let result = event::run(ctx, events_loop, client_main_state);
+
+            Ok(())
+        });
+
+        tokio::spawn(spicy_task);
         println!("Handshake successful.");
 
-//        let mut client_main_state = &mut ClientMainState::new(handshake_result.socket_write, handshake_result.player_id);//ctx)?;
-//
-//        client_main_state.client_message_box.init_message_box_filling(handshake_result.socket_read);
-//
-//
-//
-//        let result = event::run(ctx, events_loop, client_main_state);
+
+
+
         Ok(())
     }));
 

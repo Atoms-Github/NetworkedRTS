@@ -15,9 +15,7 @@ use std::io::{BufReader, Write};
 use crate::network::*;
 use futures::stream::Stream;
 use futures::future::Future;
-use crate::network::dans_codec::Bytes;
 
-use tokio::runtime::*;
 
 
 
@@ -76,7 +74,7 @@ fn example() -> impl Stream<Item = i32, Error = ()> {
 
 
 
-pub fn connect_and_send_handshake(target_ip : &String) {//-> Box<Future<Item = HandshakeResponse, Error = std::error::Error> + Send>{ //This should return Task<HandshakeResponse>
+pub fn connect_and_send_handshake(target_ip : &String) -> Box<Future<Item = HandshakeResponse, Error = ()> + Send>{ //This should return Task<HandshakeResponse>
     println!("Initializing connection to {}", target_ip);
     let addr = target_ip.to_string().parse::<SocketAddr>().unwrap();
 
@@ -87,7 +85,7 @@ pub fn connect_and_send_handshake(target_ip : &String) {//-> Box<Future<Item = H
     }).map_err(|error|{
         println!("Connected was invalid.");
     }).and_then(|connection|{
-        println!("Yea!!! BOI!!!!");
+        println!("Boi...");
         let (mut read_half, mut write_half) = connection.split();
         let mut stream = FramedRead::new(read_half, dans_codec::Bytes);
 
@@ -130,21 +128,13 @@ pub fn connect_and_send_handshake(target_ip : &String) {//-> Box<Future<Item = H
 
         tokio::spawn(future);
 
-        return Ok("201");
+        return Ok(handshake_reponse);
+    }).map_err(|error|{
+        println!("Yeet that error out the windae.");
     });
+    return Box::new(meme);
 }
-
-
-
-
-
 /*
-
-
-
-
-
-
 
 let task = stream.for_each(|item|{
             println!("{:?}", item);

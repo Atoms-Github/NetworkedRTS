@@ -23,6 +23,7 @@ use crate::game::server_networking::*;
 
 use std::sync::{Mutex, Arc};
 use std::time::Duration;
+use std::thread;
 
 
 use futures::Stream;
@@ -32,12 +33,14 @@ use std::collections::HashMap;
 
 use crate::network::*;
 use tokio::net::TcpListener;
+use core::borrow::BorrowMut;
+use futures::sink::Sink;
 
 
 struct ServerMainState {
     game_state_tail: GameState,
     all_frames: InputFramesStorage,
-    player_handles: HashMap<PlayerID, ClientHandle>,
+    client_handles: HashMap<PlayerID, ClientHandle>,
     reception_data: Arc<Mutex<ServerReceptionData>>
 //    client_message_box: MessageBox,
 }
@@ -56,6 +59,7 @@ impl ServerReceptionData{
 }
 
 
+
 pub fn server_main(hosting_ip: &String){
     println!("Starting as server. Going to host on {}", hosting_ip);
 
@@ -66,7 +70,7 @@ pub fn server_main(hosting_ip: &String){
     let mut main_state = ServerMainState{
         game_state_tail: GameState::new(),
         all_frames: InputFramesStorage::new(),
-        player_handles: Default::default(),
+        client_handles: Default::default(),
         reception_data: Arc::new(Mutex::new(ServerReceptionData::new() ))
     };
 
@@ -84,25 +88,57 @@ pub fn server_main(hosting_ip: &String){
 
             let (reader, writer) = socket.split();
 
-            let sink = FramedWrite::new(writer, dans_codec::Bytes);
+//            let sink = FramedWrite::new(writer, dans_codec::Bytes);
+
             let stream = FramedRead::new(reader, dans_codec::Bytes);
 
             let client_handle = ClientHandle{
-                write_channel: sink,
+                write_channel: writer,
                 message_box: MessageBox::new()
             };
-            client_handle.message_box.init_message_box_filling(stream);
+            client_handle.message_box.spawn_tokio_task_message_box_fill(stream);
 
             locked_reception.new_player_handles.push((new_player_id, client_handle));
             println!("Added new player ");
             Ok(())
         });
     println!("Hosting on {}", hosting_ip);
+    let networking_thread_doomed_to_loop = thread::spawn(move ||{
+        main_server_logic(main_state);
+    });
     tokio::run(done);
-
-
-    main_state.game_state_tail.frame_count = 2;
-
-
-
+    println!("Server finished.");
 }
+
+fn main_server_logic(mut main_state: ServerMainState){
+    println!("ServerLogic!");
+    loop{
+        thread::sleep(std::time::Duration::from_millis(1000));
+        { // To drop mutex handle when appropriate.
+            let mut mutex_lock = Mutex::lock(&main_state.reception_data).unwrap();
+            let mut item = &mut *mutex_lock; // TODO: this is a bit of a spicy meme, now isn't it.
+            for (player_id, mut client_handle) in item.new_player_handles.drain(..){
+                let response = NetMsgConnectionInitResponse{
+                    assigned_player_id: item.next_player_id
+                };
+                item.next_player_id += 1;
+
+                let bytes = bincode::serialize(&response).unwrap();
+                client_handle.write_channel.write(&bytes[..]);
+                main_state.client_handles.insert(player_id, client_handle);
+
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+

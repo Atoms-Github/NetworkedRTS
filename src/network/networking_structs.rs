@@ -104,9 +104,8 @@ pub struct MessageBox{
 
 impl MessageBox{
 
-    pub fn init_message_box_filling(&self, connection_readable: FramedRead<ReadHalf<TcpStream>, Bytes>){
+    pub fn spawn_tokio_task_message_box_fill(&self, connection_readable: FramedRead<ReadHalf<TcpStream>, Bytes>){
         let message_box_mutex = Arc::clone(&self.items); // However this works :)
-
 
         let tokio_task = connection_readable.for_each( move |data| {
             let deserialized = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
