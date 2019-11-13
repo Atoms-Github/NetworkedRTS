@@ -9,7 +9,7 @@ use crate::network::networking_message_types::*;
 use crate::players::inputs::*;
 use ggez::event::{EventHandler, KeyMods};
 use ggez::input::keyboard::KeyCode;
-use crate::game::client_networking::perform_handshake;
+use crate::game::client_networking::connect_and_send_handshake;
 use tokio::net::TcpStream;
 use tokio::io::WriteHalf;
 
@@ -45,7 +45,10 @@ impl ClientMainState{
 
 pub fn client_main(connection_target_ip: &String){
     let local_connection_target_ip = connection_target_ip.clone();
+    
     tokio::run(futures::lazy(move || {
+
+
         println!("Starting as client.");
         let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
@@ -53,16 +56,25 @@ pub fn client_main(connection_target_ip: &String){
 
         let (ctx, events_loop) = &mut cb.build().unwrap();
 
-        let mut handshake_result = perform_handshake(&local_connection_target_ip);
+
+        let mut handshake_result = connect_and_send_handshake(&local_connection_target_ip);
         println!("Handshake successful.");
 
-        let mut client_main_state = &mut ClientMainState::new(handshake_result.socket_write, handshake_result.player_id);//ctx)?;
-
-        client_main_state.client_message_box.init_message_box_filling(handshake_result.socket_read);
-
-        let result = event::run(ctx, events_loop, client_main_state);
+//        let mut client_main_state = &mut ClientMainState::new(handshake_result.socket_write, handshake_result.player_id);//ctx)?;
+//
+//        client_main_state.client_message_box.init_message_box_filling(handshake_result.socket_read);
+//
+//
+//
+//        let result = event::run(ctx, events_loop, client_main_state);
         Ok(())
     }));
+
+
+
+
+
+
 
 
 

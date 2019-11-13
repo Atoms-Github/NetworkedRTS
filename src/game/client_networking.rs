@@ -23,13 +23,17 @@ use tokio::runtime::*;
 
 use std::iter;
 use tokio::prelude::*;
-use std::error::Error; // 0.1.15
-
+use std::error::Error;
+use std::net::SocketAddr;
+use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc;
 
 
 pub struct HandshakeResponse{
-    pub player_id: PlayerID,
-    pub socket_read: FramedRead<ReadHalf<TcpStream>, Bytes>,
+//    pub player_id: PlayerID,
+    pub welcome_messages_channel: Receiver<NetMessageType>,
+    pub normal_messages_channel: Receiver<NetMessageType>,
+//    pub normal_messages_channel: FramedRead<ReadHalf<TcpStream>, Bytes>,
     pub socket_write: WriteHalf<TcpStream>,
 }
 
@@ -66,97 +70,152 @@ impl Stream for MyStream {
 
 
 
-
 fn example() -> impl Stream<Item = i32, Error = ()> {
     stream::iter_ok(iter::repeat(42))
 }
 
 
 
-pub fn perform_handshake(target_ip : &String) -> HandshakeResponse{
-
+pub fn connect_and_send_handshake(target_ip : &String) {//-> Box<Future<Item = HandshakeResponse, Error = std::error::Error> + Send>{ //This should return Task<HandshakeResponse>
     println!("Initializing connection to {}", target_ip);
+    let addr = target_ip.to_string().parse::<SocketAddr>().unwrap();
 
-    let mut connection = stall_thread_until_connection_success(target_ip);
-    println!("Successfully made contact with {}! Sending initialization data.", target_ip);
+    let mut connection_future = TcpStream::connect(&addr);
 
-
-    let (mut read_half, mut write_half) = connection.split();
-    let mut stream = FramedRead::new(read_half, dans_codec::Bytes);
-
-
-    let task = stream.for_each(|item|{
-        println!("{:?}", item);
-        Ok(())
+    let meme = connection_future.map_err(|e|{
+        println!("Creating connection: {:?}", e);
     }).map_err(|error|{
-        println!("Yeeto dorrito there was an errorito! {}", error);
+        println!("Connected was invalid.");
+    }).and_then(|connection|{
+        println!("Yea!!! BOI!!!!");
+        let (mut read_half, mut write_half) = connection.split();
+        let mut stream = FramedRead::new(read_half, dans_codec::Bytes);
+
+        let connection_init_query = NetMessageType::ConnectionInitQuery(
+            NetMsgConnectionInitQuery{
+                my_player_name: "Atomsadiah!".to_string()
+            }
+        );
+
+        let connection_init_bytes = bincode::serialize(&connection_init_query).unwrap();
+
+        write_half.write(&connection_init_bytes[..]);
+
+        let (tx_sender_handshake, rx_receiver_handshake): (Sender<NetMessageType>, Receiver<NetMessageType>) = mpsc::channel();
+        let (tx_sender_normal, rx_receiver_normal): (Sender<NetMessageType>, Receiver<NetMessageType>) = mpsc::channel();
+
+
+        let future = stream.for_each(move |stream_item|{
+            let received = bincode::deserialize::<NetMessageType>(&stream_item[..]).unwrap();
+            match &received{
+                NetMessageType::ConnectionInitResponse(response) => {
+                    println!("Successfully read handshake response!");
+                    tx_sender_handshake.send(received);
+                },
+                _ => {
+                    tx_sender_normal.send(received);
+                },
+            }
+
+            return Ok(())
+        }).map_err(|e|{
+            println!("MemeSupreme");
+        });
+
+        let handshake_reponse = HandshakeResponse{
+            socket_write: write_half,
+            welcome_messages_channel: rx_receiver_handshake,
+            normal_messages_channel: rx_receiver_normal
+        };
+
+        tokio::spawn(future);
+
+        return Ok("201");
     });
-
-    let spawned = tokio::spawn(task);
-    panic!("Actually got here");
-
-
-
-
-
-
-
-
-
-
-    let connection_init_query = NetMessageType::ConnectionInitQuery(
-        NetMsgConnectionInitQuery{
-            my_player_name: "Atomsadiah!".to_string()
-        }
-    );
-
-    let connection_init_bytes = bincode::serialize(&connection_init_query).unwrap();
-    write_half.write(&connection_init_bytes[..]);
-
-//    let meme = stream.poll();
-//    let response = stream.poll().expect("Error reading handshake result.");
-//
-//    let data : Vec<u8>;
-//    loop {
-//        match response {
-//            Async::Ready(item) => {
-//                data = item.expect("Problem reading handshake response.");
-//                break;
-//            }
-//            Async::NotReady => {
-//                // Keep looping.
-//            },
-//        }
-//    }
-//
-//    let received = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
-
-
-    let player_id = 0;
-//    match received{
-//        NetMessageType::ConnectionInitResponse(response) => {
-//            println!("Successfully read handshake response!");
-//            player_id = response.assigned_player_id;
-//        },
-//        _ => {
-//            panic!("First item read from server after handshake request wasn't a handshake response!");
-//        },
-//    }
-
-    let mut connection_dcwct = stall_thread_until_connection_success(target_ip);
-
-    let (mut read_half_dcwct, mut write_half_dcwct) = connection_dcwct.split();
-    let mut stream_dcwct = FramedRead::new(read_half_dcwct, dans_codec::Bytes);
-
-    HandshakeResponse{
-        player_id,
-        socket_read: stream_dcwct,
-        socket_write: write_half,
-    }
-
 }
 
 
+
+
+
+/*
+
+
+
+
+
+
+
+let task = stream.for_each(|item|{
+            println!("{:?}", item);
+            Ok(())
+        }).map_err(|error|{
+            println!("Yeeto dorrito there was an errorito! {}", error);
+        });
+        let spawned = tokio::spawn(task);
+
+        let data : Vec<u8>;
+        loop {
+            match response {
+                Async::Ready(item) => {
+                    data = item.expect("Problem reading handshake response.");
+                    break;
+                }
+                Async::NotReady => {
+                    // Keep looping.
+                },
+            }
+        }
+
+        let received = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
+
+        let mut player_id = 0;
+
+        match received{
+            NetMessageType::ConnectionInitResponse(response) => {
+                println!("Successfully read handshake response!");
+                player_id = response.assigned_player_id;
+            },
+            _ => {
+                panic!("First item read from server after handshake request wasn't a handshake response!");
+            },
+        }
+
+
+        let handshake_reponse = HandshakeResponse{
+            player_id,
+            socket_read: stream,
+            socket_write: write_half,
+        };
+        Ok(())
+
+
+
+
+
+
+
+
+*/
+
+//        let meme = stream.poll();
+//        let response = stream.poll().expect("Error reading handshake result.");
+
+
+
+
+
+
+
+
+
+
+
+
+//    let mut connection_dcwct = task_connection_future(target_ip);
+////
+////    let (mut read_half_dcwct, mut write_half_dcwct) = connection_dcwct.split();
+////    let mut stream_dcwct = FramedRead::new(read_half_dcwct, dans_codec::Bytes);
 
 
 //    let mut runtime = tokio::runtime::Runtime::new().expect("Unable to create a runtime");
