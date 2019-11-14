@@ -118,12 +118,13 @@ fn main_server_logic(mut main_state: ServerMainState){
             let mut mutex_lock = Mutex::lock(&main_state.reception_data).unwrap();
             let mut item = &mut *mutex_lock; // TODO: this is a bit of a spicy meme, now isn't it.
             for (player_id, mut client_handle) in item.new_player_handles.drain(..){
-                let response = NetMsgConnectionInitResponse{
+                let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                     assigned_player_id: item.next_player_id
-                };
+                });
                 item.next_player_id += 1;
 
                 let bytes = bincode::serialize(&response).unwrap();
+//                println!("Sending: {:?}", bytes);
                 client_handle.write_channel.write(&bytes[..]);
                 main_state.client_handles.insert(player_id, client_handle);
 

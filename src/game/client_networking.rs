@@ -104,6 +104,7 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<Future<Item = Hand
 
 
         let future = stream.for_each(move |stream_item|{
+//            println!("Receiving: {:?}", stream_item);
             let received = bincode::deserialize::<NetMessageType>(&stream_item[..]).unwrap();
             match &received{
                 NetMessageType::ConnectionInitResponse(response) => {
