@@ -74,11 +74,11 @@ fn example() -> impl Stream<Item = i32, Error = ()> {
 
 
 
-pub fn connect_and_send_handshake(target_ip : &String) -> Box<Future<Item = HandshakeResponse, Error = ()> + Send>{ //This should return Task<HandshakeResponse>
+pub fn connect_and_send_handshake(target_ip : &String) -> Box<dyn Future<Item = HandshakeResponse, Error = ()> + Send>{ //This should return Task<HandshakeResponse>
     println!("Initializing connection to {}", target_ip);
     let addr = target_ip.to_string().parse::<SocketAddr>().unwrap();
 
-    let mut connection_future = TcpStream::connect(&addr);
+    let connection_future = TcpStream::connect(&addr);
 
     let meme = connection_future.map_err(|e|{
         println!("Creating connection: {:?}", e);
@@ -86,8 +86,8 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<Future<Item = Hand
         println!("Connected was invalid.");
     }).and_then(|connection|{
         println!("Boi...");
-        let (mut read_half, mut write_half) = connection.split();
-        let mut stream = FramedRead::new(read_half, dans_codec::Bytes);
+        let (read_half, mut write_half) = connection.split();
+        let stream = FramedRead::new(read_half, dans_codec::Bytes);
 
         let connection_init_query = NetMessageType::ConnectionInitQuery(
             NetMsgConnectionInitQuery{
@@ -103,13 +103,23 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<Future<Item = Hand
         let (tx_sender_normal, rx_receiver_normal): (Sender<NetMessageType>, Receiver<NetMessageType>) = mpsc::channel();
 
 
+
         let future = stream.for_each(move |stream_item|{
 //            println!("Receiving: {:?}", stream_item);
             let received = bincode::deserialize::<NetMessageType>(&stream_item[..]).unwrap();
             match &received{
                 NetMessageType::ConnectionInitResponse(response) => {
-                    println!("Successfully read handshake response!");
-                    tx_sender_handshake.send(received);
+                    let meme_cloned = response.clone();
+                    println!("Read something from the server {:?}", meme_cloned);
+
+                    let test_result = tx_sender_handshake.send(NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
+                        assigned_player_id: 1392
+                    }));
+                    println!("TestResult: {:?}", test_result);
+
+
+                    let sending_result = tx_sender_handshake.send(received);
+                    println!("Result of sending through other channel: {:?}", sending_result);
                 },
                 _ => {
                     tx_sender_normal.send(received);
@@ -118,7 +128,7 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<Future<Item = Hand
 
             return Ok(())
         }).map_err(|e|{
-            println!("MemeSupreme");
+            println!("MemeSupremeError");
         });
 
         let handshake_reponse = HandshakeResponse{
@@ -127,12 +137,15 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<Future<Item = Hand
             normal_messages_channel: rx_receiver_normal
         };
 
+
+
         tokio::spawn(future);
 
         return Ok(handshake_reponse);
     }).map_err(|error|{
         println!("Yeet that error out the windae.");
     });
+
     return Box::new(meme);
 }
 /*

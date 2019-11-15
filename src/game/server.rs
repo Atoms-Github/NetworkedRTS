@@ -67,7 +67,7 @@ pub fn server_main(hosting_ip: &String){
     let socket = TcpListener::bind(&addr).expect("Unable to bind hosting address.");
 
 
-    let mut main_state = ServerMainState{
+    let main_state = ServerMainState{
         game_state_tail: GameState::new(),
         all_frames: InputFramesStorage::new(),
         client_handles: Default::default(),
@@ -85,7 +85,6 @@ pub fn server_main(hosting_ip: &String){
             locked_reception.next_player_id += 1;
 
             println!("New player connected. PlayerID: {} Address: {:?}", new_player_id , socket.peer_addr());
-
             let (reader, writer) = socket.split();
 
 //            let sink = FramedWrite::new(writer, dans_codec::Bytes);
@@ -94,7 +93,8 @@ pub fn server_main(hosting_ip: &String){
 
             let client_handle = ClientHandle{
                 write_channel: writer,
-                message_box: MessageBox::new()
+                message_box: MessageBox::new(),
+                properties: PlayerProperties::new(new_player_id)
             };
             client_handle.message_box.spawn_tokio_task_message_box_fill(stream);
 
@@ -103,7 +103,7 @@ pub fn server_main(hosting_ip: &String){
             Ok(())
         });
     println!("Hosting on {}", hosting_ip);
-    let networking_thread_doomed_to_loop = thread::spawn(move ||{
+    thread::spawn(move ||{
         main_server_logic(main_state);
     });
     tokio::run(done);
@@ -115,20 +115,36 @@ fn main_server_logic(mut main_state: ServerMainState){
     loop{
         thread::sleep(std::time::Duration::from_millis(1000));
         { // To drop mutex handle when appropriate.
-            let mut mutex_lock = Mutex::lock(&main_state.reception_data).unwrap();
-            let mut item = &mut *mutex_lock; // TODO: this is a bit of a spicy meme, now isn't it.
-            for (player_id, mut client_handle) in item.new_player_handles.drain(..){
-                let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
-                    assigned_player_id: item.next_player_id
-                });
-                item.next_player_id += 1;
-
-                let bytes = bincode::serialize(&response).unwrap();
-//                println!("Sending: {:?}", bytes);
-                client_handle.write_channel.write(&bytes[..]);
-                main_state.client_handles.insert(player_id, client_handle);
-
+            {
+                let mut mutex_lock = Mutex::lock(&main_state.reception_data).unwrap();
+                let mut reception_data = &mut *mutex_lock; // TODO: this is a bit of a spicy meme, now isn't it?
+                for (player_id, mut client_handle) in reception_data.new_player_handles.drain(..){
+                    main_state.client_handles.insert(player_id, client_handle);
+                }
             }
+
+
+
+            for (player_id, client_handle) in &mut main_state.client_handles {
+                for message in client_handle.message_box.items.lock().unwrap().drain(..) {
+                    match &message{
+                        NetMessageType::ConnectionInitQuery(response) => {
+                            let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
+                                assigned_player_id: *player_id
+                            });
+                            let bytes = bincode::serialize(&response).unwrap();
+                            println!("Sent init message to client: {:?}", bytes);
+                            client_handle.write_channel.write(&bytes[..]);
+                        },
+                        _ => {
+                            println!("Not implemented this type of message.");
+                        },
+                    }
+
+                    println!("Got a message from client: {:?}", message);
+                }
+            }
+
         }
     }
 }

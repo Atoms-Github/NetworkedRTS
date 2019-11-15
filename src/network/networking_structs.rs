@@ -130,24 +130,15 @@ impl MessageBox{
 }
 
 
-
-
-
-//pub fn SplitTheSplitBoi<T>(items_for_first: usize, input: Stream){
-//
-//}
-
-pub struct SplittySplitBoi{
-
+pub struct PlayerProperties{
+    pub name : String,
+    pub player_id: PlayerID
 }
-
-
-impl SplittySplitBoi{
-    pub fn new() -> SplittySplitBoi{
-        SplittySplitBoi{
-
+impl PlayerProperties{
+    pub fn new(player_id: PlayerID) -> PlayerProperties{
+        PlayerProperties{
+            name : String::from("NamelessWonder"),
+            player_id: player_id
         }
     }
 }
-
-

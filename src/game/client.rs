@@ -52,8 +52,6 @@ pub fn client_main(connection_target_ip: &String){
     let local_connection_target_ip = connection_target_ip.clone();
     
     tokio::run(futures::lazy(move || {
-
-
         println!("Starting as client.");
         let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
@@ -62,27 +60,36 @@ pub fn client_main(connection_target_ip: &String){
         let (ctx, events_loop) = &mut cb.build().unwrap();
 
 
-        let mut handshake_result_future = connect_and_send_handshake(&local_connection_target_ip);
+        let handshake_result_future = connect_and_send_handshake(&local_connection_target_ip);
         let spicy_task = handshake_result_future.map_err(|e|{
             println!("Error yote.");
         }).and_then(|handshake_response|{
-
             println!("Meme1");
             let pool = ThreadPool::new();
+            let mut my_player_id = 999;
+//            let test = handshake_response.welcome_messages_channel.recv();
+
+            println!("Before");
+            let supreme = handshake_response.welcome_messages_channel.recv();
+            println!("Supreme: {:?}", supreme);
+
+            let welcome_messages = handshake_response.welcome_messages_channel;
             pool.spawn(lazy(move || {
                 // Because `blocking` returns `Poll`, it is intended to be used
                 // from the context of a `Future` implementation. Since we don't
                 // have a complicated requirement, we can use `poll_fn` in this
                 // case.
+                println!("Meme6 Dude. For Realsies.");
                 poll_fn(move || {
                     tokio_threadpool::blocking(|| {
-                        let welcome_message = handshake_response.welcome_messages_channel.recv().unwrap();
+                        let welcome_message = welcome_messages.recv().unwrap();
                         match &welcome_message{
                             NetMessageType::ConnectionInitResponse(response) => {
-                                println!("My player ID is: {}", response.assigned_player_id);
+                                println!("Read handshake. My player ID is: {}", response.assigned_player_id);
+                                my_player_id = response.assigned_player_id;
                             },
                             _ => {
-                                panic!("How/why was a non connection init message sent in the welcome messages channel?");
+                                panic!("Why/how was a non connection init message sent in the welcome messages channel?");
                             },
                         }
 
@@ -90,9 +97,9 @@ pub fn client_main(connection_target_ip: &String){
                     }).map_err(|_| panic!("the threadpool shut down"))
                 })
             }));
-            println!("Meme2");
+            println!("Meme2 {}", my_player_id);
 
-//            let mut client_main_state = &mut ClientMainState::new(handshake_result_future.write, handshake_result_future.player_id);//ctx)?;
+            let client_main_state = &mut ClientMainState::new(handshake_response.socket_write, my_player_id);//ctx)?;
 //            client_main_state.client_message_box.blocking_fill_message_box(handshake_result_future.socket_read);
 
             println!("Meme3");
@@ -104,11 +111,6 @@ pub fn client_main(connection_target_ip: &String){
         });
 
         tokio::spawn(spicy_task);
-        println!("Handshake successful.");
-
-
-
-
         Ok(())
     }));
 
@@ -128,7 +130,6 @@ impl EventHandler for ClientMainState {
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
             let seconds = 1.0 / (DESIRED_FPS as f32);
-
 
             let messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
