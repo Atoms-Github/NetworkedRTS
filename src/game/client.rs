@@ -19,6 +19,8 @@ use futures::future::lazy;
 use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
 
+use crate::game::client_networking::*;
+
 struct ClientMainState {
     game_state_head: GameState,
     game_state_tail: GameState,
@@ -53,11 +55,7 @@ pub fn client_main(connection_target_ip: &String){
     
     tokio::run(futures::lazy(move || {
         println!("Starting as client.");
-        let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
-            .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
-            .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path("");
 
-        let (ctx, events_loop) = &mut cb.build().unwrap();
 
 
         let handshake_result_future = connect_and_send_handshake(&local_connection_target_ip);
@@ -66,46 +64,23 @@ pub fn client_main(connection_target_ip: &String){
         }).and_then(|handshake_response|{
             println!("Meme1");
             let pool = ThreadPool::new();
-            let mut my_player_id = 999;
-//            let test = handshake_response.welcome_messages_channel.recv();
+
 
             println!("Before");
-            let supreme = handshake_response.welcome_messages_channel.recv();
-            println!("Supreme: {:?}", supreme);
-
-            let welcome_messages = handshake_response.welcome_messages_channel;
-            pool.spawn(lazy(move || {
-                // Because `blocking` returns `Poll`, it is intended to be used
-                // from the context of a `Future` implementation. Since we don't
-                // have a complicated requirement, we can use `poll_fn` in this
-                // case.
-                println!("Meme6 Dude. For Realsies.");
-                poll_fn(move || {
-                    tokio_threadpool::blocking(|| {
-                        let welcome_message = welcome_messages.recv().unwrap();
-                        match &welcome_message{
-                            NetMessageType::ConnectionInitResponse(response) => {
-                                println!("Read handshake. My player ID is: {}", response.assigned_player_id);
-                                my_player_id = response.assigned_player_id;
-                            },
-                            _ => {
-                                panic!("Why/how was a non connection init message sent in the welcome messages channel?");
-                            },
-                        }
+//            println!("Supreme: {:?}", supreme);
 
 
-                    }).map_err(|_| panic!("the threadpool shut down"))
-                })
-            }));
-            println!("Meme2 {}", my_player_id);
+            thread::spawn(||{
+                client_main_loop(handshake_response);
+            });
 
-            let client_main_state = &mut ClientMainState::new(handshake_response.socket_write, my_player_id);//ctx)?;
-//            client_main_state.client_message_box.blocking_fill_message_box(handshake_result_future.socket_read);
+
+
 
             println!("Meme3");
 
 
-//            let result = event::run(ctx, events_loop, client_main_state);
+//
 
             Ok(())
         });
@@ -113,16 +88,37 @@ pub fn client_main(connection_target_ip: &String){
         tokio::spawn(spicy_task);
         Ok(())
     }));
+}
+
+fn client_main_loop(handshake_response: HandshakeResponse){
+    let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
+        .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
+        .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path("");
+
+    let (ctx, events_loop) = &mut cb.build().unwrap();
+
+
+    let welcome_messages = handshake_response.welcome_messages_channel;
+    let welcome_message = welcome_messages.recv().unwrap();
+
+    let mut my_player_id = 998;
+
+    match &welcome_message{
+        NetMessageType::ConnectionInitResponse(response) => {
+            println!("Read handshake. My player ID is: {}", response.assigned_player_id);
+            my_player_id = response.assigned_player_id;
+        },
+        _ => {
+            panic!("Why/how was a non connection init message sent in the welcome messages channel?");
+        },
+    }
+    println!("Meme2 {}", my_player_id);
 
 
 
-
-
-
-
-
-
-
+    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write, my_player_id);//ctx)?;
+//            client_main_state.client_message_box.blocking_fill_message_box(handshake_result_future.socket_read);
+    let result = event::run(ctx, events_loop, client_main_state);
 }
 
 impl EventHandler for ClientMainState {

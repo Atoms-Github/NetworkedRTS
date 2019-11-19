@@ -19,7 +19,7 @@ use futures::future::Future;
 
 
 
-use std::iter;
+use std::{iter, thread};
 use tokio::prelude::*;
 use std::error::Error;
 use std::net::SocketAddr;
@@ -112,14 +112,7 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<dyn Future<Item = 
                     let meme_cloned = response.clone();
                     println!("Read something from the server {:?}", meme_cloned);
 
-                    let test_result = tx_sender_handshake.send(NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
-                        assigned_player_id: 1392
-                    }));
-                    println!("TestResult: {:?}", test_result);
-
-
-                    let sending_result = tx_sender_handshake.send(received);
-                    println!("Result of sending through other channel: {:?}", sending_result);
+                    tx_sender_handshake.send(received);
                 },
                 _ => {
                     tx_sender_normal.send(received);
@@ -130,6 +123,13 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<dyn Future<Item = 
         }).map_err(|e|{
             println!("MemeSupremeError");
         });
+        thread::spawn(move || {
+            tokio::run(futures::lazy(move || {
+
+                Ok(())
+            }));
+        });
+        tokio::spawn(future);
 
         let handshake_reponse = HandshakeResponse{
             socket_write: write_half,
@@ -138,8 +138,6 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<dyn Future<Item = 
         };
 
 
-
-        tokio::spawn(future);
 
         return Ok(handshake_reponse);
     }).map_err(|error|{

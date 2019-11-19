@@ -1,4 +1,5 @@
 #![feature(core_intrinsics)]
+#![feature(async_await)]
 use std::env;
 
 

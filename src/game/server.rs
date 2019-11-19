@@ -53,7 +53,7 @@ impl ServerReceptionData{
     fn new() -> ServerReceptionData{
         ServerReceptionData{
             new_player_handles: vec![],
-            next_player_id: 0
+            next_player_id: 4
         }
     }
 }
