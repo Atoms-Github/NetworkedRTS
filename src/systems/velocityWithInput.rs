@@ -5,6 +5,7 @@ use crate::systems::velocity::VelocityComp;
 use crate::create_system;
 use crate::network::networking_structs::*;
 use ggez::input::keyboard::KeyCode;
+use serde::{Serialize, Deserialize};
 
 //use crate::inputs::input_structs::*;
 
@@ -26,7 +27,7 @@ fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &InputsFr
     e.my_velocity(d).y = MOVEMENT_SPEED * directional_y;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug,Serialize, Deserialize, Clone)]
 pub struct velocityWithInputComp {
     pub owner_id: usize
 }

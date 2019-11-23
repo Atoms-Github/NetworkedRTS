@@ -10,6 +10,8 @@ use crate::systems::velocityWithInput::*;
 use crate::utils::unmoving_vec::*;
 use anymap::AnyMap;
 
+use serde::{Serialize, Deserialize};
+
 
 pub type PogTypeId = u64;
 pub type CompositionID = usize;
@@ -41,14 +43,14 @@ impl Request {
 	}
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Composition {
 	id: CompositionID,
 	types: TypeSet,
 	pub global_entity_ids: Vec<EntityID>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 struct InternalEntity {
 	global_id: EntityID,
 	composition_id: CompositionID,
@@ -118,7 +120,7 @@ impl PendingEntities {
 
 macro_rules! create_system {
 	($($var_name:ident : $sty:ty),*) => {
-		#[derive(Debug)]
+		#[derive(Debug,Serialize, Deserialize)]
 		pub struct Storages {
 			$(
                     pub $var_name: VerticalStorage<$sty>,
@@ -164,12 +166,12 @@ macro_rules! create_system {
 
 create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, velocityWithInput_s: velocityWithInputComp);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct World {
 	entity_storage: UnmovingVec<InternalEntity>,
 	composition_types_to_id_map: HashMap<TypeSet, CompositionID>,
-	
 	composition_list: Vec<Composition>,
+
 }
 
 impl World {

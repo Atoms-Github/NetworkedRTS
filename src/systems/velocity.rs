@@ -4,6 +4,7 @@ use crate::systems::position::PositionComp;
 use crate::systems::render::RenderComp;
 use crate::ecs::world::*;
 use crate::create_system;
+use serde::{Serialize, Deserialize};
 
 
 create_system!( velocity_system | secret_velocity_system
@@ -17,7 +18,7 @@ fn velocity_system(d: &mut Data, e: Entity){
 	e.my_position(d).y += e.my_velocity(d).y;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug,Serialize, Deserialize, Clone)]
 pub struct VelocityComp {
 	pub x: f32,
 	pub y: f32,

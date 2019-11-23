@@ -4,6 +4,7 @@ use crate::systems::velocity::VelocityComp;
 use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
 use crate::create_system;
+use serde::{Serialize, Deserialize};
 
 
 create_system!( position_system | secret_position_system
@@ -12,8 +13,7 @@ create_system!( position_system | secret_position_system
 	|
 );
 
-
-#[derive(Debug, Clone)]
+#[derive(Debug,Serialize, Deserialize, Clone)]
 pub struct PositionComp {
 	pub x: f32,
 	pub y: f32,

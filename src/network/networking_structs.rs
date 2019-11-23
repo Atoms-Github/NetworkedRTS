@@ -27,17 +27,26 @@ use ggez::graphics;
 
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
+use std::io::{self, BufRead};
+use std::sync::mpsc::channel;
+
+use crate::network::networking_message_types::*;
+
+use std::thread;
+use serde::{Serialize, Deserialize};
+
 
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
 
 
-
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
     pub frame_count: i32,
+
 }
 
 impl GameState{
@@ -98,12 +107,13 @@ impl InputFramesStorage{
     }
 }
 
-pub struct MessageBox{
+
+
+pub struct MessageBox {
     pub items: Arc<Mutex<Vec<NetMessageType>>>,
 }
 
-impl MessageBox{
-
+impl MessageBox {
     pub fn spawn_tokio_task_message_box_fill(&self, connection_readable: FramedRead<ReadHalf<TcpStream>, Bytes>){
         let message_box_mutex = Arc::clone(&self.items); // However this works :)
 
@@ -112,20 +122,55 @@ impl MessageBox{
             {
                 let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
                 mutex_lock.push(deserialized);
-
-                std::mem::drop(mutex_lock);
+                std::mem::drop(mutex_lock); // Just to doubley ensure lock is dropped.
             }
             Ok(())
         }).map_err(|error|{
             println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
         });
 
-        let spawned = tokio::spawn(tokio_task);
+        tokio::spawn(tokio_task);
     }
-    pub fn new() -> MessageBox{
-        MessageBox{
+    pub fn spawn_thread_fill_from_receiver(&self, receiver: Receiver<NetMessageType>){
+        let meme = receiver;
+        let message_box_mutex = Arc::clone(&self.items); // However this works :)
+
+        thread::spawn(move ||{
+            let dream = meme;
+            loop{
+                let item = dream.recv();
+                match item{
+                    Ok(net_message) => {
+                        {
+                            let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
+                            mutex_lock.push(net_message);
+                            std::mem::drop(mutex_lock); // Just to doubley ensure lock is dropped.
+                        }
+                    },
+                    Err(err) => {
+                        panic!("Error initing filling message box from reciever. {}", err);
+                    },
+                }
+            }
+        });
+    }
+    pub fn new() -> MessageBox {
+        MessageBox {
             items: Arc::new(Mutex::new(vec![]))
         }
+    }
+    pub fn spawn_thread_read_cmd_input(&self){
+        let (sender, reciever) = channel::<NetMessageType>();
+        thread::spawn(||{
+            let sink = sender;
+            let stdin = io::stdin();
+            for line in stdin.lock().lines() {
+                sink.send(NetMessageType::LocalCommand(LocalCommandInfo{
+                    command: line.expect("Problem reading std:io input line.")
+                })).unwrap();
+            }
+        });
+        self.spawn_thread_fill_from_receiver(reciever);
     }
 }
 

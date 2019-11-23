@@ -10,13 +10,22 @@ pub enum NetMessageType {
     ConnectionInitQuery(NetMsgConnectionInitQuery),
     InputsUpdate(NetMsgInputsUpdate),
     ConnectionInitResponse(NetMsgConnectionInitResponse),
+    LocalCommand(LocalCommandInfo)
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LocalCommandInfo{
+    pub command: String
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetMsgInputsUpdate{
     pub player_id: PlayerID,
     pub frame_index: FrameIndex,
     pub input_states: [InputState; 20],
 }
+
+
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetMsgConnectionInitQuery {

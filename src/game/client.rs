@@ -21,6 +21,10 @@ use crate::ecs::system_macro::*;
 
 use crate::game::client_networking::*;
 
+use futures::future::Future;
+use tokio_threadpool::ThreadPool;
+use futures::future::poll_fn;
+
 struct ClientMainState {
     game_state_head: GameState,
     game_state_tail: GameState,
@@ -29,26 +33,26 @@ struct ClientMainState {
     my_player_id: PlayerID,
     client_message_box: MessageBox,
     network_oh_my_omies_mode: bool,
+    game_started: bool,
     my_current_input_state: InputState,
 }
 impl ClientMainState{
-    pub fn new(socket_write: WriteHalf<TcpStream>, my_player_id: PlayerID) -> ClientMainState{
+    pub fn new(socket_write: WriteHalf<TcpStream>, message_box: MessageBox, my_player_id: PlayerID) -> ClientMainState{
         ClientMainState{
             game_state_head: GameState::new(),
             game_state_tail: GameState::new(),
             socket_write,
             all_frames: InputFramesStorage::new(),
             my_player_id,
-            client_message_box: MessageBox::new(),
+            client_message_box: message_box,
             network_oh_my_omies_mode: false,
-            my_current_input_state: InputState::new()
+            my_current_input_state: InputState::new(),
+            game_started: false
         }
     }
 }
 
-use futures::future::Future;
-use tokio_threadpool::ThreadPool;
-use futures::future::poll_fn;
+
 
 pub fn client_main(connection_target_ip: &String){
     let local_connection_target_ip = connection_target_ip.clone();
@@ -62,26 +66,11 @@ pub fn client_main(connection_target_ip: &String){
         let spicy_task = handshake_result_future.map_err(|e|{
             println!("Error yote.");
         }).and_then(|handshake_response|{
-            println!("Meme1");
-            let pool = ThreadPool::new();
-
-
-            println!("Before");
-//            println!("Supreme: {:?}", supreme);
 
 
             thread::spawn(||{
                 client_main_loop(handshake_response);
             });
-
-
-
-
-            println!("Meme3");
-
-
-//
-
             Ok(())
         });
 
@@ -101,7 +90,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     let welcome_messages = handshake_response.welcome_messages_channel;
     let welcome_message = welcome_messages.recv().unwrap();
 
-    let mut my_player_id = 998;
+    let mut my_player_id;
 
     match &welcome_message{
         NetMessageType::ConnectionInitResponse(response) => {
@@ -116,8 +105,13 @@ fn client_main_loop(handshake_response: HandshakeResponse){
 
 
 
-    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write, my_player_id);//ctx)?;
-//            client_main_state.client_message_box.blocking_fill_message_box(handshake_result_future.socket_read);
+    let message_box = MessageBox::new();
+    message_box.spawn_thread_fill_from_receiver(handshake_response.normal_messages_channel);
+    message_box.spawn_thread_read_cmd_input();
+
+    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box, my_player_id);//ctx)?;
+//    client_main_state.client_message_box.(handshake_result_future.socket_read);
+
     let result = event::run(ctx, events_loop, client_main_state);
 }
 
@@ -127,20 +121,21 @@ impl EventHandler for ClientMainState {
         while timer::check_update_time(ctx, DESIRED_FPS) {
             let seconds = 1.0 / (DESIRED_FPS as f32);
 
-            let messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
+            let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
-
-            for message in (*messages_guard).iter(){ // TODO - fancy vector filter to remove all these after processing them.
+            for message in (*messages_guard).drain(..){
+                println!("MessageInMessageBox: {:?}", message);
                 match message{
                     NetMessageType::ConnectionInitQuery(_) => {},
                     NetMessageType::InputsUpdate(inputs_update) => {
                         self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
                     },
                     NetMessageType::ConnectionInitResponse(_) => {},
+                    NetMessageType::LocalCommand(item) => {
+                        println!("I've heard a command. Let me listen: {}", item.command);
+                    }
                 }
             }
-
-
         }
         Ok(())
     }

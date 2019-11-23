@@ -94,7 +94,7 @@ pub fn server_main(hosting_ip: &String){
             let client_handle = ClientHandle{
                 write_channel: writer,
                 message_box: MessageBox::new(),
-                properties: PlayerProperties::new(new_player_id)
+//                properties: PlayerProperties::new(new_player_id)
             };
             client_handle.message_box.spawn_tokio_task_message_box_fill(stream);
 
