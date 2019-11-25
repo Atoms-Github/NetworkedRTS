@@ -36,6 +36,7 @@ use tokio::net::TcpListener;
 use core::borrow::BorrowMut;
 use futures::sink::Sink;
 
+use std::time::{SystemTime, UNIX_EPOCH};
 
 struct ServerMainState {
     game_state_tail: GameState,
@@ -129,8 +130,11 @@ fn main_server_logic(mut main_state: ServerMainState){
                 for message in client_handle.message_box.items.lock().unwrap().drain(..) {
                     match &message{
                         NetMessageType::ConnectionInitQuery(response) => {
+                            let time = SystemTime::now();
                             let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
-                                assigned_player_id: *player_id
+                                assigned_player_id: *player_id,
+                                game_state: main_state.game_state_tail.clone(),
+                                server_time_of_state: time
                             });
                             let bytes = bincode::serialize(&response).unwrap();
                             println!("Sent init message to client: {:?}", bytes);

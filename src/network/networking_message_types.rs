@@ -3,6 +3,7 @@ use serde::{Serialize, Deserialize};
 use std::fmt;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 
 #[derive(Serialize, Deserialize, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
@@ -35,4 +36,6 @@ pub struct NetMsgConnectionInitQuery {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetMsgConnectionInitResponse {
     pub assigned_player_id: PlayerID,
+    pub game_state: GameState,
+    pub server_time_of_state: SystemTime
 }

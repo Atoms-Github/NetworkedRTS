@@ -112,10 +112,10 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<dyn Future<Item = 
                     let meme_cloned = response.clone();
                     println!("Read something from the server {:?}", meme_cloned);
 
-                    tx_sender_handshake.send(received);
+                    tx_sender_handshake.send(received).unwrap();
                 },
                 _ => {
-                    tx_sender_normal.send(received);
+                    tx_sender_normal.send(received).unwrap();
                 },
             }
 

@@ -37,10 +37,10 @@ struct ClientMainState {
     my_current_input_state: InputState,
 }
 impl ClientMainState{
-    pub fn new(socket_write: WriteHalf<TcpStream>, message_box: MessageBox, my_player_id: PlayerID) -> ClientMainState{
+    pub fn new(socket_write: WriteHalf<TcpStream>, message_box: MessageBox, state_tail: GameState, my_player_id: PlayerID) -> ClientMainState{
         ClientMainState{
             game_state_head: GameState::new(),
-            game_state_tail: GameState::new(),
+            game_state_tail: state_tail,
             socket_write,
             all_frames: InputFramesStorage::new(),
             my_player_id,
@@ -90,12 +90,14 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     let welcome_messages = handshake_response.welcome_messages_channel;
     let welcome_message = welcome_messages.recv().unwrap();
 
-    let mut my_player_id;
+    let my_player_id;
+    let server_tail;
 
-    match &welcome_message{
+    match welcome_message{
         NetMessageType::ConnectionInitResponse(response) => {
             println!("Read handshake. My player ID is: {}", response.assigned_player_id);
             my_player_id = response.assigned_player_id;
+            server_tail = response.game_state;
         },
         _ => {
             panic!("Why/how was a non connection init message sent in the welcome messages channel?");
@@ -106,10 +108,12 @@ fn client_main_loop(handshake_response: HandshakeResponse){
 
 
     let message_box = MessageBox::new();
+    // Normal messages can fill up all it wants while we're waiting for the welcome message.
+    // Once the welcome is recieved, normal ones can start to be processed.
     message_box.spawn_thread_fill_from_receiver(handshake_response.normal_messages_channel);
     message_box.spawn_thread_read_cmd_input();
 
-    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box, my_player_id);//ctx)?;
+    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box,server_tail, my_player_id);//ctx)?;
 //    client_main_state.client_message_box.(handshake_result_future.socket_read);
 
     let result = event::run(ctx, events_loop, client_main_state);
@@ -120,17 +124,20 @@ impl EventHandler for ClientMainState {
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
             let seconds = 1.0 / (DESIRED_FPS as f32);
-
             let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
             for message in (*messages_guard).drain(..){
                 println!("MessageInMessageBox: {:?}", message);
                 match message{
-                    NetMessageType::ConnectionInitQuery(_) => {},
+                    NetMessageType::ConnectionInitQuery(_) => {
+                        panic!("Client shouldn't be asked for connection inits querys.");
+                    },
                     NetMessageType::InputsUpdate(inputs_update) => {
                         self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
                     },
-                    NetMessageType::ConnectionInitResponse(_) => {},
+                    NetMessageType::ConnectionInitResponse(_) => {
+                        panic!("This should be in welcome channel.");
+                    },
                     NetMessageType::LocalCommand(item) => {
                         println!("I've heard a command. Let me listen: {}", item.command);
                     }

@@ -120,7 +120,7 @@ impl PendingEntities {
 
 macro_rules! create_system {
 	($($var_name:ident : $sty:ty),*) => {
-		#[derive(Debug,Serialize, Deserialize)]
+		#[derive(Clone, Debug,Serialize, Deserialize)]
 		pub struct Storages {
 			$(
                     pub $var_name: VerticalStorage<$sty>,

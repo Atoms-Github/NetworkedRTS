@@ -41,7 +41,7 @@ pub type PlayerID = usize;
 pub type FrameIndex = usize;
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
