@@ -131,9 +131,13 @@ fn main_server_logic(mut main_state: ServerMainState){
                     match &message{
                         NetMessageType::ConnectionInitQuery(response) => {
                             let time = SystemTime::now();
+
+                            let state_to_send = main_state.game_state_tail.clone(); // TODO this shouldn't need to be cloned to be serialized.
+                            let frames_partial = main_state.all_frames.get_frames_partial(state_to_send.frame_count + 1);
                             let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                                 assigned_player_id: *player_id,
-                                game_state: main_state.game_state_tail.clone(),
+                                frames_gathered_so_far: frames_partial,
+                                game_state: state_to_send,
                                 server_time_of_state: time
                             });
                             let bytes = bincode::serialize(&response).unwrap();

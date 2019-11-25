@@ -37,5 +37,6 @@ pub struct NetMsgConnectionInitQuery {
 pub struct NetMsgConnectionInitResponse {
     pub assigned_player_id: PlayerID,
     pub game_state: GameState,
+    pub frames_gathered_so_far: FramesStoragePartial,
     pub server_time_of_state: SystemTime
 }

@@ -92,12 +92,14 @@ fn client_main_loop(handshake_response: HandshakeResponse){
 
     let my_player_id;
     let server_tail;
+    let gathered_frames;
 
     match welcome_message{
         NetMessageType::ConnectionInitResponse(response) => {
             println!("Read handshake. My player ID is: {}", response.assigned_player_id);
             my_player_id = response.assigned_player_id;
             server_tail = response.game_state;
+            gathered_frames = response.frames_gathered_so_far;
         },
         _ => {
             panic!("Why/how was a non connection init message sent in the welcome messages channel?");
@@ -114,6 +116,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     message_box.spawn_thread_read_cmd_input();
 
     let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box,server_tail, my_player_id);//ctx)?;
+    client_main_state.all_frames.insert_frames_partial(gathered_frames);
 //    client_main_state.client_message_box.(handshake_result_future.socket_read);
 
     let result = event::run(ctx, events_loop, client_main_state);

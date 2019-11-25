@@ -30,6 +30,8 @@ use std::sync::mpsc;
 use std::io::{self, BufRead};
 use std::sync::mpsc::channel;
 
+use std::iter::FromIterator;
+
 use crate::network::networking_message_types::*;
 
 use std::thread;
@@ -45,7 +47,7 @@ pub type FrameIndex = usize;
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
-    pub frame_count: i32,
+    pub frame_count: usize,
 
 }
 
@@ -70,10 +72,16 @@ impl GameState{
 }
 
 
-
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InputsFrame{
     pub inputs: HashMap<PlayerID, InputState>
 }
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FramesStoragePartial{
+    pub frames_section: Vec<InputsFrame>,
+    pub start_index: usize
+}
+#[derive(Clone)]
 pub struct InputFramesStorage{
     pub frames: Vec<InputsFrame>
 }
@@ -86,7 +94,32 @@ impl InputFramesStorage{
             frames: vec![]
         }
     }
-    pub fn insert_frames(&mut self, player_id: PlayerID, starting_index: usize, input_states: &[InputState; 20]){
+    pub fn get_frames_partial(&self, first_index: usize) -> FramesStoragePartial{
+        let partial;
+        if first_index < self.frames.len(){
+            partial = Vec::from_iter(self.frames[first_index..].iter().cloned()); // Clone out slice.
+        }else{
+            partial = vec![];
+        }
+
+
+        FramesStoragePartial{
+            frames_section: partial,
+            start_index: first_index
+        }
+    }
+    pub fn insert_frames_partial(&mut self, partial: FramesStoragePartial){
+        // Panic on overwrite attempt.
+        // TODO investigate RAM usage of filling with hundreds of blanks. Might need to also store frames vector start index.
+        if self.frames.len() > partial.start_index{
+            panic!("Tried to overwrite existing frames by inserting a partial frame.");
+        }
+        self.blanks_up_to_index(partial.start_index - 1);
+        for (iter_index, item) in partial.frames_section.into_iter().enumerate(){
+            self.frames.insert(partial.start_index + iter_index, item)
+        }
+    }
+    pub fn insert_frames(&mut self, player_id: PlayerID, starting_index: usize, input_states: &[InputState; 20]){ // TODO probably could merge insert_frames and insert_partial.
         self.blanks_up_to_index(starting_index + input_states.len());
 
 
