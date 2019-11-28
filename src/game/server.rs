@@ -42,7 +42,8 @@ struct ServerMainState {
     game_state_tail: GameState,
     all_frames: InputFramesStorage,
     client_handles: HashMap<PlayerID, ClientHandle>,
-    reception_data: Arc<Mutex<ServerReceptionData>>
+    reception_data: Arc<Mutex<ServerReceptionData>>,
+    big_fat_zero_time: KnownFrameInfo
 //    client_message_box: MessageBox,
 }
 
@@ -72,7 +73,11 @@ pub fn server_main(hosting_ip: &String){
         game_state_tail: GameState::new(),
         all_frames: InputFramesStorage::new(),
         client_handles: Default::default(),
-        reception_data: Arc::new(Mutex::new(ServerReceptionData::new() ))
+        reception_data: Arc::new(Mutex::new(ServerReceptionData::new() )),
+        big_fat_zero_time: KnownFrameInfo{
+            frame_index: 0,
+            time: SystemTime::now()
+        }
     };
 
     let arc_reception_data = Arc::clone(&main_state.reception_data);
@@ -115,15 +120,31 @@ fn main_server_logic(mut main_state: ServerMainState){
     println!("ServerLogic!");
     loop{
         thread::sleep(std::time::Duration::from_millis(1000));
+
+        // Fill with blanks if player's don't do anything in order for new players to recieve some input log to prevent oh my homies.
+        main_state.all_frames.blanks_up_to_index(main_state.big_fat_zero_time.get_intended_current_frame() + 20); // TODO: Should detect and handle when inputs don't come in.
         { // To drop mutex handle when appropriate.
+
+            let mut new_player_ids = vec![];
             {
                 let mut mutex_lock = Mutex::lock(&main_state.reception_data).unwrap();
                 let mut reception_data = &mut *mutex_lock; // TODO: this is a bit of a spicy meme, now isn't it?
                 for (player_id, mut client_handle) in reception_data.new_player_handles.drain(..){
                     main_state.client_handles.insert(player_id, client_handle);
+                    new_player_ids.push(player_id);
                 }
             }
+            for (player_id, client_handle) in &mut main_state.client_handles {
+                for new_player_id in &new_player_ids{
+                    let new_player_msg = NetMessageType::NewPlayer(NetMsgNewPlayer{
+                        player_id: *new_player_id,
+                        frame_added: main_state.game_state_tail.frame_count // TODO: Make sure simulation's current frame number is synced.
+                    });
+                    let new_player_msg_bytes = bincode::serialize(&new_player_msg).unwrap();
 
+                    client_handle.write_channel.write(&new_player_msg_bytes[..]);
+                }
+            }
 
 
             for (player_id, client_handle) in &mut main_state.client_handles {
@@ -137,11 +158,11 @@ fn main_server_logic(mut main_state: ServerMainState){
                             let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                                 assigned_player_id: *player_id,
                                 frames_gathered_so_far: frames_partial,
+                                known_frame_info: KnownFrameInfo { frame_index: state_to_send.frame_count, time },
                                 game_state: state_to_send,
-                                server_time_of_state: time
                             });
                             let bytes = bincode::serialize(&response).unwrap();
-                            println!("Sent init message to client: {:?}", bytes);
+                            println!("Sent init message to client: {:?} {:?}", bytes, response);
                             client_handle.write_channel.write(&bytes[..]);
                         },
                         _ => {
@@ -153,6 +174,13 @@ fn main_server_logic(mut main_state: ServerMainState){
                 }
             }
 
+            for new_player_id in &new_player_ids {
+                main_state.game_state_tail.add_player();
+                main_state.all_frames.add_player_default_inputs(new_player_id, main_state.game_state_tail.frame_count);
+            }
+            // TODO: simulate server tick somewhere near here, and make sure its current frame number is synced with the player joined frame index sent to clients.
+
+
         }
     }
 }
@@ -160,7 +188,7 @@ fn main_server_logic(mut main_state: ServerMainState){
 
 
 
-
+// TODO: Look into using custom NetMsg codex instead of explicit de/serialization.
 
 
 

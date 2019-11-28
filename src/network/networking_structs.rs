@@ -59,6 +59,9 @@ impl GameState{
             frame_count: 0
         }
     }
+    pub fn add_player(&mut self){
+        println!("Added a player");
+    }
     pub fn simulate_tick(&mut self, inputs_info: &InputsFrame, delta: f32){
         let mut pending = PendingEntities::new();
 
@@ -76,6 +79,13 @@ impl GameState{
 pub struct InputsFrame{
     pub inputs: HashMap<PlayerID, InputState>
 }
+impl InputsFrame{
+    pub fn new() -> InputsFrame{
+        InputsFrame{
+            inputs: Default::default()
+        }
+    }
+}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FramesStoragePartial{
     pub frames_section: Vec<InputsFrame>,
@@ -92,6 +102,12 @@ impl InputFramesStorage{
     pub fn new() -> InputFramesStorage{
         InputFramesStorage{
             frames: vec![]
+        }
+    }
+    pub fn add_player_default_inputs(&mut self, player_id: &PlayerID, joined_player_frame_index: usize){
+        for index in 0..20 {
+            let mut meme = self.frames.get_mut(joined_player_frame_index + index).unwrap();
+            meme.inputs.insert(*player_id, InputState::new());
         }
     }
     pub fn get_frames_partial(&self, first_index: usize) -> FramesStoragePartial{
@@ -136,7 +152,6 @@ impl InputFramesStorage{
                 });
             }
         }
-
     }
 }
 

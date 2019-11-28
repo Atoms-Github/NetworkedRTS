@@ -25,6 +25,9 @@ use futures::future::Future;
 use tokio_threadpool::ThreadPool;
 use futures::future::poll_fn;
 
+use std::time::{SystemTime, UNIX_EPOCH};
+
+
 struct ClientMainState {
     game_state_head: GameState,
     game_state_tail: GameState,
@@ -32,12 +35,12 @@ struct ClientMainState {
     all_frames: InputFramesStorage,
     my_player_id: PlayerID,
     client_message_box: MessageBox,
-    network_oh_my_omies_mode: bool,
-    game_started: bool,
+    network_oh_my_homies_mode: bool,
     my_current_input_state: InputState,
+    known_frame_info: KnownFrameInfo
 }
 impl ClientMainState{
-    pub fn new(socket_write: WriteHalf<TcpStream>, message_box: MessageBox, state_tail: GameState, my_player_id: PlayerID) -> ClientMainState{
+    pub fn new(socket_write: WriteHalf<TcpStream>, message_box: MessageBox, state_tail: GameState, my_player_id: PlayerID, known_frame_info: KnownFrameInfo) -> ClientMainState{
         ClientMainState{
             game_state_head: GameState::new(),
             game_state_tail: state_tail,
@@ -45,9 +48,9 @@ impl ClientMainState{
             all_frames: InputFramesStorage::new(),
             my_player_id,
             client_message_box: message_box,
-            network_oh_my_omies_mode: false,
+            network_oh_my_homies_mode: false,
             my_current_input_state: InputState::new(),
-            game_started: false
+            known_frame_info
         }
     }
 }
@@ -93,6 +96,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     let my_player_id;
     let server_tail;
     let gathered_frames;
+    let known_frame_info;
 
     match welcome_message{
         NetMessageType::ConnectionInitResponse(response) => {
@@ -100,6 +104,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
             my_player_id = response.assigned_player_id;
             server_tail = response.game_state;
             gathered_frames = response.frames_gathered_so_far;
+            known_frame_info = response.known_frame_info;
         },
         _ => {
             panic!("Why/how was a non connection init message sent in the welcome messages channel?");
@@ -115,7 +120,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     message_box.spawn_thread_fill_from_receiver(handshake_response.normal_messages_channel);
     message_box.spawn_thread_read_cmd_input();
 
-    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box,server_tail, my_player_id);//ctx)?;
+    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box,server_tail, my_player_id, known_frame_info);//ctx)?;
     client_main_state.all_frames.insert_frames_partial(gathered_frames);
 //    client_main_state.client_message_box.(handshake_result_future.socket_read);
 
@@ -127,6 +132,8 @@ impl EventHandler for ClientMainState {
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
             let seconds = 1.0 / (DESIRED_FPS as f32);
+
+//            self.all_frames.blanks_up_to_index(self.game_state_tail.frame_count + 50); // TODO: Should detect and handle when inputs don't come in.
             let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
             for message in (*messages_guard).drain(..){
@@ -143,14 +150,51 @@ impl EventHandler for ClientMainState {
                     },
                     NetMessageType::LocalCommand(item) => {
                         println!("I've heard a command. Let me listen: {}", item.command);
+                    },
+                    NetMessageType::NewPlayer(new_player_info) => {
+                        self.game_state_tail.add_player();
+                        self.all_frames.add_player_default_inputs(&new_player_info.player_id, new_player_info.frame_added)
                     }
                 }
+            }
+
+            let target_frame_tail = self.known_frame_info.get_intended_current_frame();
+            let target_frame_head = target_frame_tail + 20;
+
+
+            while self.game_state_tail.frame_count < target_frame_tail{
+                self.game_state_tail.frame_count += 1;
+                let frame_index_to_simulate = self.game_state_tail.frame_count;
+
+                let inputs_to_use = self.all_frames.frames.get(frame_index_to_simulate).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
+                self.game_state_tail.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
+            }
+            self.game_state_head = self.game_state_tail.clone();
+
+            while self.game_state_head.frame_count < target_frame_head{
+                self.game_state_head.frame_count += 1;
+                let frame_index_to_simulate = self.game_state_head.frame_count;
+
+                let possible_arrived_inputs = self.all_frames.frames.get(frame_index_to_simulate);
+                let inputs_to_use;
+                let blank_inputs = InputsFrame::new();
+                match possible_arrived_inputs{
+                    Some(inputs) => {
+                        inputs_to_use = inputs;
+                    }
+                    None=> {
+                        inputs_to_use = &blank_inputs; // TODO: Should 1. use the last known input, not nothing. And 2. should split inputs by players, so only unknown players are guessed.
+                    }
+                }
+                self.game_state_head.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
             }
         }
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
+        // TODO things are popping assuming that the draw pretty much always happens straight after update.
+        // TODO we need to make a thing to allow logic to kinda lag while still updating render.
         graphics::clear(ctx, graphics::BLACK);
 
         let mut pending = PendingEntities::new();

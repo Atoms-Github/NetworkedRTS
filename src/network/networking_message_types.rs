@@ -11,7 +11,14 @@ pub enum NetMessageType {
     ConnectionInitQuery(NetMsgConnectionInitQuery),
     InputsUpdate(NetMsgInputsUpdate),
     ConnectionInitResponse(NetMsgConnectionInitResponse),
-    LocalCommand(LocalCommandInfo)
+    LocalCommand(LocalCommandInfo),
+    NewPlayer(NetMsgNewPlayer)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct NetMsgNewPlayer{
+    pub player_id: PlayerID,
+    pub frame_added: usize
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,5 +45,5 @@ pub struct NetMsgConnectionInitResponse {
     pub assigned_player_id: PlayerID,
     pub game_state: GameState,
     pub frames_gathered_so_far: FramesStoragePartial,
-    pub server_time_of_state: SystemTime
+    pub known_frame_info: KnownFrameInfo
 }
