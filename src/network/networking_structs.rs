@@ -144,7 +144,8 @@ impl InputFramesStorage{
         }
     }
     pub fn blanks_up_to_index(&mut self, target_index: usize){
-        let number_to_add = target_index - self.frames.len() + 1;
+//        println!("A: {} B: {} ", target_index, self.frames.len());
+        let number_to_add = target_index as i32 - self.frames.len() as i32 + 1;
         if number_to_add > 0{
             for iteration_index in 0..number_to_add { // TODO - google off by one exception. I'm expecting lower to be inclusive and upper to be exclusive.
                 self.frames.push(InputsFrame{

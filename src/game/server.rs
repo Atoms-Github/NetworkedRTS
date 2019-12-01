@@ -120,6 +120,7 @@ fn main_server_logic(mut main_state: ServerMainState){
     println!("ServerLogic!");
     loop{
         thread::sleep(std::time::Duration::from_millis(1000));
+        println!("Server frame collection size: {}", main_state.all_frames.frames.len());
 
         // Fill with blanks if player's don't do anything in order for new players to recieve some input log to prevent oh my homies.
         main_state.all_frames.blanks_up_to_index(main_state.big_fat_zero_time.get_intended_current_frame() + 20); // TODO: Should detect and handle when inputs don't come in.

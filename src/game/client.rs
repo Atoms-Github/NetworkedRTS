@@ -121,6 +121,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     message_box.spawn_thread_read_cmd_input();
 
     let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box,server_tail, my_player_id, known_frame_info);//ctx)?;
+    println!("Gathered frames length: {} start_index: {}", gathered_frames.frames_section.len(), gathered_frames.start_index);
     client_main_state.all_frames.insert_frames_partial(gathered_frames);
 //    client_main_state.client_message_box.(handshake_result_future.socket_read);
 
@@ -133,7 +134,13 @@ impl EventHandler for ClientMainState {
         while timer::check_update_time(ctx, DESIRED_FPS) {
             let seconds = 1.0 / (DESIRED_FPS as f32);
 
-//            self.all_frames.blanks_up_to_index(self.game_state_tail.frame_count + 50); // TODO: Should detect and handle when inputs don't come in.
+            let target_frame_tail = self.known_frame_info.get_intended_current_frame();
+            let target_frame_head = target_frame_tail + 20;
+
+            self.all_frames.blanks_up_to_index(target_frame_head); // TODO: Should detect and handle when inputs don't come in.
+            // Fill new blank created with my current inputs.
+            self.all_frames.frames.get_mut(target_frame_head).unwrap().inputs.insert(self.my_player_id, self.my_current_input_state.clone());
+
             let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
             for message in (*messages_guard).drain(..){
@@ -158,8 +165,9 @@ impl EventHandler for ClientMainState {
                 }
             }
 
-            let target_frame_tail = self.known_frame_info.get_intended_current_frame();
-            let target_frame_head = target_frame_tail + 20;
+
+
+
 
 
             while self.game_state_tail.frame_count < target_frame_tail{
