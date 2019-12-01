@@ -69,7 +69,7 @@ pub fn server_main(hosting_ip: &String){
     let socket = TcpListener::bind(&addr).expect("Unable to bind hosting address.");
 
 
-    let main_state = ServerMainState{
+    let mut main_state = ServerMainState{
         game_state_tail: GameState::new(),
         all_frames: InputFramesStorage::new(),
         client_handles: Default::default(),
@@ -79,6 +79,7 @@ pub fn server_main(hosting_ip: &String){
             time: SystemTime::now()
         }
     };
+    main_state.game_state_tail.init_rts();
 
     let arc_reception_data = Arc::clone(&main_state.reception_data);
 

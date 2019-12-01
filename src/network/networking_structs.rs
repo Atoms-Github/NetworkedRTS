@@ -59,6 +59,19 @@ impl GameState{
             frame_count: 0
         }
     }
+    pub fn init_rts(&mut self){
+        let mut pending = PendingEntities::new();
+
+        let mut pending_entity_online_player = PendingEntity::new();
+        pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
+        pending_entity_online_player.add_component(VelocityComp{ x: 2.0, y: 1.0 });
+        pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
+        pending_entity_online_player.add_component(velocityWithInputComp{ owner_id: 2 });
+        pending_entity_online_player.add_component(RenderComp{ hue: (255,150,150)});
+        pending.create_entity(pending_entity_online_player);
+
+        self.world.update_entities(&mut self.storages, pending);
+    }
     pub fn add_player(&mut self){
         println!("Added a player");
     }
