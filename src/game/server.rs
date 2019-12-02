@@ -177,7 +177,7 @@ fn main_server_logic(mut main_state: ServerMainState){
             }
 
             for new_player_id in &new_player_ids {
-                main_state.game_state_tail.add_player();
+                main_state.game_state_tail.add_player(*new_player_id);
                 main_state.all_frames.add_player_default_inputs(new_player_id, main_state.game_state_tail.frame_count);
             }
             // TODO: simulate server tick somewhere near here, and make sure its current frame number is synced with the player joined frame index sent to clients.

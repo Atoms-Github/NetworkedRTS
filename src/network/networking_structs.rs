@@ -64,16 +64,25 @@ impl GameState{
 
         let mut pending_entity_online_player = PendingEntity::new();
         pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
-        pending_entity_online_player.add_component(VelocityComp{ x: 2.0, y: 1.0 });
+        pending_entity_online_player.add_component(VelocityComp{ x: 0.0, y: 0.5 });
         pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
-        pending_entity_online_player.add_component(velocityWithInputComp{ owner_id: 2 });
-        pending_entity_online_player.add_component(RenderComp{ hue: (255,150,150)});
+        pending_entity_online_player.add_component(RenderComp{ hue: (0,150,100)});
         pending.create_entity(pending_entity_online_player);
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn add_player(&mut self){
-        println!("Added a player");
+    pub fn add_player(&mut self, player_id: PlayerID){
+        let mut pending = PendingEntities::new();
+
+        let mut pending_entity_online_player = PendingEntity::new();
+        pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
+        pending_entity_online_player.add_component(VelocityComp{ x: 2.0, y: 1.0 });
+        pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
+        pending_entity_online_player.add_component(velocityWithInputComp{ owner_id: player_id });
+        pending_entity_online_player.add_component(RenderComp{ hue: (255,150,150)});
+        pending.create_entity(pending_entity_online_player);
+
+        self.world.update_entities(&mut self.storages, pending);
     }
     pub fn simulate_tick(&mut self, inputs_info: &InputsFrame, delta: f32){
         let mut pending = PendingEntities::new();

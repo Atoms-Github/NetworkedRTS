@@ -37,7 +37,9 @@ struct ClientMainState {
     client_message_box: MessageBox,
     network_oh_my_homies_mode: bool,
     my_current_input_state: InputState,
-    known_frame_info: KnownFrameInfo
+    known_frame_info: KnownFrameInfo,
+    debug_client_zero: SystemTime,
+    last_simed_head_frame: usize
 }
 impl ClientMainState{
     pub fn new(socket_write: WriteHalf<TcpStream>, message_box: MessageBox, state_tail: GameState, my_player_id: PlayerID, known_frame_info: KnownFrameInfo) -> ClientMainState{
@@ -50,7 +52,9 @@ impl ClientMainState{
             client_message_box: message_box,
             network_oh_my_homies_mode: false,
             my_current_input_state: InputState::new(),
-            known_frame_info
+            known_frame_info,
+            debug_client_zero: SystemTime::now(),
+            last_simed_head_frame: 0 // Dan's game.
         }
     }
 }
@@ -130,80 +134,85 @@ fn client_main_loop(handshake_response: HandshakeResponse){
 
 impl EventHandler for ClientMainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
+        println!("BeforeUpdate {:?}", SystemTime::now().duration_since(self.debug_client_zero).unwrap());
         const DESIRED_FPS: u32 = 60;
-        while timer::check_update_time(ctx, DESIRED_FPS) {
-            let seconds = 1.0 / (DESIRED_FPS as f32);
+//        while timer::check_update_time(ctx, DESIRED_FPS) {
+        let seconds = 1.0 / (DESIRED_FPS as f32);
 
-            let target_frame_tail = self.known_frame_info.get_intended_current_frame();
-            let target_frame_head = target_frame_tail + 20;
+        let target_frame_tail = self.known_frame_info.get_intended_current_frame();
+        let target_frame_head = target_frame_tail + 20;
 
-            self.all_frames.blanks_up_to_index(target_frame_head); // TODO: Should detect and handle when inputs don't come in.
-            // Fill new blank created with my current inputs.
-            self.all_frames.frames.get_mut(target_frame_head).unwrap().inputs.insert(self.my_player_id, self.my_current_input_state.clone());
+        self.all_frames.blanks_up_to_index(target_frame_head); // TODO: Should detect and handle when inputs don't come in.
+        // Fill new blank created with my current inputs.
 
-            let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
+        for frame_index in self.last_simed_head_frame..(target_frame_head + 1){ // In the case of lag (e.g. graphics starting lag), set all missing frame's inputs to current input.
+            self.all_frames.frames.get_mut(frame_index).unwrap().inputs.insert(self.my_player_id, self.my_current_input_state.clone());
+            println!("Added my frame info for frame number:  {}", frame_index);
+        }
 
-            for message in (*messages_guard).drain(..){
-                println!("MessageInMessageBox: {:?}", message);
-                match message{
-                    NetMessageType::ConnectionInitQuery(_) => {
-                        panic!("Client shouldn't be asked for connection inits querys.");
-                    },
-                    NetMessageType::InputsUpdate(inputs_update) => {
-                        self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
-                    },
-                    NetMessageType::ConnectionInitResponse(_) => {
-                        panic!("This should be in welcome channel.");
-                    },
-                    NetMessageType::LocalCommand(item) => {
-                        println!("I've heard a command. Let me listen: {}", item.command);
-                    },
-                    NetMessageType::NewPlayer(new_player_info) => {
-                        self.game_state_tail.add_player();
-                        self.all_frames.add_player_default_inputs(&new_player_info.player_id, new_player_info.frame_added)
-                    }
+
+        let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
+
+        for message in (*messages_guard).drain(..){
+            println!("MessageInMessageBox: {:?}", message);
+            match message{
+                NetMessageType::ConnectionInitQuery(_) => {
+                    panic!("Client shouldn't be asked for connection inits querys.");
+                },
+                NetMessageType::InputsUpdate(inputs_update) => {
+                    self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
+                },
+                NetMessageType::ConnectionInitResponse(_) => {
+                    panic!("This should be in welcome channel.");
+                },
+                NetMessageType::LocalCommand(item) => {
+                    println!("I've heard a command. Let me listen: {}", item.command);
+                },
+                NetMessageType::NewPlayer(new_player_info) => {
+                    self.game_state_tail.add_player(new_player_info.player_id);
+                    self.all_frames.add_player_default_inputs(&new_player_info.player_id, new_player_info.frame_added)
                 }
-            }
-
-
-
-
-
-
-            while self.game_state_tail.frame_count < target_frame_tail{
-                self.game_state_tail.frame_count += 1;
-                let frame_index_to_simulate = self.game_state_tail.frame_count;
-
-                let inputs_to_use = self.all_frames.frames.get(frame_index_to_simulate).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
-                self.game_state_tail.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
-            }
-            self.game_state_head = self.game_state_tail.clone();
-
-            while self.game_state_head.frame_count < target_frame_head{
-                self.game_state_head.frame_count += 1;
-                let frame_index_to_simulate = self.game_state_head.frame_count;
-
-                let possible_arrived_inputs = self.all_frames.frames.get(frame_index_to_simulate);
-                let inputs_to_use;
-                let blank_inputs = InputsFrame::new();
-                match possible_arrived_inputs{
-                    Some(inputs) => {
-                        inputs_to_use = inputs;
-                    }
-                    None=> {
-                        inputs_to_use = &blank_inputs; // TODO: Should 1. use the last known input, not nothing. And 2. should split inputs by players, so only unknown players are guessed.
-                    }
-                }
-                self.game_state_head.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
             }
         }
+
+        while self.game_state_tail.frame_count < target_frame_tail{
+            self.game_state_tail.frame_count += 1;
+            let frame_index_to_simulate = self.game_state_tail.frame_count;
+
+            let inputs_to_use = self.all_frames.frames.get(frame_index_to_simulate).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
+            self.game_state_tail.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
+        }
+        self.game_state_head = self.game_state_tail.clone();
+
+        while self.game_state_head.frame_count < target_frame_head{
+            self.game_state_head.frame_count += 1;
+            let frame_index_to_simulate = self.game_state_head.frame_count;
+//                println!("Simulating frame nubmer {}", frame_index_to_simulate);
+
+            let possible_arrived_inputs = self.all_frames.frames.get(frame_index_to_simulate);
+            let inputs_to_use;
+            let blank_inputs = InputsFrame::new();
+            match possible_arrived_inputs{
+                Some(inputs) => {
+                    inputs_to_use = inputs;
+                }
+                None=> {
+                    inputs_to_use = &blank_inputs; // TODO: Should 1. use the last known input, not nothing. And 2. should split inputs by players, so only unknown players are guessed.
+                }
+            }
+            self.game_state_head.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
+        }
+        self.last_simed_head_frame = target_frame_head;
+//        }
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
+
         // TODO things are popping assuming that the draw pretty much always happens straight after update.
         // TODO we need to make a thing to allow logic to kinda lag while still updating render.
         graphics::clear(ctx, graphics::BLACK);
+
 
         let mut pending = PendingEntities::new();
 
@@ -213,9 +222,11 @@ impl EventHandler for ClientMainState {
                              &mut self.game_state_head.storages.size_s,
                              ctx);
 
-        self.game_state_head.world.update_entities(&mut self.game_state_head.storages, pending); // TODO ask Richard if this is really needed after calling render.
+        self.game_state_head.world.update_entities(&mut self.game_state_head.storages, pending); // TODO ask Richard if this is really needed after calling render. (Unlikely)
 
         graphics::present(ctx)?;
+
+
 
         timer::yield_now();
         Ok(())
