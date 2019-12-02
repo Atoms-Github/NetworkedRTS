@@ -134,7 +134,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
 
 impl EventHandler for ClientMainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        println!("BeforeUpdate {:?}", SystemTime::now().duration_since(self.debug_client_zero).unwrap());
+//        println!("BeforeUpdate {:?}", SystemTime::now().duration_since(self.debug_client_zero).unwrap());
         const DESIRED_FPS: u32 = 60;
 //        while timer::check_update_time(ctx, DESIRED_FPS) {
         let seconds = 1.0 / (DESIRED_FPS as f32);
@@ -145,9 +145,9 @@ impl EventHandler for ClientMainState {
         self.all_frames.blanks_up_to_index(target_frame_head); // TODO: Should detect and handle when inputs don't come in.
         // Fill new blank created with my current inputs.
 
-        for frame_index in self.last_simed_head_frame..(target_frame_head + 1){ // In the case of lag (e.g. graphics starting lag), set all missing frame's inputs to current input.
+        for frame_index in self.last_simed_head_frame..(target_frame_head){ // In the case of lag (e.g. graphics starting lag), set all missing frame's inputs to current input.
             self.all_frames.frames.get_mut(frame_index).unwrap().inputs.insert(self.my_player_id, self.my_current_input_state.clone());
-            println!("Added my frame info for frame number:  {}", frame_index);
+//            println!("Added my frame info for frame number:  {}", frame_index);
         }
 
 
@@ -176,16 +176,17 @@ impl EventHandler for ClientMainState {
         }
 
         while self.game_state_tail.frame_count < target_frame_tail{
-            self.game_state_tail.frame_count += 1;
+
             let frame_index_to_simulate = self.game_state_tail.frame_count;
 
             let inputs_to_use = self.all_frames.frames.get(frame_index_to_simulate).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
             self.game_state_tail.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
+            self.game_state_tail.frame_count += 1;
         }
         self.game_state_head = self.game_state_tail.clone();
 
         while self.game_state_head.frame_count < target_frame_head{
-            self.game_state_head.frame_count += 1;
+
             let frame_index_to_simulate = self.game_state_head.frame_count;
 //                println!("Simulating frame nubmer {}", frame_index_to_simulate);
 
@@ -201,6 +202,8 @@ impl EventHandler for ClientMainState {
                 }
             }
             self.game_state_head.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
+
+            self.game_state_head.frame_count += 1;
         }
         self.last_simed_head_frame = target_frame_head;
 //        }

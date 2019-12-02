@@ -76,7 +76,7 @@ impl GameState{
 
         let mut pending_entity_online_player = PendingEntity::new();
         pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
-        pending_entity_online_player.add_component(VelocityComp{ x: 2.0, y: 1.0 });
+        pending_entity_online_player.add_component(VelocityComp{ x: 100.0, y: 0.0 });
         pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
         pending_entity_online_player.add_component(velocityWithInputComp{ owner_id: player_id });
         pending_entity_online_player.add_component(RenderComp{ hue: (255,150,150)});
