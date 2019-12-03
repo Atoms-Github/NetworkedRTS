@@ -15,31 +15,26 @@ pub enum NetMessageType {
     NewPlayer(NetMsgNewPlayer)
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetMsgNewPlayer{
     pub player_id: PlayerID,
     pub frame_added: usize
 }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LocalCommandInfo{
     pub command: String
 }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetMsgInputsUpdate{
     pub player_id: PlayerID,
     pub frame_index: FrameIndex,
     pub input_states: [InputState; 20],
 }
-
-
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetMsgConnectionInitQuery {
     pub my_player_name: String,
 }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetMsgConnectionInitResponse {
     pub assigned_player_id: PlayerID,

@@ -11,3 +11,15 @@ pub struct ClientHandle {
     pub message_box: MessageBox,
 //    pub properties: PlayerProperties // TODO: This shouldn't be in here. We should keep all the game state together.
 }
+pub struct ServerReceptionData{
+    pub new_player_handles: Vec<(PlayerID, ClientHandle)>,
+    pub next_player_id: PlayerID
+}
+impl ServerReceptionData{
+    pub fn new() -> ServerReceptionData{
+        ServerReceptionData{
+            new_player_handles: vec![],
+            next_player_id: 4
+        }
+    }
+}

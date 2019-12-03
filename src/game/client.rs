@@ -116,8 +116,6 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     }
     println!("Meme2 {}", my_player_id);
 
-
-
     let message_box = MessageBox::new();
     // Normal messages can fill up all it wants while we're waiting for the welcome message.
     // Once the welcome is recieved, normal ones can start to be processed.
@@ -149,8 +147,6 @@ impl EventHandler for ClientMainState {
             self.all_frames.frames.get_mut(frame_index).unwrap().inputs.insert(self.my_player_id, self.my_current_input_state.clone());
 //            println!("Added my frame info for frame number:  {}", frame_index);
         }
-
-
         let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
         for message in (*messages_guard).drain(..){
@@ -174,9 +170,7 @@ impl EventHandler for ClientMainState {
                 }
             }
         }
-
         while self.game_state_tail.frame_count < target_frame_tail{
-
             let frame_index_to_simulate = self.game_state_tail.frame_count;
 
             let inputs_to_use = self.all_frames.frames.get(frame_index_to_simulate).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
@@ -186,7 +180,6 @@ impl EventHandler for ClientMainState {
         self.game_state_head = self.game_state_tail.clone();
 
         while self.game_state_head.frame_count < target_frame_head{
-
             let frame_index_to_simulate = self.game_state_head.frame_count;
 //                println!("Simulating frame nubmer {}", frame_index_to_simulate);
 
@@ -242,7 +235,7 @@ impl EventHandler for ClientMainState {
         _repeat: bool,
     ) {
 
-        self.my_current_input_state.keys_pressed.insert(keycode as usize, true);
+        self.my_current_input_state.set_keycode_pressed(keycode, true);
 
         match keycode {
             KeyCode::Escape => event::quit(ctx),
@@ -251,7 +244,7 @@ impl EventHandler for ClientMainState {
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods) {
-        self.my_current_input_state.keys_pressed.insert(keycode as usize, false);
+        self.my_current_input_state.set_keycode_pressed(keycode, false);
     }
 }
 

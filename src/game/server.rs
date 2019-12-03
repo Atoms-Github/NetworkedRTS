@@ -47,21 +47,6 @@ struct ServerMainState {
 //    client_message_box: MessageBox,
 }
 
-struct ServerReceptionData{
-    new_player_handles: Vec<(PlayerID, ClientHandle)>,
-    next_player_id: PlayerID
-}
-impl ServerReceptionData{
-    fn new() -> ServerReceptionData{
-        ServerReceptionData{
-            new_player_handles: vec![],
-            next_player_id: 4
-        }
-    }
-}
-
-
-
 pub fn server_main(hosting_ip: &String){
     println!("Starting as server. Going to host on {}", hosting_ip);
 
@@ -111,52 +96,63 @@ pub fn server_main(hosting_ip: &String){
         });
     println!("Hosting on {}", hosting_ip);
     thread::spawn(move ||{
-        main_server_logic(main_state);
+        main_state.main_server_logic();
     });
     tokio::run(done);
     println!("Server finished.");
 }
 
-fn main_server_logic(mut main_state: ServerMainState){
-    println!("ServerLogic!");
-    loop{
-        thread::sleep(std::time::Duration::from_millis(1000));
-        println!("Server frame collection size: {}", main_state.all_frames.frames.len());
-
-        // Fill with blanks if player's don't do anything in order for new players to recieve some input log to prevent oh my homies.
-        main_state.all_frames.blanks_up_to_index(main_state.big_fat_zero_time.get_intended_current_frame() + 20); // TODO: Should detect and handle when inputs don't come in.
-        { // To drop mutex handle when appropriate.
-
-            let mut new_player_ids = vec![];
-            {
-                let mut mutex_lock = Mutex::lock(&main_state.reception_data).unwrap();
-                let mut reception_data = &mut *mutex_lock; // TODO: this is a bit of a spicy meme, now isn't it?
-                for (player_id, mut client_handle) in reception_data.new_player_handles.drain(..){
-                    main_state.client_handles.insert(player_id, client_handle);
-                    new_player_ids.push(player_id);
-                }
+impl ServerMainState{
+    fn add_client_handles(&mut self) -> Vec<PlayerID>{
+        let mut new_player_ids = vec![];
+        {
+            let mut mutex_lock = Mutex::lock(&self.reception_data).unwrap();
+            let mut reception_data = &mut *mutex_lock; // TODO: this is a bit of a spicy meme, now isn't it?
+            for (player_id, mut client_handle) in reception_data.new_player_handles.drain(..){
+                self.client_handles.insert(player_id, client_handle);
+                new_player_ids.push(player_id);
             }
-            for (player_id, client_handle) in &mut main_state.client_handles {
+        }
+        return new_player_ids;
+    }
+    fn main_server_logic(mut self){
+        println!("ServerLogic!");
+        loop{
+            thread::sleep(std::time::Duration::from_millis(1000));
+            println!("Server frame collection size: {}", self.all_frames.frames.len());
+
+            // Fill with blanks if player's don't do anything in order for new players to recieve some input log to prevent oh my homies.
+            self.all_frames.blanks_up_to_index(self.big_fat_zero_time.get_intended_current_frame() + 20); // TODO: Should detect and handle when inputs don't come in.
+            let new_player_ids = self.add_client_handles();
+
+            for (player_id, client_handle) in &mut self.client_handles {
                 for new_player_id in &new_player_ids{
+                    if *player_id == *new_player_id{ // Don't tell the player that they themselves have been added.
+                        continue;
+                    }
                     let new_player_msg = NetMessageType::NewPlayer(NetMsgNewPlayer{
                         player_id: *new_player_id,
-                        frame_added: main_state.game_state_tail.frame_count // TODO: Make sure simulation's current frame number is synced.
+                        frame_added: self.game_state_tail.frame_count // TODO: Make sure simulation's current frame number is synced.
                     });
                     let new_player_msg_bytes = bincode::serialize(&new_player_msg).unwrap();
-
                     client_handle.write_channel.write(&new_player_msg_bytes[..]);
                 }
             }
 
+            for new_player_id in &new_player_ids {
+                self.game_state_tail.add_player(*new_player_id);
+                self.all_frames.add_player_default_inputs(new_player_id, self.game_state_tail.frame_count);
+            }
 
-            for (player_id, client_handle) in &mut main_state.client_handles {
+            for (player_id, client_handle) in &mut self.client_handles {
                 for message in client_handle.message_box.items.lock().unwrap().drain(..) {
                     match &message{
+
                         NetMessageType::ConnectionInitQuery(response) => {
                             let time = SystemTime::now();
 
-                            let state_to_send = main_state.game_state_tail.clone(); // TODO this shouldn't need to be cloned to be serialized.
-                            let frames_partial = main_state.all_frames.get_frames_partial(state_to_send.frame_count + 1);
+                            let state_to_send = self.game_state_tail.clone(); // TODO this shouldn't need to be cloned to be serialized.
+                            let frames_partial = self.all_frames.get_frames_partial(state_to_send.frame_count + 1);
                             let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                                 assigned_player_id: *player_id,
                                 frames_gathered_so_far: frames_partial,
@@ -164,11 +160,13 @@ fn main_server_logic(mut main_state: ServerMainState){
                                 game_state: state_to_send,
                             });
                             let bytes = bincode::serialize(&response).unwrap();
-                            println!("Sent init message to client: {:?} {:?}", bytes, response);
+
+                            println!("Sending init message to client: {:?} {:?}", bytes, response);
+                            println!("Init message bytes size: {}", bytes.len());
                             client_handle.write_channel.write(&bytes[..]);
                         },
-                        _ => {
-                            println!("Not implemented this type of message.");
+                        other => {
+                            println!("Not implemented this type of message. {:?}", other);
                         },
                     }
 
@@ -176,16 +174,12 @@ fn main_server_logic(mut main_state: ServerMainState){
                 }
             }
 
-            for new_player_id in &new_player_ids {
-                main_state.game_state_tail.add_player(*new_player_id);
-                main_state.all_frames.add_player_default_inputs(new_player_id, main_state.game_state_tail.frame_count);
-            }
+
             // TODO: simulate server tick somewhere near here, and make sure its current frame number is synced with the player joined frame index sent to clients.
-
-
         }
     }
 }
+
 
 
 
