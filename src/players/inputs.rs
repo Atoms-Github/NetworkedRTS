@@ -18,7 +18,7 @@ pub struct InputState {
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird. // TODO figure out how array serialization works.
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize,Clone,  Debug)]
 pub struct KnownFrameInfo{
     pub frame_index: usize,
     pub time: SystemTime

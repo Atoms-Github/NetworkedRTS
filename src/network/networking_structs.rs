@@ -108,7 +108,7 @@ impl InputsFrame{
         }
     }
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize,Clone,  Debug)]
 pub struct FramesStoragePartial{
     pub frames_section: Vec<InputsFrame>,
     pub start_index: usize
@@ -189,12 +189,25 @@ impl MessageBox {
         let message_box_mutex = Arc::clone(&self.items); // However this works :)
 
         let tokio_task = connection_readable.for_each( move |data| {
-            let deserialized = bincode::deserialize::<NetMessageType>(&data[..]).unwrap();
-            {
-                let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
-                mutex_lock.push(deserialized);
-                std::mem::drop(mutex_lock); // Just to doubley ensure lock is dropped.
+            println!("Recieved length: {}", data.len());
+            // TODO: Should crash if can't serialize.
+
+            let result = bincode::deserialize::<NetMessageType>(&data[..]);
+            match result{
+                Ok(e) => {
+                    {
+                        let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
+//                        println!("Adding to message box: {:?}", e);
+                        mutex_lock.push(e);
+
+                        std::mem::drop(mutex_lock); // Just to doubley ensure lock is dropped.
+                    }
+                }
+                Err(err) => {
+                    // TODO: Should crash.
+                }
             }
+
             Ok(())
         }).map_err(|error|{
             println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);

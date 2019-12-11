@@ -1,5 +1,5 @@
 // Yes, it uses get_position as both a function call and a variable. There wasn't any other way to do it while maintaining auto-completion.
-
+#[allow(dead_code)]
 
 pub struct TestWoah{
     pub field: i32

@@ -16,6 +16,7 @@ impl Decoder for Bytes {
     type Error = io::Error;
 
     fn decode(&mut self, buf: &mut BytesMut) -> io::Result<Option<Vec<u8>>> {
+
         if buf.len() > 0 {
             let len = buf.len();
             Ok(Some(buf.split_to(len).into_iter().collect()))

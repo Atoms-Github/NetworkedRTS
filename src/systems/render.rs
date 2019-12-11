@@ -36,7 +36,7 @@ fn render_system(d: &mut Data, e: Entity, ctx: &mut Context) {
 
 
 
-    graphics::draw(ctx, &arena_background, params);
+    graphics::draw(ctx, &arena_background, params).unwrap();
 }
 
 

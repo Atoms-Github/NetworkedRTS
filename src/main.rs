@@ -1,5 +1,6 @@
 #![feature(core_intrinsics)]
 #![feature(async_await)]
+#![allow(dead_code)]
 use std::env;
 
 
@@ -17,7 +18,7 @@ use ggez::input::keyboard::KeyCode;
 
 
 fn main() {
-    println!("STARTING.");
+    println!("STARTING.2");
     let mut args: Vec<String> = env::args().collect();
 
     args.reverse();

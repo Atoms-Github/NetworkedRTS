@@ -118,8 +118,8 @@ impl ServerMainState{
     fn main_server_logic(mut self){
         println!("ServerLogic!");
         loop{
-            thread::sleep(std::time::Duration::from_millis(1000));
-            println!("Server frame collection size: {}", self.all_frames.frames.len());
+            thread::sleep(std::time::Duration::from_millis(16));
+//            println!("Server frame collection size: {}", self.all_frames.frames.len());
 
             // Fill with blanks if player's don't do anything in order for new players to recieve some input log to prevent oh my homies.
             self.all_frames.blanks_up_to_index(self.big_fat_zero_time.get_intended_current_frame() + 20); // TODO: Should detect and handle when inputs don't come in.
@@ -135,7 +135,7 @@ impl ServerMainState{
                         frame_added: self.game_state_tail.frame_count // TODO: Make sure simulation's current frame number is synced.
                     });
                     let new_player_msg_bytes = bincode::serialize(&new_player_msg).unwrap();
-                    client_handle.write_channel.write(&new_player_msg_bytes[..]);
+                    client_handle.write_channel.write(&new_player_msg_bytes[..]).unwrap();
                 }
             }
 
@@ -144,10 +144,10 @@ impl ServerMainState{
                 self.all_frames.add_player_default_inputs(new_player_id, self.game_state_tail.frame_count);
             }
 
+            let mut input_updates = vec![]; // Dans
             for (player_id, client_handle) in &mut self.client_handles {
                 for message in client_handle.message_box.items.lock().unwrap().drain(..) {
                     match &message{
-
                         NetMessageType::ConnectionInitQuery(response) => {
                             let time = SystemTime::now();
 
@@ -161,16 +161,19 @@ impl ServerMainState{
                             });
                             let bytes = bincode::serialize(&response).unwrap();
 
-                            println!("Sending init message to client: {:?} {:?}", bytes, response);
+//                            println!("Sending init message to client: {:?} {:?}", bytes, response);
                             println!("Init message bytes size: {}", bytes.len());
-                            client_handle.write_channel.write(&bytes[..]);
+                            client_handle.write_channel.write(&bytes[..]).unwrap();
+                        },
+                        NetMessageType::InputsUpdate(updates) => {
+                            input_updates.push((*updates).clone())
                         },
                         other => {
                             println!("Not implemented this type of message. {:?}", other);
                         },
                     }
 
-                    println!("Got a message from client: {:?}", message);
+//                    println!("Got a message from client: {:?}", message);
                 }
             }
 

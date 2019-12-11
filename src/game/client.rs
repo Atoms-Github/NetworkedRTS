@@ -18,14 +18,17 @@ use futures::future::lazy;
 
 use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
+use crate::network::*;
 
 use crate::game::client_networking::*;
 
 use futures::future::Future;
-use tokio_threadpool::ThreadPool;
-use futures::future::poll_fn;
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime};
+use std::io::Write;
+use bytes::Bytes;
+use tokio_io::_tokio_codec::FramedWrite;
+use futures::sink::Sink;
 
 
 struct ClientMainState {
@@ -46,6 +49,7 @@ impl ClientMainState{
         ClientMainState{
             game_state_head: GameState::new(),
             game_state_tail: state_tail,
+//            socket_write: FramedWrite::new(socket_write, dans_codec::Bytes),
             socket_write,
             all_frames: InputFramesStorage::new(),
             my_player_id,
@@ -73,8 +77,6 @@ pub fn client_main(connection_target_ip: &String){
         let spicy_task = handshake_result_future.map_err(|e|{
             println!("Error yote.");
         }).and_then(|handshake_response|{
-
-
             thread::spawn(||{
                 client_main_loop(handshake_response);
             });
@@ -89,7 +91,7 @@ pub fn client_main(connection_target_ip: &String){
 fn client_main_loop(handshake_response: HandshakeResponse){
     let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
         .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
-        .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path("");
+        .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path(""); // TODO: Find what resource path.
 
     let (ctx, events_loop) = &mut cb.build().unwrap();
 
@@ -138,7 +140,7 @@ impl EventHandler for ClientMainState {
         let seconds = 1.0 / (DESIRED_FPS as f32);
 
         let target_frame_tail = self.known_frame_info.get_intended_current_frame();
-        let target_frame_head = target_frame_tail + 20;
+        let target_frame_head = target_frame_tail + 19;
 
         self.all_frames.blanks_up_to_index(target_frame_head); // TODO: Should detect and handle when inputs don't come in.
         // Fill new blank created with my current inputs.
@@ -147,6 +149,28 @@ impl EventHandler for ClientMainState {
             self.all_frames.frames.get_mut(frame_index).unwrap().inputs.insert(self.my_player_id, self.my_current_input_state.clone());
 //            println!("Added my frame info for frame number:  {}", frame_index);
         }
+        // Now that we've calculated local inputs, now we send them to server.
+
+        let mut inputs : [InputState; 20] = [InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/InputState::new(), /*OhMyPoggy*/]; // TODO: Make faster (This is unnecessary).
+        for index in target_frame_tail..target_frame_head{
+//            println!("Tail: {} Head: {} Size: {}", target_frame_tail, target_frame_head, self.all_frames.frames.len());
+            inputs[index - target_frame_tail /*Dans*/] = self.all_frames.frames.get(index).unwrap().inputs.get(&self.my_player_id).unwrap().clone(); // Game of Dan.
+        }
+        let inputs_update = NetMessageType::InputsUpdate(NetMsgInputsUpdate{
+            player_id: self.my_player_id,
+            frame_index: target_frame_tail,
+            input_states: inputs
+        });
+        let serialized = bincode::serialize(&inputs_update).unwrap();
+        println!("Sending size: {}", serialized.len());
+//        self.socket_write.writev(serialized);
+        self.socket_write.write(&serialized[..]).unwrap();
+        self.socket_write.flush().unwrap();
+        self.socket_write.write(&serialized[..]).unwrap();
+        self.socket_write.flush().unwrap();
+
+
+
         let mut messages_guard = Mutex::lock(&self.client_message_box.items).unwrap();
 
         for message in (*messages_guard).drain(..){

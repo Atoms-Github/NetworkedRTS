@@ -91,13 +91,16 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<dyn Future<Item = 
 
         let connection_init_query = NetMessageType::ConnectionInitQuery(
             NetMsgConnectionInitQuery{
-                my_player_name: "Atomsadiah!".to_string()
+                my_player_name: "Atomsadiah!".to_string(),
+                test_field: "Wubba".to_string(),
+                test_two: 99
             }
         );
 
         let connection_init_bytes = bincode::serialize(&connection_init_query).unwrap();
 
-        write_half.write(&connection_init_bytes[..]);
+        write_half.write(&connection_init_bytes[..]).unwrap();
+        write_half.flush().unwrap();
 
         let (tx_sender_handshake, rx_receiver_handshake): (Sender<NetMessageType>, Receiver<NetMessageType>) = mpsc::channel();
         let (tx_sender_normal, rx_receiver_normal): (Sender<NetMessageType>, Receiver<NetMessageType>) = mpsc::channel();
