@@ -29,10 +29,10 @@ use std::sync::mpsc;
 
 pub struct HandshakeResponse{
 //    pub player_id: PlayerID,
-    pub welcome_messages_channel: Receiver<NetMessageType>,
-    pub normal_messages_channel: Receiver<NetMessageType>,
+//    pub welcome_messages_channel: Receiver<NetMessageType>,
+//    pub normal_messages_channel: Receiver<NetMessageType>,
 //    pub normal_messages_channel: FramedRead<ReadHalf<TcpStream>, Bytes>,
-    pub socket_write: WriteHalf<TcpStream>,
+    pub stream: TcpStream,
 }
 
 
@@ -135,7 +135,7 @@ pub fn connect_and_send_handshake(target_ip : &String) -> Box<dyn Future<Item = 
         tokio::spawn(future);
 
         let handshake_reponse = HandshakeResponse{
-            socket_write: write_half,
+            stream: write_half,
             welcome_messages_channel: rx_receiver_handshake,
             normal_messages_channel: rx_receiver_normal
         };

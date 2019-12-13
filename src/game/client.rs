@@ -10,8 +10,6 @@ use crate::players::inputs::*;
 use ggez::event::{EventHandler, KeyMods};
 use ggez::input::keyboard::KeyCode;
 use crate::game::client_networking::connect_and_send_handshake;
-use tokio::net::TcpStream;
-use tokio::io::WriteHalf;
 
 use crate::systems::render::*;
 use futures::future::lazy;
@@ -27,14 +25,14 @@ use futures::future::Future;
 use std::time::{SystemTime};
 use std::io::Write;
 use bytes::Bytes;
-use tokio_io::_tokio_codec::FramedWrite;
 use futures::sink::Sink;
+use std::net::TcpStream;
 
 
 struct ClientMainState {
     game_state_head: GameState,
     game_state_tail: GameState,
-    socket_write: WriteHalf<TcpStream>,
+    socket: TcpStream,
     all_frames: InputFramesStorage,
     my_player_id: PlayerID,
     client_message_box: MessageBox,
@@ -45,12 +43,13 @@ struct ClientMainState {
     last_simed_head_frame: usize
 }
 impl ClientMainState{
-    pub fn new(socket_write: WriteHalf<TcpStream>, message_box: MessageBox, state_tail: GameState, my_player_id: PlayerID, known_frame_info: KnownFrameInfo) -> ClientMainState{
+    pub fn new(socket: TcpStream, message_box: MessageBox, state_tail: GameState, my_player_id: PlayerID, known_frame_info: KnownFrameInfo) -> ClientMainState{
+
         ClientMainState{
             game_state_head: GameState::new(),
             game_state_tail: state_tail,
 //            socket_write: FramedWrite::new(socket_write, dans_codec::Bytes),
-            socket_write,
+            socket,
             all_frames: InputFramesStorage::new(),
             my_player_id,
             client_message_box: message_box,
@@ -124,7 +123,7 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     message_box.spawn_thread_fill_from_receiver(handshake_response.normal_messages_channel);
     message_box.spawn_thread_read_cmd_input();
 
-    let client_main_state = &mut ClientMainState::new(handshake_response.socket_write,message_box,server_tail, my_player_id, known_frame_info);//ctx)?;
+    let client_main_state = &mut ClientMainState::new(handshake_response.stream, message_box, server_tail, my_player_id, known_frame_info);//ctx)?;
     println!("Gathered frames length: {} start_index: {}", gathered_frames.frames_section.len(), gathered_frames.start_index);
     client_main_state.all_frames.insert_frames_partial(gathered_frames);
 //    client_main_state.client_message_box.(handshake_result_future.socket_read);
