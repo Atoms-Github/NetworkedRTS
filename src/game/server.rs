@@ -6,18 +6,13 @@ use crate::players::inputs::*;
 use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
 
-use tokio::io::WriteHalf;
 
 use futures::future::Future;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpListener};
 use std::io::{BufReader, Write};
-use tokio::io::{lines, write_all};
 use futures::sync::mpsc;
 use serde::*;
 
-extern crate tokio_core;
-extern crate tokio_io;
-use self::tokio_io::AsyncRead;
 use crate::game::server_networking::*;
 
 
@@ -28,15 +23,14 @@ use std::thread;
 
 use futures::Stream;
 
-use tokio::codec::{FramedRead, FramedWrite};
 use std::collections::HashMap;
 
 use crate::network::*;
-use tokio::net::TcpListener;
 use core::borrow::BorrowMut;
 use futures::sink::Sink;
 
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::mpsc::channel;
 
 struct ServerMainState {
     game_state_tail: GameState,
@@ -68,37 +62,45 @@ pub fn server_main(hosting_ip: &String){
 
     let arc_reception_data = Arc::clone(&main_state.reception_data);
 
-    let done = socket
-        .incoming()
-        .map_err(|e| println!("failed to accept socket; error = {:?}", e))
-        .for_each(move |socket| {
-            let mut locked_reception = arc_reception_data.lock().unwrap();
-            let new_player_id = locked_reception.next_player_id;
-            locked_reception.next_player_id += 1;
 
-            println!("New player connected. PlayerID: {} Address: {:?}", new_player_id , socket.peer_addr());
-            let (reader, writer) = socket.split();
-
-//            let sink = FramedWrite::new(writer, dans_codec::Bytes);
-
-            let stream = FramedRead::new(reader, dans_codec::Bytes);
-
-            let client_handle = ClientHandle{
-                write_channel: writer,
-                message_box: MessageBox::new(),
-//                properties: PlayerProperties::new(new_player_id)
-            };
-            client_handle.message_box.spawn_tokio_task_message_box_fill(stream);
-
-            locked_reception.new_player_handles.push((new_player_id, client_handle));
-            println!("Added new player ");
-            Ok(())
-        });
     println!("Hosting on {}", hosting_ip);
     thread::spawn(move ||{
         main_state.main_server_logic();
     });
-    tokio::run(done);
+
+    for stream in socket.incoming() {
+        match stream {
+            Ok(mut stream) => {
+
+                let mut locked_reception = arc_reception_data.lock().unwrap();
+                let new_player_id = locked_reception.next_player_id;
+                locked_reception.next_player_id += 1;
+
+                println!("New player connected. PlayerID: {} Address: {:?}", new_player_id , socket.local_addr());
+
+
+
+                let reader = stream.try_clone().unwrap();
+                let writer = stream;
+
+                let client_handle = ClientHandle{
+                    write_channel: writer,
+                    message_box: MessageBox::new(),
+//                properties: PlayerProperties::new(new_player_id)
+                };
+                client_handle.message_box.spawn_thread_message_box_fill(reader);
+
+                locked_reception.new_player_handles.push((new_player_id, client_handle));
+                println!("Added new player ");
+
+                let response = b"Hello World";
+                stream.write(response).expect("Response failed");
+            }
+            Err(e) => {
+                println!("Unable to connect: {}", e);
+            }
+        }
+    }
     println!("Server finished.");
 }
 
@@ -132,7 +134,7 @@ impl ServerMainState{
                     }
                     let new_player_msg = NetMessageType::NewPlayer(NetMsgNewPlayer{
                         player_id: *new_player_id,
-                        frame_added: self.game_state_tail.frame_count // TODO: Make sure simulation's current frame number is synced.
+                        frame_added: self.game_state_tail.last_frame_simed // TODO: Make sure simulation's current frame number is synced.
                     });
                     let new_player_msg_bytes = bincode::serialize(&new_player_msg).unwrap();
                     client_handle.write_channel.write(&new_player_msg_bytes[..]).unwrap();
@@ -141,7 +143,7 @@ impl ServerMainState{
 
             for new_player_id in &new_player_ids {
                 self.game_state_tail.add_player(*new_player_id);
-                self.all_frames.add_player_default_inputs(new_player_id, self.game_state_tail.frame_count);
+                self.all_frames.add_player_default_inputs(new_player_id, self.game_state_tail.last_frame_simed);
             }
 
             let mut input_updates = vec![]; // Dans
@@ -152,11 +154,11 @@ impl ServerMainState{
                             let time = SystemTime::now();
 
                             let state_to_send = self.game_state_tail.clone(); // TODO this shouldn't need to be cloned to be serialized.
-                            let frames_partial = self.all_frames.get_frames_partial(state_to_send.frame_count + 1);
+                            let frames_partial = self.all_frames.get_frames_partial(state_to_send.last_frame_simed + 1);
                             let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                                 assigned_player_id: *player_id,
                                 frames_gathered_so_far: frames_partial,
-                                known_frame_info: KnownFrameInfo { frame_index: state_to_send.frame_count, time },
+                                known_frame_info: KnownFrameInfo { frame_index: state_to_send.last_frame_simed, time },
                                 game_state: state_to_send,
                             });
                             let bytes = bincode::serialize(&response).unwrap();

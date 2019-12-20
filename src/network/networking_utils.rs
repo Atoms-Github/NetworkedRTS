@@ -1,8 +1,6 @@
 use std::net::SocketAddr;
-use tokio::net::TcpStream;
 use std::time::Duration;
 use futures::future::{Future, IntoFuture};
-use tokio::net::tcp::ConnectFuture;
 
 
 

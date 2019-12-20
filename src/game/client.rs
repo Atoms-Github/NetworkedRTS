@@ -27,6 +27,8 @@ use std::io::Write;
 use bytes::Bytes;
 use futures::sink::Sink;
 use std::net::TcpStream;
+use std::thread::Thread;
+use crate::game::game_logic_layer;
 
 
 struct ClientMainState {
@@ -66,28 +68,15 @@ impl ClientMainState{
 
 pub fn client_main(connection_target_ip: &String){
     let local_connection_target_ip = connection_target_ip.clone();
-    
-    tokio::run(futures::lazy(move || {
-        println!("Starting as client.");
+    println!("Starting as client.");
+
+    let server_connection_init = connect_and_send_handshake(&local_connection_target_ip);
+    client_main_loop(server_connection_init);
 
 
-
-        let handshake_result_future = connect_and_send_handshake(&local_connection_target_ip);
-        let spicy_task = handshake_result_future.map_err(|e|{
-            println!("Error yote.");
-        }).and_then(|handshake_response|{
-            thread::spawn(||{
-                client_main_loop(handshake_response);
-            });
-            Ok(())
-        });
-
-        tokio::spawn(spicy_task);
-        Ok(())
-    }));
 }
 
-fn client_main_loop(handshake_response: HandshakeResponse){
+fn client_main_loop(init_response: ConnectToServerInit){
     let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
         .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
         .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path(""); // TODO: Find what resource path.
@@ -95,7 +84,13 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     let (ctx, events_loop) = &mut cb.build().unwrap();
 
 
-    let welcome_messages = handshake_response.welcome_messages_channel;
+    loop{
+
+        let mut msgs = init_response.msg_box.items;
+
+    }
+
+    let welcome_messages = init_response.welcome_messages_channel;
     let welcome_message = welcome_messages.recv().unwrap();
 
     let my_player_id;
@@ -120,10 +115,10 @@ fn client_main_loop(handshake_response: HandshakeResponse){
     let message_box = MessageBox::new();
     // Normal messages can fill up all it wants while we're waiting for the welcome message.
     // Once the welcome is recieved, normal ones can start to be processed.
-    message_box.spawn_thread_fill_from_receiver(handshake_response.normal_messages_channel);
+    message_box.spawn_thread_fill_from_receiver(init_response.normal_messages_channel);
     message_box.spawn_thread_read_cmd_input();
 
-    let client_main_state = &mut ClientMainState::new(handshake_response.stream, message_box, server_tail, my_player_id, known_frame_info);//ctx)?;
+    let client_main_state = &mut ClientMainState::new(init_response.stream, message_box, server_tail, my_player_id, known_frame_info);//ctx)?;
     println!("Gathered frames length: {} start_index: {}", gathered_frames.frames_section.len(), gathered_frames.start_index);
     client_main_state.all_frames.insert_frames_partial(gathered_frames);
 //    client_main_state.client_message_box.(handshake_result_future.socket_read);
@@ -193,17 +188,17 @@ impl EventHandler for ClientMainState {
                 }
             }
         }
-        while self.game_state_tail.frame_count < target_frame_tail{
-            let frame_index_to_simulate = self.game_state_tail.frame_count;
+        while self.game_state_tail.last_frame_simed < target_frame_tail{
+            let frame_index_to_simulate = self.game_state_tail.last_frame_simed;
 
             let inputs_to_use = self.all_frames.frames.get(frame_index_to_simulate).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
             self.game_state_tail.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
-            self.game_state_tail.frame_count += 1;
+            self.game_state_tail.last_frame_simed += 1;
         }
         self.game_state_head = self.game_state_tail.clone();
 
-        while self.game_state_head.frame_count < target_frame_head{
-            let frame_index_to_simulate = self.game_state_head.frame_count;
+        while self.game_state_head.last_frame_simed < target_frame_head{
+            let frame_index_to_simulate = self.game_state_head.last_frame_simed;
 //                println!("Simulating frame nubmer {}", frame_index_to_simulate);
 
             let possible_arrived_inputs = self.all_frames.frames.get(frame_index_to_simulate);
@@ -219,7 +214,7 @@ impl EventHandler for ClientMainState {
             }
             self.game_state_head.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
 
-            self.game_state_head.frame_count += 1;
+            self.game_state_head.last_frame_simed += 1;
         }
         self.last_simed_head_frame = target_frame_head;
 //        }

@@ -15,10 +15,6 @@ use crate::systems::size::*;
 
 
 use std::sync::{Arc, Mutex};
-use tokio::io::ReadHalf;
-use tokio::net::TcpStream;
-use crate::network::dans_codec::Bytes;
-use tokio::codec::FramedRead;
 
 use futures::stream::*;
 use futures::future::*;
@@ -27,7 +23,7 @@ use ggez::graphics;
 
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Read};
 use std::sync::mpsc::channel;
 
 use std::iter::FromIterator;
@@ -36,7 +32,10 @@ use crate::network::networking_message_types::*;
 
 use std::thread;
 use serde::{Serialize, Deserialize};
-
+use std::net::TcpStream;
+use std::thread::Thread;
+use byteorder::{ByteOrder, LittleEndian};
+use std::any::{Any, TypeId};
 
 
 pub type PlayerID = usize;
@@ -47,7 +46,7 @@ pub type FrameIndex = usize;
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
-    pub frame_count: usize,
+    pub last_frame_simed: usize,
 
 }
 
@@ -56,7 +55,7 @@ impl GameState{
         GameState{
             world: World::new(),
             storages: Storages::new(),
-            frame_count: 0
+            last_frame_simed: 0
         }
     }
     pub fn init_rts(&mut self){
@@ -185,35 +184,23 @@ pub struct MessageBox {
 }
 
 impl MessageBox {
-    pub fn spawn_tokio_task_message_box_fill(&self, connection_readable: FramedRead<ReadHalf<TcpStream>, Bytes>){
+    pub fn spawn_thread_message_box_fill(&self, connection_readable: TcpStream){
         let message_box_mutex = Arc::clone(&self.items); // However this works :)
 
-        let tokio_task = connection_readable.for_each( move |data| {
-            println!("Recieved length: {}", data.len());
-            // TODO: Should crash if can't serialize.
+        thread::spawn(move ||{
+            let inc_messages = start_inwards_codec_thread(connection_readable);
 
-            let result = bincode::deserialize::<NetMessageType>(&data[..]);
-            match result{
-                Ok(e) => {
-                    {
-                        let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
-//                        println!("Adding to message box: {:?}", e);
-                        mutex_lock.push(e);
+            loop{
+                let message = inc_messages.recv().unwrap();
 
-                        std::mem::drop(mutex_lock); // Just to doubley ensure lock is dropped.
-                    }
+                {
+                    let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
+                    println!("Adding to message box: {:?}", e);
+                    mutex_lock.push(message);
                 }
-                Err(err) => {
-                    // TODO: Should crash.
-                }
+
             }
-
-            Ok(())
-        }).map_err(|error|{
-            println!("Yeeto dorrito there was an errorito!  (While client was reading data) {}", error);
         });
-
-        tokio::spawn(tokio_task);
     }
     pub fn spawn_thread_fill_from_receiver(&self, receiver: Receiver<NetMessageType>){
         let meme = receiver;
