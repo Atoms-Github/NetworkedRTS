@@ -1,7 +1,6 @@
 use std::sync::mpsc::{Receiver, TryRecvError};
 use crate::network::game_message_types::GameMessageType;
 use std::thread;
-use crate::players::inputs::KnownFrameInfo;
 use crate::network::networking_structs::*;
 use crate::network::networking_message_types::*;
 use crate::players::inputs::*;
@@ -10,7 +9,13 @@ use crate::systems::render::*;
 use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
 use crate::network::*;
+use crate::game::timekeeping::*;
 use std::sync::{Mutex, Arc};
+use crate::game::timekeeping::KnownFrameInfo;
+
+
+
+pub const HEAD_FRAME_LEAD : usize = 19;
 
 
 pub struct GameLogicLayer{
@@ -65,23 +70,16 @@ impl GameLogicLayer{
             }
         }
     }
-    fn update_tail(&mut self, target_frame_tail: usize){
-        while self.game_state_tail.last_frame_simed < target_frame_tail{
-            self.game_state_tail.last_frame_simed += 1;
-
-            let frame_index_to_simulate = self.game_state_tail.last_frame_simed;
-
-            let inputs_to_use = self.all_frames.frames.get(frame_index_to_simulate).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
-            self.game_state_tail.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
-
-        }
+    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex){
+        self.game_state_tail.last_frame_simed = tail_frame_to_sim;
+        let inputs_to_use = self.all_frames.frames.get(tail_frame_to_sim).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
+        self.game_state_tail.simulate_tick(inputs_to_use, FRAME_DURATION);
     }
-    fn update_head(&mut self, target_frame_head: usize){
+    fn resimulate_head(&mut self, tail_frame: FrameIndex){
         let mut head_to_be = self.game_state_tail.clone();
-        while head_to_be.last_frame_simed < target_frame_head{
-            head_to_be.last_frame_simed += 1;
+        for frame_index_to_simulate in tail_frame..(tail_frame + HEAD_FRAME_LEAD + 1){
+            head_to_be.last_frame_simed += 1; // TODO: Shouldn't be needed if this field is removed. Can be done better.
 
-            let frame_index_to_simulate = head_to_be.last_frame_simed;
 //                println!("Simulating frame nubmer {}", frame_index_to_simulate);
 
             let possible_arrived_inputs = self.all_frames.frames.get(frame_index_to_simulate);
@@ -96,26 +94,24 @@ impl GameLogicLayer{
                 }
             }
             head_to_be.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
-
-
         }
         {
             *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
         }
     }
     pub fn run_logic_loop(&mut self, mut inputs_channel: Receiver<GameMessageType>){
+        let mut generator = self.known_frame_info.start_frame_stream();
         loop{
+            let tail_frame_to_sim = generator.recv().unwrap();
+
             self.apply_available_game_messages(&mut inputs_channel);
 
-            let target_frame_tail = self.known_frame_info.get_intended_current_frame();
-            let target_frame_head = target_frame_tail + 19;
+            self.all_frames.blanks_up_to_index(tail_frame_to_sim + HEAD_FRAME_LEAD); // TODO: Should detect and handle when inputs don't come in.
 
-            self.all_frames.blanks_up_to_index(target_frame_head); // TODO: Should detect and handle when inputs don't come in.
-
-            self.update_tail(target_frame_tail);
+            self.sim_tail_frame(tail_frame_to_sim);
 
             if self.does_update_head { // Don't bother on the server.
-                self.update_head(target_frame_head);
+                self.resimulate_head(tail_frame_to_sim);
             }
         }
     }

@@ -47,7 +47,7 @@ pub type FrameIndex = usize;
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
-    pub last_frame_simed: usize,
+    pub last_frame_simed: FrameIndex, // TODO: Experiment with not having this field.
 
 }
 
@@ -84,7 +84,7 @@ impl GameState{
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn simulate_tick(&mut self, inputs_info: &InputsFrame, delta: f32){
+    pub fn simulate_tick(&mut self, inputs_info: &InputsFrame, delta: f64){
         let mut pending = PendingEntities::new();
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
