@@ -38,18 +38,21 @@ impl GameLogicLayer{
 
     }
     fn apply_available_game_messages(&mut self, inputs_channel: &mut Receiver<GameMessageType>){
-        let game_message = inputs_channel.try_recv();
-        match game_message{
-            Ok(item) => {
-                self.apply_game_message(&item);
-                self.apply_available_game_messages(inputs_channel); // Try checking again.
-            }
-            Err(err) => {
-                if err == TryRecvError::Disconnected{
-                    panic!("Input stream disconnected.");
+        loop{
+            let game_message = inputs_channel.try_recv();
+            match game_message{
+                Ok(item) => {
+                    self.apply_game_message(&item);
+                }
+                Err(err) => {
+                    if err == TryRecvError::Disconnected{
+                        panic!("Input stream disconnected.");
+                    }
+                    break;
                 }
             }
         }
+
     }
     fn apply_game_message(&mut self, message: &GameMessageType){
         match message{

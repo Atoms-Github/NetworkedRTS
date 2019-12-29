@@ -1,0 +1,100 @@
+use crate::network::networking_structs::*;
+use crate::network::networking_message_types::*;
+use crate::players::inputs::*;
+
+use crate::ecs::world::*;
+use crate::ecs::system_macro::*;
+
+
+use futures::future::Future;
+use std::net::{SocketAddr, TcpListener};
+use std::io::{BufReader, Write};
+use futures::sync::mpsc;
+use serde::*;
+
+use crate::game::server_networking::*;
+
+
+use std::sync::{Mutex, Arc};
+use std::time::Duration;
+use std::thread;
+
+
+use futures::Stream;
+
+use std::collections::HashMap;
+
+use crate::network::*;
+use core::borrow::BorrowMut;
+use futures::sink::Sink;
+
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::mpsc::{channel, Receiver};
+use crate::network::networking_structs::FrameIndex;
+
+
+pub const FRAME_DURATION: f64 = 0.0166;
+
+
+pub struct SimableFrameInfo{
+    pub frame_index: FrameIndex,
+    pub delta: f32
+}
+
+
+#[derive(Serialize, Deserialize,Clone,  Debug)]
+pub struct KnownFrameInfo{
+    pub known_frame_index: FrameIndex,
+    pub time: SystemTime
+}
+
+//pub struct SimableFrameGenerator{
+//    frame_stream: Receiver<FrameIndex>
+//}
+//impl SimableFrameGenerator{
+//    pub fn recv(&mut self) -> KnownFrameInfo{
+//        let frame_number = self.recv();
+//
+//
+//
+//        KnownFrameInfo{
+//            known_frame_index: 0,
+//            time: ()
+//        }
+//    }
+//    pub fn start_new_generator(frame_info: KnownFrameInfo) -> SimableFrameGenerator{
+//        let stream = frame_info.start_frame_stream();
+//        SimableFrameGenerator{
+//            frame_stream: stream
+//        }
+//    }
+//}
+
+impl KnownFrameInfo{
+    pub fn get_intended_current_frame(&self) -> usize{
+        let time_since_known_frame = SystemTime::now().duration_since(self.time).unwrap();
+
+        let intended_frame = self.known_frame_index + (time_since_known_frame.as_micros() as f64 / FRAME_DURATION).floor() as usize;
+        return intended_frame;
+    }
+
+    pub fn start_frame_stream(&self) -> Receiver<FrameIndex>{
+        let (sender, receiver) = channel();
+
+        // TODO: find how to close thread when not needed.
+        thread::spawn( move|| {
+            let sink = sender;
+            let frame_info = self.clone();
+            let mut last_frame_simed = self.known_frame_index.clone() - 1;
+            loop{
+                let intended_frame = frame_info.get_intended_current_frame();
+                if last_frame_simed < intended_frame {
+                    last_frame_simed += 1;
+                    sink.send(last_frame_simed);
+                }
+                // TODO: Sleep until just before next frame to help performance.
+            }
+        });
+        return receiver;
+    }
+}

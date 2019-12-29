@@ -9,7 +9,6 @@ type PointFloat = nalgebra::Point2<f32>;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 
-const FRAME_MICROS_DURATION: f64 = 16_000.0; // 16ms
 
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -18,11 +17,7 @@ pub struct InputState {
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird. // TODO figure out how array serialization works.
 }
 
-#[derive(Serialize, Deserialize,Clone,  Debug)]
-pub struct KnownFrameInfo{
-    pub frame_index: usize,
-    pub time: SystemTime
-}
+
 
 impl InputState{
     pub fn new() -> InputState{
@@ -69,17 +64,6 @@ impl InputState{
         return (x,y)
     }
 }
-
-
-impl KnownFrameInfo{
-    pub fn get_intended_current_frame(&self) -> usize{
-        let meme = SystemTime::now().duration_since(self.time).unwrap();
-
-        let dream = self.frame_index + (meme.as_micros() as f64 / FRAME_MICROS_DURATION).floor() as usize;
-        return dream;
-    }
-}
-
 
 
 
