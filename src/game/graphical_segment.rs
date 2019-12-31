@@ -26,14 +26,14 @@ use bytes::Bytes;
 use futures::sink::Sink;
 use std::net::TcpStream;
 use std::thread::Thread;
-use crate::game::game_logic_layer;
+use crate::game::logic_segment;
 use crate::game::timekeeping::KnownFrameInfo;
-use crate::game::game_logic_layer::GameLogicLayer;
+use crate::game::logic_segment::LogicSegment;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 use bus::Bus;
 
-struct GameGraphicalLayer {
+struct GraphicalSegment {
 //    my_current_input_state: Arc<Mutex<InputState>>,
     render_head: Arc<Mutex<GameState>>,
     my_player_id: PlayerID,
@@ -47,9 +47,9 @@ let (logic_layer, head_handle) =
             logic_layer.run_logic_loop();
         });\
 */
-impl GameGraphicalLayer {
-    pub fn new(head_render_handle: Arc<Mutex<GameState>>, my_player_id: PlayerID) -> GameGraphicalLayer{
-        GameGraphicalLayer{
+impl GraphicalSegment {
+    pub fn new(head_render_handle: Arc<Mutex<GameState>>, my_player_id: PlayerID) -> GraphicalSegment {
+        GraphicalSegment {
             render_head: head_render_handle,
             my_player_id,
             sender: None
@@ -75,7 +75,7 @@ impl GameGraphicalLayer {
     }
 }
 
-impl EventHandler for GameGraphicalLayer {
+impl EventHandler for GraphicalSegment {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {

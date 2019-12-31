@@ -18,7 +18,7 @@ use crate::game::timekeeping::KnownFrameInfo;
 pub const HEAD_FRAME_LEAD : usize = 19;
 
 
-pub struct GameLogicLayer{
+pub struct LogicSegment {
     does_update_head: bool,
     known_frame_info: KnownFrameInfo,
     game_state_head: Arc<Mutex<GameState>>,
@@ -28,18 +28,18 @@ pub struct GameLogicLayer{
 }
 
 
-impl GameLogicLayer{
-    pub fn new(update_head :bool, known_frame_info: KnownFrameInfo, state_tail: GameState) -> (GameLogicLayer, Arc<Mutex<GameState>>){
+impl LogicSegment {
+    pub fn new(update_head :bool, known_frame_info: KnownFrameInfo, state_tail: GameState) -> (LogicSegment, Arc<Mutex<GameState>>){
         let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
         (
-        GameLogicLayer{
+            LogicSegment {
             does_update_head: update_head,
             known_frame_info,
             game_state_head: game_state_head.clone(),
             game_state_tail: state_tail,
             all_frames: InputFramesStorage::new(),
         },
-        game_state_head)
+            game_state_head)
 
     }
     fn apply_available_game_messages(&mut self, inputs_channel: &mut Receiver<GameMessageType>){

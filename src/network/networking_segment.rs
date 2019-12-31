@@ -28,17 +28,17 @@ use bytes::Bytes;
 use futures::sink::Sink;
 use std::net::{TcpStream, SocketAddr};
 use std::thread::Thread;
-use crate::game::game_logic_layer;
+use crate::game::logic_segment;
 use std::sync::mpsc::Receiver;
 
-pub struct GameNetworkingLayer{
+pub struct NetworkingSegment {
 //    socket: Option<TcpStream>,
     connection_address: SocketAddr
 }
 
-impl GameNetworkingLayer{
-    pub fn new(conn_address: SocketAddr) -> GameNetworkingLayer{
-        GameNetworkingLayer{
+impl NetworkingSegment {
+    pub fn new(conn_address: SocketAddr) -> NetworkingSegment {
+        NetworkingSegment {
 //            socket: None,
             connection_address: conn_address
         }
