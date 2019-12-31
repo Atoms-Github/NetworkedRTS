@@ -9,7 +9,6 @@ use crate::network::networking_message_types::*;
 use crate::players::inputs::*;
 use ggez::event::{EventHandler, KeyMods};
 use ggez::input::keyboard::KeyCode;
-use crate::game::client_networking::connect_and_send_handshake;
 
 use crate::systems::render::*;
 use futures::future::lazy;
@@ -18,7 +17,6 @@ use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
 use crate::network::*;
 
-use crate::game::client_networking::*;
 
 use futures::future::Future;
 

@@ -10,6 +10,7 @@ use std::io::{Read, Write};
 use byteorder::ByteOrder;
 use std::net::TcpStream;
 use crate::network::game_message_types;
+use crate::game::timekeeping::KnownFrameInfo;
 
 
 pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO: Investigate a way to destroy thread when receiver is dropped.
@@ -66,9 +67,7 @@ pub struct LocalCommandInfo{
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgConnectionInitQuery {
-    pub my_player_name: String,
-    pub test_field: String,
-    pub test_two: i64
+    pub my_player_name: String
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgConnectionInitResponse {

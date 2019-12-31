@@ -116,3 +116,61 @@ impl GameLogicLayer{
         }
     }
 }
+
+
+
+//let controllers = self.get_controllers_clone();
+//
+//let mut pending = PendingEntities::new();
+//
+//secret_position_system(&self.world, &mut pending, &mut self.storage.position_s, &mut self.storage.velocity_s);
+//secret_velocity_system(&self.world, &mut pending, &mut self.storage.position_s, &mut self.storage.velocity_s);
+//secret_velocityWithInput_system(&self.world, &mut pending, &mut self.storage.velocity_s,
+//&mut self.storage.velocityWithInput_s, &controllers);
+//
+//self.world.update_entities(&mut self.storage, pending);
+
+
+
+//
+////            std::mem::drop();
+//{ // Need to be explicit in where the mutex locks are dropped.
+//let mut messages_this_frame = self.messages_to_process.lock().unwrap();
+//for net_message in &*messages_this_frame{
+//match net_message{
+//NetMessageType::ConnectionInit(msg_init) => {
+//println!("Welcomed with a message: {}", msg_init.welcome_msg);
+//self.online_players.push(OnlinePlayer{
+//controller: PlayerController { input_state: InputState::new()}
+//});
+//
+//
+//let mut pending = PendingEntities::new();
+//
+//
+//let mut pending_entity_online_player = PendingEntity::new();
+//pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
+//pending_entity_online_player.add_component(VelocityComp{ x: 2.0, y: 1.0 });
+//pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
+//pending_entity_online_player.add_component(velocityWithInputComp{ owner_id: 2 });
+//pending_entity_online_player.add_component(RenderComp{ hue: graphics::Color::from_rgb(255,150,150) });
+//pending.create_entity(pending_entity_online_player);
+//
+//
+//
+//self.world.update_entities(&mut self.storage, pending);
+//
+//
+//
+//},
+//NetMessageType::InputsUpdate(msg_inputs) => {
+//// TODO - need to do some player ID matching here.
+//for online_player in &mut self.online_players{
+//online_player.controller = msg_inputs.controllers[0].clone();
+//}
+//
+//},
+//};
+//}
+//messages_this_frame.clear();
+//}
