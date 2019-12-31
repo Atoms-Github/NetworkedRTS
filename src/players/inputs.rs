@@ -17,6 +17,10 @@ pub struct InputState {
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird. // TODO figure out how array serialization works.
 }
 
+pub enum InputChange {
+    KeyDownUp(KeyCode, bool),
+    MouseMove(PointFloat)
+}
 
 
 impl InputState{

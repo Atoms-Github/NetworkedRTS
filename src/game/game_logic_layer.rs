@@ -35,11 +35,11 @@ impl GameLogicLayer{
         GameLogicLayer{
             does_update_head: update_head,
             known_frame_info,
-            game_state_head,
+            game_state_head: game_state_head.clone(),
             game_state_tail: state_tail,
             all_frames: InputFramesStorage::new(),
         },
-        game_state_head.clone())
+        game_state_head)
 
     }
     fn apply_available_game_messages(&mut self, inputs_channel: &mut Receiver<GameMessageType>){
