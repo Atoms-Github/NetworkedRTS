@@ -31,6 +31,7 @@ use futures::sink::Sink;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::sync::mpsc::channel;
+use crate::game::timekeeping::KnownFrameInfo;
 
 struct ServerMainState {
     game_state_tail: GameState,
@@ -54,7 +55,7 @@ pub fn server_main(hosting_ip: &String){
         client_handles: Default::default(),
         reception_data: Arc::new(Mutex::new(ServerReceptionData::new() )),
         big_fat_zero_time: KnownFrameInfo{
-            frame_index: 0,
+            known_frame_index: 0,
             time: SystemTime::now()
         }
     };
@@ -77,7 +78,6 @@ pub fn server_main(hosting_ip: &String){
                 locked_reception.next_player_id += 1;
 
                 println!("New player connected. PlayerID: {} Address: {:?}", new_player_id , socket.local_addr());
-
 
 
                 let reader = stream.try_clone().unwrap();
@@ -186,10 +186,6 @@ impl ServerMainState{
 }
 
 
-
-
-
-// TODO: Look into using custom NetMsg codex instead of explicit de/serialization.
 
 
 

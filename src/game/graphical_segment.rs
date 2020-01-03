@@ -1,39 +1,21 @@
 use ggez::*;
 use ggez::{ContextBuilder, event};
-use futures::sync::mpsc;
 use std::thread;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex};
 
 use crate::network::networking_structs::*;
-use crate::network::networking_message_types::*;
 use crate::players::inputs::*;
 use ggez::event::{EventHandler, KeyMods};
 use ggez::input::keyboard::KeyCode;
 
 use crate::systems::render::*;
-use futures::future::lazy;
 
 use crate::ecs::world::*;
-use crate::ecs::system_macro::*;
-use crate::network::*;
 
 
-use futures::future::Future;
-
-use std::time::{SystemTime};
-use std::io::Write;
-use bytes::Bytes;
-use futures::sink::Sink;
-use std::net::TcpStream;
-use std::thread::Thread;
-use crate::game::logic_segment;
-use crate::game::timekeeping::KnownFrameInfo;
-use crate::game::logic_segment::LogicSegment;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-use bus::Bus;
-
-struct GraphicalSegment {
+pub struct GraphicalSegment {
 //    my_current_input_state: Arc<Mutex<InputState>>,
     render_head: Arc<Mutex<GameState>>,
     my_player_id: PlayerID,
@@ -55,7 +37,7 @@ impl GraphicalSegment {
             sender: None
         }
     }
-    pub fn run_main(mut self) -> Receiver<InputChange>{
+    pub fn start(mut self) -> Receiver<InputChange>{
         let (sender,receiver) = channel();
         self.sender = Some(sender);
 

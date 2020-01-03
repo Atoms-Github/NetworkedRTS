@@ -18,7 +18,6 @@ use crate::ecs::world::*;
 use crate::ecs::system_macro::*;
 use crate::network::*;
 
-use crate::game::client_networking::*;
 
 use futures::future::Future;
 

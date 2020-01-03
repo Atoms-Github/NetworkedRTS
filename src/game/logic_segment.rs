@@ -1,14 +1,7 @@
 use std::sync::mpsc::{Receiver, TryRecvError};
-use crate::network::game_message_types::GameMessageType;
-use std::thread;
+use crate::network::game_message_types::{GameMessageType, NewPlayerInfo};
 use crate::network::networking_structs::*;
-use crate::network::networking_message_types::*;
-use crate::players::inputs::*;
-use crate::game::client_networking::connect_and_send_handshake;
-use crate::systems::render::*;
 use crate::ecs::world::*;
-use crate::ecs::system_macro::*;
-use crate::network::*;
 use crate::game::timekeeping::*;
 use std::sync::{Mutex, Arc};
 use crate::game::timekeeping::KnownFrameInfo;
@@ -65,10 +58,14 @@ impl LogicSegment {
                 self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
             }
             GameMessageType::NewPlayer(new_player_info) => {
-                self.game_state_tail.add_player(new_player_info.player_id);
-                self.all_frames.add_player_default_inputs(&new_player_info.player_id, new_player_info.frame_added)
+                self.add_new_player(new_player_info);
+
             }
         }
+    }
+    pub fn add_new_player(&mut self, new_player_info: &NewPlayerInfo){
+        self.game_state_tail.add_player(new_player_info.player_id);
+        self.all_frames.add_player_default_inputs(&new_player_info.player_id, new_player_info.frame_added)
     }
     fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex){
         self.game_state_tail.last_frame_simed = tail_frame_to_sim;
@@ -99,12 +96,15 @@ impl LogicSegment {
             *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
         }
     }
-    pub fn run_logic_loop(&mut self, mut inputs_channel: Receiver<GameMessageType>){
+    pub fn load_frames(&mut self, frames_partial: FramesStoragePartial){
+        self.all_frames.insert_frames_partial(frames_partial);
+    }
+    pub fn run_logic_loop(&mut self, mut game_messages_channel: Receiver<GameMessageType>){
         let mut generator = self.known_frame_info.start_frame_stream();
         loop{
             let tail_frame_to_sim = generator.recv().unwrap();
 
-            self.apply_available_game_messages(&mut inputs_channel);
+            self.apply_available_game_messages(&mut game_messages_channel);
 
             self.all_frames.blanks_up_to_index(tail_frame_to_sim + HEAD_FRAME_LEAD); // TODO: Should detect and handle when inputs don't come in.
 
