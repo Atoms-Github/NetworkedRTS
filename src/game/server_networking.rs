@@ -1,7 +1,6 @@
 
 
 use crate::network::networking_structs::*;
-use crate::network::*;
 use std::net::TcpStream;
 
 pub struct ClientHandle {

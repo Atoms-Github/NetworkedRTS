@@ -1,8 +1,11 @@
 #![feature(core_intrinsics)]
 #![feature(async_await)]
 #![allow(dead_code)]
+
 use std::env;
 
+use crate::game::client::*;
+use crate::game::server::*;
 
 mod game;
 mod network;
@@ -10,11 +13,6 @@ mod ecs;
 mod players;
 mod systems;
 mod utils;
-
-
-use crate::game::client::*;
-use crate::game::server::*;
-use ggez::input::keyboard::KeyCode;
 
 
 fn main() {

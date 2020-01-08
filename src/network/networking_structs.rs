@@ -1,42 +1,22 @@
-
-
-
 use std::collections::HashMap;
-
-use crate::players::inputs::InputState;
-use crate::ecs::world::*;
-use crate::network::networking_message_types::NetMessageType;
-
-use crate::systems::position::{PositionComp, secret_position_system};
-use crate::systems::velocity::*;
-use crate::systems::render::*;
-use crate::systems::velocityWithInput::*;
-use crate::systems::size::*;
-
-
-use std::sync::{Arc, Mutex};
-
-use futures::stream::*;
-use futures::future::*;
-use std::borrow::BorrowMut;
-use ggez::graphics;
-
-use std::sync::mpsc::{Sender, Receiver};
-use std::sync::mpsc;
-use std::io::{self, BufRead, Read};
-use std::sync::mpsc::channel;
-
+use std::io::{self, BufRead};
 use std::iter::FromIterator;
-
-use crate::network::networking_message_types::*;
-
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::channel;
 use std::thread;
-use serde::{Serialize, Deserialize};
-use std::net::TcpStream;
-use std::thread::Thread;
-use byteorder::{ByteOrder, LittleEndian};
-use std::any::{Any, TypeId};
 
+use serde::{Deserialize, Serialize};
+
+use crate::ecs::world::*;
+use crate::network::networking_message_types::*;
+use crate::network::networking_message_types::NetMessageType;
+use crate::players::inputs::InputState;
+use crate::systems::position::{PositionComp, secret_position_system};
+use crate::systems::render::*;
+use crate::systems::size::*;
+use crate::systems::velocity::*;
+use crate::systems::velocityWithInput::*;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -78,7 +58,7 @@ impl GameState{
         pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
         pending_entity_online_player.add_component(VelocityComp{ x: 100.0, y: 0.0 });
         pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
-        pending_entity_online_player.add_component(velocityWithInputComp{ owner_id: player_id });
+        pending_entity_online_player.add_component(VelocityWithInputComp { owner_id: player_id });
         pending_entity_online_player.add_component(RenderComp{ hue: (255,150,150)});
         pending.create_entity(pending_entity_online_player);
 
@@ -185,24 +165,24 @@ pub struct MessageBox {
 }
 
 impl MessageBox {
-    pub fn spawn_thread_message_box_fill(&self, connection_readable: TcpStream){
-        let message_box_mutex = Arc::clone(&self.items); // However this works :)
-
-        thread::spawn(move ||{
-            let inc_messages = start_inwards_codec_thread(connection_readable);
-
-            loop{
-                let message = inc_messages.recv().unwrap();
-
-                {
-                    let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
-                    println!("Adding to message box: {:?}", e);
-                    mutex_lock.push(message);
-                }
-
-            }
-        });
-    }
+//    pub fn spawn_thread_message_box_fill(&self, connection_readable: TcpStream){
+//        let message_box_mutex = Arc::clone(&self.items); // However this works :)
+//
+//        thread::spawn(move ||{
+//            let inc_messages = start_inwards_codec_thread(connection_readable);
+//
+//            loop{
+//                let message = inc_messages.recv().unwrap();
+//
+//                {
+//                    let mut mutex_lock= Mutex::lock(&message_box_mutex).unwrap();
+//                    println!("Adding to message box: {:?}", e);
+//                    mutex_lock.push(message);
+//                }
+//
+//            }
+//        });
+//    }
     pub fn spawn_thread_fill_from_receiver(&self, receiver: Receiver<NetMessageType>){
         let meme = receiver;
         let message_box_mutex = Arc::clone(&self.items); // However this works :)

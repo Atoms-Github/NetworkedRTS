@@ -1,17 +1,14 @@
-
-use serde::{Serialize, Deserialize};
-use std::{fmt, thread};
-use crate::network::networking_structs::*;
-use crate::players::inputs::*;
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::sync::mpsc::{Receiver, Sender, channel};
-use bytes::Reader;
+use std::{thread};
 use std::io::{Read, Write};
-use byteorder::ByteOrder;
 use std::net::TcpStream;
-use crate::network::game_message_types;
-use crate::game::timekeeping::KnownFrameInfo;
+use std::sync::mpsc::{channel, Receiver};
 
+use byteorder::ByteOrder;
+use serde::{Deserialize, Serialize};
+
+use crate::game::timekeeping::KnownFrameInfo;
+use crate::network::game_message_types;
+use crate::network::networking_structs::*;
 
 pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO: Investigate a way to destroy thread when receiver is dropped.
     let (sender, receive) = channel::<NetMessageType>();

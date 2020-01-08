@@ -1,10 +1,5 @@
-use std::collections::{HashMap, HashSet, BTreeSet, BTreeMap};
-use std::any::TypeId;
-use crate::systems::position::PositionComp;
-use crate::ecs::world::*;
-use serde::{Serialize, Deserialize};
 
-
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug,Serialize, Deserialize, Clone)]
 pub struct SizeComp {

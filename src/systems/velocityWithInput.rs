@@ -1,16 +1,16 @@
-use std::collections::{HashMap, HashSet, BTreeSet, BTreeMap};
-use std::any::TypeId;
-use crate::ecs::world::*;
-use crate::systems::velocity::VelocityComp;
+use std::collections::{BTreeSet};
+
+use serde::{Deserialize, Serialize};
+
 use crate::create_system;
+use crate::ecs::world::*;
 use crate::network::networking_structs::*;
-use ggez::input::keyboard::KeyCode;
-use serde::{Serialize, Deserialize};
+use crate::systems::velocity::VelocityComp;
 
 //use crate::inputs::input_structs::*;
 
 create_system!( velocity_with_inputs_system | secret_velocity_with_inputs_system
-	| my_velocity: VelocityComp, my_velocity_with_input_comp: velocityWithInputComp
+	| my_velocity: VelocityComp, my_velocity_with_input_comp: VelocityWithInputComp
 	|
 	| players_input: &InputsFrame
 );
@@ -30,6 +30,6 @@ fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &InputsFr
 }
 
 #[derive(Debug,Serialize, Deserialize, Clone)]
-pub struct velocityWithInputComp {
+pub struct VelocityWithInputComp {
     pub owner_id: usize
 }

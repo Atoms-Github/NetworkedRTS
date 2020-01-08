@@ -1,27 +1,13 @@
-use ggez::{event};
-use std::thread;
-use std::sync::{Mutex, MutexGuard};
-
-use crate::network::networking_structs::*;
-use crate::network::networking_message_types::*;
-use crate::players::inputs::*;
-use ggez::event::{EventHandler, KeyMods};
-use ggez::input::keyboard::KeyCode;
-
-use futures::future::lazy;
-
-
-
-
-use std::time::{SystemTime};
-use std::net::{SocketAddr};
-use crate::network::networking_segment::NetworkingSegment;
+use std::net::SocketAddr;
 use std::str::FromStr;
-use crate::game::logic_segment::LogicSegment;
-use crate::game::graphical_segment::GraphicalSegment;
-use crate::network::game_message_types::NewPlayerInfo;
 use std::sync::mpsc::channel;
+use std::thread;
 
+use crate::game::graphical_segment::GraphicalSegment;
+use crate::game::logic_segment::LogicSegment;
+use crate::network::game_message_types::NewPlayerInfo;
+use crate::network::networking_message_types::*;
+use crate::network::networking_segment::NetworkingSegment;
 
 pub fn client_main(connection_target_ip: &String){
     let local_connection_target_ip = connection_target_ip.clone();

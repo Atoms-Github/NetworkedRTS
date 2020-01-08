@@ -1,19 +1,16 @@
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread;
+
 use ggez::*;
 use ggez::{ContextBuilder, event};
-use std::thread;
-use std::sync::{Arc, Mutex};
-
-use crate::network::networking_structs::*;
-use crate::players::inputs::*;
 use ggez::event::{EventHandler, KeyMods};
 use ggez::input::keyboard::KeyCode;
 
-use crate::systems::render::*;
-
 use crate::ecs::world::*;
-
-
-use std::sync::mpsc::{channel, Receiver, Sender};
+use crate::network::networking_structs::*;
+use crate::players::inputs::*;
+use crate::systems::render::*;
 
 pub struct GraphicalSegment {
 //    my_current_input_state: Arc<Mutex<InputState>>,
@@ -45,9 +42,10 @@ impl GraphicalSegment {
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
             .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path(""); // TODO: Find what resource path.
 
-        let (ctx, events_loop) = &mut cb.build().unwrap();
 
         thread::spawn(move ||{
+            let (ctx, events_loop) = &mut cb.build().unwrap();
+
             let mut meme = self;
             event::run(ctx, events_loop, &mut meme);
         });

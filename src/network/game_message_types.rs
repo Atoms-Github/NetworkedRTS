@@ -1,15 +1,8 @@
 
-use serde::{Serialize, Deserialize};
-use std::{fmt, thread};
+use serde::{Deserialize, Serialize};
+
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::sync::mpsc::{Receiver, Sender, channel};
-use bytes::Reader;
-use std::io::{Read, Write};
-use byteorder::ByteOrder;
-use std::net::TcpStream;
-
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum GameMessageType {

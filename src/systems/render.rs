@@ -1,14 +1,14 @@
-use std::collections::{HashMap, HashSet, BTreeSet, BTreeMap};
-use std::any::TypeId;
+use std::collections::{BTreeSet};
+
+use ggez::Context;
+use ggez::graphics;
+use ggez::graphics::DrawParam;
+use serde::{Deserialize, Serialize};
+
+use crate::create_system;
+use crate::ecs::world::*;
 use crate::systems::position::PositionComp;
 use crate::systems::size::*;
-use crate::ecs::world::*;
-use crate::ecs::system_macro::*;
-use ggez::Context;
-use ggez::graphics::DrawParam;
-use ggez::graphics;
-use crate::create_system;
-use serde::{Serialize, Deserialize};
 
 create_system!( render_system | secret_render_system
 	| my_position: PositionComp, my_render: RenderComp, my_size: SizeComp

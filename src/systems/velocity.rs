@@ -1,7 +1,5 @@
-use std::collections::{HashMap, HashSet, BTreeSet, BTreeMap};
-use std::any::TypeId;
+use std::collections::{BTreeSet};
 use crate::systems::position::PositionComp;
-use crate::systems::render::RenderComp;
 use crate::ecs::world::*;
 use crate::create_system;
 use serde::{Serialize, Deserialize};

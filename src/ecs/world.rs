@@ -1,6 +1,6 @@
 
-use std::collections::{HashMap, HashSet, BTreeSet, BTreeMap};
-use std::any::{TypeId, Any};
+use std::collections::{HashMap, HashSet, BTreeSet};
+
 
 use crate::systems::velocity::*;
 use crate::systems::position::*;
@@ -164,7 +164,7 @@ macro_rules! create_system {
 	}
 }
 
-create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, velocityWithInput_s: velocityWithInputComp);
+create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, velocityWithInput_s: VelocityWithInputComp);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct World {

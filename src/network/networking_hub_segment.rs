@@ -1,14 +1,11 @@
-
-
-
-use std::sync::mpsc::{Receiver, Sender, channel};
-use crate::network::networking_structs::PlayerID;
-use crate::network::networking_message_types::{NetMessageType, start_inwards_codec_thread};
-use std::net::{TcpListener, SocketAddr, TcpStream};
-use std::thread;
-use std::sync::{Mutex, Arc};
 use std::collections::HashMap;
+use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread;
 
+use crate::network::networking_message_types::{NetMessageType, start_inwards_codec_thread};
+use crate::network::networking_structs::PlayerID;
 
 pub struct NetworkingHub{
     output_messages_sender: Option<Sender<OwnedNetworkMessage>>,
@@ -72,7 +69,7 @@ pub fn start_logic(mut self /* TODO: Ref might be enough. */, input_messages: Re
 
     thread::spawn( move ||{ // Listen for new connections.
         let socket = TcpListener::bind(&addr).expect("Unable to bind hosting address.");
-        println!("Hosting on {}", hosting_ip);
+        println!("Hosting on {}", addr.to_string());
         let id_counter = Arc::new(Mutex::new(0));
         for stream in socket.incoming() {
             self.handle_new_socket(stream.unwrap());
