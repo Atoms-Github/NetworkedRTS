@@ -11,7 +11,9 @@ use std::collections::HashMap;
 
 
 pub struct NetworkingHub{
-    
+    output_messages_sender: Option<Sender<OwnedNetworkMessage>>,
+    player_ids: Arc<Mutex<PlayerID>>,
+    new_connections_registerer: Option<Sender<(PlayerID, TcpStream)>>
 }
 
 pub struct OwnedNetworkMessage{
@@ -23,40 +25,57 @@ pub enum DistributableNetMessage{
     ToSingle(PlayerID, NetMessageType)
 }
 
-fn handle_new_socket(stream: TcpStream, messages_stream: Sender<OwnedNetworkMessage>, player_ids: Arc<Mutex<PlayerID>>, connections_registry: Sender<(PlayerID, TcpStream)>){
+
+
+impl NetworkingHub{ // This isn't responsible for sending worlds. // TODO: Fix indentation.
+pub fn new() -> NetworkingHub {
+    NetworkingHub{
+        output_messages_sender: None,
+        player_ids: Arc::new(Mutex::new(0)),
+        new_connections_registerer: None
+    }
+}
+fn handle_new_socket(&self, stream: TcpStream){
     thread::spawn(move ||{
-        let my_id;
+
+        let new_connections_sink = self.new_connections_registerer.unwrap().clone();
+        let handle_id;
         {
-            let mut next_player_id_lock = player_ids.lock().unwrap();
-            my_id = *next_player_id_lock;
-            *next_player_id_lock = my_id + 1;
+            let mut next_player_id_lock = self.player_ids.lock().unwrap();
+            handle_id = *next_player_id_lock;
+            *next_player_id_lock = handle_id + 1;
         }
-        connections_registry.send((my_id, stream.try_clone().unwrap())).unwrap();
+        new_connections_sink.send((handle_id, stream.try_clone().unwrap())).unwrap();
+
+
+        let my_output_messages_sender = self.output_messages_sender.unwrap().clone();
         let receiver = start_inwards_codec_thread(stream); // This can reasonably easily be optimised to use one fewer thread per connection.
         loop{
             let message = receiver.recv().unwrap();
             let wrapped = OwnedNetworkMessage{
-                owner: my_id,
+                owner: handle_id,
                 message
             };
-            messages_stream.send(wrapped).unwrap();
+            my_output_messages_sender.send(wrapped).unwrap();
         }
 
     });
 }
-
-impl NetworkingHub{ // This isn't responsible for sending worlds. // TODO: Fix indentation.
-pub fn start_logic(self, input_messages: Receiver<DistributableNetMessage>, addr: SocketAddr) -> Receiver<OwnedNetworkMessage>{
+pub fn start_logic(mut self /* TODO: Ref might be enough. */, input_messages: Receiver<DistributableNetMessage>, addr: SocketAddr) -> Receiver<OwnedNetworkMessage>{
 
     // HandleIncomingConnections.
     let (out_sender, out_receiver) = channel();
     let (new_connections_sender, new_connections_receiver) = channel();
+
+    self.new_connections_registerer = Some(new_connections_sender);
+    self.output_messages_sender = Some(out_sender);
+
     thread::spawn( move ||{ // Listen for new connections.
         let socket = TcpListener::bind(&addr).expect("Unable to bind hosting address.");
+        println!("Hosting on {}", hosting_ip);
         let id_counter = Arc::new(Mutex::new(0));
         for stream in socket.incoming() {
-            handle_new_socket(stream.unwrap(), out_sender.clone(),
-                              id_counter.clone(), new_connections_sender.clone());
+            self.handle_new_socket(stream.unwrap());
         }
     });
 

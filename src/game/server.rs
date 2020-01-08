@@ -32,39 +32,38 @@ use futures::sink::Sink;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::sync::mpsc::channel;
 use crate::game::timekeeping::KnownFrameInfo;
+use crate::network::networking_hub_segment::NetworkingHub;
+use crate::game::logic_segment::LogicSegment;
 
 struct ServerMainState {
-    game_state_tail: GameState,
     all_frames: InputFramesStorage,
-    client_handles: HashMap<PlayerID, ClientHandle>,
-    reception_data: Arc<Mutex<ServerReceptionData>>,
     big_fat_zero_time: KnownFrameInfo
-//    client_message_box: MessageBox,
 }
 
 pub fn server_main(hosting_ip: &String){
     println!("Starting as server. Going to host on {}", hosting_ip);
 
+    // Init connection.
     let addr = hosting_ip.to_string().parse::<SocketAddr>().unwrap();
-    let socket = TcpListener::bind(&addr).expect("Unable to bind hosting address.");
+    let mut networking_hub_segment = NetworkingHub::new();
+    let incoming_messages = networking_hub_segment.start_logic(outgoing_receiver, addr);
 
-
-    let mut main_state = ServerMainState{
-        game_state_tail: GameState::new(),
-        all_frames: InputFramesStorage::new(),
-        client_handles: Default::default(),
-        reception_data: Arc::new(Mutex::new(ServerReceptionData::new() )),
-        big_fat_zero_time: KnownFrameInfo{
-            known_frame_index: 0,
-            time: SystemTime::now()
-        }
+    // Init logic.
+    let zero_time_frame = KnownFrameInfo{
+        known_frame_index: 0,
+        time: SystemTime::now()
     };
-    main_state.game_state_tail.init_rts();
+    let mut game_state = GameState::new();
+    game_state.init_rts();
+    let (mut logic_segment, mut state_handle) =
+        LogicSegment::new(false, zero_time_frame.clone(), game_state);
 
-    let arc_reception_data = Arc::clone(&main_state.reception_data);
+
+    let mut main_state = ServerMainState::new(zero_time_frame);
+    let (outgoing_sender, outgoing_receiver) = channel();
 
 
-    println!("Hosting on {}", hosting_ip);
+
     thread::spawn(move ||{
         main_state.main_server_logic();
     });
@@ -105,6 +104,12 @@ pub fn server_main(hosting_ip: &String){
 }
 
 impl ServerMainState{
+    pub fn new(big_fat_zero_time: KnownFrameInfo) -> ServerMainState{
+        ServerMainState{
+            all_frames: InputFramesStorage::new(),
+            big_fat_zero_time
+        }
+    }
     fn add_client_handles(&mut self) -> Vec<PlayerID>{
         let mut new_player_ids = vec![];
         {

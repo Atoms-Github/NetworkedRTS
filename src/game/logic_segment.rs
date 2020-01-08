@@ -12,7 +12,7 @@ pub const HEAD_FRAME_LEAD : usize = 19;
 
 
 pub struct LogicSegment {
-    does_update_head: bool,
+    head_is_ahead: bool,
     known_frame_info: KnownFrameInfo,
     game_state_head: Arc<Mutex<GameState>>,
     game_state_tail: GameState,
@@ -22,11 +22,11 @@ pub struct LogicSegment {
 
 
 impl LogicSegment {
-    pub fn new(update_head :bool, known_frame_info: KnownFrameInfo, state_tail: GameState) -> (LogicSegment, Arc<Mutex<GameState>>){
+    pub fn new(head_is_ahead:bool, known_frame_info: KnownFrameInfo, state_tail: GameState) -> (LogicSegment, Arc<Mutex<GameState>>){
         let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
         (
             LogicSegment {
-            does_update_head: update_head,
+            head_is_ahead,
             known_frame_info,
             game_state_head: game_state_head.clone(),
             game_state_tail: state_tail,
@@ -96,9 +96,16 @@ impl LogicSegment {
             *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
         }
     }
+    fn set_head_to_tail(&mut self){
+        let meme = self.game_state_head.lock().unwrap();
+        *meme = self.game_state_tail.clone();
+
+    }
     pub fn load_frames(&mut self, frames_partial: FramesStoragePartial){
         self.all_frames.insert_frames_partial(frames_partial);
     }
+
+
     pub fn run_logic_loop(&mut self, mut game_messages_channel: Receiver<GameMessageType>){
         let mut generator = self.known_frame_info.start_frame_stream();
         loop{
@@ -110,8 +117,10 @@ impl LogicSegment {
 
             self.sim_tail_frame(tail_frame_to_sim);
 
-            if self.does_update_head { // Don't bother on the server.
+            if self.head_is_ahead { // Don't bother on the server.
                 self.resimulate_head(tail_frame_to_sim);
+            }else{
+                self.set_head_to_tail();
             }
         }
     }
