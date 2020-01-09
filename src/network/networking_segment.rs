@@ -20,15 +20,6 @@ impl NetworkingSegment {
         let connection_result = TcpStream::connect(&self.connection_address);
         let mut stream = connection_result.expect("Failed to connect.");
 
-//        let mut read_stream = stream.try_clone().unwrap();
-//        let mut write_stream = stream;
-
-        let connection_init_query = NetMessageType::ConnectionInitQuery(
-            NetMsgConnectionInitQuery{
-                my_player_name: player_name
-            }
-        );
-        connection_init_query.encode_and_send(&mut stream);
 
         let (out_send, out_rec) = channel();
         thread::spawn(move ||{
@@ -38,6 +29,13 @@ impl NetworkingSegment {
                 message_to_send.encode_and_send(&mut stream_outgoing);
             }
         });
+        let connection_init_query = NetMessageType::ConnectionInitQuery(
+            NetMsgConnectionInitQuery{
+                my_player_name: player_name
+            }
+        );
+        out_send.send(connection_init_query);
+
         let receiver = start_inwards_codec_thread(stream);
         return (out_send, out_rec);
     }

@@ -15,9 +15,9 @@ pub fn client_main(connection_target_ip: &String){
 
     let ip = SocketAddr::from_str(connection_target_ip).expect("Ill formed ip");
     let mut networking_seg = NetworkingSegment::new(ip);
-    let mut messages = networking_seg.init_connection("Atomsadiah".to_string());
+    let (mut outoing_messages, mut incoming_messages) = networking_seg.init_connection("Atomsadiah".to_string());
 
-    let welcome_message = messages.recv().unwrap();
+    let welcome_message = incoming_messages.recv().unwrap();
     let welcome_info;
     match welcome_message{
         NetMessageType::ConnectionInitResponse(info) =>{
