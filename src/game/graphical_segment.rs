@@ -70,15 +70,14 @@ impl EventHandler for GraphicalSegment {
 
 
         let mut pending = PendingEntities::new();
-        let head_unlocked = Mutex::lock(&self.render_head).unwrap();
+        let mut head_unlocked = &mut *Mutex::lock(&self.render_head).unwrap();
         secret_render_system(&head_unlocked.world, &mut pending,
                              &mut head_unlocked.storages.position_s,
                              &mut head_unlocked.storages.render_s,
                              &mut head_unlocked.storages.size_s,
                              ctx);
 
-        head_unlocked.world.update_entities(&mut head_unlocked.storages, pending); // TODO ask Richard if this is really needed after calling render. (Unlikely)
-
+        head_unlocked.world.update_entities(&mut head_unlocked.storages, pending); // Keeping this just in the unlikely event render wants to change somethingl.
         graphics::present(ctx)?;
 
         timer::yield_now();
@@ -91,7 +90,7 @@ impl EventHandler for GraphicalSegment {
         _keymod: KeyMods,
         _repeat: bool,
     ) {
-        self.sender.unwrap().send(InputChange::KeyDownUp(keycode, true)).unwrap();
+        self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, true)).unwrap();
 
 //        match keycode {
 //            KeyCode::Escape => event::quit(ctx),
@@ -100,6 +99,6 @@ impl EventHandler for GraphicalSegment {
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods) {
-        self.sender.unwrap().send(InputChange::KeyDownUp(keycode, false)).unwrap();
+        self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, false)).unwrap();
     }
 }

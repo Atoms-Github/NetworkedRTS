@@ -33,19 +33,20 @@ pub fn new() -> NetworkingHub {
     }
 }
 fn handle_new_socket(&self, stream: TcpStream){
+    let my_connections_sink = self.new_connections_registerer.clone().unwrap();
+    let my_output_messages_sender = self.output_messages_sender.clone().unwrap();
+    let my_ids_mutex = self.player_ids.clone();
     thread::spawn(move ||{
-
-        let new_connections_sink = self.new_connections_registerer.unwrap().clone();
         let handle_id;
         {
-            let mut next_player_id_lock = self.player_ids.lock().unwrap();
+            let mut next_player_id_lock = my_ids_mutex.lock().unwrap();
             handle_id = *next_player_id_lock;
             *next_player_id_lock = handle_id + 1;
         }
-        new_connections_sink.send((handle_id, stream.try_clone().unwrap())).unwrap();
+        my_connections_sink.send((handle_id, stream.try_clone().unwrap())).unwrap();
 
 
-        let my_output_messages_sender = self.output_messages_sender.unwrap().clone();
+
         let receiver = start_inwards_codec_thread(stream); // This can reasonably easily be optimised to use one fewer thread per connection.
         loop{
             let message = receiver.recv().unwrap();
@@ -81,9 +82,10 @@ pub fn start_logic(mut self /* TODO: Ref might be enough. */, input_messages: Re
 
     let clients_map = Arc::new(Mutex::new(HashMap::new()));
 
-    thread::spawn(||{ // Add new connections to dictionary.
-        let my_receiver = new_connections_receiver;
-        let my_clients_map = clients_map.clone();
+    let my_receiver = new_connections_receiver;
+    let my_clients_map = clients_map.clone();
+    thread::spawn(move ||{ // Add new connections to dictionary.
+
         loop{
             let (id, stream) = my_receiver.recv().unwrap();
             let mut locked = my_clients_map.lock().unwrap();

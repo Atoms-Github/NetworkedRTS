@@ -95,7 +95,7 @@ impl LogicSegment {
         }
     }
     fn set_head_to_tail(&mut self){
-        let meme = self.game_state_head.lock().unwrap();
+        let mut meme = self.game_state_head.lock().unwrap();
         *meme = self.game_state_tail.clone();
 
     }

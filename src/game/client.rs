@@ -8,6 +8,7 @@ use crate::game::logic_segment::LogicSegment;
 use crate::network::game_message_types::NewPlayerInfo;
 use crate::network::networking_message_types::*;
 use crate::network::networking_segment::NetworkingSegment;
+use std::panic;
 
 pub fn client_main(connection_target_ip: &String){
     let local_connection_target_ip = connection_target_ip.clone();
@@ -31,14 +32,14 @@ pub fn client_main(connection_target_ip: &String){
 
 
     let (mut logic_segment, mut state_head) = LogicSegment::new(
-        true, welcome_info.known_frame_info, welcome_info.game_state);
+        true, welcome_info.known_frame_info.clone(), welcome_info.game_state);
     logic_segment.load_frames(welcome_info.frames_gathered_so_far);
     logic_segment.add_new_player(&NewPlayerInfo{
         player_id: welcome_info.assigned_player_id,
         frame_added: welcome_info.known_frame_info.get_intended_current_frame() + 19
     });
     let (game_msg_send, game_msg_rec) = channel();
-    thread::spawn(||{
+    thread::spawn(move ||{
         logic_segment.run_logic_loop(game_msg_rec);
     });
     let mut graphics_segment = GraphicalSegment::new(state_head, welcome_info.assigned_player_id);

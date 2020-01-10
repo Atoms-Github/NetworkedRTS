@@ -9,7 +9,7 @@ use crate::network::networking_structs::FrameIndex;
 pub const FRAME_DURATION: f64 = 0.0166;
 
 
-pub struct SimableFrameInfo{
+pub struct SimableFrameInfo {
     pub frame_index: FrameIndex,
     pub delta: f32
 }
@@ -53,12 +53,12 @@ impl KnownFrameInfo{
 
     pub fn start_frame_stream(&self) -> Receiver<FrameIndex>{
         let (sender, receiver) = channel();
-
+        let frame_info = self.clone();
         // TODO: find how to close thread when not needed.
         thread::spawn( move|| {
             let sink = sender;
-            let frame_info = self.clone();
-            let mut last_frame_simed = self.known_frame_index.clone() - 1;
+
+            let mut last_frame_simed = frame_info.known_frame_index - 1;
             loop{
                 let intended_frame = frame_info.get_intended_current_frame();
                 if last_frame_simed < intended_frame {

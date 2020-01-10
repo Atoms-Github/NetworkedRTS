@@ -22,8 +22,8 @@ impl NetworkingSegment {
 
 
         let (out_send, out_rec) = channel();
+        let mut stream_outgoing = stream.try_clone().unwrap();
         thread::spawn(move ||{
-            let mut stream_outgoing = stream.try_clone().unwrap();
             loop{
                 let message_to_send: NetMessageType = out_rec.recv().unwrap();
                 message_to_send.encode_and_send(&mut stream_outgoing);
@@ -36,8 +36,8 @@ impl NetworkingSegment {
         );
         out_send.send(connection_init_query);
 
-        let receiver = start_inwards_codec_thread(stream);
-        return (out_send, out_rec);
+        let in_rec = start_inwards_codec_thread(stream);
+        return (out_send, in_rec);
     }
 }
 
