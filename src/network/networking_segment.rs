@@ -34,7 +34,7 @@ impl NetworkingSegment {
                 my_player_name: player_name
             }
         );
-        out_send.send(connection_init_query);
+        out_send.send(connection_init_query).unwrap();
 
         let in_rec = start_inwards_codec_thread(stream);
         return (out_send, in_rec);

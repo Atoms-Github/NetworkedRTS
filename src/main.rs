@@ -1,8 +1,9 @@
-
-
-#![feature(core_intrinsics)]
-#![feature(async_await)]
 #![allow(dead_code)]
+#![allow(unused_variables)]
+#![feature(core_intrinsics)]
+#![allow(dead_code)]
+#![allow(unused_mut)]
+#![allow(unused_unsafe)] // TODO: Investigate this.
 
 use std::env;
 
@@ -22,7 +23,7 @@ fn main() {
     let mut args: Vec<String> = env::args().collect();
 
     args.reverse();
-    let exe_name = args.pop();
+    let _exe_name = args.pop();
     let launch_type = args.pop().expect("'client'/'server' argument not specified!");
     let ip = match args.pop() {
         Some(ip_str) => {

@@ -47,7 +47,7 @@ impl GraphicalSegment {
             let (ctx, events_loop) = &mut cb.build().unwrap();
 
             let mut meme = self;
-            event::run(ctx, events_loop, &mut meme);
+            event::run(ctx, events_loop, &mut meme).unwrap();
         });
 
 

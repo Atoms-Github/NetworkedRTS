@@ -63,7 +63,7 @@ impl KnownFrameInfo{
                 let intended_frame = frame_info.get_intended_current_frame();
                 if last_frame_simed < intended_frame {
                     last_frame_simed += 1;
-                    sink.send(last_frame_simed);
+                    sink.send(last_frame_simed).unwrap();
                 }
                 // TODO: Sleep until just before next frame to help performance.
             }

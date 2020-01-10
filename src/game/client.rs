@@ -11,7 +11,6 @@ use crate::network::networking_segment::NetworkingSegment;
 use std::panic;
 
 pub fn client_main(connection_target_ip: &String){
-    let local_connection_target_ip = connection_target_ip.clone();
     println!("Starting as client.");
 
     let ip = SocketAddr::from_str(connection_target_ip).expect("Ill formed ip");
@@ -44,8 +43,6 @@ pub fn client_main(connection_target_ip: &String){
     });
     let mut graphics_segment = GraphicalSegment::new(state_head, welcome_info.assigned_player_id);
     let inputs_rec = graphics_segment.start();
-
-
 }
 
 

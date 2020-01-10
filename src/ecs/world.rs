@@ -6,7 +6,7 @@ use crate::systems::velocity::*;
 use crate::systems::position::*;
 use crate::systems::size::*;
 use crate::systems::render::*;
-use crate::systems::velocityWithInput::*;
+use crate::systems::velocity_with_input::*;
 use crate::utils::unmoving_vec::*;
 use anymap::AnyMap;
 
@@ -164,7 +164,7 @@ macro_rules! create_system {
 	}
 }
 
-create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, velocityWithInput_s: VelocityWithInputComp);
+create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, velocity_with_input_s: VelocityWithInputComp);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct World {

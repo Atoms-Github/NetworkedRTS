@@ -16,7 +16,7 @@ use crate::systems::position::{PositionComp, secret_position_system};
 use crate::systems::render::*;
 use crate::systems::size::*;
 use crate::systems::velocity::*;
-use crate::systems::velocityWithInput::*;
+use crate::systems::velocity_with_input::*;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -70,7 +70,7 @@ impl GameState{
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_with_inputs_system(&self.world, &mut pending, &mut self.storages.velocity_s,
-        &mut self.storages.velocityWithInput_s, inputs_info);
+        &mut self.storages.velocity_with_input_s, inputs_info);
 
         self.world.update_entities(&mut self.storages, pending);
     }

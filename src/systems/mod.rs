@@ -2,4 +2,4 @@ pub mod position;
 pub mod velocity;
 pub mod render;
 pub mod size;
-pub mod velocityWithInput;
+pub mod velocity_with_input;

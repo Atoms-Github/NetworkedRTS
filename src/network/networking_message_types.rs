@@ -19,12 +19,12 @@ pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMes
             let message_size = byteorder::LittleEndian::read_u16(&message_size_buffer);
 
             let mut message_buffer = vec![0; message_size as usize];
-            read_stream.read_exact(&mut message_buffer);
+            read_stream.read_exact(&mut message_buffer).unwrap();
 
             let result = bincode::deserialize::<NetMessageType>(&message_buffer[..]); // TODO should crash on failure.
             match result{
                 Ok(msg) => {
-                    sender.send(msg);
+                    sender.send(msg).unwrap();
                 }
                 err => {
                     panic!("Err {:?}", err)
@@ -44,7 +44,7 @@ impl NetMessageType{
         byteorder::LittleEndian::write_u16(&mut buffer, message_size);
         write_stream.write(&buffer).unwrap();
         write_stream.write(&connection_init_bytes).unwrap();
-        write_stream.flush();
+        write_stream.flush().unwrap();
     }
 }
 
