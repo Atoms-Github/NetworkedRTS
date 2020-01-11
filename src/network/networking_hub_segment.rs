@@ -59,7 +59,7 @@ fn handle_new_socket(&self, stream: TcpStream){
 
     });
 }
-pub fn start_logic(mut self /* TODO: Ref might be enough. */, input_messages: Receiver<DistributableNetMessage>, addr: SocketAddr) -> Receiver<OwnedNetworkMessage>{
+pub fn start_listening(mut self /* TODO: Ref might be enough. */, input_messages: Receiver<DistributableNetMessage>, addr: SocketAddr) -> Receiver<OwnedNetworkMessage>{
 
     // HandleIncomingConnections.
     let (out_sender, out_receiver) = channel();
@@ -69,6 +69,7 @@ pub fn start_logic(mut self /* TODO: Ref might be enough. */, input_messages: Re
     self.output_messages_sender = Some(out_sender);
 
     thread::spawn( move ||{ // Listen for new connections.
+        println!("Attempting to start hosting on : {}", addr);
         let socket = TcpListener::bind(&addr).expect("Unable to bind hosting address.");
         println!("Hosting on {}", addr.to_string());
         let id_counter = Arc::new(Mutex::new(0));

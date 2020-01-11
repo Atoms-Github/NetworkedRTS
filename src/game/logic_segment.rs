@@ -5,6 +5,7 @@ use crate::game::timekeeping::*;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::game_message_types::{GameMessageType, NewPlayerInfo};
 use crate::network::networking_structs::*;
+use std::panic;
 
 pub const HEAD_FRAME_LEAD : usize = 19;
 
@@ -104,7 +105,7 @@ impl LogicSegment {
     }
 
 
-    pub fn run_logic_loop(&mut self, mut game_messages_channel: Receiver<GameMessageType>){
+    pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<GameMessageType>){
         let mut generator = self.known_frame_info.start_frame_stream();
         loop{
             let tail_frame_to_sim = generator.recv().unwrap();

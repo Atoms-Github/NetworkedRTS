@@ -30,7 +30,7 @@ fn main() {
             ip_str
         }
         _ => {
-            let default = "192.168.0.10".to_string();
+            let default = "10.0.0.45:5535".to_string();
             println!("Connection/hosting IP not specified! Using {}", default);
             default
         }
