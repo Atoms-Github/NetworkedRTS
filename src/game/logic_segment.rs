@@ -1,9 +1,9 @@
 use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{Receiver, TryRecvError};
+use std::sync::mpsc::{Receiver, TryRecvError, Sender};
 
 use crate::game::timekeeping::*;
 use crate::game::timekeeping::KnownFrameInfo;
-use crate::network::game_message_types::{GameMessageType, NewPlayerInfo};
+use crate::network::game_message_types::{LogicInwardsMessage, NewPlayerInfo, LogicOutwardsMessage};
 use crate::network::networking_structs::*;
 use std::panic;
 
@@ -16,12 +16,14 @@ pub struct LogicSegment {
     game_state_head: Arc<Mutex<GameState>>,
     game_state_tail: GameState,
     all_frames: InputFramesStorage,
+    outwards_messages: Sender<LogicOutwardsMessage>
     // Logic layer shouldn't know it's player ID.
 }
 
 
 impl LogicSegment {
-    pub fn new(head_is_ahead:bool, known_frame_info: KnownFrameInfo, state_tail: GameState) -> (LogicSegment, Arc<Mutex<GameState>>){
+    pub fn new(head_is_ahead:bool, known_frame_info: KnownFrameInfo, state_tail: GameState, outwards_messages: Sender<LogicOutwardsMessage>)
+               -> (LogicSegment, Arc<Mutex<GameState>>){
         let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
         (
             LogicSegment {
@@ -30,11 +32,12 @@ impl LogicSegment {
             game_state_head: game_state_head.clone(),
             game_state_tail: state_tail,
             all_frames: InputFramesStorage::new(),
-        },
+                outwards_messages
+            },
             game_state_head)
 
     }
-    fn apply_available_game_messages(&mut self, inputs_channel: &mut Receiver<GameMessageType>){
+    fn apply_available_game_messages(&mut self, inputs_channel: &mut Receiver<LogicInwardsMessage>){
         loop{
             let game_message = inputs_channel.try_recv();
             match game_message{
@@ -51,12 +54,12 @@ impl LogicSegment {
         }
 
     }
-    fn apply_game_message(&mut self, message: &GameMessageType){
+    fn apply_game_message(&mut self, message: &LogicInwardsMessage){
         match message{
-            GameMessageType::InputsUpdate(inputs_update) => {
+            LogicInwardsMessage::InputsUpdate(inputs_update) => {
                 self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
             }
-            GameMessageType::NewPlayer(new_player_info) => {
+            LogicInwardsMessage::NewPlayer(new_player_info) => {
                 self.add_new_player(new_player_info);
 
             }
@@ -64,7 +67,7 @@ impl LogicSegment {
     }
     pub fn add_new_player(&mut self, new_player_info: &NewPlayerInfo){
         self.game_state_tail.add_player(new_player_info.player_id);
-        self.all_frames.add_player_default_inputs(&new_player_info.player_id, new_player_info.frame_added)
+        self.all_frames.add_player(&new_player_info.player_id, new_player_info.frame_added)
     }
     fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex){
         self.game_state_tail.last_frame_simed = tail_frame_to_sim;
@@ -75,12 +78,11 @@ impl LogicSegment {
         let mut head_to_be = self.game_state_tail.clone();
         for frame_index_to_simulate in tail_frame..(tail_frame + HEAD_FRAME_LEAD + 1){
             head_to_be.last_frame_simed += 1; // TODO: Shouldn't be needed if this field is removed. Can be done better.
-
 //                println!("Simulating frame nubmer {}", frame_index_to_simulate);
 
             let possible_arrived_inputs = self.all_frames.frames.get(frame_index_to_simulate);
             let inputs_to_use;
-            let blank_inputs = InputsFrame::new();
+            let blank_inputs = PlayerInputsRecord::new();
             match possible_arrived_inputs{
                 Some(inputs) => {
                     inputs_to_use = inputs;
@@ -105,7 +107,7 @@ impl LogicSegment {
     }
 
 
-    pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<GameMessageType>){
+    pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<LogicInwardsMessage>){
         let mut generator = self.known_frame_info.start_frame_stream();
         loop{
             let tail_frame_to_sim = generator.recv().unwrap();

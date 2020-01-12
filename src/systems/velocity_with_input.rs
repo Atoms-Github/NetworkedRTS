@@ -12,14 +12,14 @@ use crate::systems::velocity::VelocityComp;
 create_system!( velocity_with_inputs_system | secret_velocity_with_inputs_system
 	| my_velocity: VelocityComp, my_velocity_with_input_comp: VelocityWithInputComp
 	|
-	| players_input: &InputsFrame
+	| players_input: &PlayerInputsRecord
 );
 
 
 const MOVEMENT_SPEED: f32 = 2.0;
 
 
-fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &InputsFrame) {
+fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &PlayerInputsRecord) {
     let owner_id = e.my_velocity_with_input_comp(d).owner_id;
     let my_inputs = player_inputs.inputs.get(&owner_id).expect("Can't find inputs for unit owner.");
 

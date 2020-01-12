@@ -9,7 +9,7 @@ use crate::network::networking_structs::*;
 use crate::network::networking_message_types::{NetMessageType, NetMsgConnectionInitResponse};
 use std::sync::{Mutex, Arc};
 use std::thread;
-use crate::network::game_message_types::GameMessageType;
+use crate::network::game_message_types::LogicInwardsMessage;
 use std::panic;
 
 struct ServerMainState {
@@ -18,7 +18,7 @@ struct ServerMainState {
     outgoing_messages: Sender<DistributableNetMessage>,
     incoming_messages: Receiver<OwnedNetworkMessage>,
     game_state_tail: Arc<Mutex<GameState>>,
-    game_updates_sink: Sender<GameMessageType>
+    game_updates_sink: Sender<LogicInwardsMessage>
 }
 
 pub fn server_main(hosting_ip: &String){

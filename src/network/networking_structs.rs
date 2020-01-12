@@ -17,6 +17,9 @@ use crate::systems::render::*;
 use crate::systems::size::*;
 use crate::systems::velocity::*;
 use crate::systems::velocity_with_input::*;
+use crate::network::game_message_types::PlayerInputsSegmentRequest;
+use std::panic;
+use crate::utils::util_functions::vec_replace_or_end;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -28,7 +31,6 @@ pub struct GameState{
     pub world: World,
     pub storages: Storages,
     pub last_frame_simed: FrameIndex, // TODO: Experiment with not having this field.
-
 }
 
 impl GameState{
@@ -64,7 +66,7 @@ impl GameState{
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn simulate_tick(&mut self, inputs_info: &InputsFrame, delta: f64){
+    pub fn simulate_tick(&mut self, inputs_info: &PlayerInputsRecord, delta: f64){
         let mut pending = PendingEntities::new();
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
@@ -78,63 +80,76 @@ impl GameState{
 
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct InputsFrame{
-    pub inputs: HashMap<PlayerID, InputState>
+pub struct PlayerInputsRecord {
+    pub inputs: Vec<InputState>,
+    pub start_frame: FrameIndex
 }
-impl InputsFrame{
-    pub fn new() -> InputsFrame{
-        InputsFrame{
-            inputs: Default::default()
+impl PlayerInputsRecord {
+    pub fn new(start_frame: FrameIndex) -> PlayerInputsRecord {
+        PlayerInputsRecord {
+            inputs: Default::default(),
+            start_frame
         }
     }
 }
-#[derive(Serialize, Deserialize,Clone,  Debug)]
-pub struct FramesStoragePartial{
-    pub frames_section: Vec<InputsFrame>,
-    pub start_index: usize
+//#[derive(Serialize, Deserialize,Clone,  Debug)]
+//pub struct FramesStoragePartial{
+//    pub frames_section: Vec<PlayerInputsRecord>,
+//    pub start_index: usize
+//}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PlayerInputsSegmentResponse { // TODO: Rename graphical_segment etc to graphical_module.
+    pub player_id: PlayerID,
+    pub start_frame_index: FrameIndex,
+    pub input_states: Vec<InputState>,
 }
+
 #[derive(Clone)]
 pub struct InputFramesStorage{
-    pub frames: Vec<InputsFrame>
+    pub frames_map: HashMap<PlayerID, PlayerInputsRecord>
 }
-
-
 
 impl InputFramesStorage{
     pub fn new() -> InputFramesStorage{
         InputFramesStorage{
-            frames: vec![]
+            frames_map: Default::default(),
         }
     }
-    pub fn add_player_default_inputs(&mut self, player_id: &PlayerID, joined_player_frame_index: usize){
-        for index in 0..20 {
-            let mut meme = self.frames.get_mut(joined_player_frame_index + index).unwrap();
-            meme.inputs.insert(*player_id, InputState::new());
-        }
+    pub fn add_player(&mut self, player_id: &PlayerID, joined_player_frame_index: usize){
+        self.frames_map.insert(*player_id, PlayerInputsRecord::new(joined_player_frame_index));
     }
-    pub fn get_frames_partial(&self, first_index: usize) -> FramesStoragePartial{
-        let partial;
-        if first_index < self.frames.len(){
-            partial = Vec::from_iter(self.frames[first_index..].iter().cloned()); // Clone out slice.
-        }else{
-            partial = vec![];
-        }
+
+    pub fn get_frames_segment(&self, segment_needed: &PlayerInputsSegmentRequest) -> Option<PlayerInputsSegmentResponse> {
+        // Eventually..., this whole thing can probably be sped up by not cloning anywhere. Just using fancy lifetimed references.
+        let player_record = self.frames_map.get(&segment_needed.player_id)?; // Wayyyy, using question marks like a boss. :)
+        let relative_start_frame = segment_needed.start_frame - player_record.start_frame;
 
 
-        FramesStoragePartial{
-            frames_section: partial,
-            start_index: first_index
+        let mut input_states_found = vec![];
+        for relative_index in relative_start_frame..(relative_start_frame + segment_needed.number_of_frames /*No need for +1 */){
+            let inputs = player_record.inputs.get(relative_index)?.clone();
+            input_states_found.push(inputs);
         }
+        return Some(PlayerInputsSegmentResponse{
+            player_id: segment_needed.player_id,
+            start_frame_index: segment_needed.start_frame,
+            input_states: input_states_found
+        });
     }
-    pub fn insert_frames_partial(&mut self, partial: FramesStoragePartial){
-        // Panic on overwrite attempt.
-        // TODO investigate RAM usage of filling with hundreds of blanks. Might need to also store frames vector start index.
-        if self.frames.len() > partial.start_index{
-            panic!("Tried to overwrite existing frames by inserting a partial frame.");
-        }
-        self.blanks_up_to_index(partial.start_index - 1);
-        for (iter_index, item) in partial.frames_section.into_iter().enumerate(){
-            self.frames.insert(partial.start_index + iter_index, item)
+
+    pub fn insert_frames_segment(&mut self, segment: PlayerInputsSegmentResponse){
+        let map = self.frames_map.get_mut(&segment.player_id).expect("Tried to insert frames for player that wasn't stored.");
+
+        for (input_vec_index, item) in segment.input_states.iter().enumerate(){
+            let absolute_index = segment.start_frame_index + input_vec_index;
+            let relative_index = absolute_index - map.start_frame;
+            let mut vec = map.inputs;
+
+            // I know its inneficient, and can be replaced by this: https://stackoverflow.com/questions/28678615/efficiently-insert-or-replace-multiple-elements-in-the-middle-or-at-the-beginnin
+            // But the other solution will get a bit complicated as the end of the slice to insert can be off the end of the vector.
+
+            vec_replace_or_end(&mut vec, relative_index, *item);
+
         }
     }
     pub fn insert_frames(&mut self, player_id: PlayerID, starting_index: usize, input_states: &[InputState; 20]){ // TODO probably could merge insert_frames and insert_partial.
@@ -150,7 +165,7 @@ impl InputFramesStorage{
         let number_to_add = target_index as i32 - self.frames.len() as i32 + 1;
         if number_to_add > 0{
             for iteration_index in 0..number_to_add { // TODO - google off by one exception. I'm expecting lower to be inclusive and upper to be exclusive.
-                self.frames.push(InputsFrame{
+                self.frames.push(PlayerInputsRecord {
                     inputs: HashMap::new() //Default::default()
                 });
             }
