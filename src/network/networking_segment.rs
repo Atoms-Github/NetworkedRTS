@@ -16,10 +16,9 @@ impl NetworkingSegment {
             connection_address: conn_address
         }
     }
-    pub fn init_connection(&mut self, player_name: String) -> (Sender<NetMessageType>, Receiver<NetMessageType>){
+    pub fn init_connection(&mut self, player_name: &String) -> (Sender<NetMessageType>, Receiver<NetMessageType>){
         let connection_result = TcpStream::connect(&self.connection_address);
         let mut stream = connection_result.expect("Failed to connect.");
-
 
         let (out_send, out_rec) = channel();
         let mut stream_outgoing = stream.try_clone().unwrap();
@@ -31,7 +30,7 @@ impl NetworkingSegment {
         });
         let connection_init_query = NetMessageType::ConnectionInitQuery(
             NetMsgConnectionInitQuery{
-                my_player_name: player_name
+                my_player_name: player_name.clone()
             }
         );
         out_send.send(connection_init_query).unwrap();

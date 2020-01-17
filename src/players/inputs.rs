@@ -15,9 +15,24 @@ pub struct InputState {
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird. // TODO figure out how array serialization works.
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum InputChange {
     KeyDownUp(KeyCode, bool),
     MouseMove(PointFloat)
+}
+
+impl InputChange{
+    pub fn apply_to_state(self, state: &mut InputState){
+        match self{
+
+            InputChange::KeyDownUp(code, is_pressed) => {
+                state.set_keycode_pressed(code, is_pressed);
+            },
+            InputChange::MouseMove(position) => {
+                state.mouse_loc = position;
+            }
+        }
+    }
 }
 
 

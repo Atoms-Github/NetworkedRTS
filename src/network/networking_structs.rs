@@ -20,6 +20,7 @@ use crate::systems::velocity_with_input::*;
 use crate::network::game_message_types::PlayerInputsSegmentRequest;
 use std::panic;
 use crate::utils::util_functions::vec_replace_or_end;
+use crate::network::game_message_types::NewPlayerInfo;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -30,15 +31,13 @@ pub type FrameIndex = usize;
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
-    pub last_frame_simed: FrameIndex, // TODO: Experiment with not having this field.
 }
 
 impl GameState{
     pub fn new() -> GameState{
         GameState{
             world: World::new(),
-            storages: Storages::new(),
-            last_frame_simed: 0
+            storages: Storages::new()
         }
     }
     pub fn init_rts(&mut self){
@@ -66,7 +65,7 @@ impl GameState{
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn simulate_tick(&mut self, inputs_info: &PlayerInputsRecord, delta: f64){
+    pub fn simulate_tick(&mut self, inputs_info: &InfoForSim, delta: f64){
         let mut pending = PendingEntities::new();
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
@@ -76,6 +75,13 @@ impl GameState{
 
         self.world.update_entities(&mut self.storages, pending);
     }
+}
+
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct InfoForSim {
+    pub inputs_map: HashMap<PlayerID, InputState>,
+    pub bonus_events: Vec<f32> // TODO: Implemenmt
 }
 
 
@@ -91,6 +97,10 @@ impl PlayerInputsRecord {
             start_frame
         }
     }
+    pub fn get_input_frame_abs(&self, target_frame_abs: &FrameIndex) -> Option<&InputState>{
+        let relative_frame = target_frame_abs - self.start_frame;
+        return self.inputs.get(relative_frame);
+    }
 }
 //#[derive(Serialize, Deserialize,Clone,  Debug)]
 //pub struct FramesStoragePartial{
@@ -104,7 +114,8 @@ pub struct PlayerInputsSegmentResponse { // TODO: Rename graphical_segment etc t
     pub input_states: Vec<InputState>,
 }
 
-#[derive(Clone)]
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InputFramesStorage{
     pub frames_map: HashMap<PlayerID, PlayerInputsRecord>
 }
@@ -115,10 +126,32 @@ impl InputFramesStorage{
             frames_map: Default::default(),
         }
     }
-    pub fn add_player(&mut self, player_id: &PlayerID, joined_player_frame_index: usize){
-        self.frames_map.insert(*player_id, PlayerInputsRecord::new(joined_player_frame_index));
+    pub fn add_player(&mut self, new_player_info: &NewPlayerInfo){
+        self.frames_map.insert(new_player_info.player_id, PlayerInputsRecord::new(new_player_info.frame_added));
     }
+    pub fn get_simable_info(){
 
+    }
+    pub fn calculate_last_inputs(&self) -> HashMap<PlayerID, InputState>{
+        let mut to_return = HashMap::new();
+
+        for (player_id,player_record) in self.frames_map.iter(){
+            let last_input= player_record.inputs.last();
+            let usable_input;
+            match last_input{
+                Some(state) => {
+                    usable_input = state.clone();
+                }
+                None => {
+                    usable_input = InputState::new();
+                }
+
+            }
+            to_return.insert(*player_id, usable_input);
+        }
+
+        return to_return;
+    }
     pub fn get_frames_segment(&self, segment_needed: &PlayerInputsSegmentRequest) -> Option<PlayerInputsSegmentResponse> {
         // Eventually..., this whole thing can probably be sped up by not cloning anywhere. Just using fancy lifetimed references.
         let player_record = self.frames_map.get(&segment_needed.player_id)?; // Wayyyy, using question marks like a boss. :)
@@ -127,8 +160,11 @@ impl InputFramesStorage{
 
         let mut input_states_found = vec![];
         for relative_index in relative_start_frame..(relative_start_frame + segment_needed.number_of_frames /*No need for +1 */){
-            let inputs = player_record.inputs.get(relative_index)?.clone();
-            input_states_found.push(inputs);
+            let inputs = player_record.inputs.get(relative_index);
+            if inputs.is_some(){
+                input_states_found.push(inputs.unwrap().clone());
+            }
+
         }
         return Some(PlayerInputsSegmentResponse{
             player_id: segment_needed.player_id,
@@ -137,40 +173,32 @@ impl InputFramesStorage{
         });
     }
 
-    pub fn insert_frames_segment(&mut self, segment: PlayerInputsSegmentResponse){
+    pub fn insert_frames_segment(&mut self, segment: &PlayerInputsSegmentResponse){
         let map = self.frames_map.get_mut(&segment.player_id).expect("Tried to insert frames for player that wasn't stored.");
 
         for (input_vec_index, item) in segment.input_states.iter().enumerate(){
             let absolute_index = segment.start_frame_index + input_vec_index;
             let relative_index = absolute_index - map.start_frame;
-            let mut vec = map.inputs;
+            let mut vec = &mut map.inputs;
 
             // I know its inneficient, and can be replaced by this: https://stackoverflow.com/questions/28678615/efficiently-insert-or-replace-multiple-elements-in-the-middle-or-at-the-beginnin
             // But the other solution will get a bit complicated as the end of the slice to insert can be off the end of the vector.
 
-            vec_replace_or_end(&mut vec, relative_index, *item);
+            vec_replace_or_end(vec, relative_index, item.clone());
 
         }
     }
-    pub fn insert_frames(&mut self, player_id: PlayerID, starting_index: usize, input_states: &[InputState; 20]){ // TODO probably could merge insert_frames and insert_partial.
-        self.blanks_up_to_index(starting_index + input_states.len());
-
-
-        for (current_index, input_state) in input_states.iter().enumerate(){ // TODO - Use fancy vector clone section method.
-            self.frames[current_index].inputs.insert(player_id, input_state.clone()); // TODO - Use moves instead of clone.
-        }
-    }
-    pub fn blanks_up_to_index(&mut self, target_index: usize){
-//        println!("A: {} B: {} ", target_index, self.frames.len());
-        let number_to_add = target_index as i32 - self.frames.len() as i32 + 1;
-        if number_to_add > 0{
-            for iteration_index in 0..number_to_add { // TODO - google off by one exception. I'm expecting lower to be inclusive and upper to be exclusive.
-                self.frames.push(PlayerInputsRecord {
-                    inputs: HashMap::new() //Default::default()
-                });
-            }
-        }
-    }
+//    pub fn blanks_up_to_index(&mut self, target_index: usize){
+////        println!("A: {} B: {} ", target_index, self.frames.len());
+//        let number_to_add = target_index as i32 - self.frames.len() as i32 + 1;
+//        if number_to_add > 0{
+//            for iteration_index in 0..number_to_add { // TODO - google off by one exception. I'm expecting lower to be inclusive and upper to be exclusive.
+//                self.frames.push(PlayerInputsRecord {
+//                    inputs: HashMap::new() //Default::default()
+//                });
+//            }
+//        }
+//    }
 }
 
 
@@ -250,7 +278,7 @@ impl PlayerProperties{
     pub fn new(player_id: PlayerID) -> PlayerProperties{
         PlayerProperties{
             name : String::from("NamelessWonder"),
-            player_id: player_id
+            player_id
         }
     }
 }

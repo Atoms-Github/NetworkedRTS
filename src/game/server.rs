@@ -10,6 +10,7 @@ use crate::network::networking_message_types::{NetMessageType, NetMsgConnectionI
 use std::sync::{Mutex, Arc};
 use std::thread;
 use crate::network::game_message_types::LogicInwardsMessage;
+use crate::network::game_message_types::LogicOutwardsMessage;
 use std::panic;
 
 struct ServerMainState {
@@ -18,7 +19,8 @@ struct ServerMainState {
     outgoing_messages: Sender<DistributableNetMessage>,
     incoming_messages: Receiver<OwnedNetworkMessage>,
     game_state_tail: Arc<Mutex<GameState>>,
-    game_updates_sink: Sender<LogicInwardsMessage>
+    logic_updates_sink: Sender<LogicInwardsMessage>,
+    logic_updates_rec: Receiver<LogicOutwardsMessage>
 }
 
 pub fn server_main(hosting_ip: &String){
@@ -46,8 +48,9 @@ impl ServerMainState{
         };
         let mut game_state = GameState::new();
         game_state.init_rts();
+        let (mut logic_outwards_sink, mut logic_outwards_rec) = channel();
         let (mut logic_segment, mut state_handle) =
-            LogicSegment::new(false, big_fat_zero_time.clone(), game_state);
+            LogicSegment::new(false, big_fat_zero_time.clone(), game_state,logic_outwards_sink);
 
         let (mut game_updates_sink, mut game_updates_rec) = channel();
         thread::spawn(||{
@@ -62,7 +65,8 @@ impl ServerMainState{
             outgoing_messages: outgoing_sender,
             incoming_messages,
             game_state_tail: state_handle,
-            game_updates_sink
+            logic_updates_sink: game_updates_sink,
+            logic_updates_rec: logic_outwards_rec
         }
     }
     pub fn server_logic_loop(mut self){
@@ -76,18 +80,17 @@ impl ServerMainState{
             match incoming_message{
                 NetMessageType::ConnectionInitQuery(response) => {
                     let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO this shouldn't need to be cloned to be serialized.
-                    let inputs_since_connection = self.all_frames.get_frames_partial(state_to_send.last_frame_simed + 1);
                     let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                         assigned_player_id: player_id,
-                        frames_gathered_so_far: inputs_since_connection,
-                        known_frame_info: KnownFrameInfo { known_frame_index: state_to_send.last_frame_simed, time: SystemTime::now() },
+                        frames_gathered_so_far: self.all_frames.clone(),
+                        known_frame_info: self.big_fat_zero_time.clone(),
                         game_state: state_to_send,
                     });
                     println!("Received initialization request for player with ID: {}", player_id);
                     self.outgoing_messages.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
                 },
                 NetMessageType::GameUpdate(update_info) => {
-                    self.game_updates_sink.send(update_info).unwrap();
+                    self.logic_updates_sink.send(update_info).unwrap();
                 },
                 _ => {
                     panic!("Unexpected message");

@@ -5,10 +5,17 @@ use crate::game::timekeeping::*;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::game_message_types::{LogicInwardsMessage, NewPlayerInfo, LogicOutwardsMessage};
 use crate::network::networking_structs::*;
+use crate::network::game_message_types::*;
 use std::panic;
+use std::collections::HashMap;
+use std::thread::Thread;
+use std::time::Duration;
 
-pub const HEAD_FRAME_LEAD : usize = 19;
 
+pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
+
+
+type Meme<T> = Arc<Mutex<T>>;
 
 pub struct LogicSegment {
     head_is_ahead: bool,
@@ -57,53 +64,79 @@ impl LogicSegment {
     fn apply_game_message(&mut self, message: &LogicInwardsMessage){
         match message{
             LogicInwardsMessage::InputsUpdate(inputs_update) => {
-                self.all_frames.insert_frames(inputs_update.player_id,inputs_update.frame_index, &inputs_update.input_states);
+                self.all_frames.insert_frames_segment(inputs_update);
             }
             LogicInwardsMessage::NewPlayer(new_player_info) => {
-                self.add_new_player(new_player_info);
-
+//                self.add_new_player(new_player_info); // TODO: Implement properly with new bonus event system.
+            }
+            LogicInwardsMessage::SmallInputsUpdate(small_update) => {
+                // TODO: Implement
             }
         }
     }
-    pub fn add_new_player(&mut self, new_player_info: &NewPlayerInfo){
-        self.game_state_tail.add_player(new_player_info.player_id);
-        self.all_frames.add_player(&new_player_info.player_id, new_player_info.frame_added)
-    }
-    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex){
-        self.game_state_tail.last_frame_simed = tail_frame_to_sim;
-        let inputs_to_use = self.all_frames.frames.get(tail_frame_to_sim).expect("Panic! Required frames haven't arrived yet. OH MY HOMIES!");
-        self.game_state_tail.simulate_tick(inputs_to_use, FRAME_DURATION);
-    }
-    fn resimulate_head(&mut self, tail_frame: FrameIndex){
+    fn resimulate_head(&mut self, tail_frame_just_simed: FrameIndex){
         let mut head_to_be = self.game_state_tail.clone();
-        for frame_index_to_simulate in tail_frame..(tail_frame + HEAD_FRAME_LEAD + 1){
-            head_to_be.last_frame_simed += 1; // TODO: Shouldn't be needed if this field is removed. Can be done better.
-//                println!("Simulating frame nubmer {}", frame_index_to_simulate);
+        let first_head_to_sim = tail_frame_just_simed + 1;
+        // TODO: Could probably be sped with references instead of cloning.
+        let mut players_last_input = self.all_frames.calculate_last_inputs();
 
-            let possible_arrived_inputs = self.all_frames.frames.get(frame_index_to_simulate);
-            let inputs_to_use;
-            let blank_inputs = PlayerInputsRecord::new();
-            match possible_arrived_inputs{
-                Some(inputs) => {
-                    inputs_to_use = inputs;
-                }
-                None=> {
-                    inputs_to_use = &blank_inputs; // TODO: Should 1. use the last known input, not nothing. And 2. should split inputs by players, so only unknown players are guessed.
+        for frame_index_to_simulate in first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT){
+            let mut inputs_to_sim_with = HashMap::new();
+            for (player_id,player_record) in self.all_frames.frames_map.iter(){
+                let player_inputs = player_record.get_input_frame_abs(&frame_index_to_simulate);
+                match player_inputs{
+                    Some(inputs) => {
+                        inputs_to_sim_with.insert(*player_id, inputs.clone());
+                    },
+                    None => {
+                        inputs_to_sim_with.insert(*player_id, players_last_input.get(player_id).unwrap().clone());
+                    }
                 }
             }
-            head_to_be.simulate_tick(inputs_to_use, 0.016 /* TODO: Use real delta. */);
+            let sim_info = InfoForSim{
+                inputs_map: inputs_to_sim_with,
+                bonus_events: vec![] // TODO: Implement
+            };
+            head_to_be.simulate_tick(&sim_info, 0.016 /* TODO: Use real delta. */);
         }
         {
             *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
         }
     }
+    //    pub fn add_new_player(&mut self, new_player_info: &NewPlayerInfo){
+////        self.game_state_tail.add_player(new_player_info.player_id); TODO: This should be part of the fancy new other game message channel - which can either be none or list of events.
+//        self.all_frames.add_player(new_player_info);
+//    }
+    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Option<PlayerInputsSegmentRequest>{
+        let mut all_inputs = HashMap::new();
+        for (player_id,player_record) in self.all_frames.frames_map.iter(){
+            let player_inputs = player_record.get_input_frame_abs(&tail_frame_to_sim);
+            match player_inputs{
+                Some(inputs) => {
+                    all_inputs.insert(*player_id, inputs.clone());
+                },
+                None => {
+                    let missing_inputs_request = PlayerInputsSegmentRequest{
+                        player_id: *player_id,
+                        start_frame: tail_frame_to_sim,
+                        number_of_frames: 20 // Can be any.
+                    };
+                    return Some(missing_inputs_request);
+                }
+            }
+        }
+        let sim_info = InfoForSim{
+            inputs_map: all_inputs,
+            bonus_events: vec![] // TODO: Implement
+        };
+        self.game_state_tail.simulate_tick(&sim_info, FRAME_DURATION);
+
+        return None; // No missing frames.
+    }
     fn set_head_to_tail(&mut self){
         let mut meme = self.game_state_head.lock().unwrap();
         *meme = self.game_state_tail.clone();
 
-    }
-    pub fn load_frames(&mut self, frames_partial: FramesStoragePartial){
-        self.all_frames.insert_frames_partial(frames_partial);
     }
 
 
@@ -112,12 +145,18 @@ impl LogicSegment {
         loop{
             let tail_frame_to_sim = generator.recv().unwrap();
 
-            self.apply_available_game_messages(&mut game_messages_channel);
-
-            self.all_frames.blanks_up_to_index(tail_frame_to_sim + HEAD_FRAME_LEAD); // TODO: Should detect and handle when inputs don't come in.
-
-            self.sim_tail_frame(tail_frame_to_sim);
-
+            loop{ // Wait until inputs have arrived so tail can be simulated.
+                self.apply_available_game_messages(&mut game_messages_channel);
+                match self.sim_tail_frame(tail_frame_to_sim){
+                    None => {
+                        break; // Inputs have arrived.
+                    },
+                    Some(request) => {
+                        self.outwards_messages.send( LogicOutwardsMessage::PlayerInputsNeeded(request) ).unwrap();
+                        std::thread::sleep(Duration::from_millis(100)); // Wait to save CPU cycles. TODO: Can optimise recovery time by increasing check rate, but resend rate shouldn't be too high cos can't have too many messages.
+                    }
+                }
+            }
             if self.head_is_ahead { // Don't bother on the server.
                 self.resimulate_head(tail_frame_to_sim);
             }else{
