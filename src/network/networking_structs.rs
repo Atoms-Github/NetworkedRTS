@@ -17,10 +17,12 @@ use crate::systems::render::*;
 use crate::systems::size::*;
 use crate::systems::velocity::*;
 use crate::systems::velocity_with_input::*;
-use crate::network::game_message_types::PlayerInputsSegmentRequest;
+use crate::network::game_message_types::*;
+use crate::players::inputs::*;
 use std::panic;
 use crate::utils::util_functions::vec_replace_or_end;
 use crate::network::game_message_types::NewPlayerInfo;
+use nalgebra::abs;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -81,7 +83,7 @@ impl GameState{
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InfoForSim {
     pub inputs_map: HashMap<PlayerID, InputState>,
-    pub bonus_events: Vec<f32> // TODO: Implemenmt
+    pub bonus_events: Vec<BonusEvent>
 }
 
 
@@ -107,23 +109,39 @@ impl PlayerInputsRecord {
 //    pub frames_section: Vec<PlayerInputsRecord>,
 //    pub start_index: usize
 //}
+
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PlayerInputsSegmentResponse { // TODO: Rename graphical_segment etc to graphical_module.
-    pub player_id: PlayerID,
-    pub start_frame_index: FrameIndex,
-    pub input_states: Vec<InputState>,
+pub enum PlayerInputSegmentType{
+    Change(InputChange),
+    WholeState(InputState)
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum BonusEvent{
+    NewPlayer(PlayerID),
+    None
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InputFramesStorage{
-    pub frames_map: HashMap<PlayerID, PlayerInputsRecord>
+    pub frames_map: HashMap<PlayerID, PlayerInputsRecord>,
+    pub bonus_events: Vec<Vec<BonusEvent>>,
+    pub bonus_start_frame: FrameIndex,
+}
+
+fn blanks_to_frame(vector: &mut Vec<InputState>, relative_frame_index: FrameIndex){ // TODO3: Move somewhere.
+    for index in vector.len()..(relative_frame_index+1) /*Start exclusive, end inclusive.*/{
+        vector.push(InputState::new()); // Fill in with blanks.
+    }
 }
 
 impl InputFramesStorage{
-    pub fn new() -> InputFramesStorage{
+    pub fn new(start_frame: FrameIndex) -> InputFramesStorage{
         InputFramesStorage{
             frames_map: Default::default(),
+            bonus_events: vec![],
+            bonus_start_frame: start_frame
         }
     }
     pub fn add_player(&mut self, new_player_info: &NewPlayerInfo){
@@ -152,39 +170,84 @@ impl InputFramesStorage{
 
         return to_return;
     }
-    pub fn get_frames_segment(&self, segment_needed: &PlayerInputsSegmentRequest) -> Option<PlayerInputsSegmentResponse> {
-        // Eventually..., this whole thing can probably be sped up by not cloning anywhere. Just using fancy lifetimed references.
-        let player_record = self.frames_map.get(&segment_needed.player_id)?; // Wayyyy, using question marks like a boss. :)
-        let relative_start_frame = segment_needed.start_frame - player_record.start_frame;
+    pub fn get_frames_segment(&self, segment_needed: &LogicInfoRequest) -> Option<LogicInwardsMessage> {
+        match segment_needed.type_needed{
+            LogicInfoRequestType::PlayerInputs(player_id) => {
+                // Eventually..., this whole thing can probably be sped up by not cloning anywhere. Just using fancy lifetimed references.
+                let player_record = self.frames_map.get(&player_id)?; // Wayyyy, using question marks like a boss. :)
+                let relative_start_frame = segment_needed.start_frame - player_record.start_frame;
 
 
-        let mut input_states_found = vec![];
-        for relative_index in relative_start_frame..(relative_start_frame + segment_needed.number_of_frames /*No need for +1 */){
-            let inputs = player_record.inputs.get(relative_index);
-            if inputs.is_some(){
-                input_states_found.push(inputs.unwrap().clone());
+                let mut input_states_found = vec![];
+                for relative_index in relative_start_frame..(relative_start_frame + segment_needed.number_of_frames /*No need for +1 */){
+                    let inputs = player_record.inputs.get(relative_index);
+                    if inputs.is_some(){
+                        let input_segment = PlayerInputSegmentType::WholeState(inputs.unwrap().clone());
+                        input_states_found.push(input_segment);
+                    }
+
+                }
+
+                return Some(LogicInwardsMessage::InputsUpdate(LogicInputsResponse{
+                    player_id,
+                    start_frame_index: segment_needed.start_frame,
+                    input_states: input_states_found
+                }));
             }
-
+            LogicInfoRequestType::BonusEvents => {
+                // This should never be called on the client.
+                let mut events = vec![];
+                for abs_index in segment_needed.start_frame..(segment_needed.start_frame + segment_needed.number_of_frames){
+                    let relative_index = abs_index - self.bonus_start_frame;
+                    let events_list = self.bonus_events.get(abs_index);
+                    if events_list.is_some(){
+                       events.push(events_list.unwrap().clone());
+                    }else{
+                        break; // Reached end of list.
+                    }
+                }
+                let msg = LogicInwardsMessage::BonusMsgsUpdate(BonusMsgsResponse{
+                    start_frame_index: segment_needed.start_frame,
+                    event_lists: events
+                });
+                return Some(msg);
+            }
         }
-        return Some(PlayerInputsSegmentResponse{
-            player_id: segment_needed.player_id,
-            start_frame_index: segment_needed.start_frame,
-            input_states: input_states_found
-        });
+
+    }
+    pub fn insert_bonus_segment(&mut self, segment: &BonusMsgsResponse){
+
+        for (source_rel_index, events) in segment.event_lists.iter().enumerate(){
+            let abs_index = source_rel_index + segment.start_frame_index;
+            let target_rel_index = abs_index - self.bonus_start_frame;
+            vec_replace_or_end(&mut self.bonus_events, target_rel_index, events.clone()); // Pointless_optimum Clone.
+        }
     }
 
-    pub fn insert_frames_segment(&mut self, segment: &PlayerInputsSegmentResponse){
-        let map = self.frames_map.get_mut(&segment.player_id).expect("Tried to insert frames for player that wasn't stored.");
-
+    pub fn insert_frames_segment(&mut self, segment: &LogicInputsResponse){
+//        let map = self.frames_map.get_mut(&segment.player_id).expect("Tried to insert frames for player that wasn't stored.");
         for (input_vec_index, item) in segment.input_states.iter().enumerate(){
             let absolute_index = segment.start_frame_index + input_vec_index;
-            let relative_index = absolute_index - map.start_frame;
-            let mut vec = &mut map.inputs;
+
+
 
             // I know its inneficient, and can be replaced by this: https://stackoverflow.com/questions/28678615/efficiently-insert-or-replace-multiple-elements-in-the-middle-or-at-the-beginnin
             // But the other solution will get a bit complicated as the end of the slice to insert can be off the end of the vector.
+            let map = self.frames_map.get_mut(&segment.player_id).expect("Tried to insert frames for player that wasn't stored.");
+            let relative_index = absolute_index - map.start_frame;
 
-            vec_replace_or_end(vec, relative_index, item.clone());
+            match item.clone(){
+                // TODO3: Optimise this whole section.
+                PlayerInputSegmentType::WholeState(state) => {
+
+                    vec_replace_or_end(&mut map.inputs, relative_index, state);
+                }
+                PlayerInputSegmentType::Change(input_change) => {
+                    blanks_to_frame(&mut map.inputs, absolute_index);
+                    let state = map.inputs.get_mut(relative_index).unwrap();
+                    input_change.apply_to_state(state);
+                }
+            }
 
         }
     }
@@ -192,7 +255,7 @@ impl InputFramesStorage{
 ////        println!("A: {} B: {} ", target_index, self.frames.len());
 //        let number_to_add = target_index as i32 - self.frames.len() as i32 + 1;
 //        if number_to_add > 0{
-//            for iteration_index in 0..number_to_add { // TODO - google off by one exception. I'm expecting lower to be inclusive and upper to be exclusive.
+//            for iteration_index in 0..number_to_add {
 //                self.frames.push(PlayerInputsRecord {
 //                    inputs: HashMap::new() //Default::default()
 //                });

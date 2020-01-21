@@ -3,7 +3,7 @@
 #![feature(core_intrinsics)]
 #![allow(dead_code)]
 #![allow(unused_mut)]
-#![allow(unused_unsafe)] // TODO: Investigate this.
+#![allow(unused_unsafe)] // TODO2: Investigate the need for this.
 
 use std::env;
 
@@ -30,7 +30,7 @@ fn main() {
             ip_str
         }
         _ => {
-            let default = "10.0.0.45:5535".to_string();
+            let default = "188.74.103.179:5535".to_string();
             println!("Connection/hosting IP not specified! Using {}", default);
             default
         }

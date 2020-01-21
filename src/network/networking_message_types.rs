@@ -10,7 +10,7 @@ use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::game_message_types;
 use crate::network::networking_structs::*;
 
-pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO: Investigate a way to destroy thread when receiver is dropped.
+pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO2: Investigate a way to destroy thread when receiver is dropped.
     let (sender, receive) = channel::<NetMessageType>();
     thread::spawn(move ||{
         loop{
@@ -21,7 +21,7 @@ pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMes
             let mut message_buffer = vec![0; message_size as usize];
             read_stream.read_exact(&mut message_buffer).unwrap();
 
-            let result = bincode::deserialize::<NetMessageType>(&message_buffer[..]); // TODO should crash on failure.
+            let result = bincode::deserialize::<NetMessageType>(&message_buffer[..]); // TODO1 should crash on failure.
             match result{
                 Ok(msg) => {
                     sender.send(msg).unwrap();

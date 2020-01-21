@@ -1,12 +1,13 @@
 use std::sync::mpsc::{channel, Receiver};
 use std::thread;
-use std::time::{SystemTime};
+use std::time::{SystemTime, Duration};
 
 use serde::*;
 
 use crate::network::networking_structs::FrameIndex;
+use std::thread::Thread;
 
-pub const FRAME_DURATION: f64 = 0.0166;
+pub const FRAME_DURATION_MILLIS: f64 = 16.66;
 
 
 pub struct SimableFrameInfo {
@@ -47,25 +48,28 @@ impl KnownFrameInfo{
     pub fn get_intended_current_frame(&self) -> usize{
         let time_since_known_frame = SystemTime::now().duration_since(self.time).unwrap();
 
-        let intended_frame = self.known_frame_index + (time_since_known_frame.as_micros() as f64 / FRAME_DURATION).floor() as usize;
+        let intended_frame = self.known_frame_index + (time_since_known_frame.as_millis() as f64 / FRAME_DURATION_MILLIS).floor() as usize;
         return intended_frame;
     }
 
     pub fn start_frame_stream(&self) -> Receiver<FrameIndex>{
         let (sender, receiver) = channel();
         let frame_info = self.clone();
-        // TODO: find how to close thread when not needed.
+        // TODO2: find how to close thread when not needed.
         thread::spawn( move|| {
             let sink = sender;
 
-            let mut last_frame_simed = frame_info.known_frame_index;//TODO Fix off by ones globally :) - 1;
+            let mut last_frame_simed = frame_info.known_frame_index;
             loop{
                 let intended_frame = frame_info.get_intended_current_frame();
                 if last_frame_simed < intended_frame {
                     last_frame_simed += 1;
                     sink.send(last_frame_simed).unwrap();
                 }
-                // TODO: Sleep until just before next frame to help performance.
+                thread::sleep(Duration::from_millis(1))
+                // modival Sleep until just before next frame to help performance.
+                // TODO2: Use a clever sleep amount.
+
             }
         });
         return receiver;

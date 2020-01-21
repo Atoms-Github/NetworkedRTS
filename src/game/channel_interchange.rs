@@ -8,7 +8,7 @@ use crate::network::game_message_types::*;
 
 
 
-// TODO: Move all interchanges to here.
+// TODO2: Move all interchanges to here.
 
 
 use std::sync::mpsc::{Receiver, Sender};
@@ -28,10 +28,11 @@ pub fn gather_inputs_and_yeet_loop(inputs_stream: Receiver<InputChange>, outgoin
         }
 
 
-        let inputs_update_message = NetMessageType::GameUpdate(LogicInwardsMessage::InputsUpdate(PlayerInputsSegmentResponse{
+        let inputs_update_message = NetMessageType::GameUpdate(LogicInwardsMessage::InputsUpdate(LogicInputsResponse {
             player_id,
             start_frame_index: frame_index,
-            input_states: vec![inputs_state] // For now, just send one input. Can be changed to 2 or 20 if lots of input packages are failing.
+
+            input_states: vec![ PlayerInputSegmentType::WholeState(inputs_state) ] // For now, just send one input. Can be changed to 2 or 20 if lots of input packages are failing.
         }));
         outgoing_network.send(inputs_update_message).unwrap();
     }

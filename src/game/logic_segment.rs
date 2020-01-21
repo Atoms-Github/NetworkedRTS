@@ -32,17 +32,18 @@ impl LogicSegment {
     pub fn new(head_is_ahead:bool, known_frame_info: KnownFrameInfo, state_tail: GameState, outwards_messages: Sender<LogicOutwardsMessage>)
                -> (LogicSegment, Arc<Mutex<GameState>>){
         let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
+        let bonus_events_zero = known_frame_info.get_intended_current_frame();
+        println!("LogicSegmentBonusZero: {}", bonus_events_zero);
         (
             LogicSegment {
             head_is_ahead,
             known_frame_info,
             game_state_head: game_state_head.clone(),
             game_state_tail: state_tail,
-            all_frames: InputFramesStorage::new(),
+            all_frames: InputFramesStorage::new(bonus_events_zero),
                 outwards_messages
             },
             game_state_head)
-
     }
     fn apply_available_game_messages(&mut self, inputs_channel: &mut Receiver<LogicInwardsMessage>){
         loop{
@@ -66,18 +67,15 @@ impl LogicSegment {
             LogicInwardsMessage::InputsUpdate(inputs_update) => {
                 self.all_frames.insert_frames_segment(inputs_update);
             }
-            LogicInwardsMessage::NewPlayer(new_player_info) => {
-//                self.add_new_player(new_player_info); // TODO: Implement properly with new bonus event system.
-            }
-            LogicInwardsMessage::SmallInputsUpdate(small_update) => {
-                // TODO: Implement
+            LogicInwardsMessage::BonusMsgsUpdate(bonus_msg_response) => {
+
             }
         }
     }
     fn resimulate_head(&mut self, tail_frame_just_simed: FrameIndex){
         let mut head_to_be = self.game_state_tail.clone();
         let first_head_to_sim = tail_frame_just_simed + 1;
-        // TODO: Could probably be sped with references instead of cloning.
+        // Pointless_optimum: Could probably be sped with references instead of cloning.
         let mut players_last_input = self.all_frames.calculate_last_inputs();
 
         for frame_index_to_simulate in first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT){
@@ -93,21 +91,28 @@ impl LogicSegment {
                     }
                 }
             }
+
+            let bonus_relative_frame_index = frame_index_to_simulate - self.all_frames.bonus_start_frame;
+            let bonus_infos = self.all_frames.bonus_events.get(bonus_relative_frame_index);
+            let bonus_infos_to_use;
+            if bonus_infos.is_some(){
+                bonus_infos_to_use = bonus_infos.unwrap().clone();
+            }else{
+                bonus_infos_to_use = vec![];
+            }
+
+
             let sim_info = InfoForSim{
                 inputs_map: inputs_to_sim_with,
-                bonus_events: vec![] // TODO: Implement
+                bonus_events: bonus_infos_to_use
             };
-            head_to_be.simulate_tick(&sim_info, 0.016 /* TODO: Use real delta. */);
+            head_to_be.simulate_tick(&sim_info, 0.016 /* TODO2: Use real delta. */);
         }
         {
             *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
         }
     }
-    //    pub fn add_new_player(&mut self, new_player_info: &NewPlayerInfo){
-////        self.game_state_tail.add_player(new_player_info.player_id); TODO: This should be part of the fancy new other game message channel - which can either be none or list of events.
-//        self.all_frames.add_player(new_player_info);
-//    }
-    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Option<PlayerInputsSegmentRequest>{
+    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Option<LogicInfoRequest>{
         let mut all_inputs = HashMap::new();
         for (player_id,player_record) in self.all_frames.frames_map.iter(){
             let player_inputs = player_record.get_input_frame_abs(&tail_frame_to_sim);
@@ -116,20 +121,29 @@ impl LogicSegment {
                     all_inputs.insert(*player_id, inputs.clone());
                 },
                 None => {
-                    let missing_inputs_request = PlayerInputsSegmentRequest{
-                        player_id: *player_id,
+                    let missing_inputs_request = LogicInfoRequest {
                         start_frame: tail_frame_to_sim,
-                        number_of_frames: 20 // Can be any.
+                        number_of_frames: 20, // Can be any.
+                        type_needed: LogicInfoRequestType::PlayerInputs(*player_id),
                     };
                     return Some(missing_inputs_request);
                 }
             }
         }
+        let bonus_relative_frame_index = tail_frame_to_sim - self.all_frames.bonus_start_frame;
+        let bonus_infos = self.all_frames.bonus_events.get(bonus_relative_frame_index);
+        if bonus_infos.is_none(){
+            return Some(LogicInfoRequest{
+                start_frame: tail_frame_to_sim,
+                number_of_frames: 20,
+                type_needed: LogicInfoRequestType::BonusEvents
+            });
+        }
         let sim_info = InfoForSim{
             inputs_map: all_inputs,
-            bonus_events: vec![] // TODO: Implement
+            bonus_events: bonus_infos.unwrap().clone(),
         };
-        self.game_state_tail.simulate_tick(&sim_info, FRAME_DURATION);
+        self.game_state_tail.simulate_tick(&sim_info, FRAME_DURATION_MILLIS);
 
         return None; // No missing frames.
     }
@@ -139,7 +153,9 @@ impl LogicSegment {
 
     }
 
-
+    pub fn load_frames(&mut self, storage: InputFramesStorage){
+        self.all_frames = storage;
+    }
     pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<LogicInwardsMessage>){
         let mut generator = self.known_frame_info.start_frame_stream();
         loop{
@@ -152,8 +168,9 @@ impl LogicSegment {
                         break; // Inputs have arrived.
                     },
                     Some(request) => {
-                        self.outwards_messages.send( LogicOutwardsMessage::PlayerInputsNeeded(request) ).unwrap();
-                        std::thread::sleep(Duration::from_millis(100)); // Wait to save CPU cycles. TODO: Can optimise recovery time by increasing check rate, but resend rate shouldn't be too high cos can't have too many messages.
+                        println!("Logic missing info so asking: {:?}", request);
+                        self.outwards_messages.send( LogicOutwardsMessage::InputsNeeded(request) ).unwrap();
+                        std::thread::sleep(Duration::from_millis(100)); // Wait to save CPU cycles. modival: Can optimise recovery time by increasing check rate, but resend rate shouldn't be too high cos can't have too many messages.
                     }
                 }
             }
@@ -213,7 +230,6 @@ impl LogicSegment {
 //
 //},
 //NetMessageType::InputsUpdate(msg_inputs) => {
-//// TODO - need to do some player ID matching here.
 //for online_player in &mut self.online_players{
 //online_player.controller = msg_inputs.controllers[0].clone();
 //}

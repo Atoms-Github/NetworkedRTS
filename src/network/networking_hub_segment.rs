@@ -24,7 +24,7 @@ pub enum DistributableNetMessage{
 
 
 
-impl NetworkingHub{ // This isn't responsible for sending worlds. // TODO: Fix indentation.
+impl NetworkingHub{ // This isn't responsible for sending worlds. // TODO3: Fix indentation.
 pub fn new() -> NetworkingHub {
     NetworkingHub{
         output_messages_sender: None,
@@ -59,7 +59,7 @@ fn handle_new_socket(&self, stream: TcpStream){
 
     });
 }
-pub fn start_listening(mut self /* TODO: Ref might be enough. */, input_messages: Receiver<DistributableNetMessage>, addr: SocketAddr) -> Receiver<OwnedNetworkMessage>{
+pub fn start_listening(mut self /* TODO2: Ref might be enough. */, input_messages: Receiver<DistributableNetMessage>, addr: SocketAddr) -> Receiver<OwnedNetworkMessage>{
 
     // HandleIncomingConnections.
     let (out_sender, out_receiver) = channel();

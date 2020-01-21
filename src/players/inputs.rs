@@ -12,7 +12,7 @@ type PointFloat = nalgebra::Point2<f32>;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
-    pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird. // TODO figure out how array serialization works.
+    pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird. // TODO2 figure out how array serialization works.
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -22,14 +22,13 @@ pub enum InputChange {
 }
 
 impl InputChange{
-    pub fn apply_to_state(self, state: &mut InputState){
+    pub fn apply_to_state(&self, state: &mut InputState){
         match self{
-
             InputChange::KeyDownUp(code, is_pressed) => {
-                state.set_keycode_pressed(code, is_pressed);
+                state.set_keycode_pressed(*code, *is_pressed);
             },
             InputChange::MouseMove(position) => {
-                state.mouse_loc = position;
+                state.mouse_loc = position.clone();
             }
         }
     }
@@ -41,7 +40,7 @@ impl InputState{
         InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
             keys_pressed: HashSet::new(),
-//            keys_pressed: vec![false; 260], // TODO find real limit of keys_pressed array.
+//            keys_pressed: vec![false; 260]
         }
     }
     pub fn is_keyid_pressed(&self, key_id: usize) -> bool{

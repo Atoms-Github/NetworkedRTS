@@ -59,7 +59,7 @@ impl ServerMainState{
 
 
         return ServerMainState{
-            all_frames: InputFramesStorage::new(),
+            all_frames: InputFramesStorage::new(0),
             big_fat_zero_time,
 
             outgoing_messages: outgoing_sender,
@@ -79,7 +79,7 @@ impl ServerMainState{
 
             match incoming_message{
                 NetMessageType::ConnectionInitQuery(response) => {
-                    let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO this shouldn't need to be cloned to be serialized.
+                    let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
                     let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                         assigned_player_id: player_id,
                         frames_gathered_so_far: self.all_frames.clone(),

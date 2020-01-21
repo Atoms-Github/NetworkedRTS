@@ -6,16 +6,20 @@ use crate::players::inputs::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum LogicInwardsMessage {
-    InputsUpdate(PlayerInputsSegmentResponse),
-    SmallInputsUpdate(PlayerInputsSingleChange),
-    NewPlayer(NewPlayerInfo)
-}
+    InputsUpdate(LogicInputsResponse),
+    BonusMsgsUpdate(BonusMsgsResponse)
 
+}
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PlayerInputsSingleChange {
+pub struct LogicInputsResponse { // TODO2: Rename graphical_segment etc to graphical_module.
     pub player_id: PlayerID,
-    pub frame_index: FrameIndex,
-    pub input_change: InputChange,
+    pub start_frame_index: FrameIndex,
+    pub input_states: Vec<PlayerInputSegmentType>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct BonusMsgsResponse {
+    pub start_frame_index: FrameIndex,
+    pub event_lists: Vec<Vec<BonusEvent>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -26,12 +30,18 @@ pub struct NewPlayerInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum LogicOutwardsMessage {
-    PlayerInputsNeeded(PlayerInputsSegmentRequest)
+    InputsNeeded(LogicInfoRequest)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PlayerInputsSegmentRequest {
-    pub player_id: PlayerID,
+pub enum LogicInfoRequestType {
+    PlayerInputs(PlayerID),
+    BonusEvents,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct LogicInfoRequest {
     pub start_frame: FrameIndex,
-    pub number_of_frames: usize // Usually 20.
+    pub number_of_frames: usize, // Usually 20.
+    pub type_needed: LogicInfoRequestType,
 }

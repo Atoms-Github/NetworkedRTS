@@ -37,11 +37,8 @@ fn init_logic(welcome_info: NetMsgConnectionInitResponse) -> (Sender<LogicInward
     let (mut from_logic_sink, mut from_logic_rec) = channel();
     let (mut logic_segment, mut state_head) = LogicSegment::new(
         true, welcome_info.known_frame_info.clone(), welcome_info.game_state, from_logic_sink);
-//    logic_segment.load_frames(welcome_info.frames_gathered_so_far); TODO: Implement.
-//    logic_segment.add_new_player(&NewPlayerInfo{
-//        player_id: welcome_info.assigned_player_id,
-//        frame_added: welcome_info.known_frame_info.get_intended_current_frame() + 19
-//    });
+
+    logic_segment.load_frames(welcome_info.frames_gathered_so_far); // TODO3: A bit clumsy.
     let (to_logic_sink, to_logic_rec) = channel();
     thread::spawn(move ||{
         logic_segment.run_logic_loop(to_logic_rec);
@@ -68,7 +65,7 @@ fn init_yeeting_my_inputs(inputs_stream: Receiver<InputChange>, outgoing_network
         loop{
             let inputs_change = inputs_stream.recv().unwrap();
             for_network_sink.send(inputs_change.clone()).unwrap(); // Apply to network.
-            let message = LogicInwardsMessage::InputsUpdate(PlayerInputsSegmentResponse{
+            let message = LogicInwardsMessage::InputsUpdate(LogicInputsResponse {
                 player_id: my_player_id,
                 start_frame_index: 2,
                 input_states: vec![]
