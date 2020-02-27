@@ -70,7 +70,6 @@ impl ServerMainState{
         }
     }
     pub fn server_logic_loop(mut self){
-
         loop{
             let incoming_owned_message = self.incoming_messages.recv().unwrap();
 

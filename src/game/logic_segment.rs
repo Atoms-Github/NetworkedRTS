@@ -33,7 +33,6 @@ impl LogicSegment {
                -> (LogicSegment, Arc<Mutex<GameState>>){
         let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
         let bonus_events_zero = known_frame_info.get_intended_current_frame();
-        println!("LogicSegmentBonusZero: {}", bonus_events_zero);
         (
             LogicSegment {
             head_is_ahead,
