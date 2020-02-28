@@ -67,7 +67,7 @@ impl LogicSegment {
                 self.all_frames.insert_frames_segment(inputs_update);
             }
             LogicInwardsMessage::BonusMsgsUpdate(bonus_msg_response) => {
-
+                self.all_frames.insert_bonus_segment(bonus_msg_response);
             }
         }
     }

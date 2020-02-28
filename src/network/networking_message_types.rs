@@ -12,7 +12,7 @@ use crate::network::networking_structs::*;
 
 pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO2: Investigate a way to destroy thread when receiver is dropped.
     let (sender, receive) = channel::<NetMessageType>();
-    thread::spawn(move ||{
+    thread::Builder::new().name("StreamDeserializer".to_string()).spawn(move ||{
         loop{
             let mut message_size_buffer = [0; 2];
             let message_size_bytes = read_stream.read_exact(&mut message_size_buffer).unwrap();
@@ -31,7 +31,7 @@ pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMes
                 }
             }
         }
-    });
+    }).unwrap();
     return receive;
 }
 

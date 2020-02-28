@@ -15,6 +15,8 @@ use crate::game::channel_interchange::*;
 use crate::game::timekeeping::*;
 use std::panic;
 use std::sync::{Arc, Mutex};
+use std::thread::Thread;
+use std::time::Duration;
 
 
 fn init_networking(connection_target_ip: &String, player_name: &String) -> (Sender<NetMessageType>, Receiver<NetMessageType>, NetMsgConnectionInitResponse){
@@ -88,7 +90,9 @@ pub fn client_main(connection_target_ip: &String){
 
     init_yeeting_my_inputs(player_inputs_rec,&outgoing_net_sink,&to_logic_sink, &welcome_info);
 
-
+    loop{
+        thread::sleep(Duration::from_millis(10)); // TODO1
+    }
 }
 
 

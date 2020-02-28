@@ -12,12 +12,20 @@ use std::thread;
 use crate::network::game_message_types::LogicInwardsMessage;
 use crate::network::game_message_types::LogicOutwardsMessage;
 use std::panic;
+use crate::game::bonus_msgs_segment::*;
+use crate::network::game_message_types::*;
+use crate::game::channel_interchange::gather_incoming_server_messages;
 
+
+pub enum ServerActableMessage{
+    NewBonusMsgs(BonusMsgsResponse),
+    IncomingClientMsg(OwnedNetworkMessage),
+}
 struct ServerMainState {
     all_frames: InputFramesStorage,
     big_fat_zero_time: KnownFrameInfo,
-    outgoing_messages: Sender<DistributableNetMessage>,
-    incoming_messages: Receiver<OwnedNetworkMessage>,
+    outgoing_client_messages: Sender<DistributableNetMessage>,
+    all_incoming_messages: Receiver<ServerActableMessage>,
     game_state_tail: Arc<Mutex<GameState>>,
     logic_updates_sink: Sender<LogicInwardsMessage>,
     logic_updates_rec: Receiver<LogicOutwardsMessage>
@@ -38,7 +46,7 @@ impl ServerMainState{
         let addr = hosting_ip.to_string().parse::<SocketAddr>().unwrap();
         let mut networking_hub_segment = NetworkingHub::new();
         let (mut outgoing_sender, outgoing_receiver) = channel();
-        let incoming_messages =
+        let incoming_client_messages =
             networking_hub_segment.start_listening(outgoing_receiver, addr);
 
         // Init logic.
@@ -58,12 +66,22 @@ impl ServerMainState{
         });
 
 
+        let mut bonus_msgs_segment = BonusMsgsSegment::new(big_fat_zero_time.clone());
+        let new_bonus_msgs = bonus_msgs_segment.start();
+
+
+
+        let all_incoming_messages = gather_incoming_server_messages(incoming_client_messages, new_bonus_msgs);
+
+
+
+
         return ServerMainState{
             all_frames: InputFramesStorage::new(0),
             big_fat_zero_time,
 
-            outgoing_messages: outgoing_sender,
-            incoming_messages,
+            outgoing_client_messages: outgoing_sender,
+            all_incoming_messages,
             game_state_tail: state_handle,
             logic_updates_sink: game_updates_sink,
             logic_updates_rec: logic_outwards_rec
@@ -71,30 +89,40 @@ impl ServerMainState{
     }
     pub fn server_logic_loop(mut self){
         loop{
-            let incoming_owned_message = self.incoming_messages.recv().unwrap();
+            let incoming_actable_message = self.all_incoming_messages.recv().unwrap();
+            match incoming_actable_message{
+                ServerActableMessage::IncomingClientMsg(incoming_owned_message) => {
+                    let incoming_message = incoming_owned_message.message;
+                    let player_id = incoming_owned_message.owner;
 
-            let incoming_message = incoming_owned_message.message;
-            let player_id = incoming_owned_message.owner;
-
-            match incoming_message{
-                NetMessageType::ConnectionInitQuery(response) => {
-                    let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
-                    let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
-                        assigned_player_id: player_id,
-                        frames_gathered_so_far: self.all_frames.clone(),
-                        known_frame_info: self.big_fat_zero_time.clone(),
-                        game_state: state_to_send,
-                    });
-                    println!("Received initialization request for player with ID: {}", player_id);
-                    self.outgoing_messages.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
-                },
-                NetMessageType::GameUpdate(update_info) => {
-                    self.logic_updates_sink.send(update_info).unwrap();
-                },
-                _ => {
-                    panic!("Unexpected message");
+                    match incoming_message{
+                        NetMessageType::ConnectionInitQuery(response) => {
+                            let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
+                            let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
+                                assigned_player_id: player_id,
+                                frames_gathered_so_far: self.all_frames.clone(),
+                                known_frame_info: self.big_fat_zero_time.clone(),
+                                game_state: state_to_send,
+                            });
+                            println!("Received initialization request for player with ID: {}", player_id);
+                            self.outgoing_client_messages.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
+                        },
+                        NetMessageType::GameUpdate(update_info) => {
+                            self.logic_updates_sink.send(update_info).unwrap();
+                        },
+                        _ => {
+                            panic!("Unexpected message");
+                        }
+                    }
+                }
+                ServerActableMessage::NewBonusMsgs(new_bonus_msg) => {
+                    // Send to all clients + self logic.
+                    let logic_update = LogicInwardsMessage::BonusMsgsUpdate(new_bonus_msg);
+                    self.logic_updates_sink.send(logic_update.clone()).unwrap();
+                    self.outgoing_client_messages.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update.clone()))).unwrap();
                 }
             }
+
         }
 
 

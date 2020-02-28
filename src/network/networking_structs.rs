@@ -222,6 +222,7 @@ impl InputFramesStorage{
             let target_rel_index = abs_index - self.bonus_start_frame;
             vec_replace_or_end(&mut self.bonus_events, target_rel_index, events.clone()); // Pointless_optimum Clone.
         }
+
     }
 
     pub fn insert_frames_segment(&mut self, segment: &LogicInputsResponse){

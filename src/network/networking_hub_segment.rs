@@ -19,7 +19,8 @@ pub struct OwnedNetworkMessage{
 }
 
 pub enum DistributableNetMessage{
-    ToSingle(PlayerID, NetMessageType)
+    ToSingle(PlayerID, NetMessageType),
+    ToAll(NetMessageType)
 }
 
 
@@ -102,6 +103,12 @@ pub fn start_listening(mut self /* TODO2: Ref might be enough. */, input_message
             match distributable_message {
                 DistributableNetMessage::ToSingle(target, msg) => {
                     msg.encode_and_send(locked.get_mut(&target).unwrap());
+                }
+                DistributableNetMessage::ToAll(msg) => {
+
+                    for (player_id, stream) in locked.iter(){
+                        msg.encode_and_send(stream);
+                    }
                 }
             }
         }
