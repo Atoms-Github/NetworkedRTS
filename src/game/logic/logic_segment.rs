@@ -1,28 +1,40 @@
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{Receiver, TryRecvError, Sender};
+use serde::{Deserialize, Serialize};
 
 use crate::game::timekeeping::*;
 use crate::game::timekeeping::KnownFrameInfo;
-use crate::network::game_message_types::{LogicInwardsMessage, NewPlayerInfo, LogicOutwardsMessage};
 use crate::network::networking_structs::*;
 use crate::network::game_message_types::*;
 use std::panic;
 use std::collections::HashMap;
 use std::thread::Thread;
 use std::time::Duration;
-
+use crate::game::synced_data_stream::*;
+use crate::players::inputs::*;
+use crate::game::bonus_msgs_segment::*;
+use crate::game::logic::logic_data_storage::*;
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum LogicInwardsMessage {
+    SyncerBonusUpdate(SyncerData<Vec<BonusEvent>>),
+    SyncerInputsUpdate(SyncerData<InputState>),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum LogicOutwardsMessage {
+    DataNeeded(SyncerRequestTyped)
+}
 
-type Meme<T> = Arc<Mutex<T>>;
+
 
 pub struct LogicSegment {
     head_is_ahead: bool,
     known_frame_info: KnownFrameInfo,
     game_state_head: Arc<Mutex<GameState>>,
     game_state_tail: GameState,
-    all_frames: InputFramesStorage,
+    all_frames: LogicDataStorage,
     outwards_messages: Sender<LogicOutwardsMessage>
     // Logic layer shouldn't know it's player ID.
 }
@@ -39,7 +51,7 @@ impl LogicSegment {
             known_frame_info,
             game_state_head: game_state_head.clone(),
             game_state_tail: state_tail,
-            all_frames: InputFramesStorage::new(bonus_events_zero),
+            all_frames: LogicDataStorage::new(bonus_events_zero),
                 outwards_messages
             },
             game_state_head)
@@ -49,7 +61,7 @@ impl LogicSegment {
             let game_message = inputs_channel.try_recv();
             match game_message{
                 Ok(item) => {
-                    self.apply_game_message(&item);
+                    self.apply_game_message(item);
                 }
                 Err(err) => {
                     if err == TryRecvError::Disconnected{
@@ -61,15 +73,8 @@ impl LogicSegment {
         }
 
     }
-    fn apply_game_message(&mut self, message: &LogicInwardsMessage){
-        match message{
-            LogicInwardsMessage::InputsUpdate(inputs_update) => {
-                self.all_frames.insert_frames_segment(inputs_update);
-            }
-            LogicInwardsMessage::BonusMsgsUpdate(bonus_msg_response) => {
-                self.all_frames.insert_bonus_segment(bonus_msg_response);
-            }
-        }
+    fn apply_game_message(&mut self, message: LogicInwardsMessage){
+        self.all_frames.handle_inwards_msg(message);
     }
     fn resimulate_head(&mut self, tail_frame_just_simed: FrameIndex){
         let mut head_to_be = self.game_state_tail.clone();
@@ -79,8 +84,8 @@ impl LogicSegment {
 
         for frame_index_to_simulate in first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT){
             let mut inputs_to_sim_with = HashMap::new();
-            for (player_id,player_record) in self.all_frames.frames_map.iter(){
-                let player_inputs = player_record.get_input_frame_abs(&frame_index_to_simulate);
+            for (player_id,player_record) in self.all_frames.player_inputs.iter(){
+                let player_inputs = player_record.get_single_item(frame_index_to_simulate);
                 match player_inputs{
                     Some(inputs) => {
                         inputs_to_sim_with.insert(*player_id, inputs.clone());
@@ -90,9 +95,7 @@ impl LogicSegment {
                     }
                 }
             }
-
-            let bonus_relative_frame_index = frame_index_to_simulate - self.all_frames.bonus_start_frame;
-            let bonus_infos = self.all_frames.bonus_events.get(bonus_relative_frame_index);
+            let bonus_infos = self.all_frames.bonus_events.get_single_item(frame_index_to_simulate);
             let bonus_infos_to_use;
             if bonus_infos.is_some(){
                 bonus_infos_to_use = bonus_infos.unwrap().clone();
@@ -111,31 +114,34 @@ impl LogicSegment {
             *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
         }
     }
-    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Option<LogicInfoRequest>{
+    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Option<SyncerRequestTyped>{
         let mut all_inputs = HashMap::new();
-        for (player_id,player_record) in self.all_frames.frames_map.iter(){
-            let player_inputs = player_record.get_input_frame_abs(&tail_frame_to_sim);
+        for (playerId,player_record) in self.all_frames.player_inputs.iter(){
+            let player_inputs = player_record.get_single_item(tail_frame_to_sim);
             match player_inputs{
                 Some(inputs) => {
-                    all_inputs.insert(*player_id, inputs.clone());
+                    all_inputs.insert(*playerId, inputs.clone());
                 },
                 None => {
-                    let missing_inputs_request = LogicInfoRequest {
-                        start_frame: tail_frame_to_sim,
-                        number_of_frames: 20, // Can be any.
-                        type_needed: LogicInfoRequestType::PlayerInputs(*player_id),
+                    let missing_inputs_request = SyncerRequestTyped {
+                        request: SyncerRequest {
+                            start_frame: tail_frame_to_sim,
+                            number_of_frames: 20,
+                        },
+                        type_needed: SyncerRequestType::PlayerInputs(*playerId),
                     };
                     return Some(missing_inputs_request);
                 }
             }
         }
-        let bonus_relative_frame_index = tail_frame_to_sim - self.all_frames.bonus_start_frame;
-        let bonus_infos = self.all_frames.bonus_events.get(bonus_relative_frame_index);
+        let bonus_infos = self.all_frames.bonus_events.get_single_item(tail_frame_to_sim);
         if bonus_infos.is_none(){
-            return Some(LogicInfoRequest{
-                start_frame: tail_frame_to_sim,
-                number_of_frames: 20,
-                type_needed: LogicInfoRequestType::BonusEvents
+            return Some(SyncerRequestTyped{
+                request: SyncerRequest {
+                    start_frame: tail_frame_to_sim,
+                    number_of_frames: 20
+                },
+                 type_needed: SyncerRequestType::BonusEvents
             });
         }
         let sim_info = InfoForSim{
@@ -152,7 +158,7 @@ impl LogicSegment {
 
     }
 
-    pub fn load_frames(&mut self, storage: InputFramesStorage){
+    pub fn load_frames(&mut self, storage: LogicDataStorage){
         self.all_frames = storage;
     }
     pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<LogicInwardsMessage>){
@@ -168,7 +174,7 @@ impl LogicSegment {
                     },
                     Some(request) => {
                         println!("Logic missing info so asking: {:?}", request);
-                        self.outwards_messages.send( LogicOutwardsMessage::InputsNeeded(request) ).unwrap();
+                        self.outwards_messages.send( LogicOutwardsMessage::DataNeeded(request) ).unwrap();
                         std::thread::sleep(Duration::from_millis(100)); // Wait to save CPU cycles. modival: Can optimise recovery time by increasing check rate, but resend rate shouldn't be too high cos can't have too many messages.
                     }
                 }

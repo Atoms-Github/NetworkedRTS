@@ -23,6 +23,7 @@ use std::panic;
 use crate::utils::util_functions::vec_replace_or_end;
 use crate::network::game_message_types::NewPlayerInfo;
 use nalgebra::abs;
+use crate::game::synced_data_stream::*;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -87,23 +88,23 @@ pub struct InfoForSim {
 }
 
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct PlayerInputsRecord {
-    pub inputs: Vec<InputState>,
-    pub start_frame: FrameIndex
-}
-impl PlayerInputsRecord {
-    pub fn new(start_frame: FrameIndex) -> PlayerInputsRecord {
-        PlayerInputsRecord {
-            inputs: Default::default(),
-            start_frame
-        }
-    }
-    pub fn get_input_frame_abs(&self, target_frame_abs: &FrameIndex) -> Option<&InputState>{
-        let relative_frame = target_frame_abs - self.start_frame;
-        return self.inputs.get(relative_frame);
-    }
-}
+//#[derive(Clone, Serialize, Deserialize, Debug)]
+//pub struct PlayerInputsRecord {
+//    pub inputs: Vec<InputState>,
+//    pub start_frame: FrameIndex
+//}
+//impl PlayerInputsRecord {
+//    pub fn new(start_frame: FrameIndex) -> PlayerInputsRecord {
+//        PlayerInputsRecord {
+//            inputs: Default::default(),
+//            start_frame
+//        }
+//    }
+//    pub fn get_input_frame_abs(&self, target_frame_abs: &FrameIndex) -> Option<&InputState>{
+//        let relative_frame = target_frame_abs - self.start_frame;
+//        return self.inputs.get(relative_frame);
+//    }
+//}
 //#[derive(Serialize, Deserialize,Clone,  Debug)]
 //pub struct FramesStoragePartial{
 //    pub frames_section: Vec<PlayerInputsRecord>,
@@ -117,18 +118,9 @@ pub enum PlayerInputSegmentType{
     WholeState(InputState)
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum BonusEvent{
-    NewPlayer(PlayerID),
-    None
-}
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InputFramesStorage{
-    pub frames_map: HashMap<PlayerID, PlayerInputsRecord>,
-    pub bonus_events: Vec<Vec<BonusEvent>>,
-    pub bonus_start_frame: FrameIndex,
-}
+
+
 
 fn blanks_to_frame(vector: &mut Vec<InputState>, relative_frame_index: FrameIndex){ // TODO3: Move somewhere.
     for index in vector.len()..(relative_frame_index+1) /*Start exclusive, end inclusive.*/{
@@ -136,134 +128,7 @@ fn blanks_to_frame(vector: &mut Vec<InputState>, relative_frame_index: FrameInde
     }
 }
 
-impl InputFramesStorage{
-    pub fn new(start_frame: FrameIndex) -> InputFramesStorage{
-        InputFramesStorage{
-            frames_map: Default::default(),
-            bonus_events: vec![],
-            bonus_start_frame: start_frame
-        }
-    }
-    pub fn add_player(&mut self, new_player_info: &NewPlayerInfo){
-        self.frames_map.insert(new_player_info.player_id, PlayerInputsRecord::new(new_player_info.frame_added));
-    }
-    pub fn get_simable_info(){
 
-    }
-    pub fn calculate_last_inputs(&self) -> HashMap<PlayerID, InputState>{
-        let mut to_return = HashMap::new();
-
-        for (player_id,player_record) in self.frames_map.iter(){
-            let last_input= player_record.inputs.last();
-            let usable_input;
-            match last_input{
-                Some(state) => {
-                    usable_input = state.clone();
-                }
-                None => {
-                    usable_input = InputState::new();
-                }
-
-            }
-            to_return.insert(*player_id, usable_input);
-        }
-
-        return to_return;
-    }
-    pub fn get_frames_segment(&self, segment_needed: &LogicInfoRequest) -> Option<LogicInwardsMessage> {
-        match segment_needed.type_needed{
-            LogicInfoRequestType::PlayerInputs(player_id) => {
-                // Eventually..., this whole thing can probably be sped up by not cloning anywhere. Just using fancy lifetimed references.
-                let player_record = self.frames_map.get(&player_id)?; // Wayyyy, using question marks like a boss. :)
-                let relative_start_frame = segment_needed.start_frame - player_record.start_frame;
-
-
-                let mut input_states_found = vec![];
-                for relative_index in relative_start_frame..(relative_start_frame + segment_needed.number_of_frames /*No need for +1 */){
-                    let inputs = player_record.inputs.get(relative_index);
-                    if inputs.is_some(){
-                        let input_segment = PlayerInputSegmentType::WholeState(inputs.unwrap().clone());
-                        input_states_found.push(input_segment);
-                    }
-
-                }
-
-                return Some(LogicInwardsMessage::InputsUpdate(LogicInputsResponse{
-                    player_id,
-                    start_frame_index: segment_needed.start_frame,
-                    input_states: input_states_found
-                }));
-            }
-            LogicInfoRequestType::BonusEvents => {
-                // This should never be called on the client.
-                let mut events = vec![];
-                for abs_index in segment_needed.start_frame..(segment_needed.start_frame + segment_needed.number_of_frames){
-                    let relative_index = abs_index - self.bonus_start_frame;
-                    let events_list = self.bonus_events.get(abs_index);
-                    if events_list.is_some(){
-                       events.push(events_list.unwrap().clone());
-                    }else{
-                        break; // Reached end of list.
-                    }
-                }
-                let msg = LogicInwardsMessage::BonusMsgsUpdate(BonusMsgsResponse{
-                    start_frame_index: segment_needed.start_frame,
-                    event_lists: events
-                });
-                return Some(msg);
-            }
-        }
-
-    }
-    pub fn insert_bonus_segment(&mut self, segment: &BonusMsgsResponse){
-
-        for (source_rel_index, events) in segment.event_lists.iter().enumerate(){
-            let abs_index = source_rel_index + segment.start_frame_index;
-            let target_rel_index = abs_index - self.bonus_start_frame;
-            vec_replace_or_end(&mut self.bonus_events, target_rel_index, events.clone()); // Pointless_optimum Clone.
-        }
-
-    }
-
-    pub fn insert_frames_segment(&mut self, segment: &LogicInputsResponse){
-//        let map = self.frames_map.get_mut(&segment.player_id).expect("Tried to insert frames for player that wasn't stored.");
-        for (input_vec_index, item) in segment.input_states.iter().enumerate(){
-            let absolute_index = segment.start_frame_index + input_vec_index;
-
-
-
-            // I know its inneficient, and can be replaced by this: https://stackoverflow.com/questions/28678615/efficiently-insert-or-replace-multiple-elements-in-the-middle-or-at-the-beginnin
-            // But the other solution will get a bit complicated as the end of the slice to insert can be off the end of the vector.
-            let map = self.frames_map.get_mut(&segment.player_id).expect("Tried to insert frames for player that wasn't stored.");
-            let relative_index = absolute_index - map.start_frame;
-
-            match item.clone(){
-                // TODO3: Optimise this whole section.
-                PlayerInputSegmentType::WholeState(state) => {
-
-                    vec_replace_or_end(&mut map.inputs, relative_index, state);
-                }
-                PlayerInputSegmentType::Change(input_change) => {
-                    blanks_to_frame(&mut map.inputs, absolute_index);
-                    let state = map.inputs.get_mut(relative_index).unwrap();
-                    input_change.apply_to_state(state);
-                }
-            }
-
-        }
-    }
-//    pub fn blanks_up_to_index(&mut self, target_index: usize){
-////        println!("A: {} B: {} ", target_index, self.frames.len());
-//        let number_to_add = target_index as i32 - self.frames.len() as i32 + 1;
-//        if number_to_add > 0{
-//            for iteration_index in 0..number_to_add {
-//                self.frames.push(PlayerInputsRecord {
-//                    inputs: HashMap::new() //Default::default()
-//                });
-//            }
-//        }
-//    }
-}
 
 
 

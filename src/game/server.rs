@@ -2,27 +2,28 @@ use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::{SystemTime};
 
-use crate::game::logic_segment::LogicSegment;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_hub_segment::{DistributableNetMessage, NetworkingHub, OwnedNetworkMessage};
 use crate::network::networking_structs::*;
 use crate::network::networking_message_types::{NetMessageType, NetMsgConnectionInitResponse};
 use std::sync::{Mutex, Arc};
 use std::thread;
-use crate::network::game_message_types::LogicInwardsMessage;
-use crate::network::game_message_types::LogicOutwardsMessage;
 use std::panic;
 use crate::game::bonus_msgs_segment::*;
 use crate::network::game_message_types::*;
 use crate::game::channel_interchange::gather_incoming_server_messages;
+use crate::game::logic::logic_data_storage::*;
+use crate::game::logic::logic_segment::*;
+use crate::game::synced_data_stream::*;
+use crate::game::bonus_msgs_segment::*;
 
 
 pub enum ServerActableMessage{
-    NewBonusMsgs(BonusMsgsResponse),
+    NewlyGeneratedBonusMsgs(SyncerData<Vec<BonusEvent>>),
     IncomingClientMsg(OwnedNetworkMessage),
 }
 struct ServerMainState {
-    all_frames: InputFramesStorage,
+    all_frames: LogicDataStorage,
     big_fat_zero_time: KnownFrameInfo,
     outgoing_client_messages: Sender<DistributableNetMessage>,
     all_incoming_messages: Receiver<ServerActableMessage>,
@@ -77,7 +78,7 @@ impl ServerMainState{
 
 
         return ServerMainState{
-            all_frames: InputFramesStorage::new(0),
+            all_frames: LogicDataStorage::new(0),
             big_fat_zero_time,
 
             outgoing_client_messages: outgoing_sender,
@@ -115,9 +116,9 @@ impl ServerMainState{
                         }
                     }
                 }
-                ServerActableMessage::NewBonusMsgs(new_bonus_msg) => {
+                ServerActableMessage::NewlyGeneratedBonusMsgs(new_bonus_msg) => {
                     // Send to all clients + self logic.
-                    let logic_update = LogicInwardsMessage::BonusMsgsUpdate(new_bonus_msg);
+                    let logic_update = LogicInwardsMessage::SyncerBonusUpdate(new_bonus_msg);
                     self.logic_updates_sink.send(logic_update.clone()).unwrap();
                     self.outgoing_client_messages.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update.clone()))).unwrap();
                 }

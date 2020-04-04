@@ -56,7 +56,7 @@ pub fn gather_incoming_server_messages(inc_clients: Receiver<OwnedNetworkMessage
     thread::spawn(move ||{
         loop{
             let bonus_msg = bonus_msgs.recv().unwrap();
-            actable_from_clients.send(ServerActableMessage::NewBonusMsgs(bonus_msg)).unwrap();
+            actable_from_clients.send(ServerActableMessage::NewlyGeneratedBonusMsgs(bonus_msg)).unwrap();
         }
     });
     return actable_rec;
