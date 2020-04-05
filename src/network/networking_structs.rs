@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::io::{self, BufRead};
-use std::iter::FromIterator;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::channel;
@@ -17,13 +16,8 @@ use crate::gameplay::systems::render::*;
 use crate::gameplay::systems::size::*;
 use crate::gameplay::systems::velocity::*;
 use crate::gameplay::systems::velocity_with_input::*;
-use crate::network::game_message_types::*;
 use crate::players::inputs::*;
 use std::panic;
-use crate::utils::util_functions::vec_replace_or_end;
-use crate::network::game_message_types::NewPlayerInfo;
-use nalgebra::abs;
-use crate::game::synced_data_stream::*;
 
 use crate::game::bonus_msgs_segment::*;
 

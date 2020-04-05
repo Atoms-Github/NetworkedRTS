@@ -5,7 +5,6 @@ use std::time::{SystemTime, Duration};
 use serde::*;
 
 use crate::network::networking_structs::FrameIndex;
-use std::thread::Thread;
 
 pub const FRAME_DURATION_MILLIS: f64 = 16.66;
 

@@ -1,28 +1,10 @@
 
-use std::net::SocketAddr;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::time::{SystemTime};
-
-use crate::game::timekeeping::KnownFrameInfo;
-use crate::network::networking_hub_segment::{DistributableNetMessage, NetworkingHub, OwnedNetworkMessage};
-use crate::network::networking_structs::*;
-use crate::network::networking_message_types::*;
-use crate::network::game_message_types::*;
-use std::sync::{Mutex, Arc};
-use std::thread;
-use std::panic;
-use crate::game::timekeeping::*;
-use crate::network::networking_structs::*;
-use crate::network::game_message_types::*;
-use std::collections::HashMap;
-use std::thread::Thread;
-use std::time::Duration;
-use crate::players::inputs::*;
 use serde::{Deserialize, Serialize};
-use crate::utils::util_functions::*;
-use crate::game::bonus_msgs_segment::*;
-use crate::players::inputs::*;
 
+use crate::game::bonus_msgs_segment::*;
+use crate::network::networking_structs::*;
+use crate::players::inputs::*;
+use crate::utils::util_functions::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SyncerData<T> {
@@ -87,17 +69,17 @@ impl<T> SyncerStore<T> where T: Clone{
                 }
             }
         }
-        let mut playerId = -1;
+        let mut player_id = -1;
         match request.type_needed{
             SyncerRequestType::PlayerInputs(id) => {
-                playerId = id as i32;
+                player_id = id as i32;
             }
             _ => {}
         }
         return SyncerData{
             data: data_found,
             start_frame: request.request.start_frame,
-            owning_player: playerId
+            owning_player: player_id
         }
     }
     pub fn insert_data_segment(&mut self, syncer_data: SyncerData<T>){

@@ -5,10 +5,8 @@ use serde::{Deserialize, Serialize};
 use crate::game::timekeeping::*;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
-use crate::network::game_message_types::*;
 use std::panic;
 use std::collections::HashMap;
-use std::thread::Thread;
 use std::time::Duration;
 use crate::game::synced_data_stream::*;
 use crate::players::inputs::*;
@@ -116,11 +114,11 @@ impl LogicSegment {
     }
     fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Option<SyncerRequestTyped>{
         let mut all_inputs = HashMap::new();
-        for (playerId,player_record) in self.all_frames.player_inputs.iter(){
+        for (player_id,player_record) in self.all_frames.player_inputs.iter(){
             let player_inputs = player_record.get_single_item(tail_frame_to_sim);
             match player_inputs{
                 Some(inputs) => {
-                    all_inputs.insert(*playerId, inputs.clone());
+                    all_inputs.insert(*player_id, inputs.clone());
                 },
                 None => {
                     let missing_inputs_request = SyncerRequestTyped {
@@ -128,7 +126,7 @@ impl LogicSegment {
                             start_frame: tail_frame_to_sim,
                             number_of_frames: 20,
                         },
-                        type_needed: SyncerRequestType::PlayerInputs(*playerId),
+                        type_needed: SyncerRequestType::PlayerInputs(*player_id),
                     };
                     return Some(missing_inputs_request);
                 }

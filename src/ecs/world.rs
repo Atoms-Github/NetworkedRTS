@@ -20,7 +20,6 @@ pub type VerticalStorage<T> = Vec<Vec<T>>;
 //pub type TypeSetSerializable = BTreeSet<u64>;
 //pub type TypeSetTypes = BTreeSet<TypeId>;
 pub type TypeSet = BTreeSet<PogTypeId>;
-use std::hash::Hash;
 
 use std::intrinsics;
 

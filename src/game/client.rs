@@ -4,26 +4,16 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
 use crate::game::graphical_segment::GraphicalSegment;
-use crate::network::game_message_types::NewPlayerInfo;
 use crate::network::networking_message_types::*;
 use crate::network::networking_segment::NetworkingSegment;
 use crate::network::networking_structs::*;
-use crate::network::game_message_types::*;
 use crate::players::inputs::*;
-use crate::game::channel_interchange::*;
-use crate::game::timekeeping::*;
 use std::panic;
 use std::sync::{Arc, Mutex};
-use std::thread::Thread;
 use std::time::Duration;
 
 use crate::game::logic::logic_segment::*;
-use crate::game::logic::logic_data_storage::*;
-
-use crate::game::logic::logic_segment::*;
-use crate::game::logic::logic_data_storage::*;
 use crate::game::synced_data_stream::*;
-use crate::game::bonus_msgs_segment::*;
 
 
 fn init_networking(connection_target_ip: &String, player_name: &String) -> (Sender<NetMessageType>, Receiver<NetMessageType>, NetMsgConnectionInitResponse){
