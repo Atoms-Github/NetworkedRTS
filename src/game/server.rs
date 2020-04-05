@@ -10,12 +10,9 @@ use std::sync::{Mutex, Arc};
 use std::thread;
 use std::panic;
 use crate::game::bonus_msgs_segment::*;
-use crate::network::game_message_types::*;
-use crate::game::channel_interchange::gather_incoming_server_messages;
 use crate::game::logic::logic_data_storage::*;
 use crate::game::logic::logic_segment::*;
 use crate::game::synced_data_stream::*;
-use crate::game::bonus_msgs_segment::*;
 
 
 pub enum ServerActableMessage{
@@ -29,7 +26,28 @@ struct ServerMainState {
     all_incoming_messages: Receiver<ServerActableMessage>,
     game_state_tail: Arc<Mutex<GameState>>,
     logic_updates_sink: Sender<LogicInwardsMessage>,
-    logic_updates_rec: Receiver<LogicOutwardsMessage>
+    logic_updates_rec: Receiver<LogicOutwardsMessage>,
+    bonus_scheduler_sink: Sender<BonusEvent>
+}
+pub fn gather_incoming_server_messages(inc_clients: Receiver<OwnedNetworkMessage>, bonus_msgs: Receiver<SyncerData<Vec<BonusEvent>>>)
+                                       -> Receiver<ServerActableMessage>{
+    let (actable_sink,actable_rec) = channel();
+
+    let actable_from_clients = actable_sink.clone();
+    thread::spawn(move ||{
+        loop{
+            let client_message = inc_clients.recv().unwrap();
+            actable_from_clients.send(ServerActableMessage::IncomingClientMsg(client_message)).unwrap();
+        }
+    });
+    let actable_from_clients = actable_sink.clone();
+    thread::spawn(move ||{
+        loop{
+            let bonus_msg = bonus_msgs.recv().unwrap();
+            actable_from_clients.send(ServerActableMessage::NewlyGeneratedBonusMsgs(bonus_msg)).unwrap();
+        }
+    });
+    return actable_rec;
 }
 
 pub fn server_main(hosting_ip: &String){
@@ -66,9 +84,8 @@ impl ServerMainState{
             logic_segment.run_logic_loop(game_updates_rec);
         });
 
-
         let mut bonus_msgs_segment = BonusMsgsSegment::new(big_fat_zero_time.clone());
-        let new_bonus_msgs = bonus_msgs_segment.start();
+        let (new_bonus_msgs, bonus_scheduler_sink) = bonus_msgs_segment.start();
 
 
 
@@ -85,7 +102,8 @@ impl ServerMainState{
             all_incoming_messages,
             game_state_tail: state_handle,
             logic_updates_sink: game_updates_sink,
-            logic_updates_rec: logic_outwards_rec
+            logic_updates_rec: logic_outwards_rec,
+            bonus_scheduler_sink
         }
     }
     pub fn server_logic_loop(mut self){

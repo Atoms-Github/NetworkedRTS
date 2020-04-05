@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::create_system;
 use crate::ecs::world::*;
 use crate::network::networking_structs::*;
-use crate::systems::velocity::VelocityComp;
+use crate::gameplay::systems::velocity::VelocityComp;
 
 //use crate::inputs::input_structs::*;
 

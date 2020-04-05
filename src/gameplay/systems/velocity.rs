@@ -1,5 +1,5 @@
 use std::collections::{BTreeSet};
-use crate::systems::position::PositionComp;
+use crate::gameplay::systems::position::PositionComp;
 use crate::ecs::world::*;
 use crate::create_system;
 use serde::{Serialize, Deserialize};

@@ -12,11 +12,11 @@ use crate::ecs::world::*;
 use crate::network::networking_message_types::*;
 use crate::network::networking_message_types::NetMessageType;
 use crate::players::inputs::InputState;
-use crate::systems::position::{PositionComp, secret_position_system};
-use crate::systems::render::*;
-use crate::systems::size::*;
-use crate::systems::velocity::*;
-use crate::systems::velocity_with_input::*;
+use crate::gameplay::systems::position::{PositionComp, secret_position_system};
+use crate::gameplay::systems::render::*;
+use crate::gameplay::systems::size::*;
+use crate::gameplay::systems::velocity::*;
+use crate::gameplay::systems::velocity_with_input::*;
 use crate::network::game_message_types::*;
 use crate::players::inputs::*;
 use std::panic;
@@ -24,6 +24,8 @@ use crate::utils::util_functions::vec_replace_or_end;
 use crate::network::game_message_types::NewPlayerInfo;
 use nalgebra::abs;
 use crate::game::synced_data_stream::*;
+
+use crate::game::bonus_msgs_segment::*;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;

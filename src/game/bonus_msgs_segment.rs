@@ -49,7 +49,7 @@ impl BonusMsgsSegment{
             loop{
                 let frame_index = new_frame_o_matic.recv().unwrap();
 
-                self.read_new_events(in_msgs_rec, frame_index);
+                self.read_new_events(&in_msgs_rec, frame_index);
                 
                 for forecast_frame_index in (self.bonus_msgs_frames.len() + 1)..(frame_index + 60){
                     let mut new_event_list = vec![];
@@ -73,7 +73,7 @@ impl BonusMsgsSegment{
         return (out_msgs_rec, in_msgs_sink);
     }
 
-    fn read_new_events(mut self, in_msgs_rec: Receiver<BonusEvent>, frame_index: usize) {
+    fn read_new_events(&mut self, in_msgs_rec: &Receiver<BonusEvent>, frame_index: usize) {
         loop {
             let requested_to_schedule = in_msgs_rec.try_recv();
             match requested_to_schedule {

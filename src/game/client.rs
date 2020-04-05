@@ -4,7 +4,6 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
 use crate::game::graphical_segment::GraphicalSegment;
-use crate::game::logic_segment::LogicSegment;
 use crate::network::game_message_types::NewPlayerInfo;
 use crate::network::networking_message_types::*;
 use crate::network::networking_segment::NetworkingSegment;
@@ -17,6 +16,14 @@ use std::panic;
 use std::sync::{Arc, Mutex};
 use std::thread::Thread;
 use std::time::Duration;
+
+use crate::game::logic::logic_segment::*;
+use crate::game::logic::logic_data_storage::*;
+
+use crate::game::logic::logic_segment::*;
+use crate::game::logic::logic_data_storage::*;
+use crate::game::synced_data_stream::*;
+use crate::game::bonus_msgs_segment::*;
 
 
 fn init_networking(connection_target_ip: &String, player_name: &String) -> (Sender<NetMessageType>, Receiver<NetMessageType>, NetMsgConnectionInitResponse){
@@ -53,26 +60,24 @@ fn init_graphics(state_to_render: Arc<Mutex<GameState>>, my_player_id: PlayerID)
     return graphics_segment.start();
 }
 
-fn init_yeeting_my_inputs(inputs_stream: Receiver<InputChange>, outgoing_network: &Sender<NetMessageType>, to_logic: &Sender<LogicInwardsMessage>, welcome_info: &NetMsgConnectionInitResponse){
-    let my_net_known_frame = welcome_info.known_frame_info.clone();
-    let my_outgoing_network = outgoing_network.clone();
-    let my_to_logic = to_logic.clone();
-    let (for_network_sink, for_network_rec) = channel();
+fn init_input_distribution(inputs_stream: Receiver<InputChange>, outgoing_network: Sender<NetMessageType>, to_logic: Sender<LogicInwardsMessage>, welcome_info: &NetMsgConnectionInitResponse){
+    let changes = init_input_collector_thread(inputs_stream, welcome_info.known_frame_info.clone());
+    // TODO3: Things can be improved by not waiting for the entire frame to finish before sending the entire input frame to local logic. Could be as it comes.
+
+    let my_known_info = welcome_info.known_frame_info.clone();
     let my_player_id = welcome_info.assigned_player_id;
     thread::spawn(move ||{
-        gather_inputs_and_yeet_loop(for_network_rec, my_outgoing_network, my_player_id, my_net_known_frame);
-    });
-    let my_logic_known_frame = welcome_info.known_frame_info.clone();
-    thread::spawn(move ||{
         loop{
-            let inputs_change = inputs_stream.recv().unwrap();
-            for_network_sink.send(inputs_change.clone()).unwrap(); // Apply to network.
-            let message = LogicInwardsMessage::InputsUpdate(LogicInputsResponse {
-                player_id: my_player_id,
-                start_frame_index: 2,
-                input_states: vec![]
+            let state = changes.recv().unwrap();
+            let now_frame_index = my_known_info.get_intended_current_frame(); // Super important this doesn't change between local and sent so we get here.
+
+            let logic_message = LogicInwardsMessage::SyncerInputsUpdate(SyncerData{
+                data: vec![],
+                start_frame: now_frame_index,
+                owning_player: my_player_id as i32
             });
-            my_to_logic.send(message).unwrap();
+            to_logic.send(logic_message.clone()).unwrap();
+            outgoing_network.send(NetMessageType::GameUpdate(logic_message)).unwrap();
         }
     });
 }
@@ -88,7 +93,7 @@ pub fn client_main(connection_target_ip: &String){
 
     let mut player_inputs_rec = init_graphics(render_state_head, welcome_info.assigned_player_id);
 
-    init_yeeting_my_inputs(player_inputs_rec,&outgoing_net_sink,&to_logic_sink, &welcome_info);
+    init_input_distribution(player_inputs_rec, outgoing_net_sink.clone(), to_logic_sink.clone(), &welcome_info);
 
     loop{
         thread::sleep(Duration::from_millis(10)); // TODO1

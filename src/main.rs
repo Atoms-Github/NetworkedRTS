@@ -15,7 +15,7 @@ mod game;
 mod network;
 mod ecs;
 mod players;
-mod systems;
+mod gameplay;
 mod utils;
 
 

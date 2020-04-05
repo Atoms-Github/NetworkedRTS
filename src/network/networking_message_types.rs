@@ -9,6 +9,10 @@ use serde::{Deserialize, Serialize};
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::game_message_types;
 use crate::network::networking_structs::*;
+use crate::game::synced_data_stream::*;
+use crate::game::logic::logic_data_storage::*;
+use crate::game::logic::logic_segment::*;
+
 
 pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO2: Investigate a way to destroy thread when receiver is dropped.
     let (sender, receive) = channel::<NetMessageType>();
@@ -51,7 +55,7 @@ impl NetMessageType{
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum NetMessageType {
     ConnectionInitQuery(NetMsgConnectionInitQuery),
-    GameUpdate(game_message_types::LogicInwardsMessage),
+    GameUpdate(LogicInwardsMessage),
     ConnectionInitResponse(NetMsgConnectionInitResponse),
     LocalCommand(LocalCommandInfo)
 }
@@ -70,7 +74,7 @@ pub struct NetMsgConnectionInitQuery {
 pub struct NetMsgConnectionInitResponse {
     pub assigned_player_id: PlayerID,
     pub game_state: GameState,
-    pub frames_gathered_so_far: InputFramesStorage,
+    pub frames_gathered_so_far: LogicDataStorage,
     pub known_frame_info: KnownFrameInfo
 }
 

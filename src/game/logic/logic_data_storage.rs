@@ -25,7 +25,10 @@ impl LogicDataStorage{
     pub fn handle_inwards_msg(&mut self, msg: LogicInwardsMessage){
         match msg{
             LogicInwardsMessage::SyncerInputsUpdate(data) => {
-                let player_sync = self.player_inputs.get_mut(&data.owning_player).unwrap();
+                if data.owning_player < 0{
+                    panic!("No owning player set on inputs update data pack.");
+                }
+                let player_sync = self.player_inputs.get_mut(&(data.owning_player as usize)).unwrap();
                 player_sync.insert_data_segment(data);
             }
             LogicInwardsMessage::SyncerBonusUpdate(data) => {
@@ -36,11 +39,11 @@ impl LogicDataStorage{
     pub fn new(frame_offset: FrameIndex) -> LogicDataStorage{
         LogicDataStorage{
             player_inputs: Default::default(),
-            bonus_events: SyncerStore::gen_bonus_store(frame_offset),
+            bonus_events: SyncerStore::<Vec<BonusEvent>>::gen_bonus_store(frame_offset),
         }
     }
     pub fn add_player(&mut self, new_player_info: &NewPlayerInfo){
-        self.player_inputs.insert(new_player_info.player_id, SyncerStore::gen_inputs_store(new_player_info.frame_added));
+        self.player_inputs.insert(new_player_info.player_id, SyncerStore::<InputState>::gen_inputs_store(new_player_info.frame_added));
     }
     pub fn get_simable_info(){
 

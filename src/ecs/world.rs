@@ -2,11 +2,11 @@
 use std::collections::{HashMap, HashSet, BTreeSet};
 
 
-use crate::systems::velocity::*;
-use crate::systems::position::*;
-use crate::systems::size::*;
-use crate::systems::render::*;
-use crate::systems::velocity_with_input::*;
+use crate::gameplay::systems::velocity::*;
+use crate::gameplay::systems::position::*;
+use crate::gameplay::systems::size::*;
+use crate::gameplay::systems::render::*;
+use crate::gameplay::systems::velocity_with_input::*;
 use crate::utils::unmoving_vec::*;
 use anymap::AnyMap;
 

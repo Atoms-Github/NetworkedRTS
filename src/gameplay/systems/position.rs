@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::create_system;
 use crate::ecs::system_macro::*;
 use crate::ecs::world::*;
-use crate::systems::velocity::VelocityComp;
+use crate::gameplay::systems::velocity::VelocityComp;
 
 create_system!( position_system | secret_position_system
 	| my_position: PositionComp, my_velocity: VelocityComp

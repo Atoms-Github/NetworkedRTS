@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::create_system;
 use crate::ecs::world::*;
-use crate::systems::position::PositionComp;
-use crate::systems::size::*;
+use crate::gameplay::systems::position::PositionComp;
+use crate::gameplay::systems::size::*;
 
 create_system!( render_system | secret_render_system
 	| my_position: PositionComp, my_render: RenderComp, my_size: SizeComp

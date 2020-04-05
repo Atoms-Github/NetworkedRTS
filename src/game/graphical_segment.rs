@@ -10,7 +10,7 @@ use ggez::input::keyboard::KeyCode;
 use crate::ecs::world::*;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
-use crate::systems::render::*;
+use crate::gameplay::systems::render::*;
 
 pub struct GraphicalSegment {
 //    my_current_input_state: Arc<Mutex<InputState>>,

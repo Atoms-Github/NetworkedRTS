@@ -3,7 +3,6 @@ use std::net::SocketAddr;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::{SystemTime};
 
-use crate::game::logic_segment::LogicSegment;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_hub_segment::{DistributableNetMessage, NetworkingHub, OwnedNetworkMessage};
 use crate::network::networking_structs::*;
@@ -11,7 +10,6 @@ use crate::network::networking_message_types::*;
 use crate::network::game_message_types::*;
 use std::sync::{Mutex, Arc};
 use std::thread;
-use crate::network::game_message_types::LogicOutwardsMessage;
 use std::panic;
 use crate::game::timekeeping::*;
 use crate::network::networking_structs::*;
@@ -103,15 +101,12 @@ impl<T> SyncerStore<T> where T: Clone{
         }
     }
     pub fn insert_data_segment(&mut self, syncer_data: SyncerData<T>){
+
         for (input_vec_index, item) in syncer_data.data.iter().enumerate(){
             let absolute_index = syncer_data.start_frame + input_vec_index;
-
-            // I know its inneficient, and can be replaced by this: https://stackoverflow.com/questions/28678615/efficiently-insert-or-replace-multiple-elements-in-the-middle-or-at-the-beginnin
-            // But the other solution will get a bit complicated as the end of the slice to insert can be off the end of the vector.
             let relative_index = absolute_index - self.frames_index_offset;
 
-            vec_replace_or_end(&mut self.data,relative_index, *item);
-
+            vec_replace_or_end(&mut self.data,relative_index, item.clone()); // Pointless_optimum no need to clone.
         }
     }
 }
