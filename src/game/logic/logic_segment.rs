@@ -22,7 +22,8 @@ pub enum LogicInwardsMessage {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum LogicOutwardsMessage {
-    DataNeeded(SyncerRequestTyped)
+    DataNeeded(SyncerRequestTyped),
+    IAmInitialized()
 }
 
 

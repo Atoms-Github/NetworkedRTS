@@ -32,7 +32,7 @@ fn main() {
             ip_str
         }
         _ => {
-            let default = "188.74.103.179:5535".to_string();
+            let default = "10.0.0.8:5535".to_string();
             println!("Connection/hosting IP not specified! Using {}", default);
             default
         }
@@ -51,6 +51,4 @@ fn main() {
             client_main(&ip);
         }
     }
-
-
 }

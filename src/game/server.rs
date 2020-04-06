@@ -116,6 +116,7 @@ impl ServerMainState{
 
                     match incoming_message{
                         NetMessageType::ConnectionInitQuery(response) => {
+
                             let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
                             let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                                 assigned_player_id: player_id,

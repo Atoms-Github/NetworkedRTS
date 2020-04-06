@@ -95,7 +95,7 @@ impl PendingEntities {
 		}
 	}
 
-//    fn add_comp_to_entity<T>(&mut self, entity_id: EntityID, component: T) { //TODO3 (Richard's :))
+//    fn add_comp_to_entity<T>(&mut self, entity_id: EntityID, component: T) { //TODO_richard 3 (Richard's :))
 //
 //    }
 	
