@@ -87,8 +87,6 @@ impl ServerMainState{
         let mut bonus_msgs_segment = BonusMsgsSegment::new(big_fat_zero_time.clone());
         let (new_bonus_msgs, bonus_scheduler_sink) = bonus_msgs_segment.start();
 
-
-
         let all_incoming_messages = gather_incoming_server_messages(incoming_client_messages, new_bonus_msgs);
 
 
@@ -106,46 +104,49 @@ impl ServerMainState{
             bonus_scheduler_sink
         }
     }
+    fn handle_incoming_client_msg(&mut self, incoming_owned_message: OwnedNetworkMessage){
+        let incoming_message = incoming_owned_message.message;
+        let player_id = incoming_owned_message.owner;
+        match incoming_message{
+            NetMessageType::ConnectionInitQuery(response) => {
+
+                let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
+                let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
+                    assigned_player_id: player_id,
+                    frames_gathered_so_far: self.all_frames.clone(),
+                    known_frame_info: self.big_fat_zero_time.clone(),
+                    game_state: state_to_send,
+                });
+                println!("Received initialization request for player with ID: {}", player_id);
+                self.outgoing_client_messages.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
+            },
+            NetMessageType::GameUpdate(update_info) => {
+                self.logic_updates_sink.send(update_info).unwrap();
+            },
+            _ => {
+                panic!("Unexpected message");
+            }
+        }
+    }
+    fn handle_new_bonus_event(&mut self, new_bonus_msg: SyncerData<Vec<BonusEvent>>) -> () {
+        // Send to all clients + self logic.
+        let logic_update = LogicInwardsMessage::SyncerBonusUpdate(new_bonus_msg);
+        self.logic_updates_sink.send(logic_update.clone()).unwrap();
+        self.outgoing_client_messages.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update.clone()))).unwrap();
+    }
     pub fn server_logic_loop(mut self){
         loop{
             let incoming_actable_message = self.all_incoming_messages.recv().unwrap();
             match incoming_actable_message{
                 ServerActableMessage::IncomingClientMsg(incoming_owned_message) => {
-                    let incoming_message = incoming_owned_message.message;
-                    let player_id = incoming_owned_message.owner;
-
-                    match incoming_message{
-                        NetMessageType::ConnectionInitQuery(response) => {
-
-                            let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
-                            let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
-                                assigned_player_id: player_id,
-                                frames_gathered_so_far: self.all_frames.clone(),
-                                known_frame_info: self.big_fat_zero_time.clone(),
-                                game_state: state_to_send,
-                            });
-                            println!("Received initialization request for player with ID: {}", player_id);
-                            self.outgoing_client_messages.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
-                        },
-                        NetMessageType::GameUpdate(update_info) => {
-                            self.logic_updates_sink.send(update_info).unwrap();
-                        },
-                        _ => {
-                            panic!("Unexpected message");
-                        }
-                    }
+                    self.handle_incoming_client_msg(incoming_owned_message);
                 }
                 ServerActableMessage::NewlyGeneratedBonusMsgs(new_bonus_msg) => {
-                    // Send to all clients + self logic.
-                    let logic_update = LogicInwardsMessage::SyncerBonusUpdate(new_bonus_msg);
-                    self.logic_updates_sink.send(logic_update.clone()).unwrap();
-                    self.outgoing_client_messages.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update.clone()))).unwrap();
+                    self.handle_new_bonus_event(new_bonus_msg)
                 }
             }
 
         }
-
-
     }
 }
 

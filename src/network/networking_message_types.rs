@@ -52,8 +52,8 @@ impl NetMessageType{
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum NetMessageType {
     ConnectionInitQuery(NetMsgConnectionInitQuery),
-    GameUpdate(LogicInwardsMessage),
     ConnectionInitResponse(NetMsgConnectionInitResponse),
+    GameUpdate(LogicInwardsMessage),
     LocalCommand(LocalCommandInfo)
 }
 

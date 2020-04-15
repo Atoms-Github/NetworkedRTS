@@ -87,7 +87,6 @@ fn init_input_distribution(inputs_stream: Receiver<InputChange>, outgoing_networ
     }
 
     // TODO3: Things can be improved by not waiting for the entire frame to finish before sending the entire input frame to local logic. Could be as it comes.
-
 }
 
 fn init_logic_output_responder(logic_output: Receiver<LogicOutwardsMessage>, network_sink: Sender<NetMessageType>, input_distributor: InputDistributor){
@@ -98,6 +97,7 @@ fn init_logic_output_responder(logic_output: Receiver<LogicOutwardsMessage>, net
             match logic_msg{
 
                 LogicOutwardsMessage::DataNeeded(syncer_request) => {
+//                    network_sink.send(NetMessageType::())
                     // TODO1: Implement
                 }
                 LogicOutwardsMessage::IAmInitialized() => {
@@ -108,6 +108,21 @@ fn init_logic_output_responder(logic_output: Receiver<LogicOutwardsMessage>, net
     });
 }
 
+fn init_inwards_net_handling(incoming_messages: Receiver<NetMessageType>, to_logic: Sender<LogicInwardsMessage>){
+    thread::spawn(move || {
+        loop{
+            match incoming_messages.recv().unwrap(){
+                NetMessageType::GameUpdate(update) => {
+                    to_logic.send(update).unwrap();
+                },
+                NetMessageType::LocalCommand(_) => {panic!("Not implemented!")},
+                _ => {
+                    panic!("Client shouldn't be getting a message of this type (or at this time)!")
+                }
+            }
+        }
+    });
+}
 
 pub fn client_main(connection_target_ip: &String){
     println!("Starting as client.");
@@ -117,6 +132,9 @@ pub fn client_main(connection_target_ip: &String){
 
     let (mut to_logic_sink, mut from_logic_rec, mut render_state_head) =
         init_logic(welcome_info.clone());
+
+
+    init_inwards_net_handling(incoming_net_rec, to_logic_sink.clone());
 
 
     let mut graphical_segment = init_graphics(render_state_head, welcome_info.assigned_player_id);
