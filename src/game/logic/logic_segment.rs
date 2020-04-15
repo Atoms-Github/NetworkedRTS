@@ -43,7 +43,8 @@ impl LogicSegment {
     pub fn new(head_is_ahead:bool, known_frame_info: KnownFrameInfo, state_tail: GameState, outwards_messages: Sender<LogicOutwardsMessage>)
                -> (LogicSegment, Arc<Mutex<GameState>>){
         let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
-        let bonus_events_zero = known_frame_info.get_intended_current_frame();
+        let bonus_events_zero = state_tail.get_simmed_frame_index();
+        println!("Creating logic with start frame {}", bonus_events_zero);
         (
             LogicSegment {
             head_is_ahead,
@@ -161,7 +162,7 @@ impl LogicSegment {
         self.all_frames = storage;
     }
     pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<LogicInwardsMessage>){
-        let mut generator = self.known_frame_info.start_frame_stream();
+        let mut generator = self.known_frame_info.start_frame_stream_from_any(self.game_state_tail.get_simmed_frame_index());
         loop{
             let tail_frame_to_sim = generator.recv().unwrap();
 

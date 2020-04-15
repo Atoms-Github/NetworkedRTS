@@ -30,13 +30,18 @@ pub type FrameIndex = usize;
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
+    /* Private */simmed_frame_index: FrameIndex,
 }
 
 impl GameState{
+    pub fn get_simmed_frame_index(&self) -> FrameIndex{
+        return self.simmed_frame_index;
+    }
     pub fn new() -> GameState{
         GameState{
             world: World::new(),
-            storages: Storages::new()
+            storages: Storages::new(),
+            simmed_frame_index: 0
         }
     }
     pub fn init_rts(&mut self){
@@ -73,6 +78,8 @@ impl GameState{
         &mut self.storages.velocity_with_input_s, inputs_info);
 
         self.world.update_entities(&mut self.storages, pending);
+
+        self.simmed_frame_index = self.simmed_frame_index + 1;
     }
 }
 

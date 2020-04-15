@@ -81,7 +81,7 @@ impl InputState{
 }
 
 pub fn init_input_collector_thread(inputs_rec: Receiver<InputChange>, known_frame: KnownFrameInfo) -> Receiver<InputState>{
-    let mut frame_generator = known_frame.start_frame_stream();
+    let mut frame_generator = known_frame.start_frame_stream_from_known();
     let (merged_sink, merged_rec) = channel();
 
     thread::spawn(move ||{

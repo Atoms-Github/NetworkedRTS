@@ -37,7 +37,7 @@ impl BonusMsgsSegment{
             panic!();
         }
         thread::Builder::new().name("BonusMsgsMain".to_string()).spawn(move ||{
-            let new_frame_o_matic = self.known_frame.start_frame_stream();
+            let new_frame_o_matic = self.known_frame.start_frame_stream_from_known();
             loop{
                 let frame_index = new_frame_o_matic.recv().unwrap();
 

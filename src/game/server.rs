@@ -104,12 +104,14 @@ impl ServerMainState{
             bonus_scheduler_sink
         }
     }
+
     fn handle_incoming_client_msg(&mut self, incoming_owned_message: OwnedNetworkMessage){
         let incoming_message = incoming_owned_message.message;
         let player_id = incoming_owned_message.owner;
         match incoming_message{
             NetMessageType::ConnectionInitQuery(response) => {
 
+//                let (state_to_send, known_to_send) = self.get_accurate_state();
                 let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
                 let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                     assigned_player_id: player_id,
@@ -133,6 +135,8 @@ impl ServerMainState{
         let logic_update = LogicInwardsMessage::SyncerBonusUpdate(new_bonus_msg);
         self.logic_updates_sink.send(logic_update.clone()).unwrap();
         self.outgoing_client_messages.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update.clone()))).unwrap();
+
+
     }
     pub fn server_logic_loop(mut self){
         loop{
