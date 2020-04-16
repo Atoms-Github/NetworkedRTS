@@ -112,7 +112,8 @@ impl ServerMainState{
             NetMessageType::ConnectionInitQuery(response) => {
 
 //                let (state_to_send, known_to_send) = self.get_accurate_state();
-                let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.
+                let state_to_send = self.game_state_tail.lock().unwrap().clone(); // TODO3 this shouldn't need to be cloned to be serialized.]
+                println!("Going to send with this much info: {}", self.all_frames.bonus_events.data.len());
                 let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{
                     assigned_player_id: player_id,
                     frames_gathered_so_far: self.all_frames.clone(),
@@ -135,6 +136,7 @@ impl ServerMainState{
         let logic_update = LogicInwardsMessage::SyncerBonusUpdate(new_bonus_msg);
         self.logic_updates_sink.send(logic_update.clone()).unwrap();
         self.outgoing_client_messages.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update.clone()))).unwrap();
+        println!("Sending {:?}", logic_update);
 
 
     }
