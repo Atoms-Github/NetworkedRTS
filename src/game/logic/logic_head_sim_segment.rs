@@ -18,130 +18,76 @@ pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
 pub struct LogicHeadSim {
     known_frame_info: KnownFrameInfo,
-    game_state_head: Arc<RwLock<GameState>>,
-    game_state_tail: Arc<RwLock<GameState>>,
+    head_lock: Arc<RwLock<GameState>>,
+    tail_lock: Arc<RwLock<GameState>>,
     all_frames: Arc<RwLock<LogicDataStorage>>,
 //    outwards_messages: Sender<LogicOutwardsMessage>
 }
 
-struct InfoForHeadSim {
-    player_last_inputs: HashMap<PlayerID, InputState>,
-    player_inputs: [],
-    bonus_events: ,
+
+
+fn clone_tail_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
+    let guard = state_tail.read().unwrap();
+    let head_state = (*guard).clone();
+    return Arc::new(RwLock::new(head_state));
 }
-
-
 impl LogicHeadSim {
-    pub fn new(known_frame_info: KnownFrameInfo, state_tail: GameState,
-               outwards_messages: Sender<LogicOutwardsMessage>, data_store: Arc<RwLock<LogicDataStorage>>) // TODO2: Refactor arguments.
-               -> (LogicSegment, Arc<Mutex<GameState>>){
-        let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
-        (
-            LogicHeadSim {
-                known_frame_info,
-                game_state_head: game_state_head.clone(),
-                game_state_tail: state_tail,
-                all_frames: data_store
-            },
-            game_state_head)
+    pub fn new(known_frame_info: KnownFrameInfo, tail_lock: Arc<RwLock<GameState>>,
+               data_store: Arc<RwLock<LogicDataStorage>>) // TODO2: Refactor arguments.
+               -> LogicHeadSim{
+
+        let game_state_head =
+
+        return LogicHeadSim {
+            known_frame_info,
+            head_lock: clone_tail_lock(&tail_lock),
+            tail_lock: tail_lock,
+            all_frames: data_store
+        };
+    }
+
+
+    fn set_new_head(&mut self, new_head: GameState){
+        *self.head_lock.write().unwrap() = new_head;
     }
     pub fn start(mut self) -> Arc<RwLock<GameState>>{
-        let head_handle = self.game_state_head.clone();
+        let head_handle = self.head_lock.clone();
         thread::spawn(move ||{
-            let my_self = self;
-
+            let mut my_self = self;
+            let start_frame = my_self.tail_lock.read().unwrap().get_simmed_frame_index();
+            let generator = my_self.known_frame_info.start_frame_stream_from_any(start_frame);
             loop{
-                let tail = self.clone_tail();
-
-                self.calculate_new_head();
+                generator.recv().unwrap();
+                let tail = my_self.clone_tail();
+                let new_head = my_self.calculate_new_head(tail);
+                my_self.set_new_head(new_head);
             }
-
-
-
         });
 
         return head_handle;
     }
 
     fn clone_tail(&self) -> GameState{
-        return self.game_state_tail.read().unwrap().clone();
+        return self.tail_lock.read().unwrap().clone();
     }
-    // Pointless_optimum: Things could probably be sped with references instead of cloning.
+    fn calculate_new_head(&mut self, mut state_tail: GameState) -> GameState{
+        let first_head_to_sim = state_tail.get_simmed_frame_index() + 1;
+        let frames_to_sim_range = first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT);
 
-    fn calculate_new_head(&mut self, initial_tail: GameState) -> GameState{
-        let mut head_to_be = self.game_state_tail.clone();
-        let first_head_to_sim = initial_tail.get_simmed_frame_index() + 1;
-        let frames_to_sim = first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT);
-        { // Get all information needed from frame database.
+        let mut infos_for_sims = vec![];
+        { // Get all information needed from frames database.
             let all_frames = self.all_frames.read().unwrap();
-            let mut players_last_input = all_frames.calculate_last_inputs();
-
-        }
-
-        for frame_index_to_simulate in first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT){
-            let mut inputs_to_sim_with = HashMap::new();
-            for (player_id,player_record) in self.all_frames.read().unwrap().player_inputs.iter(){
-                let player_inputs = player_record.get_single_item(frame_index_to_simulate);
-                match player_inputs{
-                    Some(inputs) => {
-                        inputs_to_sim_with.insert(*player_id, inputs.clone());
-                    },
-                    None => {
-                        inputs_to_sim_with.insert(*player_id, players_last_input.get(player_id).unwrap().clone());
-                    }
-                }
+            for frame_index in frames_to_sim_range{
+                let clone_data_result = all_frames.clone_info_for_sim(frame_index);
+                // We don't care about the failures - we want any info we can get.
+                infos_for_sims.push(clone_data_result.sim_info);
             }
-            {
-                let frame_data = self.all_frames.read().unwrap();
-                let bonus_infos = frame_data.bonus_events.get_single_item(frame_index_to_simulate);
-                let bonus_infos_to_use;
-                if bonus_infos.is_some(){
-                    bonus_infos_to_use = bonus_infos.unwrap().clone();
-                }else{
-                    bonus_infos_to_use = vec![];
-                }
+        } // Discard frame info database lock.
 
-
-                let sim_info = InfoForSim{
-                    inputs_map: inputs_to_sim_with,
-                    bonus_events: bonus_infos_to_use
-                };
-                head_to_be.simulate_tick(&sim_info, 0.016 /* TODO2: Use real delta. */);
-            }
-
+        for sim_info in infos_for_sims{
+            state_tail.simulate_tick(&sim_info, FRAME_DURATION_MILLIS);
         }
-        {
-            *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
-        }
-    }
-
-    //    pub fn load_frames(&mut self, storage: LogicDataStorage){
-//        self.all_frames = storage;
-//    }
-    pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<LogicInwardsMessage>){
-        let mut generator = self.known_frame_info.start_frame_stream_from_any(self.game_state_tail.get_simmed_frame_index());
-        loop{
-            let tail_frame_to_sim = generator.recv().unwrap();
-
-            loop{ // Wait until inputs have arrived so tail can be simulated.
-                self.apply_available_game_messages(&mut game_messages_channel);
-                match self.sim_tail_frame(tail_frame_to_sim){
-                    None => {
-                        break; // Inputs have arrived.
-                    },
-                    Some(request) => {
-                        println!("Logic missing info so asking: {:?}", request);
-                        self.outwards_messages.send( LogicOutwardsMessage::DataNeeded(request) ).unwrap();
-                        std::thread::sleep(Duration::from_millis(100)); // Wait to save CPU cycles. modival: Can optimise recovery time by increasing check rate, but resend rate shouldn't be too high cos can't have too many messages.
-                    }
-                }
-            }
-            if self.head_is_ahead { // Don't bother on the server.
-                self.calculate_new_head(tail_frame_to_sim);
-            }else{
-                self.set_head_to_tail(); // TODO3: Not sure why this is needed. Investigate.
-            }
-        }
+        return state_tail;
     }
 }
 

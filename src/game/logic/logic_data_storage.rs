@@ -17,8 +17,8 @@ pub struct LogicDataStorage {
     pub bonus_events: SyncerStore<Vec<BonusEvent>>,
 }
 pub struct FrameSimQueryResults{
-    missing_info: Vec<SyncerRequestTyped>,
-    sim_info: InfoForSim
+    pub missing_info: Vec<SyncerRequestTyped>,
+    pub sim_info: InfoForSim
 }
 impl LogicDataStorage{
     pub fn new(bonus_frame_offset: FrameIndex) -> LogicDataStorage{
