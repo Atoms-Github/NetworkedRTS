@@ -9,13 +9,13 @@ use crate::network::networking_segment::NetworkingSegment;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
 use std::panic;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 
 use crate::game::logic::logic_segment::*;
 use crate::game::synced_data_stream::*;
 use crate::game::timekeeping::*;
-
+use crate::game::logic::logic_data_storage::*;
 
 fn init_networking(connection_target_ip: &String, player_name: &String) -> (Sender<NetMessageType>, Receiver<NetMessageType>, NetMsgConnectionInitResponse){
     let ip = SocketAddr::from_str(connection_target_ip).expect("Ill formed ip");
@@ -35,10 +35,14 @@ fn init_networking(connection_target_ip: &String, player_name: &String) -> (Send
 
 fn init_logic(welcome_info: NetMsgConnectionInitResponse) -> (Sender<LogicInwardsMessage>, Receiver<LogicOutwardsMessage>, Arc<Mutex<GameState>>){
     let (mut from_logic_sink, mut from_logic_rec) = channel();
-    let (mut logic_segment, mut state_head) = LogicSegment::new(
-        true, welcome_info.known_frame_info.clone(), welcome_info.game_state, from_logic_sink);
 
-    logic_segment.load_frames(welcome_info.frames_gathered_so_far); // TODO3: A bit clumsy.
+    let data_storage = welcome_info.frames_gathered_so_far;//LogicDataStorage::new(welcome_info.game_state.get_simmed_frame_index());
+
+    let (mut logic_segment, mut state_head) = LogicSegment::new(
+        true, welcome_info.known_frame_info.clone(), welcome_info.game_state, from_logic_sink,
+    Arc::new(RwLock::new(data_storage)));
+
+//    logic_segment.load_frames(welcome_info.frames_gathered_so_far); // TODO3: A bit clumsy.
     let (to_logic_sink, to_logic_rec) = channel();
     thread::spawn(move ||{
         logic_segment.run_logic_loop(to_logic_rec);

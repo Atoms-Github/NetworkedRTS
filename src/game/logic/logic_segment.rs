@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use std::sync::mpsc::{Receiver, TryRecvError, Sender};
 use serde::{Deserialize, Serialize};
 
@@ -33,25 +33,24 @@ pub struct LogicSegment {
     known_frame_info: KnownFrameInfo,
     game_state_head: Arc<Mutex<GameState>>,
     game_state_tail: GameState,
-    all_frames: LogicDataStorage,
+    all_frames: Arc<RwLock<LogicDataStorage>>,
     outwards_messages: Sender<LogicOutwardsMessage>
     // Logic layer shouldn't know it's player ID.
 }
 
 
 impl LogicSegment {
-    pub fn new(head_is_ahead:bool, known_frame_info: KnownFrameInfo, state_tail: GameState, outwards_messages: Sender<LogicOutwardsMessage>)
+    pub fn new(head_is_ahead:bool, known_frame_info: KnownFrameInfo, state_tail: GameState,
+               outwards_messages: Sender<LogicOutwardsMessage>, data_store: Arc<RwLock<LogicDataStorage>>) // TODO2: Refactor arguments.
                -> (LogicSegment, Arc<Mutex<GameState>>){
         let game_state_head = Arc::new(Mutex::new(state_tail.clone()));
-        let bonus_events_zero = state_tail.get_simmed_frame_index();
-        println!("Creating logic with start frame {}", bonus_events_zero);
         (
             LogicSegment {
-            head_is_ahead,
-            known_frame_info,
-            game_state_head: game_state_head.clone(),
-            game_state_tail: state_tail,
-            all_frames: LogicDataStorage::new(bonus_events_zero),
+                head_is_ahead,
+                known_frame_info,
+                game_state_head: game_state_head.clone(),
+                game_state_tail: state_tail,
+                all_frames: data_store,
                 outwards_messages
             },
             game_state_head)
@@ -74,17 +73,17 @@ impl LogicSegment {
 
     }
     fn apply_game_message(&mut self, message: LogicInwardsMessage){
-        self.all_frames.handle_inwards_msg(message);
+        self.all_frames.write().unwrap().handle_inwards_msg(message);
     }
     fn resimulate_head(&mut self, tail_frame_just_simed: FrameIndex){
         let mut head_to_be = self.game_state_tail.clone();
         let first_head_to_sim = tail_frame_just_simed + 1;
         // Pointless_optimum: Could probably be sped with references instead of cloning.
-        let mut players_last_input = self.all_frames.calculate_last_inputs();
+        let mut players_last_input = self.all_frames.read().unwrap().calculate_last_inputs();
 
         for frame_index_to_simulate in first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT){
             let mut inputs_to_sim_with = HashMap::new();
-            for (player_id,player_record) in self.all_frames.player_inputs.iter(){
+            for (player_id,player_record) in self.all_frames.read().unwrap().player_inputs.iter(){
                 let player_inputs = player_record.get_single_item(frame_index_to_simulate);
                 match player_inputs{
                     Some(inputs) => {
@@ -95,20 +94,24 @@ impl LogicSegment {
                     }
                 }
             }
-            let bonus_infos = self.all_frames.bonus_events.get_single_item(frame_index_to_simulate);
-            let bonus_infos_to_use;
-            if bonus_infos.is_some(){
-                bonus_infos_to_use = bonus_infos.unwrap().clone();
-            }else{
-                bonus_infos_to_use = vec![];
+            {
+                let frame_data = self.all_frames.read().unwrap();
+                let bonus_infos = frame_data.bonus_events.get_single_item(frame_index_to_simulate);
+                let bonus_infos_to_use;
+                if bonus_infos.is_some(){
+                    bonus_infos_to_use = bonus_infos.unwrap().clone();
+                }else{
+                    bonus_infos_to_use = vec![];
+                }
+
+
+                let sim_info = InfoForSim{
+                    inputs_map: inputs_to_sim_with,
+                    bonus_events: bonus_infos_to_use
+                };
+                head_to_be.simulate_tick(&sim_info, 0.016 /* TODO2: Use real delta. */);
             }
 
-
-            let sim_info = InfoForSim{
-                inputs_map: inputs_to_sim_with,
-                bonus_events: bonus_infos_to_use
-            };
-            head_to_be.simulate_tick(&sim_info, 0.016 /* TODO2: Use real delta. */);
         }
         {
             *self.game_state_head.lock().unwrap() = head_to_be; // Update mutex lock.
@@ -116,7 +119,7 @@ impl LogicSegment {
     }
     fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Option<SyncerRequestTyped>{
         let mut all_inputs = HashMap::new();
-        for (player_id,player_record) in self.all_frames.player_inputs.iter(){
+        for (player_id,player_record) in self.all_frames.read().unwrap().player_inputs.iter(){
             let player_inputs = player_record.get_single_item(tail_frame_to_sim);
             match player_inputs{
                 Some(inputs) => {
@@ -134,33 +137,36 @@ impl LogicSegment {
                 }
             }
         }
-        let bonus_infos = self.all_frames.bonus_events.get_single_item(tail_frame_to_sim);
-        if bonus_infos.is_none(){
-            return Some(SyncerRequestTyped{
-                request: SyncerRequest {
-                    start_frame: tail_frame_to_sim,
-                    number_of_frames: 20
-                },
-                 type_needed: SyncerRequestType::BonusEvents
-            });
+        {
+            let frame_data = self.all_frames.read().unwrap();
+            let bonus_infos = frame_data.bonus_events.get_single_item(tail_frame_to_sim);
+            if bonus_infos.is_none(){
+                return Some(SyncerRequestTyped{
+                    request: SyncerRequest {
+                        start_frame: tail_frame_to_sim,
+                        number_of_frames: 20
+                    },
+                    type_needed: SyncerRequestType::BonusEvents
+                });
+            }
+            let sim_info = InfoForSim{
+                inputs_map: all_inputs,
+                bonus_events: bonus_infos.unwrap().clone(),
+            };
+            self.game_state_tail.simulate_tick(&sim_info, FRAME_DURATION_MILLIS);
         }
-        let sim_info = InfoForSim{
-            inputs_map: all_inputs,
-            bonus_events: bonus_infos.unwrap().clone(),
-        };
-        self.game_state_tail.simulate_tick(&sim_info, FRAME_DURATION_MILLIS);
+
 
         return None; // No missing frames.
     }
     fn set_head_to_tail(&mut self){
         let mut meme = self.game_state_head.lock().unwrap();
         *meme = self.game_state_tail.clone();
-
     }
 
-    pub fn load_frames(&mut self, storage: LogicDataStorage){
-        self.all_frames = storage;
-    }
+//    pub fn load_frames(&mut self, storage: LogicDataStorage){
+//        self.all_frames = storage;
+//    }
     pub fn run_logic_loop(mut self, mut game_messages_channel: Receiver<LogicInwardsMessage>){
         let mut generator = self.known_frame_info.start_frame_stream_from_any(self.game_state_tail.get_simmed_frame_index());
         loop{
@@ -182,7 +188,7 @@ impl LogicSegment {
             if self.head_is_ahead { // Don't bother on the server.
                 self.resimulate_head(tail_frame_to_sim);
             }else{
-                self.set_head_to_tail();
+                self.set_head_to_tail(); // TODO3: Not sure why this is needed. Investigate.
             }
         }
     }
