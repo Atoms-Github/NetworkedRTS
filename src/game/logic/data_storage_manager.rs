@@ -1,41 +1,38 @@
 
-use std::collections::HashMap;
-use std::{panic, thread};
+use std::{thread};
 
 use serde::{Deserialize, Serialize};
 
-use crate::game::bonus_msgs_segment::*;
 use crate::game::logic::logic_segment::*;
-use crate::game::synced_data_stream::*;
-use crate::network::game_message_types::NewPlayerInfo;
-use crate::network::networking_structs::*;
-use crate::players::inputs::*;
+
 
 use crate::game::logic::logic_data_storage::*;
-use std::sync::{Mutex, Arc, RwLock};
-use std::time::Duration;
-use crate::game::timekeeping::FRAME_DURATION_MILLIS;
+use std::sync::{Arc, RwLock};
+use std::sync::mpsc::Receiver;
 
 
-pub struct DataStorageManager<T>{
-    pub value: Arc<RwLock<T>> // Yup, that's it.
+pub struct DataStorageManager{
+    value: Arc<RwLock<LogicDataStorage>> // Yup, that's it.
 }
-// TODO1: Add apply game messages section.
+impl DataStorageManager{
+    pub fn new(storage: LogicDataStorage) -> Self{
+        return DataStorageManager{
+            value: Arc::new(RwLock::new(storage))
+        }
+    }
+    pub fn clone_lock_ref(&self) -> Arc<RwLock<LogicDataStorage>>{
+        return self.value.clone();
+    }
+    pub fn start_data_update_consumption_thread(&self, inputs_channel: Receiver<LogicInwardsMessage>){
+        let my_data_handle = self.value.clone();
+        thread::spawn(move ||{
+            loop{
+                let next_msg = inputs_channel.recv().unwrap();
+                my_data_handle.write().unwrap().handle_inwards_msg(next_msg);
+            }
+        });
+    }
 
-//impl<T> DataStorageManager<T>{
-//    pub fn get_read_mutex(&self){
-//        return self.read_only.clone();
-//    }
-//
-//    pub fn modify_data(){
-//
-//    }
-//
-//    pub fn start_thread(){
-//        thread::spawn(||{
-//            loop{
-//                thread::sleep(Duration::from_millis((FRAME_DURATION_MILLIS / 2.0) as u64));
-//            }
-//        });
-//    }
-//}
+
+
+}

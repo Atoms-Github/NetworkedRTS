@@ -26,7 +26,7 @@ pub struct LogicHeadSim {
 
 
 
-fn clone_tail_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
+fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
     let guard = state_tail.read().unwrap();
     let head_state = (*guard).clone();
     return Arc::new(RwLock::new(head_state));
@@ -40,8 +40,8 @@ impl LogicHeadSim {
 
         return LogicHeadSim {
             known_frame_info,
-            head_lock: clone_tail_lock(&tail_lock),
-            tail_lock: tail_lock,
+            head_lock: deep_clone_state_lock(&tail_lock),
+            tail_lock,
             all_frames: data_store
         };
     }
