@@ -54,7 +54,36 @@ impl<T> SyncerStore<T> where T: Clone{
     pub fn get_single_item(&self, frame_index: FrameIndex) -> Option<&T> {
         return self.data.get(frame_index - self.frames_index_offset);
     }
+    pub fn get_or_last_query(&self, frame_index: FrameIndex, request_type: SyncerRequestType) -> (Option<T>, Option<SyncerRequestTyped>){
+        // Returns data if found at index or found at vec end.
+        // Returns typed error if not found at index.
+
+
+        let data_option = self.get_single_item(frame_index);
+        let data;
+        let mut missing = None;
+        match data_option{
+            Some(found_data) => {
+                data = Some(found_data.clone());
+            }
+            None => {
+                missing = Some(SyncerRequestTyped{
+                    request: SyncerRequest {
+                        start_frame: frame_index,
+                        number_of_frames: 20 // modival
+                    },
+                    type_needed: request_type
+                });
+                data = self.get_last().cloned();
+            }
+        }
+        return (data, missing);
+    }
+    pub fn get_last(&self) -> Option<&T>{
+        return self.data.last();
+    }
     pub fn get_frames_segment(&self, request: &SyncerRequestTyped) -> SyncerData<T> { // This is used when server responds to client's missing input request.
+        // Here we're assuming that the reqest is of the correct type.
         let relative_start_frame = request.request.start_frame - self.frames_index_offset;
 
         let mut data_found = vec![];

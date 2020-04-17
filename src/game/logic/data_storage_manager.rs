@@ -20,6 +20,8 @@ use crate::game::timekeeping::FRAME_DURATION_MILLIS;
 pub struct DataStorageManager<T>{
     pub value: Arc<RwLock<T>> // Yup, that's it.
 }
+// TODO1: Add apply game messages section.
+
 //impl<T> DataStorageManager<T>{
 //    pub fn get_read_mutex(&self){
 //        return self.read_only.clone();

@@ -16,7 +16,17 @@ pub struct LogicDataStorage {
     pub player_inputs: HashMap<PlayerID, SyncerStore<InputState>>,
     pub bonus_events: SyncerStore<Vec<BonusEvent>>,
 }
+pub struct FrameSimQueryResults{
+    missing_info: Vec<SyncerRequestTyped>,
+    sim_info: InfoForSim
+}
 impl LogicDataStorage{
+    pub fn new(bonus_frame_offset: FrameIndex) -> LogicDataStorage{
+        LogicDataStorage{
+            player_inputs: Default::default(),
+            bonus_events: SyncerStore::<Vec<BonusEvent>>::gen_bonus_store(bonus_frame_offset),
+        }
+    }
     pub fn handle_inwards_msg(&mut self, msg: LogicInwardsMessage){
         match msg{
             LogicInwardsMessage::SyncerInputsUpdate(data) => {
@@ -31,17 +41,36 @@ impl LogicDataStorage{
             }
         }
     }
-    pub fn new(frame_offset: FrameIndex) -> LogicDataStorage{
-        LogicDataStorage{
-            player_inputs: Default::default(),
-            bonus_events: SyncerStore::<Vec<BonusEvent>>::gen_bonus_store(frame_offset),
-        }
-    }
+
     pub fn add_player(&mut self, new_player_info: &NewPlayerInfo){
         self.player_inputs.insert(new_player_info.player_id, SyncerStore::<InputState>::gen_inputs_store(new_player_info.frame_added));
     }
-    pub fn get_simable_info(){
 
+
+    pub fn clone_info_for_sim(&self, frame_index: FrameIndex) -> FrameSimQueryResults{
+        let mut missing_item_requests = vec![];
+        let (bonus_list, problem_bonus) =
+            self.bonus_events.get_or_last_query(frame_index, SyncerRequestType::BonusEvents);
+        if problem_bonus.is_some(){
+            missing_item_requests.push(problem_bonus.unwrap());
+        }
+        let mut latest_inputs = HashMap::new();
+        for (player_id, data) in self.player_inputs.iter(){
+            let (player_inputs, problem_inputs) =
+                data.get_or_last_query(frame_index, SyncerRequestType::PlayerInputs(*player_id));
+
+            latest_inputs.insert(*player_id, player_inputs.unwrap_or(InputState::new()));
+            if problem_inputs.is_some(){
+                missing_item_requests.push(problem_inputs.unwrap());
+            }
+        }
+        return FrameSimQueryResults{
+            missing_info: missing_item_requests,
+            sim_info: InfoForSim {
+                inputs_map: latest_inputs,
+                bonus_events: bonus_list.unwrap_or(vec![])
+            }
+        }
     }
     pub fn calculate_last_inputs(&self) -> HashMap<PlayerID, InputState>{
         let mut to_return = HashMap::new();

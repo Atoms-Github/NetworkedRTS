@@ -26,8 +26,6 @@ pub enum LogicOutwardsMessage {
     IAmInitialized()
 }
 
-
-
 pub struct LogicSegment {
     head_is_ahead: bool,
     known_frame_info: KnownFrameInfo,
