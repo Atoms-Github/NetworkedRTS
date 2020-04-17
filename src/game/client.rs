@@ -15,29 +15,33 @@ use std::time::Duration;
 use crate::game::logic::logic_segment::*;
 use crate::game::synced_data_stream::*;
 use crate::game::timekeeping::*;
-use crate::game::logic::logic_data_storage::*;
 use crate::game::logic::data_storage_manager::*;
 
 
 struct Client{
-    player_name: String
+    player_name: String,
+    connection_ip: String
 }
 impl Client{
-    fn init_networking(&self, connection_target_ip: &String, player_name: &String) ->
-           (Sender<NetMessageType>, Receiver<NetMessageType>, NetMsgConnectionInitResponse){
-        let ip = SocketAddr::from_str(connection_target_ip).expect("Ill formed ip");
-        let mut networking_seg = NetworkingSegment::new(ip);
-        let (mut outgoing_messages, mut incoming_messages) = networking_seg.init_connection(player_name);
-
-        let welcome_message = incoming_messages.recv().unwrap();
+    fn init_networking(&self, connection_target_ip: &String, player_name: &String) -> NetworkingSegment{
+        let mut segment = NetworkingSegment::init_connection(connection_target_ip);
+        segment.send_greeting(player_name);
+        return segment;
+    }
+    fn receive_welcome_message(net_seg: &mut NetworkingSegment) -> NetMsgConnectionInitResponse{
+        let welcome_message = net_seg.net_rec.recv().unwrap();
         match welcome_message{
             NetMessageType::ConnectionInitResponse(info) =>{
-                return (outgoing_messages, incoming_messages, info);
+                return info;
             }
             _ => {
                 panic!("First message read wasn't welcome.");
             }
         }
+    }
+    fn start(self){
+        let net_seg = self.init_networking(&self.connection_ip, &self.player_name);
+
     }
 }
 
@@ -139,11 +143,13 @@ fn init_inwards_net_handling(incoming_messages: Receiver<NetMessageType>, to_log
     });
 }
 
-pub fn client_main(connection_target_ip: &String){
+pub fn client_main(connection_target_ip: String){
     println!("Starting as client.");
-
-    let (mut net_sink, mut net_rec, welcome_info) =
-        init_networking(connection_target_ip, &(String::from("Atomsadiah")));
+    let client = Client{
+        player_name: String::from("Atomserdiah"),
+        connection_ip: connection_target_ip,
+    };
+    client.start();
 
     let (mut to_logic_sink, mut from_logic_rec, mut render_state_head) =
         init_logic_tail(welcome_info.clone());
