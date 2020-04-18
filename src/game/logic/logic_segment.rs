@@ -1,6 +1,6 @@
 
 use std::sync::{Arc, Mutex, RwLock};
-use std::sync::mpsc::{Receiver, TryRecvError, Sender};
+use std::sync::mpsc::{Receiver, TryRecvError, Sender, channel};
 use serde::{Deserialize, Serialize};
 
 use crate::game::timekeeping::*;
@@ -27,23 +27,28 @@ pub enum LogicOutwardsMessage {
     IAmInitialized()
 }
 
-pub struct LogicSegmentTailer {
+pub struct LogicSegmentTailerEx {
+    to_logic_sink: Sender<LogicInwardsMessage>,
+    from_logic_rec: Receiver<LogicOutwardsMessage>,
+    tail_lock: Arc<RwLock<GameState>>
+}
+impl LogicSegmentTailerEx {
+
+}
+pub struct LogicSegmentTailerIn {
     known_frame_info: KnownFrameInfo,
-    game_state_tail: Arc<RwLock<GameState>>,
-    all_frames: Arc<RwLock<LogicDataStorage>>,
-    outwards_messages: Sender<LogicOutwardsMessage>
+    tail_lock: Arc<RwLock<GameState>>,
+    all_frames: Arc<RwLock<LogicDataStorage>>
     // Logic layer shouldn't know it's player ID.
 }
 
-
-impl LogicSegmentTailer {
-    pub fn new(known_frame_info: KnownFrameInfo, state_tail: Arc<RwLock<GameState>>,
-               outwards_messages: Sender<LogicOutwardsMessage>, data_store: Arc<RwLock<LogicDataStorage>>) -> LogicSegmentTailer {
-        LogicSegmentTailer {
+impl LogicSegmentTailerIn {
+    pub fn new(known_frame_info: KnownFrameInfo, state_tail: GameState,
+               data_store: Arc<RwLock<LogicDataStorage>>) -> LogicSegmentTailerIn {
+        LogicSegmentTailerIn {
             known_frame_info,
-            game_state_tail: state_tail,
-            all_frames: data_store,
-            outwards_messages
+            tail_lock: Arc::new(RwLock::new(state_tail)),
+            all_frames: data_store
         }
     }
 
@@ -57,37 +62,48 @@ impl LogicSegmentTailer {
         }
         {
             // It's fine to hold the state for a while as this thread is important - and we shouldn't be long in comparison to head.
-            self.game_state_tail.write().unwrap().simulate_tick(&sim_query_result.sim_info, FRAME_DURATION_MILLIS);
+            self.tail_lock.write().unwrap().simulate_tick(&sim_query_result.sim_info, FRAME_DURATION_MILLIS);
         }
 
         return None; // No missing frames.
     }
 
 
-    pub fn start_logic_thread(mut self){
-        let mut generator = self.known_frame_info.start_frame_stream_from_any(self.game_state_tail.get_simmed_frame_index());
+    fn start_thread(mut self, outwards_messages: Sender<LogicOutwardsMessage>){
         thread::spawn(move ||{
-            let mut my_self = self;
+            let first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index();
+            let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
             loop{
                 let tail_frame_to_sim = generator.recv().unwrap();
-
                 loop{
-                    let problems = my_self.sim_tail_frame(tail_frame_to_sim);
+                    let problems = self.sim_tail_frame(tail_frame_to_sim);
                     if problems.len() > 0 {
                         break;
                     }
 
                     for problem in problems{
                         println!("Logic missing info so asking: {:?}", problem);
-                        my_self.outwards_messages.send( LogicOutwardsMessage::DataNeeded(problem) ).unwrap();
-
-
+                        outwards_messages.send( LogicOutwardsMessage::DataNeeded(problem) ).unwrap();
                     }
                     std::thread::sleep(Duration::from_millis(100)); // Wait to save CPU cycles. modival: Can optimise recovery time by increasing check rate, but resend rate shouldn't be too high cos can't have too many messages.
-
                 }
             }
         });
+    }
+
+    pub fn start_logic_tail(mut self) -> LogicSegmentTailerEx {
+        let (from_logic_sink, from_logic_rec) = channel();
+        let (to_logic_sink, to_logic_rec) = channel(); // TODO1: Move this to data manager.
+
+        let tail_lock = self.tail_lock.clone();
+
+        self.start_thread(from_logic_sink);
+
+        return LogicSegmentTailerEx {
+            to_logic_sink,
+            from_logic_rec,
+            tail_lock
+        };
     }
 }
 

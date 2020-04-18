@@ -1,18 +1,18 @@
 use std::net::{SocketAddr, TcpStream};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use std::net::SocketAddr;
 use std::str::FromStr;
 
 use crate::network::networking_message_types::*;
 
-pub struct NetworkingSegment {
-//    socket: Option<TcpStream>,
+pub struct NetworkingSegmentIn {
+    conn_address_str: String
+}
+pub struct NetworkingSegmentEx {
     pub net_sink: Sender<NetMessageType>,
     pub net_rec: Receiver<NetMessageType>,
 }
-
-impl NetworkingSegment {
+impl NetworkingSegmentEx {
     pub fn send_greeting(&mut self, player_name: &String){
         let connection_init_query = NetMessageType::ConnectionInitQuery(
             NetMsgConnectionInitQuery{
@@ -21,8 +21,27 @@ impl NetworkingSegment {
         );
         self.net_sink.send(connection_init_query).unwrap();
     }
-    pub fn init_connection(conn_address_str: &String) -> NetworkingSegment{
-        let conn_address = SocketAddr::from_str(conn_address_str).expect("Ill formed ip");
+    pub fn receive_welcome_message(&mut self) -> NetMsgConnectionInitResponse{
+        let welcome_message = self.net_rec.recv().unwrap();
+        match welcome_message{
+            NetMessageType::ConnectionInitResponse(info) =>{
+                return info;
+            }
+            _ => {
+                panic!("First message read wasn't welcome.");
+            }
+        }
+    }
+}
+
+impl NetworkingSegmentIn {
+    pub fn new(conn_address_str :String) -> NetworkingSegmentIn{
+        NetworkingSegmentIn{
+            conn_address_str
+        }
+    }
+    pub fn start_net(self) -> NetworkingSegmentEx {
+        let conn_address = SocketAddr::from_str(&self.conn_address_str).expect("Ill formed ip");
         let connection_result = TcpStream::connect(conn_address);
         let mut stream = connection_result.expect("Failed to connect.");
 
@@ -35,7 +54,7 @@ impl NetworkingSegment {
             }
         });
         let in_rec = start_inwards_codec_thread(stream);
-        return NetworkingSegment{
+        return NetworkingSegmentEx {
             net_sink: out_sink,
             net_rec: in_rec
         };

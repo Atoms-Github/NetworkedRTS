@@ -84,9 +84,9 @@ impl ServerMainState{
 
 
         let (mut logic_segment, mut state_handle) =
-            LogicSegmentTailer::new(false, big_fat_zero_time.clone(),
-                                    game_state, logic_outwards_sink,
-                                    storage_manager.value.clone());
+            LogicSegmentTailerEx::new(false, big_fat_zero_time.clone(),
+                                      game_state, logic_outwards_sink,
+                                      storage_manager.value.clone());
 
         let (mut game_updates_sink, mut game_updates_rec) = channel();
         thread::spawn(||{

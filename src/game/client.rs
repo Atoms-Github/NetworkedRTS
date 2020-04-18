@@ -5,7 +5,7 @@ use std::thread;
 
 use crate::game::graphical_segment::GraphicalSegment;
 use crate::network::networking_message_types::*;
-use crate::network::networking_segment::NetworkingSegment;
+use crate::network::networking_segment::*;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
 use std::panic;
@@ -23,46 +23,27 @@ struct Client{
     connection_ip: String
 }
 impl Client{
-    fn init_networking(&self, connection_target_ip: &String, player_name: &String) -> NetworkingSegment{
-        let mut segment = NetworkingSegment::init_connection(connection_target_ip);
-        segment.send_greeting(player_name);
-        return segment;
+    fn init_networking(&self, connection_target_ip: &String, player_name: &String) -> NetworkingSegmentEx {
+        let mut net_seg_in = NetworkingSegmentIn::new(connection_target_ip.clone());
+        let mut net_seg_ex = net_seg_in.start_net();
+        net_seg_ex.send_greeting(player_name);
+        return net_seg_ex;
     }
-    fn receive_welcome_message(net_seg: &mut NetworkingSegment) -> NetMsgConnectionInitResponse{
-        let welcome_message = net_seg.net_rec.recv().unwrap();
-        match welcome_message{
-            NetMessageType::ConnectionInitResponse(info) =>{
-                return info;
-            }
-            _ => {
-                panic!("First message read wasn't welcome.");
-            }
-        }
-    }
-    fn start(self){
-        let net_seg = self.init_networking(&self.connection_ip, &self.player_name);
 
+    fn start(self){
+        let mut net_seg = self.init_networking(&self.connection_ip, &self.player_name);
+        let welcome_info = net_seg.receive_welcome_message();
+
+        let in_tail_logic = LogicSegmentTailerIn::new(net_seg);
+        let (mut to_logic_sink, mut from_logic_rec, mut render_state_head) =
+            init_logic_tail(welcome_info.clone());
     }
 }
 
 
 
 fn init_logic_tail(welcome_info: NetMsgConnectionInitResponse) -> (Sender<LogicInwardsMessage>, Receiver<LogicOutwardsMessage>, Arc<Mutex<GameState>>){
-    let (from_logic_sink, from_logic_rec) = channel();
-    let (to_logic_sink, to_logic_rec) = channel();
 
-
-    let tail_lock = Arc::new(RwLock::new(welcome_info.game_state));
-    let storage_manager = DataStorageManager::new(welcome_info.frames_gathered_so_far);
-
-
-    let mut logic_segment = LogicSegmentTailer::new(welcome_info.known_frame_info.clone()
-                                                    , tail_lock, from_logic_sink, storage_manager.clone_lock_ref());
-    logic_segment.start_logic_thread();
-
-
-
-    return (to_logic_sink, from_logic_rec, state_head);
 }
 
 fn init_graphics(state_to_render: Arc<Mutex<GameState>>, my_player_id: PlayerID) -> GraphicalSegment{
@@ -151,8 +132,7 @@ pub fn client_main(connection_target_ip: String){
     };
     client.start();
 
-    let (mut to_logic_sink, mut from_logic_rec, mut render_state_head) =
-        init_logic_tail(welcome_info.clone());
+
 
 
     init_inwards_net_handling(net_rec, to_logic_sink.clone());
