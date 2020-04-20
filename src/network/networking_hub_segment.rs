@@ -7,10 +7,21 @@ use std::thread;
 use crate::network::networking_message_types::{NetMessageType, start_inwards_codec_thread};
 use crate::network::networking_structs::PlayerID;
 
-pub struct NetworkingHub{
-    output_messages_sender: Option<Sender<OwnedNetworkMessage>>,
-    player_ids: Arc<Mutex<PlayerID>>,
-    new_connections_registerer: Option<Sender<(PlayerID, TcpStream)>>
+
+pub struct NetworkingHubEx {
+    yeet_sink: Sender<DistributableNetMessage>,
+    pickup_rec: Receiver<OwnedNetworkMessage>,
+}
+
+pub struct NetworkingHubMid {
+    net_in: NetworkingHubIn,
+    connections_map: Arc<Mutex<HashMap<PlayerID, TcpStream>>>,
+    pickup_sink: Sender<OwnedNetworkMessage>,
+    next_player_id: PlayerID
+}
+
+pub struct NetworkingHubIn {
+    host_addr_str: String,
 }
 
 pub struct OwnedNetworkMessage{
@@ -23,99 +34,84 @@ pub enum DistributableNetMessage{
     ToAll(NetMessageType)
 }
 
+impl NetworkingHubMid{
+    pub fn startup(mut self, yeet_rec: Receiver<DistributableNetMessage>){
+        self.start_yeeting_msgs(yeet_rec);
+        thread::spawn( move ||{ // Listen for new connections
+            let socket = self.bind_addr();
 
-
-impl NetworkingHub{ // This isn't responsible for sending worlds. // TODO3: Fix indentation.
-pub fn new() -> NetworkingHub {
-    NetworkingHub{
-        output_messages_sender: None,
-        player_ids: Arc::new(Mutex::new(0)),
-        new_connections_registerer: None
+            for stream in socket.incoming() {
+                self.handle_new_socket(stream.unwrap(), self.gen_next_player_id());
+            }
+        });
     }
-}
-fn handle_new_socket(&self, stream: TcpStream){
-    let my_connections_sink = self.new_connections_registerer.clone().unwrap();
-    let my_output_messages_sender = self.output_messages_sender.clone().unwrap();
-    let my_ids_mutex = self.player_ids.clone();
-    thread::spawn(move ||{
-        let handle_id;
-        {
-            let mut next_player_id_lock = my_ids_mutex.lock().unwrap();
-            handle_id = *next_player_id_lock;
-            *next_player_id_lock = handle_id + 1;
-        }
-        my_connections_sink.send((handle_id, stream.try_clone().unwrap())).unwrap();
-
-
-
-        let receiver = start_inwards_codec_thread(stream); // This can reasonably easily be optimised to use one fewer thread per connection.
-        loop{
-            let message = receiver.recv().unwrap();
-            let wrapped = OwnedNetworkMessage{
-                owner: handle_id,
-                message
-            };
-            my_output_messages_sender.send(wrapped).unwrap();
-        }
-
-    });
-}
-pub fn start_listening(mut self /* TODO2: Ref might be enough. */, input_messages: Receiver<DistributableNetMessage>, addr: SocketAddr) -> Receiver<OwnedNetworkMessage>{
-
-    // HandleIncomingConnections.
-    let (out_sender, out_receiver) = channel();
-    let (new_connections_sender, new_connections_receiver) = channel();
-
-    self.new_connections_registerer = Some(new_connections_sender);
-    self.output_messages_sender = Some(out_sender);
-
-    thread::spawn( move ||{ // Listen for new connections.
-        println!("Attempting to start hosting on : {}", addr);
-        let socket = TcpListener::bind(&addr).expect("Unable to bind hosting address.");
-        println!("Hosting on {}", addr.to_string());
-        let id_counter = Arc::new(Mutex::new(0));
-        for stream in socket.incoming() {
-            self.handle_new_socket(stream.unwrap());
-        }
-    });
-
-
-
-
-    let clients_map = Arc::new(Mutex::new(HashMap::new()));
-
-    let my_receiver = new_connections_receiver;
-    let my_clients_map = clients_map.clone();
-    thread::spawn(move ||{ // Add new connections to dictionary.
-
-        loop{
-            let (id, stream) = my_receiver.recv().unwrap();
-            let mut locked = my_clients_map.lock().unwrap();
-            locked.insert(id, stream);
-        }
-    });
-
-    thread::spawn(move ||{ // Distribute messages to connections.
-        let mut my_clients_map = clients_map.clone();
-        loop{
-            let distributable_message = input_messages.recv().unwrap();
-            let mut locked = clients_map.lock().unwrap();
-            match distributable_message {
-                DistributableNetMessage::ToSingle(target, msg) => {
-                    msg.encode_and_send(locked.get_mut(&target).unwrap());
-                }
-                DistributableNetMessage::ToAll(msg) => {
-
-                    for (player_id, stream) in locked.iter(){
-                        msg.encode_and_send(stream);
+    fn start_yeeting_msgs(&mut self, yeet_rec: Receiver<DistributableNetMessage>){
+        let my_stream_map = self.connections_map.clone();
+        thread::spawn(move ||{
+            loop{
+                let to_yeet = yeet_rec.recv().unwrap();
+                let mut locked = my_stream_map.lock().unwrap();
+                match to_yeet {
+                    DistributableNetMessage::ToSingle(target, msg) => {
+                        msg.encode_and_send(locked.get_mut(&target).unwrap());
+                    }
+                    DistributableNetMessage::ToAll(msg) => {
+                        for (player_id, stream) in locked.iter(){
+                            msg.encode_and_send(stream);
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    }
+    fn gen_next_player_id(&mut self) -> PlayerID{
+        let id = self.next_player_id;
+        self.next_player_id += 1;
+        return id;
+    }
+    fn bind_addr(&self) -> TcpListener{
+        let host_addr = self.net_in.host_addr_str.parse::<SocketAddr>().unwrap();
+        println!("Starting hosting on : {}", host_addr);
+        return TcpListener::bind(&host_addr).expect("Unable to bind hosting address.");
+    }
+    fn start_socket_read(&mut self, stream: TcpStream, my_id: PlayerID){
+        let my_output_sender = self.pickup_sink.clone();
+        thread::spawn(move ||{
+            let receiver = start_inwards_codec_thread(stream);
+            loop{
+                my_output_sender.send(OwnedNetworkMessage{
+                    owner: my_id,
+                    message: receiver.recv().unwrap()
+                });
+            }
 
-    return out_receiver;
-
-
+        });
+    }
+    fn add_socket_to_write_map(&mut self, stream: TcpStream, player_id: PlayerID){
+        let mut handle = self.connections_map.lock().unwrap();
+        handle.insert(player_id, stream);
+    }
+    fn handle_new_socket(&mut self, stream: TcpStream, player_id: PlayerID){
+        self.start_socket_read(stream.try_clone().unwrap(), player_id);
+        self.add_socket_to_write_map(stream, player_id);
+    }
 }
+
+impl NetworkingHubIn { // Manages the server's incoming and outgoing network messages.
+    pub fn start_hosting(self) -> NetworkingHubEx{
+        let (yeet_sink, yeet_rec) = channel();
+        let (pickup_sink, pickup_rec) = channel();
+        let mid = NetworkingHubMid{
+            net_in: self,
+            connections_map: Arc::new(Mutex::new(Default::default())),
+            pickup_sink,
+            next_player_id: 0
+        };
+        mid.startup(yeet_rec);
+
+        return NetworkingHubEx{
+            yeet_sink,
+            pickup_rec
+        }
+    }
 }

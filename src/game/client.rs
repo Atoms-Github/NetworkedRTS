@@ -64,12 +64,6 @@ impl Client{
         let seg_graph = GraphicalSegment::new(state_to_render, my_player_id);
         return seg_graph.start();
     }
-//    fn init_input_distribution(inputs_stream: Receiver<InputChange>, outgoing_network: Sender<NetMessageType>, to_logic: Sender<LogicInwardsMessage>,
-//                               welcome_info: &NetMsgConnectionInitResponse) -> InputHandlerEx{
-//
-//
-//    }
-
     fn start(self){
         let mut set_net = self.init_networking(&self.connection_ip);
         set_net.send_greeting(&self.player_name);
@@ -88,8 +82,9 @@ impl Client{
 
 
         let my_to_net = set_net.net_sink.clone();
+        let my_to_data = seg_data_storage.logic_msgs_sink.clone();
         seg_scheduler.schedule_event(Box::new(move ||{
-            seg_input_dist.start_dist(seg_data_storage.logic_msgs_sink, my_to_net);
+            seg_input_dist.start_dist(my_to_data, my_to_net);
         }), welcome_info.you_initialize_frame);
 
         self.init_net_rec_handling(set_net.net_rec, seg_data_storage.logic_msgs_sink);
@@ -111,20 +106,6 @@ pub fn client_main(connection_target_ip: String){
         connection_ip: connection_target_ip,
     };
     client.start();
-
-
-    init_inwards_net_handling(net_rec, to_logic_sink.clone());
-
-
-//    let mut graphical_segment = init_graphics(render_state_head, welcome_info.assigned_player_id);
-//    let mut player_inputs_rec = graphical_segment.start();
-
-    let input_distributor = init_input_distribution(player_inputs_rec, net_sink.clone(), to_logic_sink.clone(), &welcome_info);
-
-    init_logic_output_responder(from_logic_rec, net_sink.clone(), input_distributor);
-    // Now we wait for us to be initialized.
-
-
 }
 
 

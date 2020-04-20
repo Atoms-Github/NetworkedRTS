@@ -3,7 +3,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::{SystemTime};
 
 use crate::game::timekeeping::KnownFrameInfo;
-use crate::network::networking_hub_segment::{DistributableNetMessage, NetworkingHub, OwnedNetworkMessage};
+use crate::network::networking_hub_segment::{DistributableNetMessage, NetworkingHubIn, OwnedNetworkMessage};
 use crate::network::networking_structs::*;
 use crate::network::networking_message_types::{NetMessageType, NetMsgConnectionInitResponse};
 use std::sync::{Mutex, Arc, RwLock};
@@ -64,11 +64,16 @@ pub fn server_main(hosting_ip: &String){
 impl ServerMainState{
     pub fn init_server_hosting(hosting_ip: &String) -> ServerMainState{
         // Init connection.
-        let addr = hosting_ip.to_string().parse::<SocketAddr>().unwrap();
-        let mut networking_hub_segment = NetworkingHub::new();
+//        let addr = hosting_ip.to_string().parse::<SocketAddr>().unwrap();
+
+        let mut networking_hub_segment = NetworkingHubIn::new(hosting_ip.clone());
+
         let (mut outgoing_sender, outgoing_receiver) = channel();
+
+
+        let seg_hosted = networking_hub_segment.start_hosting();
         let incoming_client_messages =
-            networking_hub_segment.start_listening(outgoing_receiver, addr);
+            networking_hub_segment.start_listening(outgoing_receiver);
 
         // Init logic.
         let big_fat_zero_time = KnownFrameInfo{
