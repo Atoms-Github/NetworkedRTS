@@ -19,6 +19,7 @@ use crate::game::timekeeping::*;
 use crate::game::logic::data_storage_manager::*;
 use crate::game::logic::logic_data_storage::*;
 use crate::game::client_input_handler_segment::*;
+use crate::game::scheduler_segment::*;
 
 
 struct Client{
@@ -59,26 +60,37 @@ impl Client{
             }
         });
     }
-    fn init_graphics(&self, state_to_render: Arc<RwLock<GameState>>, my_player_id: PlayerID){
+    fn init_graphics(&self, state_to_render: Arc<RwLock<GameState>>, my_player_id: PlayerID) -> Receiver<InputChange>{
         let seg_graph = GraphicalSegment::new(state_to_render, my_player_id);
-        seg_graph.start();
+        return seg_graph.start();
     }
-    fn init_input_distribution(inputs_stream: Receiver<InputChange>, outgoing_network: Sender<NetMessageType>, to_logic: Sender<LogicInwardsMessage>,
-                               welcome_info: &NetMsgConnectionInitResponse) -> InputDistributor{
-
-        // TODO3: Things can be improved by not waiting for the entire frame to finish before sending the entire input frame to local logic. Could be as it comes.
-    }
+//    fn init_input_distribution(inputs_stream: Receiver<InputChange>, outgoing_network: Sender<NetMessageType>, to_logic: Sender<LogicInwardsMessage>,
+//                               welcome_info: &NetMsgConnectionInitResponse) -> InputHandlerEx{
+//
+//
+//    }
 
     fn start(self){
         let mut set_net = self.init_networking(&self.connection_ip);
         set_net.send_greeting(&self.player_name);
         let welcome_info = set_net.receive_welcome_message();
 
-        let seg_data_storage = self.init_data_store(welcome_info.frames_gathered_so_far);
-        let seg_tailer = self.init_tail_sim(welcome_info.known_frame_info.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref());
-        let seg_header = self.init_head_sim(welcome_info.known_frame_info, seg_tailer.tail_lock, seg_data_storage.clone_lock_ref());
-        let seg_graphics = self.init_graphics(seg_header.head_lock, welcome_info.assigned_player_id);
+        let mut seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame_info).start();
 
+        let seg_data_storage = self.init_data_store(welcome_info.frames_gathered_so_far);
+        let seg_logic_tailer = self.init_tail_sim(welcome_info.known_frame_info.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref());
+        let seg_logic_header = self.init_head_sim(welcome_info.known_frame_info, seg_logic_tailer.tail_lock, seg_data_storage.clone_lock_ref());
+        let seg_graphics = self.init_graphics(seg_logic_header.head_lock, welcome_info.assigned_player_id);
+
+
+        let seg_input_dist = InputHandlerIn::new(seg_graphics, welcome_info.known_frame_info.clone(), welcome_info.assigned_player_id);
+
+
+
+        let my_to_net = set_net.net_sink.clone();
+        seg_scheduler.schedule_event(Box::new(move ||{
+            seg_input_dist.start_dist(seg_data_storage.logic_msgs_sink, my_to_net);
+        }), welcome_info.you_initialize_frame);
 
         self.init_net_rec_handling(set_net.net_rec, seg_data_storage.logic_msgs_sink);
 

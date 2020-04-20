@@ -72,7 +72,8 @@ pub struct NetMsgConnectionInitResponse {
     pub assigned_player_id: PlayerID,
     pub game_state: GameState,
     pub frames_gathered_so_far: LogicDataStorage,
-    pub known_frame_info: KnownFrameInfo
+    pub known_frame_info: KnownFrameInfo,
+    pub you_initialize_frame: FrameIndex
 }
 
 

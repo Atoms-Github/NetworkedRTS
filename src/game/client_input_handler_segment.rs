@@ -20,48 +20,30 @@ use crate::game::logic::data_storage_manager::*;
 use crate::game::logic::logic_data_storage::*;
 
 
-struct InputHandlerEx {
-    inputs_stream_state: Receiver<InputChange>,
-    to_logic: Sender<LogicInwardsMessage>,
-    known_frame: KnownFrameInfo,
-    player_id: PlayerID
-}
-struct InputHandlerIn {
-    inputs_stream_state: Receiver<InputChange>,
-    init_at_frame: FrameIndex,
-    known_frame: KnownFrameInfo,
+pub struct InputHandlerEx {
+//    inputs_stream_state: Receiver<InputChange>,
+//    to_logic: Sender<LogicInwardsMessage>,
+//    known_frame: KnownFrameInfo,
 //    player_id: PlayerID
 }
+impl InputHandlerEx {
+
+}
+pub struct InputHandlerIn {
+    inputs_stream_state: Receiver<InputChange>,
+    known_frame: KnownFrameInfo,
+    player_id: PlayerID,
+}
 impl InputHandlerIn {
-    pub fn new() -> InputHandlerIn {
+    pub fn new(inputs_stream_state: Receiver<InputChange>, known_frame: KnownFrameInfo, player_id: PlayerID) -> InputHandlerIn {
         return InputHandlerIn {
-            inputs_stream_state: changes_rec,
-            outgoing_network,
-            to_logic,
-            known_frame: welcome_info.known_frame_info.clone(),
-            player_id: welcome_info.assigned_player_id
+            inputs_stream_state,
+            known_frame,
+            player_id
         }
     }
-}
-impl InputHandlerEx {
-    fn start(self){
-        thread::spawn(move ||{
-            loop{
-                let state = self.inputs_stream_state.recv().unwrap();
-                let now_frame_index = self.known_frame.get_intended_current_frame(); // Super important this doesn't change between local and sent so we get here.
-
-                let logic_message = LogicInwardsMessage::SyncerInputsUpdate(SyncerData{
-                    data: vec![],
-                    start_frame: now_frame_index,
-                    owning_player: self.player_id as i32
-                });
-                self.to_logic.send(logic_message.clone()).unwrap();
-                self.outgoing_network.send(NetMessageType::GameUpdate(logic_message)).unwrap();
-            }
-        });
-    }
-    pub fn init_input_collector_thread(inputs_rec: Receiver<InputChange>, known_frame: KnownFrameInfo) -> Receiver<InputState>{
-        let mut frame_generator = known_frame.start_frame_stream_from_known();
+    fn init_input_collector_thread(&self, inputs_rec: Receiver<InputChange>) -> Receiver<InputState>{ // TODO3: Things can be improved by not waiting for the entire frame to finish before sending the entire input frame to local logic. Could be as it comes.
+        let mut frame_generator = self.known_frame.start_frame_stream_from_known();
         let (merged_sink, merged_rec) = channel();
 
         thread::spawn(move ||{
@@ -79,23 +61,27 @@ impl InputHandlerEx {
         });
         return merged_rec;
     }
-}
 
-fn init_logic_output_responder(logic_output: Receiver<LogicOutwardsMessage>, network_sink: Sender<NetMessageType>, input_distributor: InputDistributor){
-    thread::spawn(move || {
-        let mut my_distributor = Some(input_distributor);
-        loop{
-            let logic_msg = logic_output.recv().unwrap();
-            match logic_msg{
+    pub fn start_dist(self, to_logic: Sender<LogicInwardsMessage>, to_net: Sender<NetMessageType>) -> InputHandlerEx{
+        let grouped_inputs = self.init_input_collector_thread(self.inputs_stream_state);
+        thread::spawn(move ||{
+            loop{
+                let state = self.inputs_stream_state.recv().unwrap();
+                let now_frame_index = self.known_frame.get_intended_current_frame(); // Super important this doesn't change between local and sent so we get here.
 
-                LogicOutwardsMessage::DataNeeded(syncer_request) => {
-//                    network_sink.send(NetMessageType::())
-                    // TODO1: Implement
-                }
-                LogicOutwardsMessage::IAmInitialized() => {
-                    my_distributor.take().unwrap().start();
-                }
+                let logic_message = LogicInwardsMessage::SyncerInputsUpdate(SyncerData{
+                    data: vec![],
+                    start_frame: now_frame_index,
+                    owning_player: self.player_id as i32
+                });
+                to_logic.send(logic_message.clone()).unwrap();
+                to_net.send(NetMessageType::GameUpdate(logic_message)).unwrap();
             }
+        });
+
+        return InputHandlerEx{
         }
-    });
+    }
 }
+
+
