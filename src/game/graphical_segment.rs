@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
@@ -14,7 +14,7 @@ use crate::gameplay::systems::render::*;
 
 pub struct GraphicalSegment {
 //    my_current_input_state: Arc<Mutex<InputState>>,
-    render_head: Arc<Mutex<GameState>>,
+    render_head: Arc<RwLock<GameState>>,
     my_player_id: PlayerID,
     sender: Option<Sender<InputChange>>
 }
@@ -27,7 +27,7 @@ let (logic_layer, head_handle) =
         });\
 */
 impl GraphicalSegment {
-    pub fn new(head_render_handle: Arc<Mutex<GameState>>, my_player_id: PlayerID) -> GraphicalSegment {
+    pub fn new(head_render_handle: Arc<RwLock<GameState>>, my_player_id: PlayerID) -> GraphicalSegment {
         GraphicalSegment {
             render_head: head_render_handle,
             my_player_id,
@@ -70,7 +70,8 @@ impl EventHandler for GraphicalSegment {
 
 
         let mut pending = PendingEntities::new();
-        let mut head_unlocked = &mut *Mutex::lock(&self.render_head).unwrap();
+        let mut head_unlocked = self.render_head.write().unwrap(); // TODO2 should perhaps clone here for render performance.
+//        let mut head_unlocked = &mut *Mutex::lock(&self.render_head).unwrap();
         secret_render_system(&head_unlocked.world, &mut pending,
                              &mut head_unlocked.storages.position_s,
                              &mut head_unlocked.storages.render_s,

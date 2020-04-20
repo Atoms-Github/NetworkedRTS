@@ -28,9 +28,8 @@ pub enum LogicOutwardsMessage {
 }
 
 pub struct LogicSegmentTailerEx {
-    to_logic_sink: Sender<LogicInwardsMessage>,
-    from_logic_rec: Receiver<LogicOutwardsMessage>,
-    tail_lock: Arc<RwLock<GameState>>
+    pub from_logic_rec: Receiver<LogicOutwardsMessage>,
+    pub tail_lock: Arc<RwLock<GameState>>
 }
 impl LogicSegmentTailerEx {
 
@@ -65,7 +64,7 @@ impl LogicSegmentTailerIn {
             self.tail_lock.write().unwrap().simulate_tick(&sim_query_result.sim_info, FRAME_DURATION_MILLIS);
         }
 
-        return None; // No missing frames.
+        return vec![]; // No missing frames.
     }
 
 
@@ -93,14 +92,13 @@ impl LogicSegmentTailerIn {
 
     pub fn start_logic_tail(mut self) -> LogicSegmentTailerEx {
         let (from_logic_sink, from_logic_rec) = channel();
-        let (to_logic_sink, to_logic_rec) = channel(); // TODO1: Move this to data manager.
+
 
         let tail_lock = self.tail_lock.clone();
 
         self.start_thread(from_logic_sink);
 
         return LogicSegmentTailerEx {
-            to_logic_sink,
             from_logic_rec,
             tail_lock
         };

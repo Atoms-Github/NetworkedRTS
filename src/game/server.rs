@@ -29,7 +29,7 @@ struct ServerMainState {
     logic_updates_sink: Sender<LogicInwardsMessage>,
     logic_updates_rec: Receiver<LogicOutwardsMessage>,
     bonus_scheduler_sink: Sender<BonusEvent>,
-    game_data_store: DataStorageManager
+    game_data_store: DataStorageManagerIn
 }
 pub fn gather_incoming_server_messages(inc_clients: Receiver<OwnedNetworkMessage>, bonus_msgs: Receiver<SyncerData<Vec<BonusEvent>>>)
                                        -> Receiver<ServerActableMessage>{
@@ -80,7 +80,7 @@ impl ServerMainState{
         let (mut logic_outwards_sink, mut logic_outwards_rec) = channel();
 
 
-        let storage_manager = DataStorageManager { value: Arc::new(RwLock::new(LogicDataStorage::new(0))) };
+        let storage_manager = DataStorageManagerIn { value: Arc::new(RwLock::new(LogicDataStorage::new(0))) };
 
 
         let (mut logic_segment, mut state_handle) =

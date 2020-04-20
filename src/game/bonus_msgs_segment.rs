@@ -21,6 +21,10 @@ pub enum BonusEvent{
     NewPlayer(PlayerID),
     None
 }
+pub struct ScheduledBonusEvent{
+    event: BonusEvent,
+    when_frame: FrameIndex
+}
 
 impl BonusMsgsSegment{
     pub fn new(known_frame: KnownFrameInfo) -> BonusMsgsSegment{
@@ -30,7 +34,7 @@ impl BonusMsgsSegment{
             new_bonus_events: vec![]
         }
     }
-    pub fn start(mut self) -> (Receiver<SyncerData<Vec<BonusEvent>>>, Sender<BonusEvent>){
+    pub fn start(mut self) -> (Receiver<SyncerData<Vec<BonusEvent>>>, Sender<ScheduledBonusEvent>){
         let (out_msgs_sink, out_msgs_rec) = channel(); // Messages that have been scheduled.
         let (in_msgs_sink, in_msgs_rec) = channel(); // Messages to schedule somewhere.
         if self.bonus_msgs_frames.len() > 0{

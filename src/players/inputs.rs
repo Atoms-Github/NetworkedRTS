@@ -80,26 +80,7 @@ impl InputState{
     }
 }
 
-pub fn init_input_collector_thread(inputs_rec: Receiver<InputChange>, known_frame: KnownFrameInfo) -> Receiver<InputState>{
-    let mut frame_generator = known_frame.start_frame_stream_from_known();
-    let (merged_sink, merged_rec) = channel();
 
-    thread::spawn(move ||{
-        loop{
-            let frame_index = frame_generator.recv().unwrap(); // Wait for new frame.
-            let mut input_state = InputState::new();
-
-            let mut change = inputs_rec.try_recv();
-            while change.is_ok(){ // Keep fishing.
-                change.unwrap().apply_to_state(&mut input_state);
-                change = inputs_rec.try_recv();
-            }
-            merged_sink.send(input_state).unwrap();
-        }
-    });
-    return merged_rec;
-
-}
 
 
 

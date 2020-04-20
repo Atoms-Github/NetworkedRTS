@@ -16,29 +16,27 @@ use crate::game::logic::logic_data_storage::*;
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
 
-pub struct LogicHeadSim {
+pub struct LogicHeadSimIn {
     known_frame_info: KnownFrameInfo,
     head_lock: Arc<RwLock<GameState>>,
     tail_lock: Arc<RwLock<GameState>>,
     all_frames: Arc<RwLock<LogicDataStorage>>,
-//    outwards_messages: Sender<LogicOutwardsMessage>
 }
-
-
+pub struct LogicHeadSimEx {
+    pub head_lock: Arc<RwLock<GameState>>,
+}
 
 fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
     let guard = state_tail.read().unwrap();
     let head_state = (*guard).clone();
     return Arc::new(RwLock::new(head_state));
 }
-impl LogicHeadSim {
+
+impl LogicHeadSimIn {
     pub fn new(known_frame_info: KnownFrameInfo, tail_lock: Arc<RwLock<GameState>>,
                data_store: Arc<RwLock<LogicDataStorage>>) // TODO2: Refactor arguments.
-               -> LogicHeadSim{
-
-        let game_state_head =
-
-        return LogicHeadSim {
+               -> LogicHeadSimIn {
+        return LogicHeadSimIn {
             known_frame_info,
             head_lock: deep_clone_state_lock(&tail_lock),
             tail_lock,
@@ -50,7 +48,7 @@ impl LogicHeadSim {
     fn set_new_head(&mut self, new_head: GameState){
         *self.head_lock.write().unwrap() = new_head;
     }
-    pub fn start(mut self) -> Arc<RwLock<GameState>>{
+    pub fn start(mut self) -> LogicHeadSimEx{
         let head_handle = self.head_lock.clone();
         thread::spawn(move ||{
             let mut my_self = self;
@@ -64,7 +62,9 @@ impl LogicHeadSim {
             }
         });
 
-        return head_handle;
+        return LogicHeadSimEx{
+            head_lock: self.head_lock
+        };
     }
 
     fn clone_tail(&self) -> GameState{
