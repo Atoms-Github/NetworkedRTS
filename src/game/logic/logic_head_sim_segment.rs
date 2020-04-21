@@ -48,6 +48,7 @@ impl LogicHeadSimIn {
     fn set_new_head(&mut self, new_head: GameState){
         *self.head_lock.write().unwrap() = new_head;
     }
+
     pub fn start(mut self) -> LogicHeadSimEx{
         let head_handle = self.head_lock.clone();
         thread::spawn(move ||{
@@ -63,7 +64,7 @@ impl LogicHeadSimIn {
         });
 
         return LogicHeadSimEx{
-            head_lock: self.head_lock
+            head_lock: head_handle
         };
     }
 

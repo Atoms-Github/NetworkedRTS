@@ -36,10 +36,10 @@ struct ServerMainStateEx {
     known_frame_zero: KnownFrameInfo
 }
 
-pub fn server_main(hosting_ip: &String){
+pub fn server_main(hosting_ip: String){
     println!("Starting as server. Going to host on {}", hosting_ip);
 
-    let server_in = ServerMainStateIn::new(hosting_ip.clone());
+    let server_in = ServerMainStateIn::new(hosting_ip);
     let server_ex = server_in.start_segments();
     server_ex.startup_loop();
 
@@ -94,8 +94,11 @@ impl ServerMainStateIn {
 
 }
 impl ServerMainStateEx {
-    pub fn merge_server_actable_msgs(&self, inc_clients: Receiver<OwnedNetworkMessage>, bonus_msgs: Receiver<SyncerData<Vec<BonusEvent>>>)
+    pub fn merge_server_actable_msgs(&mut self)
                                      -> Receiver<ServerActableMessage>{
+        let inc_clients = self.seg_net_hub.pickup_rec.take().unwrap();
+        let inc_bonus_msgs = self.seg_bonus_msgs.scheduled_events.take().unwrap();
+
         let (actable_sink,actable_rec) = channel();
 
         let actable_from_clients = actable_sink.clone();
@@ -108,14 +111,19 @@ impl ServerMainStateEx {
         let actable_from_clients = actable_sink.clone();
         thread::spawn(move ||{
             loop{
-                let bonus_msg = bonus_msgs.recv().unwrap();
+                let bonus_msg = inc_bonus_msgs.recv().unwrap();
                 actable_from_clients.send(ServerActableMessage::NewlyGeneratedBonusMsgs(bonus_msg)).unwrap();
             }
         });
         return actable_rec;
     }
     pub fn startup_loop(mut self){
-        let server_actable_msgs = self.merge_server_actable_msgs(self.seg_net_hub.pickup_rec, self.seg_bonus_msgs.scheduled_events);
+        let server_actable_msgs = self.merge_server_actable_msgs();
+//        let clients_rec = self.seg_net_hub.pickup_rec.take().unwrap();
+//        let server_actable_msgs =
+//            self.merge_server_actable_msgs(clients_rec,
+//                                           self.seg_bonus_msgs.scheduled_events.take().unwrap());
+
         loop{
             let incoming_actable_message = server_actable_msgs.recv().unwrap();
             match incoming_actable_message{

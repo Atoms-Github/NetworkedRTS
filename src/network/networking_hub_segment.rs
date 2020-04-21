@@ -10,7 +10,7 @@ use crate::network::networking_structs::PlayerID;
 
 pub struct NetworkingHubEx {
     pub yeet_sink: Sender<DistributableNetMessage>,
-    pub pickup_rec: Receiver<OwnedNetworkMessage>,
+    pub pickup_rec: Option<Receiver<OwnedNetworkMessage>>,
 }
 
 pub struct NetworkingHubMid {
@@ -117,7 +117,7 @@ impl NetworkingHubIn {
 
         return NetworkingHubEx{
             yeet_sink,
-            pickup_rec
+            pickup_rec: Some(pickup_rec)
         }
     }
 }

@@ -69,11 +69,11 @@ impl Client{
         set_net.send_greeting(&self.player_name);
         let welcome_info = set_net.receive_welcome_message();
 
-        let mut seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame_info).start();
+        let mut seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame_info.clone()).start();
 
         let seg_data_storage = self.init_data_store(welcome_info.frames_gathered_so_far);
         let seg_logic_tailer = self.init_tail_sim(welcome_info.known_frame_info.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref());
-        let seg_logic_header = self.init_head_sim(welcome_info.known_frame_info, seg_logic_tailer.tail_lock, seg_data_storage.clone_lock_ref());
+        let seg_logic_header = self.init_head_sim(welcome_info.known_frame_info.clone(), seg_logic_tailer.tail_lock, seg_data_storage.clone_lock_ref());
         let seg_graphics = self.init_graphics(seg_logic_header.head_lock, welcome_info.assigned_player_id);
 
 

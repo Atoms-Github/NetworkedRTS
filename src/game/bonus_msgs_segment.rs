@@ -21,7 +21,7 @@ pub struct BonusMsgsSegmentIn {
     events_map: HashMap<FrameIndex, Vec<BonusEvent>>,
 }
 pub struct BonusMsgsSegmentEx {
-    pub scheduled_events: Receiver<SyncerData<Vec<BonusEvent>>>,
+    pub scheduled_events: Option<Receiver<SyncerData<Vec<BonusEvent>>>>,
     event_dump: Sender<TimedBonusEvent>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -114,9 +114,8 @@ impl BonusMsgsSegmentIn {
             panic!();
         }
         self.start_bonus_thread(in_msgs_rec, out_msgs_sink);
-
         return BonusMsgsSegmentEx{
-            scheduled_events: out_msgs_rec,
+            scheduled_events: Some(out_msgs_rec),
             event_dump: in_msgs_sink, // TODO1: Finish allowing for scheduling wherever wanted.
         };
     }
