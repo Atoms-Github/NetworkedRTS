@@ -129,27 +129,31 @@ impl ServerMainStateEx {
 
         }
     }
+    fn gen_init_info(&self, player_id: PlayerID, frame_to_init: FrameIndex) -> NetMsgConnectionInitResponse{
+        let state_to_send = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
+        let frames_to_send;
+        {
+            frames_to_send = self.seg_data_store.data_lock.read().unwrap().clone();
+        }
+        return NetMsgConnectionInitResponse{
+            assigned_player_id: player_id,
+            frames_gathered_so_far: frames_to_send,
+            known_frame_info: self.known_frame_zero.clone(),
+            game_state: state_to_send,
+            you_initialize_frame: frame_to_init
+        };
+    }
 
     fn handle_incoming_client_msg(&mut self, incoming_owned_message: OwnedNetworkMessage){
         let incoming_message = incoming_owned_message.message;
         let player_id = incoming_owned_message.owner;
         match incoming_message{
             NetMessageType::ConnectionInitQuery(response) => {
-                let state_to_send = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
-                let mut frames_to_send;
-                {
-                    let frames_guard = self.seg_data_store.data_lock.read().unwrap();
-                    frames_to_send = frames_guard.clone();
-                }
-
-                println!("Going to send with this much info: {}", frames_to_send.bonus_events.data.len());
-                let response = NetMessageType::ConnectionInitResponse(NetMsgConnectionInitResponse{ // TODO1 implement set frame init thing.
-                    assigned_player_id: player_id,
-                    frames_gathered_so_far: frames_to_send,
-                    known_frame_info: self.known_frame_zero.clone(),
-                    game_state: state_to_send,
-                });
                 println!("Received initialization request for player with ID: {}", player_id);
+
+                let frame_to_init_player = self.known_frame_zero.get_intended_current_frame() + 60;
+                self.seg_bonus_msgs.schedule_event_timed(BonusEvent::NewPlayer(player_id), frame_to_init_player);
+                let response = NetMessageType::ConnectionInitResponse(self.gen_init_info(player_id, frame_to_init_player));
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             },
             NetMessageType::GameUpdate(update_info) => {
