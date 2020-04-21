@@ -76,6 +76,6 @@ impl KnownFrameInfo{
         return receiver;
     }
     pub fn start_frame_stream_from_known(&self) -> Receiver<FrameIndex>{
-        self.start_frame_stream_from_any(self.known_frame_index + 1)
+        self.start_frame_stream_from_any(self.known_frame_index)
     }
 }

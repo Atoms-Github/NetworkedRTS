@@ -6,40 +6,101 @@ use serde::*;
 use crate::game::synced_data_stream::*;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
+use std::collections::HashMap;
 
-struct NewBonusEvent{
+const BONUS_FRAMES_AHEAD: usize = 60;
+
+struct TimedBonusEvent {
     bonus_event: BonusEvent,
-    execution_frame: FrameIndex,
+    execution_frame: Option<FrameIndex>,
 }
 pub struct BonusMsgsSegmentIn {
     known_frame: KnownFrameInfo,
     bonus_msgs_frames: Vec<Vec<BonusEvent>>,
-    new_bonus_events: Vec<NewBonusEvent>,
+//    new_bonus_events: Vec<NewBonusEvent>,
+    events_map: HashMap<FrameIndex, Vec<BonusEvent>>,
 }
 pub struct BonusMsgsSegmentEx {
     pub scheduled_events: Receiver<SyncerData<Vec<BonusEvent>>>,
-    pub event_dump: Sender<ScheduledBonusEvent>
+    event_dump: Sender<TimedBonusEvent>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum BonusEvent{
     NewPlayer(PlayerID),
-    None
-}
-pub struct ScheduledBonusEvent{
-    event: BonusEvent,
-    when_frame: FrameIndex
 }
 
 impl BonusMsgsSegmentEx{
-
+    pub fn schedule_event(&mut self, event: BonusEvent){
+        let event = TimedBonusEvent{
+            bonus_event: event,
+            execution_frame: None
+        };
+        self.event_dump.send(event).unwrap();
+    }
+    pub fn schedule_event_timed(&mut self, event: BonusEvent, frame_index: FrameIndex){
+        let event = TimedBonusEvent{
+            bonus_event: event,
+            execution_frame: Some(frame_index)
+        };
+        self.event_dump.send(event).unwrap();
+    }
 }
 
-impl BonusMsgsSegmentIn {
+impl BonusMsgsSegmentIn { // If we do eventually switch to udp we can expose the list of all events history.
     pub fn new(known_frame: KnownFrameInfo) -> BonusMsgsSegmentIn {
         BonusMsgsSegmentIn {
             known_frame,
-            bonus_msgs_frames : Vec::new(),
-            new_bonus_events: vec![]
+            bonus_msgs_frames : vec![],
+            events_map: Default::default()
+        }
+    }
+    fn get_new_events_on_frame(&mut self, frame_index: FrameIndex) -> Vec<BonusEvent>{
+        let mut events_found = vec![];
+        let events_on_frame = self.events_map.get_mut(&frame_index);
+        if events_on_frame.is_some(){
+            let found = events_on_frame.unwrap();
+            events_found.append(found);
+        }
+        return events_found;
+    }
+    fn send_events_from_frame(&mut self, scheduled_sink: &Sender<SyncerData<Vec<BonusEvent>>>, frame_index: FrameIndex){
+        let events_on_frame = self.get_new_events_on_frame(frame_index);
+
+        let data = SyncerData{
+            data: vec![events_on_frame],
+            start_frame: frame_index,
+            owning_player: -1
+        };
+        scheduled_sink.send(data).unwrap();
+
+    }
+    fn start_bonus_thread(mut self, to_schedule_rec: Receiver<TimedBonusEvent>, schedled_sink: Sender<SyncerData<Vec<BonusEvent>>>){
+        thread::Builder::new().name("BonusMsgsMain".to_string()).spawn(move ||{
+            let new_frame_o_matic = self.known_frame.start_frame_stream_from_known();
+            self.add_new_events_to_map(&to_schedule_rec);
+            for setup_frame_index in self.known_frame.known_frame_index .. self.known_frame.known_frame_index + BONUS_FRAMES_AHEAD{
+                self.send_events_from_frame(&schedled_sink, setup_frame_index);
+            }
+            loop{
+                let frame_index = new_frame_o_matic.recv().unwrap();
+                self.add_new_events_to_map(&to_schedule_rec);
+                self.send_events_from_frame(&schedled_sink, frame_index);
+            }
+        }).unwrap();
+    }
+    fn add_event_to_map(&mut self, event: BonusEvent, frame: FrameIndex){
+        if !self.events_map.contains_key(&frame){
+            self.events_map.insert(frame, vec![]);
+        }
+        self.events_map.get_mut(&frame).unwrap().push(event);
+    }
+    fn add_new_events_to_map(&mut self, in_msgs_rec: &Receiver<TimedBonusEvent>) {
+        let to_schedule = in_msgs_rec.try_recv();
+        while to_schedule.is_ok(){
+            let timed_bonus = to_schedule.unwrap();
+            let future_frame = timed_bonus.execution_frame.unwrap_or(self.known_frame.get_intended_current_frame() + 60);
+            self.add_event_to_map(timed_bonus.bonus_event, future_frame);
+            let to_schedule = in_msgs_rec.try_recv();
         }
     }
     pub fn start(mut self) -> BonusMsgsSegmentEx{
@@ -48,53 +109,14 @@ impl BonusMsgsSegmentIn {
         if self.bonus_msgs_frames.len() > 0{
             panic!();
         }
-        thread::Builder::new().name("BonusMsgsMain".to_string()).spawn(move ||{
-            let new_frame_o_matic = self.known_frame.start_frame_stream_from_known();
-            loop{
-                let frame_index = new_frame_o_matic.recv().unwrap();
+        self.start_bonus_thread(in_msgs_rec, out_msgs_sink);
 
-                self.read_new_events(&in_msgs_rec, frame_index);
-                
-                for forecast_frame_index in (self.bonus_msgs_frames.len() + 1)..(frame_index + 60){
-                    let mut new_event_list = vec![];
-                    let matching_new_events = self.new_bonus_events.drain_filter(|potentially_matching_new_event|{
-                        return potentially_matching_new_event.execution_frame == forecast_frame_index;
-                    });
-                    for new_event_in_frame in matching_new_events{
-                        new_event_list.push(new_event_in_frame.bonus_event);
-                    }
-                    let bonus_events = SyncerData{
-                        data: vec![new_event_list.clone()],
-                        start_frame: forecast_frame_index,
-                        owning_player: 0
-                    };
-                    out_msgs_sink.send(bonus_events).unwrap();
-
-                    self.bonus_msgs_frames.push(new_event_list); // Save to history.
-                }
-            }
-        }).unwrap();
         return BonusMsgsSegmentEx{
             scheduled_events: out_msgs_rec,
             event_dump: in_msgs_sink, // TODO1: Finish allowing for scheduling wherever wanted.
         };
     }
-    fn read_new_events(&mut self, in_msgs_rec: &Receiver<BonusEvent>, frame_index: usize) {
-        loop {
-            let requested_to_schedule = in_msgs_rec.try_recv();
-            match requested_to_schedule {
-                Ok(bonus) => {
-                    self.new_bonus_events.push(NewBonusEvent {
-                        bonus_event: bonus,
-                        execution_frame: frame_index + 70
-                    })
-                }
-                Err(error) => {
-                    break;
-                }
-            }
-        }
-    }
+
 }
 
 
