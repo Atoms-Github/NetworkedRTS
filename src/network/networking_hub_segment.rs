@@ -9,8 +9,8 @@ use crate::network::networking_structs::PlayerID;
 
 
 pub struct NetworkingHubEx {
-    yeet_sink: Sender<DistributableNetMessage>,
-    pickup_rec: Receiver<OwnedNetworkMessage>,
+    pub yeet_sink: Sender<DistributableNetMessage>,
+    pub pickup_rec: Receiver<OwnedNetworkMessage>,
 }
 
 pub struct NetworkingHubMid {
@@ -97,7 +97,13 @@ impl NetworkingHubMid{
     }
 }
 
-impl NetworkingHubIn { // Manages the server's incoming and outgoing network messages.
+// Manages the server's incoming and outgoing network messages.
+impl NetworkingHubIn {
+    pub fn new(host_addr_str: String) -> Self {
+        return NetworkingHubIn{
+            host_addr_str
+        }
+    }
     pub fn start_hosting(self) -> NetworkingHubEx{
         let (yeet_sink, yeet_rec) = channel();
         let (pickup_sink, pickup_rec) = channel();

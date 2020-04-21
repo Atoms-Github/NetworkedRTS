@@ -11,10 +11,14 @@ struct NewBonusEvent{
     bonus_event: BonusEvent,
     execution_frame: FrameIndex,
 }
-pub struct BonusMsgsSegment{
+pub struct BonusMsgsSegmentIn {
     known_frame: KnownFrameInfo,
     bonus_msgs_frames: Vec<Vec<BonusEvent>>,
     new_bonus_events: Vec<NewBonusEvent>,
+}
+pub struct BonusMsgsSegmentEx {
+    pub scheduled_events: Receiver<SyncerData<Vec<BonusEvent>>>,
+    pub event_dump: Sender<ScheduledBonusEvent>
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum BonusEvent{
@@ -26,15 +30,19 @@ pub struct ScheduledBonusEvent{
     when_frame: FrameIndex
 }
 
-impl BonusMsgsSegment{
-    pub fn new(known_frame: KnownFrameInfo) -> BonusMsgsSegment{
-        BonusMsgsSegment{
+impl BonusMsgsSegmentEx{
+
+}
+
+impl BonusMsgsSegmentIn {
+    pub fn new(known_frame: KnownFrameInfo) -> BonusMsgsSegmentIn {
+        BonusMsgsSegmentIn {
             known_frame,
             bonus_msgs_frames : Vec::new(),
             new_bonus_events: vec![]
         }
     }
-    pub fn start(mut self) -> (Receiver<SyncerData<Vec<BonusEvent>>>, Sender<ScheduledBonusEvent>){
+    pub fn start(mut self) -> BonusMsgsSegmentEx{
         let (out_msgs_sink, out_msgs_rec) = channel(); // Messages that have been scheduled.
         let (in_msgs_sink, in_msgs_rec) = channel(); // Messages to schedule somewhere.
         if self.bonus_msgs_frames.len() > 0{
@@ -66,9 +74,11 @@ impl BonusMsgsSegment{
                 }
             }
         }).unwrap();
-        return (out_msgs_rec, in_msgs_sink);
+        return BonusMsgsSegmentEx{
+            scheduled_events: out_msgs_rec,
+            event_dump: in_msgs_sink, // TODO1: Finish allowing for scheduling wherever wanted.
+        };
     }
-
     fn read_new_events(&mut self, in_msgs_rec: &Receiver<BonusEvent>, frame_index: usize) {
         loop {
             let requested_to_schedule = in_msgs_rec.try_recv();

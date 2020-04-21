@@ -91,7 +91,7 @@ impl Client{
 
 
         loop{
-            thread::sleep(Duration::from_millis(10000)); // TODO1
+            thread::sleep(Duration::from_millis(10000));
         }
     }
 }
