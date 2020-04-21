@@ -19,7 +19,7 @@ pub enum ServerActableMessage{
     NewlyGeneratedBonusMsgs(SyncerData<Vec<BonusEvent>>),
     IncomingClientMsg(OwnedNetworkMessage),
 }
-struct ServerMainStateEx {
+pub struct ServerMainStateEx {
 ////    all_frames: LogicDataStorage,
 //    big_fat_zero_time: KnownFrameInfo,
 //    outgoing_client_messages: Sender<DistributableNetMessage>,

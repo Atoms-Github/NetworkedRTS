@@ -41,7 +41,8 @@ impl NetworkingHubMid{
             let socket = self.bind_addr();
 
             for stream in socket.incoming() {
-                self.handle_new_socket(stream.unwrap(), self.gen_next_player_id());
+                let next_id = self.gen_next_player_id();
+                self.handle_new_socket(stream.unwrap(), next_id);
             }
         });
     }

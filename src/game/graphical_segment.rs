@@ -70,7 +70,7 @@ impl EventHandler for GraphicalSegment {
 
 
         let mut pending = PendingEntities::new();
-        let mut head_unlocked = self.render_head.write().unwrap(); // TODO2 should perhaps clone here for render performance.
+        let mut head_unlocked = self.render_head.write().unwrap().clone(); // TODO2 find is it faster to clone or to render?
 //        let mut head_unlocked = &mut *Mutex::lock(&self.render_head).unwrap();
         secret_render_system(&head_unlocked.world, &mut pending,
                              &mut head_unlocked.storages.position_s,

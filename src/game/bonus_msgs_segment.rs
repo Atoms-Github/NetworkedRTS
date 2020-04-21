@@ -99,12 +99,12 @@ impl BonusMsgsSegmentIn {
         self.events_map.get_mut(&schedule_frame).unwrap().push(event);
     }
     fn add_new_events_to_map(&mut self, in_msgs_rec: &Receiver<TimedBonusEvent>) {
-        let to_schedule = in_msgs_rec.try_recv();
+        let mut to_schedule = in_msgs_rec.try_recv();
         while to_schedule.is_ok(){
             let timed_bonus = to_schedule.unwrap();
             let future_frame = timed_bonus.execution_frame.unwrap_or(self.known_frame.get_intended_current_frame() + 60);
             self.add_event_to_map(timed_bonus.bonus_event, future_frame);
-            let to_schedule = in_msgs_rec.try_recv();
+            to_schedule = in_msgs_rec.try_recv();
         }
     }
     pub fn start(mut self) -> BonusMsgsSegmentEx{
