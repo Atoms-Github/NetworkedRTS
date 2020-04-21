@@ -16,7 +16,7 @@ struct TimedBonusEvent {
 }
 pub struct BonusMsgsSegmentIn {
     known_frame: KnownFrameInfo,
-    bonus_msgs_frames: Vec<Vec<BonusEvent>>,
+    bonus_msgs_frames: Vec<Vec<BonusEvent>>, // If we do eventually switch to udp we can expose the list of all events history.
 //    new_bonus_events: Vec<NewBonusEvent>,
     events_map: HashMap<FrameIndex, Vec<BonusEvent>>,
 }
@@ -46,7 +46,7 @@ impl BonusMsgsSegmentEx{
     }
 }
 
-impl BonusMsgsSegmentIn { // If we do eventually switch to udp we can expose the list of all events history.
+impl BonusMsgsSegmentIn {
     pub fn new(known_frame: KnownFrameInfo) -> BonusMsgsSegmentIn {
         BonusMsgsSegmentIn {
             known_frame,
@@ -88,11 +88,15 @@ impl BonusMsgsSegmentIn { // If we do eventually switch to udp we can expose the
             }
         }).unwrap();
     }
-    fn add_event_to_map(&mut self, event: BonusEvent, frame: FrameIndex){
-        if !self.events_map.contains_key(&frame){
-            self.events_map.insert(frame, vec![]);
+    fn add_event_to_map(&mut self, event: BonusEvent, schedule_frame: FrameIndex){
+        let processing_frame = self.known_frame.get_intended_current_frame();
+        if schedule_frame - processing_frame < 3{
+            panic!("Tried to schedule a bonus event that was too near to the present!");
         }
-        self.events_map.get_mut(&frame).unwrap().push(event);
+        if !self.events_map.contains_key(&schedule_frame){
+            self.events_map.insert(schedule_frame, vec![]);
+        }
+        self.events_map.get_mut(&schedule_frame).unwrap().push(event);
     }
     fn add_new_events_to_map(&mut self, in_msgs_rec: &Receiver<TimedBonusEvent>) {
         let to_schedule = in_msgs_rec.try_recv();
