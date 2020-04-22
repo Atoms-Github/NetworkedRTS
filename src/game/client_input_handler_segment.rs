@@ -1,23 +1,13 @@
-use std::net::SocketAddr;
-use std::str::FromStr;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
-use crate::game::graphical_segment::GraphicalSegment;
 use crate::network::networking_message_types::*;
-use crate::network::networking_segment::*;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
-use std::panic;
-use std::sync::{Arc, Mutex, RwLock};
-use std::time::Duration;
 
 use crate::game::logic::logic_segment::*;
-use crate::game::logic::logic_head_sim_segment::*;
 use crate::game::synced_data_stream::*;
 use crate::game::timekeeping::*;
-use crate::game::logic::data_storage_manager::*;
-use crate::game::logic::logic_data_storage::*;
 
 trait AbleToStartCollectionThread {
     fn init_input_collector_thread(self, known_frame: KnownFrameInfo) -> Receiver<InputState>;

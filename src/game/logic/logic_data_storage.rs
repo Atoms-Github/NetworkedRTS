@@ -33,17 +33,29 @@ impl LogicDataStorage{
                 if data.owning_player < 0{
                     panic!("No owning player set on inputs update data pack.");
                 }
-                let player_sync = self.player_inputs.get_mut(&(data.owning_player as usize)).unwrap();
+                let inputs_map = self.player_inputs.get_mut(&(data.owning_player as usize));
+                if inputs_map.is_none(){
+                    panic!("Inputs arrived for player before their init bonus event arrived.");
+                }
+                let player_sync = inputs_map.unwrap();
                 player_sync.insert_data_segment(data);
             }
             LogicInwardsMessage::SyncerBonusUpdate(data) => {
+                self.extract_new_players(&data);
                 self.bonus_events.insert_data_segment(data);
             }
+        }
+    }
+    fn extract_new_players(&mut self, data: &SyncerData<Vec<BonusEvent>>){
+        let new_players = data.extract_new_players();
+        for new_player_info in new_players{
+            self.add_player(&new_player_info);
         }
     }
 
     pub fn add_player(&mut self, new_player_info: &NewPlayerInfo){
         self.player_inputs.insert(new_player_info.player_id, SyncerStore::<InputState>::gen_inputs_store(new_player_info.frame_added));
+        println!("New player entry in data storage id: {}", new_player_info.player_id);
     }
 
 

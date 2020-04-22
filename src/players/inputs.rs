@@ -1,9 +1,6 @@
 use serde::{Serialize, Deserialize};
 use std::collections::{HashSet};
 use ggez::event::KeyCode;
-use std::sync::mpsc::{Receiver, channel};
-use crate::game::timekeeping::*;
-use std::thread;
 
 type PointFloat = nalgebra::Point2<f32>;
 

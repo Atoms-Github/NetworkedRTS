@@ -5,6 +5,30 @@ use crate::game::bonus_msgs_segment::*;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
 use crate::utils::util_functions::*;
+use crate::network::game_message_types::NewPlayerInfo;
+
+pub trait ExtractNewPlayers{
+    fn extract_new_players(&self) -> Vec<NewPlayerInfo>;
+}
+impl ExtractNewPlayers for SyncerData<Vec<BonusEvent>>{
+    fn extract_new_players(&self) -> Vec<NewPlayerInfo> {
+        let mut new_players = vec![];
+        for (package_relative_frame_index, bonus_list) in self.data.iter().enumerate(){
+            for bonus_event in bonus_list{
+                match bonus_event{
+                    BonusEvent::NewPlayer(player_id) => {
+                        let new_player = NewPlayerInfo{
+                            player_id: *player_id,
+                            frame_added: self.start_frame + package_relative_frame_index,
+                        };
+                        new_players.push(new_player);
+                    }
+                }
+            }
+        }
+        return new_players;
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SyncerData<T> {
@@ -52,6 +76,10 @@ impl<T> SyncerStore<T> where T: Clone{
         }
     }
     pub fn get_single_item(&self, frame_index: FrameIndex) -> Option<&T> {
+        if frame_index < self.frames_index_offset{
+            // Since lists of player inputs are inited when players join, we can sometimes try to get info from frames before 0.
+            return None;
+        }
         return self.data.get(frame_index - self.frames_index_offset);
     }
     pub fn get_or_last_query(&self, frame_index: FrameIndex, request_type: SyncerRequestType) -> (Option<T>, Option<SyncerRequestTyped>){

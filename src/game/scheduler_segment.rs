@@ -1,4 +1,3 @@
-use std::sync::{Mutex, RwLock};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 

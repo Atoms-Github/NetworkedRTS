@@ -52,11 +52,14 @@ impl NetworkingHubMid{
             loop{
                 let to_yeet = yeet_rec.recv().unwrap();
                 let mut locked = my_stream_map.lock().unwrap();
+
                 match to_yeet {
                     DistributableNetMessage::ToSingle(target, msg) => {
+                        println!("Sending item to one: {:?}", msg);
                         msg.encode_and_send(locked.get_mut(&target).unwrap());
                     }
                     DistributableNetMessage::ToAll(msg) => {
+                        println!("Sending an item to all: {:?}", msg);
                         for (player_id, stream) in locked.iter(){
                             msg.encode_and_send(stream);
                         }
@@ -83,7 +86,7 @@ impl NetworkingHubMid{
                 my_output_sender.send(OwnedNetworkMessage{
                     owner: my_id,
                     message: receiver.recv().unwrap()
-                });
+                }).unwrap();
             }
 
         });

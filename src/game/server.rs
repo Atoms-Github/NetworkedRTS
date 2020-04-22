@@ -1,11 +1,11 @@
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{channel, Receiver};
 use std::time::{SystemTime};
 
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_hub_segment::*;
 use crate::network::networking_structs::*;
 use crate::network::networking_message_types::{NetMessageType, NetMsgConnectionInitResponse};
-use std::sync::{Mutex, Arc, RwLock};
+use std::sync::{Arc, RwLock};
 use std::thread;
 use std::panic;
 use crate::game::bonus_msgs_segment::*;
@@ -123,7 +123,6 @@ impl ServerMainStateEx {
 //        let server_actable_msgs =
 //            self.merge_server_actable_msgs(clients_rec,
 //                                           self.seg_bonus_msgs.scheduled_events.take().unwrap());
-
         loop{
             let incoming_actable_message = server_actable_msgs.recv().unwrap();
             match incoming_actable_message{
@@ -175,7 +174,7 @@ impl ServerMainStateEx {
     fn handle_new_bonus_event(&mut self, new_bonus_msg: SyncerData<Vec<BonusEvent>>) -> () {
         // Send to all clients + self logic.
         let logic_update = LogicInwardsMessage::SyncerBonusUpdate(new_bonus_msg);
-        println!("Sending {:?}", logic_update);
+
         self.seg_data_store.logic_msgs_sink.send(logic_update.clone()).unwrap();
         self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update))).unwrap();
     }
