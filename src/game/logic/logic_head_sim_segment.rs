@@ -79,7 +79,7 @@ impl LogicHeadSimIn {
         } // Discard frame info database lock.
 
         for sim_info in infos_for_sims{
-            state_tail.simulate_tick(&sim_info, FRAME_DURATION_MILLIS);
+            state_tail.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
         }
         return state_tail;
     }

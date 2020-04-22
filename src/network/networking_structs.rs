@@ -56,7 +56,7 @@ impl GameState{
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn add_player(&mut self, player_id: PlayerID){
+    pub fn init_new_player(&mut self, player_id: PlayerID){
         let mut pending = PendingEntities::new();
 
         let mut pending_entity_online_player = PendingEntity::new();
@@ -69,13 +69,23 @@ impl GameState{
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn simulate_tick(&mut self, inputs_info: &InfoForSim, delta: f64){
+    fn apply_bonus_event(&mut self, bonus_event: BonusEvent){
+        match bonus_event{
+            BonusEvent::NewPlayer(player_id) => {
+                self.init_new_player(player_id);
+            }
+        }
+    }
+    pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f64){
+        for bonus_event in sim_info.bonus_events{
+            self.apply_bonus_event(bonus_event);
+        }
         let mut pending = PendingEntities::new();
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_with_inputs_system(&self.world, &mut pending, &mut self.storages.velocity_s,
-        &mut self.storages.velocity_with_input_s, inputs_info);
+        &mut self.storages.velocity_with_input_s, &sim_info.inputs_map);
 
         self.world.update_entities(&mut self.storages, pending);
 

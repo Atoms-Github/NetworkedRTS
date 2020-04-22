@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet};
+use std::collections::{BTreeSet, HashMap};
 
 use serde::{Deserialize, Serialize};
 
@@ -6,20 +6,21 @@ use crate::create_system;
 use crate::ecs::world::*;
 use crate::network::networking_structs::*;
 use crate::gameplay::systems::velocity::VelocityComp;
+use crate::players::inputs::*;
 
 //use crate::inputs::input_structs::*;
 
 create_system!( velocity_with_inputs_system | secret_velocity_with_inputs_system
 	| my_velocity: VelocityComp, my_velocity_with_input_comp: VelocityWithInputComp
 	|
-	| players_input: &InfoForSim
+	| players_input: &HashMap<PlayerID, InputState>
 );
 
 
 const MOVEMENT_SPEED: f32 = 2.0;
 
 
-fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &InfoForSim) {
+fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID, InputState>) {
 //    let owner_id = e.my_velocity_with_input_comp(d).owner_id; TODO1: Implement
 //    let my_inputs = player_inputs.inputs.get(&owner_id).expect("Can't find inputs for unit owner.");
 //

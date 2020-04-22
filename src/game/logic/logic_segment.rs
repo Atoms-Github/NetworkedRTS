@@ -50,7 +50,8 @@ impl LogicSegmentTailerIn {
         }
     }
 
-    fn sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<SyncerRequestTyped>{
+    fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<SyncerRequestTyped>{
+
         let sim_query_result;
         {
             sim_query_result = self.all_frames.read().unwrap().clone_info_for_sim(tail_frame_to_sim);
@@ -60,7 +61,8 @@ impl LogicSegmentTailerIn {
         }
         {
             // It's fine to hold the state for a while as this thread is important - and we shouldn't be long in comparison to head.
-            self.tail_lock.write().unwrap().simulate_tick(&sim_query_result.sim_info, FRAME_DURATION_MILLIS);
+
+            self.tail_lock.write().unwrap().simulate_tick(sim_query_result.sim_info, FRAME_DURATION_MILLIS);
         }
 
         return vec![]; // No missing frames.
@@ -73,9 +75,10 @@ impl LogicSegmentTailerIn {
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
             loop{
                 let tail_frame_to_sim = generator.recv().unwrap();
+
                 loop{
-                    let problems = self.sim_tail_frame(tail_frame_to_sim);
-                    if problems.len() > 0 {
+                    let problems = self.try_sim_tail_frame(tail_frame_to_sim);
+                    if problems.len() == 0 {
                         break;
                     }
 

@@ -22,7 +22,7 @@ pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMes
             let mut message_buffer = vec![0; message_size as usize];
             read_stream.read_exact(&mut message_buffer).unwrap();
 
-            let result = bincode::deserialize::<NetMessageType>(&message_buffer[..]); // TODO1 should crash on failure.
+            let result = bincode::deserialize::<NetMessageType>(&message_buffer[..]);
             match result{
                 Ok(msg) => {
                     sender.send(msg).unwrap();

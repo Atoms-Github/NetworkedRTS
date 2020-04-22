@@ -65,12 +65,12 @@ impl BonusMsgsSegmentIn {
     }
     fn send_events_from_frame(&mut self, scheduled_sink: &Sender<SyncerData<Vec<BonusEvent>>>, frame_index: FrameIndex){
         let events_on_frame = self.get_new_events_on_frame(frame_index);
-
         let data = SyncerData{
             data: vec![events_on_frame],
             start_frame: frame_index,
             owning_player: -1
         };
+
         scheduled_sink.send(data).unwrap();
 
     }
@@ -116,7 +116,7 @@ impl BonusMsgsSegmentIn {
         self.start_bonus_thread(in_msgs_rec, out_msgs_sink);
         return BonusMsgsSegmentEx{
             scheduled_events: Some(out_msgs_rec),
-            event_dump: in_msgs_sink, // TODO1: Finish allowing for scheduling wherever wanted.
+            event_dump: in_msgs_sink,
         };
     }
 

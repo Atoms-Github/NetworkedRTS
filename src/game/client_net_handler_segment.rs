@@ -92,7 +92,6 @@
 //
 //                LogicOutwardsMessage::DataNeeded(syncer_request) => {
 ////                    network_sink.send(NetMessageType::())
-//                    // TODO1: Implement
 //                }
 //                LogicOutwardsMessage::IAmInitialized() => {
 //                    my_distributor.take().unwrap().start();

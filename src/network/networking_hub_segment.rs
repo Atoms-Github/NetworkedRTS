@@ -55,11 +55,9 @@ impl NetworkingHubMid{
 
                 match to_yeet {
                     DistributableNetMessage::ToSingle(target, msg) => {
-                        println!("Sending item to one: {:?}", msg);
                         msg.encode_and_send(locked.get_mut(&target).unwrap());
                     }
                     DistributableNetMessage::ToAll(msg) => {
-                        println!("Sending an item to all: {:?}", msg);
                         for (player_id, stream) in locked.iter(){
                             msg.encode_and_send(stream);
                         }

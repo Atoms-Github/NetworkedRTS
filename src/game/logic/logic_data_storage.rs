@@ -63,6 +63,7 @@ impl LogicDataStorage{
         let mut missing_item_requests = vec![];
         let (bonus_list, problem_bonus) =
             self.bonus_events.get_or_last_query(frame_index, SyncerRequestType::BonusEvents);
+        
         if problem_bonus.is_some(){
             missing_item_requests.push(problem_bonus.unwrap());
         }
