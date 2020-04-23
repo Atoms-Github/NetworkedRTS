@@ -69,7 +69,7 @@ impl InputState{
         if self.is_keycode_pressed(KeyCode::D) || self.is_keycode_pressed(KeyCode::Right) {
             x += 1.0;
         }
-        if self.is_keycode_pressed(KeyCode::W) || self.is_keycode_pressed(KeyCode::Left) {
+        if self.is_keycode_pressed(KeyCode::A) || self.is_keycode_pressed(KeyCode::Left) {
             x -= 1.0;
         }
 
