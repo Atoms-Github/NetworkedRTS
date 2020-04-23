@@ -47,12 +47,12 @@ impl GameState{
     pub fn init_rts(&mut self){
         let mut pending = PendingEntities::new();
 
-        let mut pending_entity_online_player = PendingEntity::new();
-        pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
-        pending_entity_online_player.add_component(VelocityComp{ x: 0.0, y: 0.5 });
-        pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
-        pending_entity_online_player.add_component(RenderComp{ hue: (0,150,100)});
-        pending.create_entity(pending_entity_online_player);
+//        let mut pending_entity_online_player = PendingEntity::new();
+//        pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
+//        pending_entity_online_player.add_component(VelocityComp{ x: 0.0, y: 0.5 });
+//        pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
+//        pending_entity_online_player.add_component(RenderComp{ hue: (0,150,100)});
+//        pending.create_entity(pending_entity_online_player);
 
         self.world.update_entities(&mut self.storages, pending);
     }
