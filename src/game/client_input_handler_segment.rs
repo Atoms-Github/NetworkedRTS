@@ -73,7 +73,9 @@ impl InputHandlerIn {
                     start_frame: head_frame_index,
                     owning_player: my_player_id as i32
                 });
-                println!("Sent y'all frame number {}", head_frame_index);
+                if crate::SEND_DEBUG_MSGS{
+                    println!("Sent y'all frame number {}", head_frame_index);
+                }
                 to_logic.send(logic_message.clone()).unwrap();
                 to_net.send(NetMessageType::GameUpdate(logic_message)).unwrap();
             }

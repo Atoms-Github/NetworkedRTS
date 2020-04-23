@@ -70,8 +70,9 @@ impl BonusMsgsSegmentIn {
             start_frame: frame_index,
             owning_player: -1
         };
-
-        println!("Sending bonus: {:?}", data);
+        if crate::SEND_DEBUG_MSGS{
+            println!("Sending bonus: {:?}", data);
+        }
         scheduled_sink.send(data).unwrap();
 
     }

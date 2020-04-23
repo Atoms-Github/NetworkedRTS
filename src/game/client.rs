@@ -47,7 +47,9 @@ impl Client{
             loop{
                 match incoming_messages.recv().unwrap(){
                     NetMessageType::GameUpdate(update) => {
-                        println!("Net rec message: {:?}", update);
+                        if crate::SEND_DEBUG_MSGS{
+                            println!("Net rec message: {:?}", update);
+                        }
                         to_logic.send(update).unwrap();
                     },
                     NetMessageType::LocalCommand(_) => {panic!("Not implemented!")},

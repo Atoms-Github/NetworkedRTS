@@ -15,6 +15,8 @@ use crate::game::synced_data_stream::*;
 use crate::game::logic::data_storage_manager::*;
 
 
+
+
 pub enum ServerActableMessage{
     NewlyGeneratedBonusMsgs(SyncerData<Vec<BonusEvent>>),
     IncomingClientMsg(OwnedNetworkMessage),

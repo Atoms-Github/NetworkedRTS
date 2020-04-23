@@ -29,7 +29,6 @@ impl NetworkingSegmentEx {
                     return info;
                 }
                 _ => {
-                    // Panics below.
                 }
 
             }

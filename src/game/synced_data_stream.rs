@@ -96,7 +96,7 @@ impl<T> SyncerStore<T> where T: Clone{
                 missing = Some(SyncerRequestTyped{
                     request: SyncerRequest {
                         start_frame: frame_index,
-                        number_of_frames: 20 // modival
+                        number_of_frames: 10 // modival
                     },
                     type_needed: request_type
                 });

@@ -18,6 +18,8 @@ mod players;
 mod gameplay;
 mod utils;
 
+pub const SEND_DEBUG_MSGS: bool = false;
+
 
 
 fn main() {
