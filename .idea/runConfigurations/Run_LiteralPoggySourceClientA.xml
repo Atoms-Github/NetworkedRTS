@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run LiteralPoggySourceClient" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="false">
+  <configuration default="false" name="Run LiteralPoggySourceClientA" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="false">
     <option name="channel" value="DEFAULT" />
     <option name="command" value="run --package literal_poggy_source --bin literal_poggy_source Client" />
     <option name="allFeatures" value="false" />

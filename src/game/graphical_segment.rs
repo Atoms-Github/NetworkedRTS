@@ -34,6 +34,7 @@ impl GraphicalSegment {
             sender: None
         }
     }
+
     pub fn start(mut self) -> Receiver<InputChange>{
         let (sender,receiver) = channel();
         self.sender = Some(sender);
@@ -41,6 +42,8 @@ impl GraphicalSegment {
         let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
             .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path(""); // TODO: Find what resource path.
+
+
 
 
         thread::spawn(move ||{
