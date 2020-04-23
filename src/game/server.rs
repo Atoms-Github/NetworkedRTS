@@ -164,7 +164,10 @@ impl ServerMainStateEx {
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             },
             NetMessageType::GameUpdate(update_info) => {
-                self.seg_data_store.logic_msgs_sink.send(update_info).unwrap();
+                self.seg_data_store.logic_msgs_sink.send(update_info.clone()).unwrap();
+                self.seg_net_hub.yeet_sink.send(
+                    DistributableNetMessage::ToAllExcept(player_id, NetMessageType::GameUpdate(update_info))
+                ).unwrap();
             },
             _ => {
                 panic!("Unexpected message");

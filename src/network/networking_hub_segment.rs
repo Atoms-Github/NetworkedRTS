@@ -31,6 +31,7 @@ pub struct OwnedNetworkMessage{
 
 pub enum DistributableNetMessage{
     ToSingle(PlayerID, NetMessageType),
+    ToAllExcept(PlayerID, NetMessageType),
     ToAll(NetMessageType)
 }
 
@@ -60,6 +61,14 @@ impl NetworkingHubMid{
                     DistributableNetMessage::ToAll(msg) => {
                         for (player_id, stream) in locked.iter(){
                             msg.encode_and_send(stream);
+                        }
+                    }
+                    DistributableNetMessage::ToAllExcept(do_not_send_to_id, msg) => {
+                        for (player_id, stream) in locked.iter(){
+                            if *player_id != do_not_send_to_id{
+                                msg.encode_and_send(stream);
+
+                            }
                         }
                     }
                 }
