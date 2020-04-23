@@ -89,9 +89,12 @@ impl EventHandler for GraphicalSegment {
         ctx: &mut Context,
         keycode: KeyCode,
         _keymod: KeyMods,
-        _repeat: bool,
+        repeat: bool,
     ) {
-        self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, true)).unwrap();
+        if !repeat{
+            self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, true)).unwrap();
+        }
+
 
 //        match keycode {
 //            KeyCode::Escape => event::quit(ctx),

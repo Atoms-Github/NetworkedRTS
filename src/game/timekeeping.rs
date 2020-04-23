@@ -6,8 +6,9 @@ use serde::*;
 
 use crate::network::networking_structs::FrameIndex;
 
-pub const FRAME_DURATION_MILLIS: f64 = 30.0;
-//pub const FRAME_DURATION_MILLIS: f64 = 16.66;
+//pub const FRAME_DURATION_MILLIS: f64 = 30.0;
+//pub const FRAME_DURATION_MILLIS: f64 = 16.67;
+pub const FRAME_DURATION_MILLIS: f64 = 10.0;
 
 
 

@@ -18,16 +18,16 @@ impl AbleToStartCollectionThread for Receiver<InputChange>{
         let mut frame_generator = known_frame.start_frame_stream_from_any(known_frame.get_intended_current_frame());
         let (merged_sink, merged_rec) = channel();
         thread::spawn(move ||{
+            let mut current_input_state = InputState::new();
             loop{
                 let frame_index = frame_generator.recv().unwrap(); // Wait for new frame.
-                let mut input_state = InputState::new();
 
                 let mut change = self.try_recv();
                 while change.is_ok(){ // Keep fishing.
-                    change.unwrap().apply_to_state(&mut input_state);
+                    change.unwrap().apply_to_state(&mut current_input_state);
                     change = self.try_recv();
                 }
-                merged_sink.send((frame_index, input_state)).unwrap();
+                merged_sink.send((frame_index, current_input_state.clone())).unwrap();
             }
         });
         return merged_rec;
