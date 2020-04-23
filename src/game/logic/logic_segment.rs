@@ -13,7 +13,6 @@ use crate::players::inputs::*;
 use crate::game::bonus_msgs_segment::*;
 use crate::game::logic::logic_data_storage::*;
 
-pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum LogicInwardsMessage {

@@ -82,7 +82,7 @@ impl Client{
         let my_to_data = seg_data_storage.logic_msgs_sink.clone();
         seg_scheduler.schedule_event(Box::new(move ||{
             seg_input_dist.start_dist(my_to_data, my_to_net);
-        }), welcome_info.you_initialize_frame);
+        }), welcome_info.you_initialize_frame - HEAD_AHEAD_FRAME_COUNT);
 
         self.init_net_rec_handling(set_net.net_rec, seg_data_storage.logic_msgs_sink);
 

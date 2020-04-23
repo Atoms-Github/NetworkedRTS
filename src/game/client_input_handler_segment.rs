@@ -6,6 +6,7 @@ use crate::network::networking_structs::*;
 use crate::players::inputs::*;
 
 use crate::game::logic::logic_segment::*;
+use crate::game::logic::logic_head_sim_segment::*;
 use crate::game::synced_data_stream::*;
 use crate::game::timekeeping::*;
 
@@ -63,14 +64,15 @@ impl InputHandlerIn {
         thread::spawn(move ||{
             loop{
                 let (frame_index, state) = grouped_inputs.recv().unwrap();
+                let user_percieved_frame_index = frame_index + HEAD_AHEAD_FRAME_COUNT;
 //                let now_frame_index = my_known_frame.get_intended_current_frame(); // Super important this doesn't change between local and sent so we get here.
 
                 let logic_message = LogicInwardsMessage::SyncerInputsUpdate(SyncerData{
                     data: vec![state],
-                    start_frame: frame_index,
+                    start_frame: user_percieved_frame_index,
                     owning_player: my_player_id as i32
                 });
-                println!("Sent y'all frame number {}", frame_index);
+                println!("Sent y'all frame number {}", user_percieved_frame_index);
                 to_logic.send(logic_message.clone()).unwrap();
                 to_net.send(NetMessageType::GameUpdate(logic_message)).unwrap();
             }

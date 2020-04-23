@@ -156,9 +156,9 @@ impl ServerMainStateEx {
         let player_id = incoming_owned_message.owner;
         match incoming_message{
             NetMessageType::ConnectionInitQuery(response) => {
-                println!("Received initialization request for player with ID: {}", player_id);
 
                 let frame_to_init_player = self.known_frame_zero.get_intended_current_frame() + 60;
+                println!("Received initialization request for player with ID: {} scheduling init for: {}", player_id, frame_to_init_player);
                 self.seg_bonus_msgs.schedule_event_timed(BonusEvent::NewPlayer(player_id), frame_to_init_player);
                 let response = NetMessageType::ConnectionInitResponse(self.gen_init_info(player_id, frame_to_init_player));
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();

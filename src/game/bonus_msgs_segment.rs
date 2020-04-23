@@ -8,7 +8,7 @@ use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
 use std::collections::HashMap;
 
-const BONUS_FRAMES_AHEAD: usize = 60;
+const BONUS_FRAMES_AHEAD: usize = 20;
 
 struct TimedBonusEvent {
     bonus_event: BonusEvent,
@@ -71,18 +71,21 @@ impl BonusMsgsSegmentIn {
             owning_player: -1
         };
 
+        println!("Sending bonus: {:?}", data);
         scheduled_sink.send(data).unwrap();
 
     }
     fn start_bonus_thread(mut self, to_schedule_rec: Receiver<TimedBonusEvent>, schedled_sink: Sender<SyncerData<Vec<BonusEvent>>>){
         thread::Builder::new().name("BonusMsgsMain".to_string()).spawn(move ||{
-            let new_frame_o_matic = self.known_frame.start_frame_stream_from_known();
+
             self.add_new_events_to_map(&to_schedule_rec);
-            for setup_frame_index in self.known_frame.known_frame_index .. self.known_frame.known_frame_index + BONUS_FRAMES_AHEAD{
+            for setup_frame_index in 0 .. BONUS_FRAMES_AHEAD{
                 self.send_events_from_frame(&schedled_sink, setup_frame_index);
             }
+
+            let new_frame_o_matic = self.known_frame.start_frame_stream_from_any(0);
             loop{
-                let frame_index = new_frame_o_matic.recv().unwrap();
+                let frame_index = new_frame_o_matic.recv().unwrap() + BONUS_FRAMES_AHEAD;
                 self.add_new_events_to_map(&to_schedule_rec);
                 self.send_events_from_frame(&schedled_sink, frame_index);
             }
