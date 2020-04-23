@@ -28,9 +28,11 @@ impl NetworkingSegmentEx {
                 return info;
             }
             _ => {
-                panic!("First message read wasn't welcome.");
+                // Panics below.
             }
+
         }
+        panic!("First message read wasn't welcome. {:?}", welcome_message);
     }
 }
 

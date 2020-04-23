@@ -47,6 +47,7 @@ impl Client{
             loop{
                 match incoming_messages.recv().unwrap(){
                     NetMessageType::GameUpdate(update) => {
+                        println!("Net rec message: {:?}", update);
                         to_logic.send(update).unwrap();
                     },
                     NetMessageType::LocalCommand(_) => {panic!("Not implemented!")},
@@ -74,7 +75,8 @@ impl Client{
         let seg_graphics = self.init_graphics(seg_logic_header.head_lock, welcome_info.assigned_player_id);
 
 
-        let seg_input_dist = InputHandlerIn::new(seg_graphics, welcome_info.known_frame_info.clone(), welcome_info.assigned_player_id);
+        let seg_input_dist = InputHandlerIn::new(seg_graphics, welcome_info.known_frame_info.clone(),
+                                                 welcome_info.assigned_player_id, welcome_info.you_initialize_frame);
 
 
 
