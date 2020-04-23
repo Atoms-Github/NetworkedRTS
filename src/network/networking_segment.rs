@@ -22,17 +22,19 @@ impl NetworkingSegmentEx {
         self.net_sink.send(connection_init_query).unwrap();
     }
     pub fn receive_welcome_message(&mut self) -> NetMsgConnectionInitResponse{
-        let welcome_message = self.net_rec.recv().unwrap();
-        match welcome_message{
-            NetMessageType::ConnectionInitResponse(info) =>{
-                return info;
-            }
-            _ => {
-                // Panics below.
-            }
+        loop{
+            let welcome_message = self.net_rec.recv().unwrap();
+            match welcome_message{
+                NetMessageType::ConnectionInitResponse(info) =>{
+                    return info;
+                }
+                _ => {
+                    // Panics below.
+                }
 
+            }
+            println!("Ignoring first messages until welcome info: {:?}", welcome_message);
         }
-        panic!("First message read wasn't welcome. {:?}", welcome_message);
     }
 }
 
