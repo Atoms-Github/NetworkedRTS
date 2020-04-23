@@ -10,10 +10,11 @@ use crate::game::synced_data_stream::*;
 use crate::network::game_message_types::NewPlayerInfo;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
+//use crate::game::player_list_protector::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LogicDataStorage {
-    pub player_inputs: HashMap<PlayerID, SyncerStore<InputState>>,
+    player_inputs: HashMap<PlayerID, SyncerStore<InputState>>,
     pub bonus_events: SyncerStore<Vec<BonusEvent>>,
 }
 pub struct FrameSimQueryResults{
@@ -49,26 +50,29 @@ impl LogicDataStorage{
     fn extract_new_players(&mut self, data: &SyncerData<Vec<BonusEvent>>){
         let new_players = data.extract_new_players();
         for new_player_info in new_players{
-            self.add_player(&new_player_info);
+            self.add_player_section(&new_player_info);
         }
     }
 
-    pub fn add_player(&mut self, new_player_info: &NewPlayerInfo){
+    pub fn add_player_section(&mut self, new_player_info: &NewPlayerInfo){
         self.player_inputs.insert(new_player_info.player_id, SyncerStore::<InputState>::gen_inputs_store(new_player_info.frame_added));
-        println!("New player entry in data storage id: {}", new_player_info.player_id);
+        println!("New player entry in data storage id: {} init frame: {}", new_player_info.player_id, new_player_info.frame_added);
     }
 
-
     pub fn clone_info_for_sim(&self, frame_index: FrameIndex) -> FrameSimQueryResults{
+        // Should return that there's no error when getting value before player inited but just blank
         let mut missing_item_requests = vec![];
         let (bonus_list, problem_bonus) =
             self.bonus_events.get_or_last_query(frame_index, SyncerRequestType::BonusEvents);
-        
+
         if problem_bonus.is_some(){
             missing_item_requests.push(problem_bonus.unwrap());
         }
         let mut latest_inputs = HashMap::new();
         for (player_id, data) in self.player_inputs.iter(){
+            if frame_index < data.frames_index_offset{
+                continue;
+            }
             let (player_inputs, problem_inputs) =
                 data.get_or_last_query(frame_index, SyncerRequestType::PlayerInputs(*player_id));
 
@@ -85,26 +89,26 @@ impl LogicDataStorage{
             }
         }
     }
-    pub fn calculate_last_inputs(&self) -> HashMap<PlayerID, InputState>{
-        let mut to_return = HashMap::new();
-
-        for (player_id,player_record) in self.player_inputs.iter(){
-            let last_input= player_record.data.last();
-            let usable_input;
-            match last_input{
-                Some(state) => {
-                    usable_input = state.clone();
-                }
-                None => {
-                    usable_input = InputState::new();
-                }
-
-            }
-            to_return.insert(*player_id, usable_input);
-        }
-
-        return to_return;
-    }
+//    pub fn calculate_last_inputs(&self) -> HashMap<PlayerID, InputState>{
+//        let mut to_return = HashMap::new();
+//
+//        for (player_id,player_record) in self.player_inputs.iter(){
+//            let last_input= player_record.data.last();
+//            let usable_input;
+//            match last_input{
+//                Some(state) => {
+//                    usable_input = state.clone();
+//                }
+//                None => {
+//                    usable_input = InputState::new();
+//                }
+//
+//            }
+//            to_return.insert(*player_id, usable_input);
+//        }
+//
+//        return to_return;
+//    }
 //    pub fn get_frames_segment(&self, segment_needed: &Sync) -> Option<LogicInwardsMessage> {
 //        match segment_needed.type_needed{
 //            LogicInfoRequestType::PlayerInputs(player_id) => {

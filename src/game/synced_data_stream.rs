@@ -7,6 +7,7 @@ use crate::players::inputs::*;
 use crate::utils::util_functions::*;
 use crate::network::game_message_types::NewPlayerInfo;
 
+
 pub trait ExtractNewPlayers{
     fn extract_new_players(&self) -> Vec<NewPlayerInfo>;
 }
@@ -29,6 +30,7 @@ impl ExtractNewPlayers for SyncerData<Vec<BonusEvent>>{
         return new_players;
     }
 }
+
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SyncerData<T> {
@@ -56,7 +58,6 @@ pub struct SyncerRequest {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SyncerStore<T> {
     pub frames_index_offset: usize, // This is needed as this might all be used for a player who can join midway.
-    pub head_ahead_frames: i32,
     pub data: Vec<T>,
 }
 
@@ -64,28 +65,25 @@ impl<T> SyncerStore<T> where T: Clone{
     pub fn gen_bonus_store(frames_index_offset: usize) -> SyncerStore<Vec<BonusEvent>>{
         return SyncerStore{
             frames_index_offset,
-            head_ahead_frames: 60,
             data: vec![]
         }
     }
     pub fn gen_inputs_store(frames_index_offset: usize) -> SyncerStore<InputState>{
         return SyncerStore{
             frames_index_offset,
-            head_ahead_frames: 20,
             data: vec![]
         }
     }
     pub fn get_single_item(&self, frame_index: FrameIndex) -> Option<&T> {
         if frame_index < self.frames_index_offset{
             // Since lists of player inputs are inited when players join, we can sometimes try to get info from frames before 0.
-            return None;
+            panic!("NOT ALLOWED TO QUERY INFORMATION FROM BEFORE PLAYER IS INITIALIZED.");
         }
         return self.data.get(frame_index - self.frames_index_offset);
     }
     pub fn get_or_last_query(&self, frame_index: FrameIndex, request_type: SyncerRequestType) -> (Option<T>, Option<SyncerRequestTyped>){
         // Returns data if found at index or found at vec end.
         // Returns typed error if not found at index.
-
 
         let data_option = self.get_single_item(frame_index);
         let data;
@@ -110,7 +108,7 @@ impl<T> SyncerStore<T> where T: Clone{
     pub fn get_last(&self) -> Option<&T>{
         return self.data.last();
     }
-    pub fn get_frames_segment(&self, request: &SyncerRequestTyped) -> SyncerData<T> { // This is used when server responds to client's missing input request.
+    pub fn get_data_segment(&self, request: &SyncerRequestTyped) -> SyncerData<T> { // This is used when server responds to client's missing input request.
         // Here we're assuming that the reqest is of the correct type.
         let relative_start_frame = request.request.start_frame - self.frames_index_offset;
 

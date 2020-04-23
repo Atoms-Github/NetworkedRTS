@@ -10,11 +10,11 @@ use crate::game::synced_data_stream::*;
 use crate::game::timekeeping::*;
 
 trait AbleToStartCollectionThread {
-    fn init_input_collector_thread(self, known_frame: KnownFrameInfo) -> Receiver<InputState>;
+    fn init_input_collector_thread(self, known_frame: KnownFrameInfo) -> Receiver<(FrameIndex, InputState)>;
 }
 impl AbleToStartCollectionThread for Receiver<InputChange>{
-    fn init_input_collector_thread(self, known_frame: KnownFrameInfo) -> Receiver<InputState> {
-        let mut frame_generator = known_frame.start_frame_stream_from_known();
+    fn init_input_collector_thread(self, known_frame: KnownFrameInfo) -> Receiver<(FrameIndex, InputState)> {
+        let mut frame_generator = known_frame.start_frame_stream_from_any(known_frame.get_intended_current_frame());
         let (merged_sink, merged_rec) = channel();
         thread::spawn(move ||{
             loop{
@@ -26,7 +26,7 @@ impl AbleToStartCollectionThread for Receiver<InputChange>{
                     change.unwrap().apply_to_state(&mut input_state);
                     change = self.try_recv();
                 }
-                merged_sink.send(input_state).unwrap();
+                merged_sink.send((frame_index, input_state)).unwrap();
             }
         });
         return merged_rec;
@@ -60,17 +60,17 @@ impl InputHandlerIn {
     pub fn start_dist(self, to_logic: Sender<LogicInwardsMessage>, to_net: Sender<NetMessageType>) -> InputHandlerEx{
         let grouped_inputs = self.inputs_stream_changes.init_input_collector_thread(self.known_frame.clone());
         let my_player_id = self.player_id;
-        let my_known_frame = self.known_frame.clone();
         thread::spawn(move ||{
             loop{
-                let state = grouped_inputs.recv().unwrap();
-                let now_frame_index = my_known_frame.get_intended_current_frame(); // Super important this doesn't change between local and sent so we get here.
+                let (frame_index, state) = grouped_inputs.recv().unwrap();
+//                let now_frame_index = my_known_frame.get_intended_current_frame(); // Super important this doesn't change between local and sent so we get here.
 
                 let logic_message = LogicInwardsMessage::SyncerInputsUpdate(SyncerData{
                     data: vec![state],
-                    start_frame: now_frame_index,
+                    start_frame: frame_index,
                     owning_player: my_player_id as i32
                 });
+                println!("Sent y'all frame number {}", frame_index);
                 to_logic.send(logic_message.clone()).unwrap();
                 to_net.send(NetMessageType::GameUpdate(logic_message)).unwrap();
             }

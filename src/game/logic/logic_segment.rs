@@ -59,11 +59,8 @@ impl LogicSegmentTailerIn {
         if sim_query_result.missing_info.len() > 0{
             return sim_query_result.missing_info;
         }
-        {
-            // It's fine to hold the state for a while as this thread is important - and we shouldn't be long in comparison to head.
-
-            self.tail_lock.write().unwrap().simulate_tick(sim_query_result.sim_info, FRAME_DURATION_MILLIS);
-        }
+        // It's fine to hold the state for a while as this thread is important - and we shouldn't be long in comparison to head.
+        self.tail_lock.write().unwrap().simulate_tick(sim_query_result.sim_info, FRAME_DURATION_MILLIS);
 
         return vec![]; // No missing frames.
     }

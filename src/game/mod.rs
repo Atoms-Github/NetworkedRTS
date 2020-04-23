@@ -11,5 +11,6 @@ pub mod synced_data_stream;
 pub mod client_input_handler_segment;
 pub mod client_net_handler_segment;
 pub mod scheduler_segment;
+pub mod player_list_protector;
 
 
