@@ -11,7 +11,6 @@ use crate::game::logic::logic_segment::*;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
 use std::time::SystemTime;
-use time::Duration;
 
 pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO2: Investigate a way to destroy thread when receiver is dropped.
     let (sender, receive) = channel::<NetMessageType>();

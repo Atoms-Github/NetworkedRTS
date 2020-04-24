@@ -4,7 +4,6 @@ use std::thread;
 use std::str::FromStr;
 
 use crate::network::networking_message_types::*;
-use ggez::graphics::FilterMode::Nearest;
 use std::time::{SystemTime, Duration};
 use std::ops::*;
 
@@ -101,7 +100,9 @@ impl NetworkingSegmentEx {
                 }
 
             }
-            println!("Ignoring first messages until welcome info: {:?}", welcome_message);
+            if crate::SEND_DEBUG_MSGS{
+                println!("Ignoring first messages until welcome info: {:?}", welcome_message);
+            }
         }
     }
 }

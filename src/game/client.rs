@@ -71,7 +71,7 @@ impl Client{
         let mut seg_net = self.init_networking(&self.connection_ip);
 
         let clock_offset = seg_net.perform_ping_tests_get_clock_offset();
-        println!("Clock offset: {}", clock_offset);
+        println!("Clock offset: {}nanos", clock_offset);
 
         seg_net.send_greeting(&self.player_name);
         let welcome_info = seg_net.receive_welcome_message();

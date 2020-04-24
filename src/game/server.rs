@@ -155,7 +155,6 @@ impl ServerMainStateEx {
         let player_id = incoming_owned_message.owner;
         match incoming_message{
             NetMessageType::ConnectionInitQuery(response) => {
-
                 let frame_to_init_player = self.known_frame_zero.get_intended_current_frame() + 60;
                 println!("Received initialization request for player with ID: {} scheduling init for: {}", player_id, frame_to_init_player);
                 self.seg_bonus_msgs.schedule_event_timed(BonusEvent::NewPlayer(player_id), frame_to_init_player);
@@ -169,13 +168,14 @@ impl ServerMainStateEx {
                 ).unwrap();
             },
             NetMessageType::PingTestQuery(client_time) => { // TODO2 Have dedicated thread for this to minimize waiting.
-                let response = NetMessageType::PingTestResponse(
-                    NetMsgPingTestResponse{
-                        client_time,
-                        server_time: SystemTime::now()
-                    }
-                );
-                self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
+                // Do nothing. This message arrived too late.
+//                let response = NetMessageType::PingTestResponse(
+//                    NetMsgPingTestResponse{
+//                        client_time,
+//                        server_time: SystemTime::now()
+//                    }
+//                );
+//                self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             }
             _ => {
                 panic!("Unexpected message");
