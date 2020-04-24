@@ -6,7 +6,7 @@ use std::thread;
 
 use crate::network::networking_message_types::{NetMessageType, start_inwards_codec_thread};
 use crate::network::networking_structs::PlayerID;
-use std::time::{SystemTime, Duration};
+use std::time::{SystemTime};
 use crate::network::networking_message_types::*;
 
 

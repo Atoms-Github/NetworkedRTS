@@ -23,7 +23,7 @@ pub const SEND_DEBUG_MSGS: bool = true;
 
 
 fn main() {
-    println!("STARTING.2");
+    println!("STARTING23.");
     let mut args: Vec<String> = env::args().collect();
 
     args.reverse();
@@ -34,7 +34,7 @@ fn main() {
             ip_str
         }
         _ => {
-            let default = "10.0.64.15:5535".to_string();
+            let default = "25.84.114.249:5535".to_string();
             println!("Connection/hosting IP not specified! Using {}", default);
             default
         }
