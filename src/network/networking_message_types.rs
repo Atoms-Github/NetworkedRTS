@@ -10,6 +10,8 @@ use crate::game::logic::logic_data_storage::*;
 use crate::game::logic::logic_segment::*;
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
+use std::time::SystemTime;
+use time::Duration;
 
 pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO2: Investigate a way to destroy thread when receiver is dropped.
     let (sender, receive) = channel::<NetMessageType>();
@@ -54,7 +56,14 @@ pub enum NetMessageType {
     ConnectionInitQuery(NetMsgConnectionInitQuery),
     ConnectionInitResponse(NetMsgConnectionInitResponse),
     GameUpdate(LogicInwardsMessage),
-    LocalCommand(LocalCommandInfo)
+    LocalCommand(LocalCommandInfo),
+    PingTestQuery(SystemTime),
+    PingTestResponse(NetMsgPingTestResponse),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NetMsgPingTestResponse{
+    pub client_time: SystemTime,
+    pub server_time: SystemTime,
 }
 
 

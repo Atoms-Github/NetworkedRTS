@@ -1,15 +1,16 @@
 use std::sync::mpsc::{channel, Receiver};
 use std::thread;
-use std::time::{SystemTime, Duration};
+use std::time::{SystemTime, Duration, Instant};
 
 use serde::*;
 
 use crate::network::networking_structs::FrameIndex;
+use std::thread::Thread;
 
-//pub const FRAME_DURATION_MILLIS: f64 = 50.0;
+pub const FRAME_DURATION_MILLIS: f64 = 50.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 30.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 16.67;
-pub const FRAME_DURATION_MILLIS: f64 = 10.0;
+//pub const FRAME_DURATION_MILLIS: f64 = 10.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 1.0;
 
 
@@ -17,8 +18,8 @@ pub const FRAME_DURATION_MILLIS: f64 = 10.0;
 
 #[derive(Serialize, Deserialize,Clone,  Debug)]
 pub struct KnownFrameInfo{
-    pub known_frame_index: FrameIndex,
-    pub time: SystemTime
+    known_frame_index: FrameIndex,
+    time: SystemTime
 }
 
 //pub struct SimableFrameGenerator{
@@ -44,10 +45,33 @@ pub struct KnownFrameInfo{
 //}
 
 impl KnownFrameInfo{
-    pub fn new_from_current_time(frame_reference: &KnownFrameInfo) -> Self{
+//    pub fn new_from_ntp_server(known_frame: FrameIndex) -> KnownFrameInfo{
+//        println!("Getting time");
+//        for index in 0..20{
+//            let start = Instant::now();
+//            let result_1 = sntpc::request("time3.google.com", 123).unwrap();
+//
+//            let taken = Instant::now().duration_since(start);
+//            println!("TimeTaken: {}", taken.as_micros());
+//            println!("Result {}: {:?}",index, result_1);
+//            thread::sleep(Duration::from_millis(20))
+//        }
+//
+//
+//
+////        println!("Ntp server: {:?}", result);
+////        println!("SystemTime: {:?}", time_now.duration_since(SystemTime::UNIX_EPOCH).unwrap()  );
+//        let systemtime: Instant;
+//        let test = Instant::now();
+//        KnownFrameInfo{
+//            known_frame_index: known_frame,
+//            time: SystemTime::now()
+//        }
+//    }
+    pub fn new_from_args(frame_index: FrameIndex, time: SystemTime) -> KnownFrameInfo{
         KnownFrameInfo{
-            known_frame_index: frame_reference.get_intended_current_frame(),
-            time: SystemTime::now()
+            known_frame_index: frame_index,
+            time
         }
     }
     pub fn get_intended_current_frame(&self) -> usize{

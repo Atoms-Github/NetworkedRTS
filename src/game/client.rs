@@ -53,6 +53,9 @@ impl Client{
                         to_logic.send(update).unwrap();
                     },
                     NetMessageType::LocalCommand(_) => {panic!("Not implemented!")},
+                    NetMessageType::PingTestResponse(_) => {
+                        // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
+                    }
                     _ => {
                         panic!("Client shouldn't be getting a message of this type (or at this time)!")
                     }
@@ -65,9 +68,13 @@ impl Client{
         return seg_graph.start();
     }
     fn start(self){
-        let mut set_net = self.init_networking(&self.connection_ip);
-        set_net.send_greeting(&self.player_name);
-        let welcome_info = set_net.receive_welcome_message();
+        let mut seg_net = self.init_networking(&self.connection_ip);
+
+        let clock_offset = seg_net.perform_ping_tests_get_clock_offset();
+        println!("Clock offset: {}", clock_offset);
+
+        seg_net.send_greeting(&self.player_name);
+        let welcome_info = seg_net.receive_welcome_message();
 
         let mut seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame_info.clone()).start();
 
@@ -82,13 +89,13 @@ impl Client{
 
 
 
-        let my_to_net = set_net.net_sink.clone();
+        let my_to_net = seg_net.net_sink.clone();
         let my_to_data = seg_data_storage.logic_msgs_sink.clone();
         seg_scheduler.schedule_event(Box::new(move ||{
             seg_input_dist.start_dist(my_to_data, my_to_net);
         }), welcome_info.you_initialize_frame - HEAD_AHEAD_FRAME_COUNT);
 
-        self.init_net_rec_handling(set_net.net_rec, seg_data_storage.logic_msgs_sink);
+        self.init_net_rec_handling(seg_net.net_rec, seg_data_storage.logic_msgs_sink);
 
 
         loop{

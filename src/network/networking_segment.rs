@@ -4,6 +4,9 @@ use std::thread;
 use std::str::FromStr;
 
 use crate::network::networking_message_types::*;
+use ggez::graphics::FilterMode::Nearest;
+use std::time::{SystemTime, Duration};
+use std::ops::*;
 
 pub struct NetworkingSegmentIn {
     conn_address_str: String
@@ -12,7 +15,73 @@ pub struct NetworkingSegmentEx {
     pub net_sink: Sender<NetMessageType>,
     pub net_rec: Receiver<NetMessageType>,
 }
+struct FullPingSample{
+    c_send_time: SystemTime,
+    s_receive_time: SystemTime,
+    c_receive_time: SystemTime
+}
+pub const TIME_SAMPLES_REQUIRED : usize = 10;
 impl NetworkingSegmentEx {
+    pub fn perform_ping_tests_get_clock_offset(&mut self) -> i64{
+        self.start_ping_sender_thread();
+        let data = self.gather_ping_data();
+        return self.process_ping_data(data);
+    }
+    fn start_ping_sender_thread(&mut self){
+        let my_sender = self.net_sink.clone();
+        thread::spawn(move ||{
+            loop{
+                my_sender.send(NetMessageType::PingTestQuery(SystemTime::now())).unwrap();
+                thread::sleep(Duration::from_millis(100)); // Modival
+            }
+
+        }); // TODO2: Add finish method to here.
+    }
+    fn process_ping_data(&mut self, ping_data: Vec<FullPingSample>) -> i64{
+        let mut total_ping = Duration::from_millis(0);
+        for data in &ping_data{
+            total_ping = total_ping.add(data.c_receive_time.duration_since(data.c_send_time).unwrap());
+        }
+        let average_one_way_ping = total_ping.div((2 /*One way*/ * ping_data.len()) as u32); // TODO3: Use a better way to eliminate bad values.
+
+        let data_clock_differences = ping_data.iter().map(|data|{
+            let recieve_ms = data.s_receive_time.sub(average_one_way_ping).duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos();
+            let send_ms = data.c_send_time.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos();
+            // Time from send to recieve.
+            return recieve_ms as i64 - send_ms as i64;
+        });
+        let mut total_difference_in_clocks = 0;
+        data_clock_differences.for_each(|difference|{
+            total_difference_in_clocks += difference;
+        });
+        let average_difference_in_clocks = total_difference_in_clocks / ping_data.len() as i64;
+        return average_difference_in_clocks;
+//        return SystemTime::now().add(Duration::from_nanos(average_difference_in_clocks as u64));
+    }
+    fn gather_ping_data(&mut self) -> Vec<FullPingSample>{
+        let mut results = vec![];
+        while results.len() < TIME_SAMPLES_REQUIRED{
+            let returned_maybe = self.net_rec.recv();
+            let c_receive_time = SystemTime::now();
+            if returned_maybe.is_ok(){
+                match returned_maybe.unwrap(){
+                    NetMessageType::PingTestResponse(response) => {
+                        let full_sample = FullPingSample{
+                            c_send_time: response.client_time,
+                            s_receive_time: response.server_time,
+                            c_receive_time,
+                        };
+                        results.push(full_sample);
+                    }
+                    _ => {
+                        println!("Received message which wasn't a a ping response.");
+                    }
+                }
+
+            }
+        }
+        return results;
+    }
     pub fn send_greeting(&mut self, player_name: &String){
         let connection_init_query = NetMessageType::ConnectionInitQuery(
             NetMsgConnectionInitQuery{

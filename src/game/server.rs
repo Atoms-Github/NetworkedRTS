@@ -4,7 +4,7 @@ use std::time::{SystemTime};
 use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_hub_segment::*;
 use crate::network::networking_structs::*;
-use crate::network::networking_message_types::{NetMessageType, NetMsgConnectionInitResponse};
+use crate::network::networking_message_types::*;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::panic;
@@ -54,10 +54,7 @@ pub struct ServerMainStateIn {
 impl ServerMainStateIn {
     pub fn new(hosting_ip: String) -> ServerMainStateIn {
         ServerMainStateIn {
-            known_frame: KnownFrameInfo{
-                known_frame_index: 0,
-                time: SystemTime::now()
-            },
+            known_frame: KnownFrameInfo::new_from_args(0, SystemTime::now()),
             hosting_ip
         }
     }
@@ -171,6 +168,15 @@ impl ServerMainStateEx {
                     DistributableNetMessage::ToAllExcept(player_id, NetMessageType::GameUpdate(update_info))
                 ).unwrap();
             },
+            NetMessageType::PingTestQuery(client_time) => { // TODO2 Have dedicated thread for this to minimize waiting.
+                let response = NetMessageType::PingTestResponse(
+                    NetMsgPingTestResponse{
+                        client_time,
+                        server_time: SystemTime::now()
+                    }
+                );
+                self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
+            }
             _ => {
                 panic!("Unexpected message");
             }
