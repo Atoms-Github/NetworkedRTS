@@ -17,7 +17,7 @@ create_system!( velocity_with_inputs_system | secret_velocity_with_inputs_system
 );
 
 
-const MOVEMENT_SPEED: f32 = 2.0;
+const MOVEMENT_SPEED: f32 = 10.0;
 
 fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID, InputState>) {
     let owner_id = e.my_velocity_with_input_comp(d).owner_id;

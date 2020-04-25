@@ -6,11 +6,15 @@ use serde::*;
 
 use crate::network::networking_structs::FrameIndex;
 
+//pub const FRAME_DURATION_MILLIS: f64 = 200.0;
+//pub const FRAME_DURATION_MILLIS: f64 = 100.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 50.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 30.0;
 pub const FRAME_DURATION_MILLIS: f64 = 16.67;
 //pub const FRAME_DURATION_MILLIS: f64 = 10.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 1.0;
+use std::ops::Add;
+use std::ops::Sub;
 
 
 
@@ -67,6 +71,15 @@ impl KnownFrameInfo{
 //            time: SystemTime::now()
 //        }
 //    }
+
+    pub fn apply_offset(&mut self, offset_ns: i64){
+        // TODO3: Find the abs function.
+        if offset_ns > 0{
+            self.time = self.time.add(Duration::from_nanos(offset_ns as u64));
+        }else{
+            self.time = self.time.sub(Duration::from_nanos(-offset_ns as u64));
+        }
+    }
     pub fn new_from_args(frame_index: FrameIndex, time: SystemTime) -> KnownFrameInfo{
         KnownFrameInfo{
             known_frame_index: frame_index,

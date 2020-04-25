@@ -70,21 +70,24 @@ impl Client{
     fn start(self){
         let mut seg_net = self.init_networking(&self.connection_ip);
 
-        let clock_offset = seg_net.perform_ping_tests_get_clock_offset();
-        println!("Clock offset: {}nanos", clock_offset);
+        let clock_offset_ns = seg_net.perform_ping_tests_get_clock_offset();
+        println!("Clock offset: {}nanos", clock_offset_ns);
 
         seg_net.send_greeting(&self.player_name);
         let welcome_info = seg_net.receive_welcome_message();
 
-        let mut seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame_info.clone()).start();
+        let mut synced_frame_info = welcome_info.known_frame_info;
+        synced_frame_info.apply_offset(clock_offset_ns);
+
+        let mut seg_scheduler = SchedulerSegIn::new(synced_frame_info.clone()).start();
 
         let seg_data_storage = self.init_data_store(welcome_info.frames_gathered_so_far);
-        let seg_logic_tailer = self.init_tail_sim(welcome_info.known_frame_info.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref());
-        let seg_logic_header = self.init_head_sim(welcome_info.known_frame_info.clone(), seg_logic_tailer.tail_lock, seg_data_storage.clone_lock_ref());
+        let seg_logic_tailer = self.init_tail_sim(synced_frame_info.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref());
+        let seg_logic_header = self.init_head_sim(synced_frame_info.clone(), seg_logic_tailer.tail_lock, seg_data_storage.clone_lock_ref());
         let seg_graphics = self.init_graphics(seg_logic_header.head_lock, welcome_info.assigned_player_id);
 
 
-        let seg_input_dist = InputHandlerIn::new(seg_graphics, welcome_info.known_frame_info.clone(),
+        let seg_input_dist = InputHandlerIn::new(seg_graphics, synced_frame_info.clone(),
                                                  welcome_info.assigned_player_id, welcome_info.you_initialize_frame);
 
 
