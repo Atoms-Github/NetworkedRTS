@@ -8,7 +8,7 @@ use crate::network::networking_structs::*;
 use crate::players::inputs::*;
 use std::panic;
 use std::sync::{Arc, RwLock};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use crate::game::logic::logic_segment::*;
 use crate::game::logic::logic_head_sim_segment::*;
@@ -67,17 +67,23 @@ impl Client{
         let seg_graph = GraphicalSegment::new(state_to_render, my_player_id);
         return seg_graph.start();
     }
-    fn start(self){
+    fn start(self, test_arg: i64){
         let mut seg_net = self.init_networking(&self.connection_ip);
-
+        let temp = SystemTime::now();
         let clock_offset_ns = seg_net.perform_ping_tests_get_clock_offset();
-        println!("Clock offset: {}nanos", clock_offset_ns);
+        println!("Clock offset: {}nanos or {}ms", clock_offset_ns, clock_offset_ns / 1_000_000);
 
         seg_net.send_greeting(&self.player_name);
         let welcome_info = seg_net.receive_welcome_message();
 
         let mut synced_frame_info = welcome_info.known_frame_info;
-        synced_frame_info.apply_offset(clock_offset_ns);
+        println!("Before: {:?}", synced_frame_info);
+        synced_frame_info.apply_offset(-clock_offset_ns); // Things work out that this is negative.
+        // Known frame checks time between known and now.
+        // If the server clock is fast, then we want to decrease our known one so we're using info from the future and vice versa.
+        // Simpler explaination:
+        // If server is fast, then we need to pull it back to convert it into local client time.
+        println!("After: {:?}", synced_frame_info);
 
         let mut seg_scheduler = SchedulerSegIn::new(synced_frame_info.clone()).start();
 
@@ -110,13 +116,13 @@ impl Client{
 
 
 
-pub fn client_main(connection_target_ip: String){
+pub fn client_main(connection_target_ip: String, test_arg: i64){
     println!("Starting as client.");
     let client = Client{
         player_name: String::from("Atomserdiah"),
         connection_ip: connection_target_ip,
     };
-    client.start();
+    client.start(test_arg);
 }
 
 

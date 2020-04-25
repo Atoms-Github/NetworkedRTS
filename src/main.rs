@@ -23,7 +23,7 @@ pub const SEND_DEBUG_MSGS: bool = true;
 
 
 fn main() {
-    println!("STARTING234.");
+    println!("STARTING2345.");
     let mut args: Vec<String> = env::args().collect();
 
     args.reverse();
@@ -40,17 +40,18 @@ fn main() {
         }
     }; // args.pop().or_else().expect("Connection/hosting IP not specified!");
 
+    let test_arg = args.pop().unwrap_or(String::from("0")).parse::<i64>().unwrap();
 
     match launch_type.to_lowercase().as_ref() {
         "client" => {
-            client_main(ip);
+            client_main(ip, test_arg);
         }
         "server" => {
             server_main(ip);
         }
         _ => {
             println!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
-            client_main(ip);
+            client_main(ip, test_arg);
         }
     }
 }
