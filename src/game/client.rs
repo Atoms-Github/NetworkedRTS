@@ -100,9 +100,13 @@ impl Client{
 
         let my_to_net = seg_net.net_sink.clone();
         let my_to_data = seg_data_storage.logic_msgs_sink.clone();
+        let frame_to_init_my_inputs = welcome_info.you_initialize_frame - HEAD_AHEAD_FRAME_COUNT;
+        if crate::SEND_DEBUG_MSGS{
+            println!("Frame to init my own inputs: {}", frame_to_init_my_inputs);
+        }
         seg_scheduler.schedule_event(Box::new(move ||{
             seg_input_dist.start_dist(my_to_data, my_to_net);
-        }), welcome_info.you_initialize_frame - HEAD_AHEAD_FRAME_COUNT);
+        }), frame_to_init_my_inputs);
 
         self.init_net_rec_handling(seg_net.net_rec, seg_data_storage.logic_msgs_sink);
 

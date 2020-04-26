@@ -94,6 +94,10 @@ impl NetworkingSegmentEx {
             let welcome_message = self.net_rec.recv().unwrap();
             match welcome_message{
                 NetMessageType::ConnectionInitResponse(info) =>{
+                    if crate::SEND_DEBUG_MSGS{
+                        println!("Received connection init response {:?}", info);
+                    }
+
                     return info;
                 }
                 _ => {

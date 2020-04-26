@@ -8,7 +8,7 @@ use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
 use std::collections::HashMap;
 
-const BONUS_FRAMES_AHEAD: usize = 20;
+const BONUS_FRAMES_AHEAD: usize = 40; // modival
 
 struct TimedBonusEvent {
     bonus_event: BonusEvent,
