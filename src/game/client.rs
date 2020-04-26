@@ -38,8 +38,8 @@ impl Client{
         let tail_logic_in = LogicSegmentTailerIn::new(known_frame, tail_state, data_store);
         return tail_logic_in.start_logic_tail();
     }
-    fn init_head_sim(&self, known_frame: KnownFrameInfo, tail_state: Arc<RwLock<GameState>>, data_store: Arc<RwLock<LogicDataStorage>>)-> LogicHeadSimEx {
-        let head_logic_in = LogicHeadSimIn::new(known_frame, tail_state, data_store);
+    fn init_head_sim(&self, known_frame: KnownFrameInfo, tail_rec: Receiver<GameState>, data_store: Arc<RwLock<LogicDataStorage>>)-> LogicHeadSimEx {
+        let head_logic_in = LogicHeadSimIn::new(known_frame, tail_rec, data_store);
         return head_logic_in.start();
     }
     fn init_net_rec_handling(&self, incoming_messages: Receiver<NetMessageType>, to_logic: Sender<LogicInwardsMessage>){
@@ -63,8 +63,8 @@ impl Client{
             }
         });
     }
-    fn init_graphics(&self, state_to_render: Arc<RwLock<GameState>>, my_player_id: PlayerID) -> Receiver<InputChange>{
-        let seg_graph = GraphicalSegment::new(state_to_render, my_player_id);
+    fn init_graphics(&self, render_states_rec: Receiver<GameState>, my_player_id: PlayerID) -> Receiver<InputChange>{
+        let seg_graph = GraphicalSegment::new(render_states_rec, my_player_id);
         return seg_graph.start();
     }
     fn start(self, test_arg: i64){
@@ -89,9 +89,8 @@ impl Client{
 
         let seg_data_storage = self.init_data_store(welcome_info.frames_gathered_so_far);
         let seg_logic_tailer = self.init_tail_sim(synced_frame_info.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref());
-        let seg_logic_header = self.init_head_sim(synced_frame_info.clone(), seg_logic_tailer.tail_lock, seg_data_storage.clone_lock_ref());
-        let seg_graphics = self.init_graphics(seg_logic_header.head_lock, welcome_info.assigned_player_id);
-
+        let seg_logic_header = self.init_head_sim(synced_frame_info.clone(), seg_logic_tailer.new_tail_states_rec, seg_data_storage.clone_lock_ref());
+        let seg_graphics = self.init_graphics(seg_logic_header.head_rec, welcome_info.assigned_player_id);
 
         let seg_input_dist = InputHandlerIn::new(seg_graphics, synced_frame_info.clone(),
                                                  welcome_info.assigned_player_id, welcome_info.you_initialize_frame);

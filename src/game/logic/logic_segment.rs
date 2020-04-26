@@ -27,7 +27,9 @@ pub enum LogicOutwardsMessage {
 
 pub struct LogicSegmentTailerEx {
     pub from_logic_rec: Receiver<LogicOutwardsMessage>,
-    pub tail_lock: Arc<RwLock<GameState>>
+    pub tail_lock: Arc<RwLock<GameState>>,
+    pub new_tail_states_rec: Receiver<GameState>,
+
 }
 impl LogicSegmentTailerEx {
 
@@ -49,7 +51,7 @@ impl LogicSegmentTailerIn {
         }
     }
 
-    fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<SyncerRequestTyped>{
+    fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex, new_tails_sink: &mut Sender<GameState>) -> Vec<SyncerRequestTyped>{
 
         let sim_query_result;
         {
@@ -59,13 +61,18 @@ impl LogicSegmentTailerIn {
             return sim_query_result.missing_info;
         }
         // It's fine to hold the state for a while as this thread is important - and we shouldn't be long in comparison to head.
-        self.tail_lock.write().unwrap().simulate_tick(sim_query_result.sim_info, FRAME_DURATION_MILLIS);
+        {
+            let mut state_handle = self.tail_lock.write().unwrap();
+            state_handle.simulate_tick(sim_query_result.sim_info, FRAME_DURATION_MILLIS);
+            new_tails_sink.send(state_handle.clone()).unwrap();
+        }
+
 
         return vec![]; // No missing frames.
     }
 
 
-    fn start_thread(mut self, outwards_messages: Sender<LogicOutwardsMessage>){
+    fn start_thread(mut self, outwards_messages: Sender<LogicOutwardsMessage>, mut new_tails_sink: Sender<GameState>){
         thread::spawn(move ||{
             let first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index();
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
@@ -73,8 +80,9 @@ impl LogicSegmentTailerIn {
                 let tail_frame_to_sim = generator.recv().unwrap();
 
                 loop{
-                    let problems = self.try_sim_tail_frame(tail_frame_to_sim);
+                    let problems = self.try_sim_tail_frame(tail_frame_to_sim, &mut new_tails_sink);
                     if problems.len() == 0 {
+
                         break;
                     }
 
@@ -90,15 +98,17 @@ impl LogicSegmentTailerIn {
 
     pub fn start_logic_tail(mut self) -> LogicSegmentTailerEx {
         let (from_logic_sink, from_logic_rec) = channel();
+        let (new_tails_sink, new_tails_rec) = channel();
 
 
         let tail_lock = self.tail_lock.clone();
 
-        self.start_thread(from_logic_sink);
+        self.start_thread(from_logic_sink, new_tails_sink);
 
         return LogicSegmentTailerEx {
             from_logic_rec,
-            tail_lock
+            tail_lock,
+            new_tail_states_rec: new_tails_rec
         };
     }
 }

@@ -5,18 +5,18 @@ use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
 use std::{thread};
 use crate::game::logic::logic_data_storage::*;
+use std::sync::mpsc::{Receiver, channel};
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
 
 pub struct LogicHeadSimIn {
     known_frame_info: KnownFrameInfo,
-    head_lock: Arc<RwLock<GameState>>,
-    tail_lock: Arc<RwLock<GameState>>,
+    tail_rec: Receiver<GameState>,
     all_frames: Arc<RwLock<LogicDataStorage>>,
 }
 pub struct LogicHeadSimEx {
-    pub head_lock: Arc<RwLock<GameState>>,
+    pub head_rec: Receiver<GameState>,
 }
 
 fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
@@ -26,44 +26,37 @@ fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<Game
 }
 
 impl LogicHeadSimIn {
-    pub fn new(known_frame_info: KnownFrameInfo, tail_lock: Arc<RwLock<GameState>>,
+    pub fn new(known_frame_info: KnownFrameInfo, tail_rec: Receiver<GameState>,
                data_store: Arc<RwLock<LogicDataStorage>>) // TODO2: Refactor arguments.
                -> LogicHeadSimIn {
         return LogicHeadSimIn {
             known_frame_info,
-            head_lock: deep_clone_state_lock(&tail_lock),
-            tail_lock,
-            all_frames: data_store
+            all_frames: data_store,
+            tail_rec
         };
     }
 
 
-    fn set_new_head(&mut self, new_head: GameState){
-        *self.head_lock.write().unwrap() = new_head;
-    }
 
     pub fn start(mut self) -> LogicHeadSimEx{
-        let head_handle = self.head_lock.clone();
+        let (mut head_sink, mut head_rec) = channel();
         thread::spawn(move ||{
-            let mut my_self = self;
-            let start_frame = my_self.tail_lock.read().unwrap().get_simmed_frame_index();
-            let generator = my_self.known_frame_info.start_frame_stream_from_any(start_frame);
             loop{
-                generator.recv().unwrap();
-                let tail = my_self.clone_tail();
-                let new_head = my_self.calculate_new_head(tail);
-                my_self.set_new_head(new_head);
+                let tail = self.tail_rec.recv().unwrap();
+                let new_head = self.calculate_new_head(tail);
+                head_sink.send(new_head).unwrap();
+
             }
         });
 
         return LogicHeadSimEx{
-            head_lock: head_handle
+            head_rec: head_rec
         };
     }
 
-    fn clone_tail(&self) -> GameState{
-        return self.tail_lock.read().unwrap().clone();
-    }
+//    fn clone_tail(&self) -> GameState{
+//        return self.tail_lock.read().unwrap().clone();
+//    }
     fn calculate_new_head(&mut self, mut state_tail: GameState) -> GameState{
         let first_head_to_sim = state_tail.get_simmed_frame_index() + 1;
         let frames_to_sim_range = first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT);

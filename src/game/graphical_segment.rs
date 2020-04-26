@@ -14,7 +14,7 @@ use crate::gameplay::systems::render::*;
 
 pub struct GraphicalSegment {
 //    my_current_input_state: Arc<Mutex<InputState>>,
-    render_head: Arc<RwLock<GameState>>,
+    render_head: Receiver<GameState>,
     my_player_id: PlayerID,
     sender: Option<Sender<InputChange>>
 }
@@ -27,7 +27,7 @@ let (logic_layer, head_handle) =
         });\
 */
 impl GraphicalSegment {
-    pub fn new(head_render_handle: Arc<RwLock<GameState>>, my_player_id: PlayerID) -> GraphicalSegment {
+    pub fn new(head_render_handle: Receiver<GameState>, my_player_id: PlayerID) -> GraphicalSegment {
         GraphicalSegment {
             render_head: head_render_handle,
             my_player_id,
@@ -73,7 +73,7 @@ impl EventHandler for GraphicalSegment {
 
 
         let mut pending = PendingEntities::new();
-        let mut head_unlocked = self.render_head.write().unwrap().clone(); // TODO2 find is it faster to clone or to render?
+        let mut head_unlocked = self.render_head.recv().unwrap();
 //        let mut head_unlocked = &mut *Mutex::lock(&self.render_head).unwrap();
         secret_render_system(&head_unlocked.world, &mut pending,
                              &mut head_unlocked.storages.position_s,
