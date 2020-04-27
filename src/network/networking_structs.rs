@@ -135,12 +135,6 @@ pub enum PlayerInputSegmentType{
 
 
 
-fn blanks_to_frame(vector: &mut Vec<InputState>, relative_frame_index: FrameIndex){ // TODO3: Move somewhere.
-    for index in vector.len()..(relative_frame_index+1) /*Start exclusive, end inclusive.*/{
-        vector.push(InputState::new()); // Fill in with blanks.
-    }
-}
-
 
 
 

@@ -32,17 +32,12 @@ fn render_system(d: &mut Data, e: Entity, ctx: &mut Context) {
     let bounds = graphics::Rect::new(e.my_position(d).x, e.my_position(d).y,e.my_size(d).x,e.my_size(d).y);
     let color = graphics::Color::from(e.my_render(d).hue);
 
-
-
-
-    let before_render_ent = SystemTime::now();
     let arena_background : graphics::Mesh = graphics::Mesh::new_rectangle(
         ctx,
         mode,
         bounds,
         color,
     ).unwrap();
-    println!("EntityRender1 tooks {} ms", SystemTime::now().duration_since(before_render_ent).unwrap().as_millis());
 
 
     graphics::draw(ctx, &arena_background, params).unwrap();

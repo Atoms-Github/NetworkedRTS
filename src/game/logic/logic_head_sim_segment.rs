@@ -7,7 +7,7 @@ use std::{thread};
 use crate::game::logic::logic_data_storage::*;
 use std::sync::mpsc::{Receiver, channel};
 
-pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
+pub const HEAD_AHEAD_FRAME_COUNT: usize = 3;
 
 
 pub struct LogicHeadSimIn {
@@ -19,6 +19,7 @@ pub struct LogicHeadSimEx {
     pub head_rec: Receiver<GameState>,
 }
 
+
 fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
     let guard = state_tail.read().unwrap();
     let head_state = (*guard).clone();
@@ -27,7 +28,7 @@ fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<Game
 
 impl LogicHeadSimIn {
     pub fn new(known_frame_info: KnownFrameInfo, tail_rec: Receiver<GameState>,
-               data_store: Arc<RwLock<LogicDataStorage>>) // TODO2: Refactor arguments.
+               data_store: Arc<RwLock<LogicDataStorage>>)
                -> LogicHeadSimIn {
         return LogicHeadSimIn {
             known_frame_info,

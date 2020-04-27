@@ -8,7 +8,7 @@ type PointFloat = nalgebra::Point2<f32>;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
-    pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird. // TODO2 figure out how array serialization works.
+    pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird.
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

@@ -12,7 +12,7 @@ use crate::game::timekeeping::KnownFrameInfo;
 use crate::network::networking_structs::*;
 use std::time::SystemTime;
 
-pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{ // TODO2: Investigate a way to destroy thread when receiver is dropped.
+pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<NetMessageType>{
     let (sender, receive) = channel::<NetMessageType>();
     thread::Builder::new().name("StreamDeserializer".to_string()).spawn(move ||{
         loop{
