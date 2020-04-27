@@ -6,12 +6,14 @@ use serde::*;
 
 use crate::network::networking_structs::FrameIndex;
 
-pub const FRAME_DURATION_MILLIS: f64 = 200.0;
+//pub const FRAME_DURATION_MILLIS: f64 = 200.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 100.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 50.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 30.0;
+//pub const FRAME_DURATION_MILLIS: f64 = 18.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 16.67;
-//pub const FRAME_DURATION_MILLIS: f64 = 10.0;
+pub const FRAME_DURATION_MILLIS: f64 = 10.0;
+//pub const FRAME_DURATION_MILLIS: f64 = 5.0;
 //pub const FRAME_DURATION_MILLIS: f64 = 1.0;
 use std::ops::Add;
 use std::ops::Sub;

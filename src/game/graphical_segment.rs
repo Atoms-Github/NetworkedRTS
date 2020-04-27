@@ -11,12 +11,15 @@ use crate::ecs::world::*;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
 use crate::gameplay::systems::render::*;
+use std::time::SystemTime;
+use time::Duration;
 
 pub struct GraphicalSegment {
 //    my_current_input_state: Arc<Mutex<InputState>>,
-    render_head: Receiver<GameState>,
+render_head_rec: Receiver<GameState>,
     my_player_id: PlayerID,
-    sender: Option<Sender<InputChange>>
+    sender: Option<Sender<InputChange>>,
+    init_time: SystemTime
 }
 /*
 let (logic_layer, head_handle) =
@@ -29,9 +32,10 @@ let (logic_layer, head_handle) =
 impl GraphicalSegment {
     pub fn new(head_render_handle: Receiver<GameState>, my_player_id: PlayerID) -> GraphicalSegment {
         GraphicalSegment {
-            render_head: head_render_handle,
+            render_head_rec: head_render_handle,
             my_player_id,
-            sender: None
+            sender: None,
+            init_time: SystemTime::now()
         }
     }
 
@@ -54,39 +58,59 @@ impl GraphicalSegment {
         });
 
 
+
         return receiver;
+    }
+    fn render_state(&self, state: &mut GameState, ctx: &mut Context){
+        secret_render_system(&state.world, &mut PendingEntities::new(),
+                             &mut state.storages.position_s,
+                             &mut state.storages.render_s,
+                             &mut state.storages.size_s,
+                             ctx);
+    }
+    fn pull_newest_usable_state(&mut self) -> GameState{
+        // Discards all states in the pipeline until empty, then uses the last one.
+        let mut render_state = self.render_head_rec.recv().unwrap();
+
+        let mut next_state_maybe = self.render_head_rec.try_recv();
+        while next_state_maybe.is_ok(){
+            render_state = next_state_maybe.unwrap();
+            next_state_maybe = self.render_head_rec.try_recv();
+        }
+        return render_state;
     }
 }
 
 impl EventHandler for GraphicalSegment {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-        const DESIRED_FPS: u32 = 60;
-        while timer::check_update_time(ctx, DESIRED_FPS) {
-            let seconds = 1.0 / (DESIRED_FPS as f32);
-            // No logic currently :)
-        }
+
+
+
         Ok(())
     }
+
+
+
+
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::BLACK);
 
 
-        let mut pending = PendingEntities::new();
-        let mut head_unlocked = self.render_head.recv().unwrap();
-//        let mut head_unlocked = &mut *Mutex::lock(&self.render_head).unwrap();
-        secret_render_system(&head_unlocked.world, &mut pending,
-                             &mut head_unlocked.storages.position_s,
-                             &mut head_unlocked.storages.render_s,
-                             &mut head_unlocked.storages.size_s,
-                             ctx);
 
-        head_unlocked.world.update_entities(&mut head_unlocked.storages, pending); // Keeping this just in the unlikely event render wants to change somethingl.
+        let mut render_state = self.pull_newest_usable_state();
+        self.render_state(&mut render_state, ctx);
+
+
+
         graphics::present(ctx)?;
 
-        timer::yield_now();
         Ok(())
+
     }
+
+
+
     fn key_down_event(
         &mut self,
         ctx: &mut Context,
@@ -109,3 +133,12 @@ impl EventHandler for GraphicalSegment {
         self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, false)).unwrap();
     }
 }
+
+//fn update(&mut self, ctx: &mut Context) -> GameResult {
+//        const DESIRED_FPS: u32 = 120;
+//        while timer::check_update_time(ctx, DESIRED_FPS) {
+//            let seconds = 1.0 / (DESIRED_FPS as f32);
+//            // No logic currently :)
+//        }
+//        Ok(())
+//    }
