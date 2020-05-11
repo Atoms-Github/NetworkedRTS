@@ -90,22 +90,20 @@ impl Client{
         let seg_data_storage = self.init_data_store(welcome_info.frames_gathered_so_far);
         let seg_logic_tailer = self.init_tail_sim(synced_frame_info.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref());
         let seg_logic_header = self.init_head_sim(synced_frame_info.clone(), seg_logic_tailer.new_tail_states_rec, seg_data_storage.clone_lock_ref());
-        let seg_graphics = self.init_graphics(seg_logic_header.head_rec, welcome_info.assigned_player_id);
+        let input_changes = self.init_graphics(seg_logic_header.head_rec, welcome_info.assigned_player_id);
 
-        let seg_input_dist = InputHandlerIn::new(seg_graphics, synced_frame_info.clone(),
-                                                 welcome_info.assigned_player_id, welcome_info.you_initialize_frame);
+        let seg_input_dist = InputHandlerIn::new(synced_frame_info, welcome_info.assigned_player_id,
+                                                  seg_data_storage.logic_msgs_sink.clone(),
+                                                 seg_net.net_sink.clone());
 
 
 
-        let my_to_net = seg_net.net_sink.clone();
-        let my_to_data = seg_data_storage.logic_msgs_sink.clone();
-        let frame_to_init_my_inputs = welcome_info.you_initialize_frame - HEAD_AHEAD_FRAME_COUNT;
         if crate::SEND_DEBUG_MSGS{
-            println!("Frame to init my own inputs: {}", frame_to_init_my_inputs);
+            println!("Frame to init my own inputs: {}", welcome_info.you_initialize_frame);
         }
         seg_scheduler.schedule_event(Box::new(move ||{
-            seg_input_dist.start_dist(my_to_data, my_to_net);
-        }), frame_to_init_my_inputs);
+            seg_input_dist.start_dist(input_changes);
+        }), welcome_info.you_initialize_frame);
 
         self.init_net_rec_handling(seg_net.net_rec, seg_data_storage.logic_msgs_sink);
 

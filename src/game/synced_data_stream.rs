@@ -141,6 +141,9 @@ impl<T> SyncerStore<T> where T: Clone{
 
         for (input_vec_index, item) in syncer_data.data.iter().enumerate(){
             let absolute_index = syncer_data.start_frame + input_vec_index;
+            if self.frames_index_offset > absolute_index{
+                panic!("Tried to insert data into segment from earler than segment was collecting data from. Collecting from {}. Insert at {}", self.frames_index_offset, absolute_index);
+            }
             let relative_index = absolute_index - self.frames_index_offset;
 
             vec_replace_or_end(&mut self.data,relative_index, item.clone()); // Pointless_optimum no need to clone.

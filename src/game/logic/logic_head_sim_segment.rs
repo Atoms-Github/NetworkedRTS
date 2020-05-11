@@ -68,6 +68,7 @@ impl LogicHeadSimIn {
         let mut infos_for_sims = vec![];
         { // Get all information needed from frames database.
             let all_frames = self.all_frames.read().unwrap();
+//            println!("{:?}", all_frames);
             for frame_index in frames_to_sim_range{
                 let clone_data_result = all_frames.clone_info_for_sim(frame_index);
                 // We don't care about the failures - we want any info we can get.
@@ -75,6 +76,7 @@ impl LogicHeadSimIn {
             }
         } // Discard frame info database lock.
 
+        println!("Simming head with: {:?}", infos_for_sims);
         for sim_info in infos_for_sims{
             state_tail.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
         }
