@@ -1,42 +1,18 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::game::bonus_msgs_segment::*;
 use crate::network::networking_structs::*;
 use crate::players::inputs::*;
 use crate::utils::util_functions::*;
 use crate::network::game_message_types::NewPlayerInfo;
-
-
-pub trait ExtractNewPlayers{
-    fn extract_new_players(&self) -> Vec<NewPlayerInfo>;
-}
-impl ExtractNewPlayers for SyncerData<Vec<BonusEvent>>{
-    fn extract_new_players(&self) -> Vec<NewPlayerInfo> {
-        let mut new_players = vec![];
-        for (package_relative_frame_index, bonus_list) in self.data.iter().enumerate(){
-            for bonus_event in bonus_list{
-                match bonus_event{
-                    BonusEvent::NewPlayer(player_id) => {
-                        let new_player = NewPlayerInfo{
-                            player_id: *player_id,
-                            frame_added: self.start_frame + package_relative_frame_index,
-                        };
-                        new_players.push(new_player);
-                    }
-                }
-            }
-        }
-        return new_players;
-    }
-}
+use crate::game::bonus_msgs_segment::*;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SyncerData<T> {
     pub data: Vec<T>,
     pub start_frame: FrameIndex,
-    pub owning_player: i32// Unused for bonus msgs. i32 not usize as unused is -1.
+    pub owning_player: PlayerID
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum SyncerRequestType {
@@ -62,13 +38,7 @@ pub struct SyncerStore<T> {
 }
 
 impl<T> SyncerStore<T> where T: Clone{
-    pub fn gen_bonus_store(frames_index_offset: usize) -> SyncerStore<Vec<BonusEvent>>{
-        return SyncerStore{
-            frames_index_offset,
-            data: vec![]
-        }
-    }
-    pub fn gen_inputs_store(frames_index_offset: usize) -> SyncerStore<InputState>{
+    pub fn new(frames_index_offset: usize) -> SyncerStore<T>{
         return SyncerStore{
             frames_index_offset,
             data: vec![]
@@ -124,18 +94,19 @@ impl<T> SyncerStore<T> where T: Clone{
                 }
             }
         }
-        let mut player_id = -1;
         match request.type_needed{
             SyncerRequestType::PlayerInputs(id) => {
-                player_id = id as i32;
+                return SyncerData{
+                    data: data_found,
+                    start_frame: request.request.start_frame,
+                    owning_player: id
+                }
             }
-            _ => {}
+            _ => {
+                panic!("Shouldn't be any other types.");
+            }
         }
-        return SyncerData{
-            data: data_found,
-            start_frame: request.request.start_frame,
-            owning_player: player_id
-        }
+
     }
     pub fn insert_data_segment(&mut self, syncer_data: SyncerData<T>){
 

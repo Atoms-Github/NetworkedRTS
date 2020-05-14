@@ -6,6 +6,11 @@ use std::str::FromStr;
 use crate::network::networking_message_types::*;
 use std::time::{SystemTime, Duration};
 use std::ops::*;
+use crate::network::networking_structs::*;
+use crate::game::logic::logic_segment::*;
+use crate::game::synced_data_stream::*;
+
+use crate::players::inputs::*;
 
 pub struct NetworkingSegmentIn {
     conn_address_str: String
@@ -108,6 +113,16 @@ impl NetworkingSegmentEx {
                 println!("Ignoring first messages until welcome info: {:?}", welcome_message);
             }
         }
+    }
+    pub fn send_init_me_msg(&mut self, frame_to_init_on: FrameIndex, my_player_id: PlayerID){
+        let mut first_input = InputState::new();
+        first_input.new_player = true;
+        let syncer_data = SyncerData{
+            data: vec![first_input],
+            start_frame: frame_to_init_on,
+            owning_player: my_player_id
+        };
+        self.net_sink.send(NetMessageType::GameUpdate(LogicInwardsMessage::SyncerInputsUpdate(syncer_data))).unwrap();
     }
 }
 

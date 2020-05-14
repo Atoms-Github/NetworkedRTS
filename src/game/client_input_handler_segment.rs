@@ -117,7 +117,7 @@ impl InputHandlerIn {
                 let logic_message = LogicInwardsMessage::SyncerInputsUpdate(SyncerData{
                     data: vec![curret_input.clone()],
                     start_frame: inputs_arriving_for_frame,
-                    owning_player: self.player_id as i32
+                    owning_player: self.player_id,
                 });
                 match next_message{
                     InputHandlerMsg::NewFrame(next_frame_index) => {

@@ -10,13 +10,11 @@ use std::{thread};
 use std::time::Duration;
 use crate::game::synced_data_stream::*;
 use crate::players::inputs::*;
-use crate::game::bonus_msgs_segment::*;
 use crate::game::logic::logic_data_storage::*;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum LogicInwardsMessage {
-    SyncerBonusUpdate(SyncerData<Vec<BonusEvent>>),
     SyncerInputsUpdate(SyncerData<InputState>),
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]

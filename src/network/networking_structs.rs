@@ -17,9 +17,9 @@ use crate::gameplay::systems::size::*;
 use crate::gameplay::systems::velocity::*;
 use crate::gameplay::systems::velocity_with_input::*;
 use crate::players::inputs::*;
+use crate::game::bonus_msgs_segment::*;
 use std::panic;
 
-use crate::game::bonus_msgs_segment::*;
 
 pub type PlayerID = usize;
 pub type FrameIndex = usize;
@@ -69,17 +69,7 @@ impl GameState{
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    fn apply_bonus_event(&mut self, bonus_event: BonusEvent){
-        match bonus_event{
-            BonusEvent::NewPlayer(player_id) => {
-                self.init_new_player(player_id);
-            }
-        }
-    }
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f64){
-        for bonus_event in sim_info.bonus_events{
-            self.apply_bonus_event(bonus_event);
-        }
         let mut pending = PendingEntities::new();
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
@@ -96,8 +86,7 @@ impl GameState{
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InfoForSim {
-    pub inputs_map: HashMap<PlayerID, InputState>,
-    pub bonus_events: Vec<BonusEvent>
+    pub inputs_map: HashMap<PlayerID, InputState>
 }
 
 

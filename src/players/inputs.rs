@@ -9,6 +9,7 @@ type PointFloat = nalgebra::Point2<f32>;
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird.
+    pub new_player: bool
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -37,6 +38,7 @@ impl InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
             keys_pressed: HashSet::new(),
 //            keys_pressed: vec![false; 260]
+            new_player: false
         }
     }
     pub fn is_keyid_pressed(&self, key_id: usize) -> bool{

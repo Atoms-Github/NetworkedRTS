@@ -8,7 +8,6 @@ use crate::network::networking_message_types::*;
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::panic;
-use crate::game::bonus_msgs_segment::*;
 use crate::game::logic::logic_data_storage::*;
 use crate::game::logic::logic_segment::*;
 use crate::game::synced_data_stream::*;
@@ -18,7 +17,6 @@ use crate::game::logic::data_storage_manager::*;
 
 
 pub enum ServerActableMessage{
-    NewlyGeneratedBonusMsgs(SyncerData<Vec<BonusEvent>>),
     IncomingClientMsg(OwnedNetworkMessage),
 }
 pub struct ServerMainStateEx {
@@ -34,7 +32,6 @@ pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
     seg_data_store: DataStorageManagerEx,
     seg_logic_tail: LogicSegmentTailerEx,
-    seg_bonus_msgs: BonusMsgsSegmentEx,
     known_frame_zero: KnownFrameInfo
 }
 
@@ -81,12 +78,10 @@ impl ServerMainStateIn {
         let seg_net_hub = self.init_network_hub();
         let seg_data_store = self.init_storage_man();
         let seg_logic_tail = self.init_logic_tailer(seg_data_store.clone_lock_ref());
-        let seg_bonus_msgs = BonusMsgsSegmentIn::new(self.known_frame.clone()).start();
         return ServerMainStateEx {
             seg_net_hub,
             seg_data_store,
             seg_logic_tail,
-            seg_bonus_msgs,
             known_frame_zero: self.known_frame,
         }
     }
@@ -96,7 +91,6 @@ impl ServerMainStateEx {
     pub fn merge_server_actable_msgs(&mut self)
                                      -> Receiver<ServerActableMessage>{
         let inc_clients = self.seg_net_hub.pickup_rec.take().unwrap();
-        let inc_bonus_msgs = self.seg_bonus_msgs.scheduled_events.take().unwrap();
 
         let (actable_sink,actable_rec) = channel();
 
@@ -105,13 +99,6 @@ impl ServerMainStateEx {
             loop{
                 let client_message = inc_clients.recv().unwrap();
                 actable_from_clients.send(ServerActableMessage::IncomingClientMsg(client_message)).unwrap();
-            }
-        });
-        let actable_from_clients = actable_sink.clone();
-        thread::spawn(move ||{
-            loop{
-                let bonus_msg = inc_bonus_msgs.recv().unwrap();
-                actable_from_clients.send(ServerActableMessage::NewlyGeneratedBonusMsgs(bonus_msg)).unwrap();
             }
         });
         return actable_rec;
@@ -127,9 +114,6 @@ impl ServerMainStateEx {
             match incoming_actable_message{
                 ServerActableMessage::IncomingClientMsg(incoming_owned_message) => {
                     self.handle_incoming_client_msg(incoming_owned_message);
-                }
-                ServerActableMessage::NewlyGeneratedBonusMsgs(new_bonus_msg) => {
-                    self.handle_new_bonus_event(new_bonus_msg)
                 }
             }
 
@@ -157,7 +141,6 @@ impl ServerMainStateEx {
             NetMessageType::ConnectionInitQuery(response) => {
                 let frame_to_init_player = self.known_frame_zero.get_intended_current_frame() + 40; // modival.
                 println!("Received initialization request for player with ID: {} scheduling init for: {}", player_id, frame_to_init_player);
-                self.seg_bonus_msgs.schedule_event_timed(BonusEvent::NewPlayer(player_id), frame_to_init_player);
                 let response = NetMessageType::ConnectionInitResponse(self.gen_init_info(player_id, frame_to_init_player));
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             },
@@ -174,13 +157,6 @@ impl ServerMainStateEx {
                 panic!("Unexpected message");
             }
         }
-    }
-    fn handle_new_bonus_event(&mut self, new_bonus_msg: SyncerData<Vec<BonusEvent>>) -> () {
-        // Send to all clients + self logic.
-        let logic_update = LogicInwardsMessage::SyncerBonusUpdate(new_bonus_msg);
-
-        self.seg_data_store.logic_msgs_sink.send(logic_update.clone()).unwrap();
-        self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToAll(NetMessageType::GameUpdate(logic_update))).unwrap();
     }
 }
 
