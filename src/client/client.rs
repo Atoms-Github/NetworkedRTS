@@ -47,7 +47,7 @@ impl Client{
             loop{
                 match incoming_messages.recv().unwrap(){
                     ExternalMsg::GameUpdate(update) => {
-                        if crate::SEND_DEBUG_MSGS{
+                        if crate::DEBUG_MSGS_MAIN {
                             println!("Net rec message: {:?}", update);
                         }
                         to_logic.send(update).unwrap();
@@ -75,6 +75,8 @@ impl Client{
 
         seg_net.send_greeting(&self.player_name);
         let welcome_info = seg_net.receive_welcome_message();
+        // Now that we've downloaded, then we can let everyone know in advance that we're coming as a new player.
+        seg_net.send_init_me_msg(welcome_info.you_initialize_frame, welcome_info.assigned_player_id);
 
         let mut synced_frame_info = welcome_info.known_frame_info;
         println!("Before: {:?}", synced_frame_info);
@@ -98,7 +100,7 @@ impl Client{
 
 
 
-        if crate::SEND_DEBUG_MSGS{
+        if crate::DEBUG_MSGS_MAIN {
             println!("Frame to init my own sync: {}", welcome_info.you_initialize_frame);
         }
         seg_scheduler.schedule_event(Box::new(move ||{

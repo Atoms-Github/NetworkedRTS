@@ -9,7 +9,6 @@ use crate::create_system;
 use crate::common::gameplay::ecs::world::*;
 use crate::common::gameplay::systems::position::PositionComp;
 use crate::common::gameplay::systems::size::*;
-use std::time::SystemTime;
 
 create_system!( render_system | secret_render_system
 	| my_position: PositionComp, my_render: RenderComp, my_size: SizeComp

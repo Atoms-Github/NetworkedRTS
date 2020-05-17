@@ -15,7 +15,9 @@ pub mod client;
 pub mod server;
 pub mod common;
 
-pub const SEND_DEBUG_MSGS: bool = true;
+pub const DEBUG_MSGS_ALL: bool = false;
+pub const DEBUG_MSGS_MAIN: bool = DEBUG_MSGS_ALL || true;
+pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || true;
 
 
 

@@ -5,7 +5,6 @@ use std::sync::mpsc::{channel, Receiver};
 use crate::common::gameplay::game::game_state::*;
 use crate::common::sim_data::sim_data_storage::*;
 use crate::common::time::timekeeping::*;
-use crate::common::types::*;
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 3;
 

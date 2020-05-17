@@ -27,6 +27,9 @@ pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<Extern
             let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
             match result{
                 Ok(msg) => {
+                    if crate::DEBUG_MSGS_NET{
+                        println!("<- {:?}", msg);
+                    }
                     sender.send(msg).unwrap();
                 }
                 err => {
@@ -48,6 +51,10 @@ impl ExternalMsg{
         write_stream.write(&buffer).unwrap();
         write_stream.write(&connection_init_bytes).unwrap();
         write_stream.flush().unwrap();
+
+        if crate::DEBUG_MSGS_NET{
+            println!("->: {:?}", self);
+        }
     }
 }
 

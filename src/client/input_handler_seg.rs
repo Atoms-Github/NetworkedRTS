@@ -55,7 +55,7 @@ impl InputHandlerIn {
         thread::spawn(move ||{
             loop{
                 let head_frame = tail_frame_rec.recv().unwrap() + HEAD_AHEAD_FRAME_COUNT;
-                out_msgs.send(InputHandlerMsg::NewFrame(head_frame));
+                out_msgs.send(InputHandlerMsg::NewFrame(head_frame)).unwrap();
             }
         });
     }

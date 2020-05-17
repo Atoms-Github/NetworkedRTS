@@ -28,19 +28,26 @@ struct FullPingSample{
 pub const TIME_SAMPLES_REQUIRED : usize = 10;
 impl ConnectNetEx {
     pub fn perform_ping_tests_get_clock_offset(&mut self) -> i64{
-        self.start_ping_sender_thread();
+        let mut ping_request_stopper = self.start_ping_sender_thread();
         let data = self.gather_ping_data();
+
+        ping_request_stopper.send(()).unwrap();
         return self.process_ping_data(data);
     }
-    fn start_ping_sender_thread(&mut self){
+    fn start_ping_sender_thread(&mut self) -> Sender<ThreadCloser>{
         let my_sender = self.net_sink.clone();
+        let (stop_sink, stop_rec) = channel();
         thread::spawn(move ||{
             loop{
                 my_sender.send(ExternalMsg::PingTestQuery(SystemTime::now())).unwrap();
                 thread::sleep(Duration::from_millis(100)); // Modival
+                if stop_rec.try_recv().is_ok(){
+                    return;
+                }
             }
 
-        }); // TODO2: Add finish method to here.
+        });
+        return stop_sink;
     }
     fn process_ping_data(&mut self, ping_data: Vec<FullPingSample>) -> i64{
         let mut total_ping = Duration::from_millis(0);
@@ -100,7 +107,7 @@ impl ConnectNetEx {
             let welcome_message = self.net_rec.recv().unwrap();
             match welcome_message{
                 ExternalMsg::ConnectionInitResponse(info) =>{
-                    if crate::SEND_DEBUG_MSGS{
+                    if crate::DEBUG_MSGS_MAIN {
                         println!("Received connection init response {:?}", info);
                     }
 
@@ -110,7 +117,7 @@ impl ConnectNetEx {
                 }
 
             }
-            if crate::SEND_DEBUG_MSGS{
+            if crate::DEBUG_MSGS_MAIN {
                 println!("Ignoring first messages until welcome info: {:?}", welcome_message);
             }
         }
