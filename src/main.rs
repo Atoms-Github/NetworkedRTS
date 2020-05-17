@@ -8,15 +8,12 @@
 
 use std::env;
 
-use crate::game::client::*;
-use crate::game::server::*;
+use crate::client::client::*;
+use crate::server::server::*;
 
-mod game;
-mod network;
-mod ecs;
-mod players;
-mod gameplay;
-mod utils;
+pub mod client;
+pub mod server;
+pub mod common;
 
 pub const SEND_DEBUG_MSGS: bool = true;
 

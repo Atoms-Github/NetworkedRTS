@@ -1,0 +1,111 @@
+use std::io::{Read, Write};
+use std::net::TcpStream;
+use std::sync::mpsc::{channel, Receiver};
+use std::thread;
+use std::time::SystemTime;
+
+use byteorder::ByteOrder;
+use serde::{Deserialize, Serialize};
+
+use crate::common::gameplay::game::game_state::*;
+use crate::common::logic::logic_sim_tailer_seg::*;
+use crate::common::sim_data::sim_data_storage::*;
+use crate::common::time::timekeeping::*;
+use crate::common::types::*;
+
+pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{
+    let (sender, receive) = channel::<ExternalMsg>();
+    thread::Builder::new().name("StreamDeserializer".to_string()).spawn(move ||{
+        loop{
+            let mut message_size_buffer = [0; 2];
+            let message_size_bytes = read_stream.read_exact(&mut message_size_buffer).unwrap();
+            let message_size = byteorder::LittleEndian::read_u16(&message_size_buffer);
+
+            let mut message_buffer = vec![0; message_size as usize];
+            read_stream.read_exact(&mut message_buffer).unwrap();
+
+            let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+            match result{
+                Ok(msg) => {
+                    sender.send(msg).unwrap();
+                }
+                err => {
+                    panic!("Err {:?}", err)
+                }
+            }
+        }
+    }).unwrap();
+    return receive;
+}
+
+impl ExternalMsg{
+    pub fn encode_and_send(&self, mut write_stream :&TcpStream){
+        let connection_init_bytes = bincode::serialize(self).unwrap();
+        let message_size = connection_init_bytes.len() as u16;
+
+        let mut buffer = [0; 2];
+        byteorder::LittleEndian::write_u16(&mut buffer, message_size);
+        write_stream.write(&buffer).unwrap();
+        write_stream.write(&connection_init_bytes).unwrap();
+        write_stream.flush().unwrap();
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
+pub enum ExternalMsg {
+    ConnectionInitQuery(NetMsgConnectionInitQuery),
+    ConnectionInitResponse(NetMsgConnectionInitResponse),
+    GameUpdate(LogicInwardsMessage),
+    LocalCommand(LocalCommandInfo),
+    PingTestQuery(SystemTime),
+    PingTestResponse(NetMsgPingTestResponse),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NetMsgPingTestResponse{
+    pub client_time: SystemTime,
+    pub server_time: SystemTime,
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct LocalCommandInfo{
+    pub command: String
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NetMsgConnectionInitQuery {
+    pub my_player_name: String
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct NetMsgConnectionInitResponse {
+    pub assigned_player_id: PlayerID,
+    pub game_state: GameState,
+    pub frames_gathered_so_far: SimDataStorage,
+    pub known_frame_info: KnownFrameInfo,
+    pub you_initialize_frame: FrameIndex
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
