@@ -60,8 +60,8 @@ impl ExternalMsg{
 
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum ExternalMsg {
-    ConnectionInitQuery(NetMsgConnectionInitQuery),
-    ConnectionInitResponse(NetMsgConnectionInitResponse),
+    ConnectionInitQuery(NetMsgGreetingQuery),
+    ConnectionInitResponse(NetMsgGreetingResponse),
     GameUpdate(LogicInwardsMessage),
     LocalCommand(LocalCommandInfo),
     PingTestQuery(SystemTime),
@@ -80,15 +80,15 @@ pub struct LocalCommandInfo{
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct NetMsgConnectionInitQuery {
+pub struct NetMsgGreetingQuery {
     pub my_player_name: String
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct NetMsgConnectionInitResponse {
+pub struct NetMsgGreetingResponse {
     pub assigned_player_id: PlayerID,
     pub game_state: GameState,
     pub frames_gathered_so_far: SimDataStorage,
-    pub known_frame_info: KnownFrameInfo,
+    pub known_frame: KnownFrameInfo,
     pub you_initialize_frame: FrameIndex
 }
 

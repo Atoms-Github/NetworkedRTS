@@ -26,7 +26,7 @@ enum InputHandlerMsg{
 pub struct InputHandlerIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,
-//    first_frame_to_send: FrameIndex,
+    first_frame_to_send: FrameIndex,
     to_logic: Sender<LogicInwardsMessage>,
     to_net: Sender<ExternalMsg>,
 }
@@ -38,11 +38,11 @@ impl InputHandlerIn {
     // We can't duplicate the input receiver and have two separate gathering methods as it's super important that the frame count output of each of them is in sync.
     // So we're going to have one thread with a receiver which either gets a message to send away straight away, or a time notification meaning send net with current.
 
-    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, /*first_frame_to_send: FrameIndex,*/ to_logic: Sender<LogicInwardsMessage>, to_net: Sender<ExternalMsg>,) -> InputHandlerIn {
+    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex, to_logic: Sender<LogicInwardsMessage>, to_net: Sender<ExternalMsg>,) -> InputHandlerIn {
         return InputHandlerIn {
             known_frame,
             player_id,
-//            first_frame_to_send,
+            first_frame_to_send,
             to_logic,
             to_net
         }
@@ -51,7 +51,7 @@ impl InputHandlerIn {
 
     fn gen_time_msgs_th(&self, out_msgs: Sender<InputHandlerMsg>){
 
-        let tail_frame_rec = self.known_frame.start_frame_stream_from_known();
+        let tail_frame_rec = self.known_frame.start_frame_stream_from_any(self.first_frame_to_send);
         thread::spawn(move ||{
             loop{
                 let head_frame = tail_frame_rec.recv().unwrap() + HEAD_AHEAD_FRAME_COUNT;

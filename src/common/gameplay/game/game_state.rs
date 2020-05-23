@@ -60,6 +60,11 @@ impl GameState{
         self.world.update_entities(&mut self.storages, pending);
     }
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f64){
+        for (player_id, input) in &sim_info.inputs_map{
+            if input.new_player{
+                self.init_new_player(*player_id);
+            }
+        }
         let mut pending = PendingEntities::new();
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);

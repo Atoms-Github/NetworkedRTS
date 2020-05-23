@@ -12,13 +12,14 @@ use crate::common::network::external_msg::*;
 use crate::common::sim_data::framed_vec::*;
 use crate::common::sim_data::input_state::*;
 use crate::common::types::*;
+use core::borrow::Borrow;
 
 pub struct ConnectNetIn {
-    conn_address_str: String
+    conn_address_str: String,
 }
 pub struct ConnectNetEx {
     pub net_sink: Sender<ExternalMsg>,
-    pub net_rec: Receiver<ExternalMsg>,
+    pub net_rec: Option<Receiver<ExternalMsg>>,
 }
 struct FullPingSample{
     c_send_time: SystemTime,
@@ -27,14 +28,18 @@ struct FullPingSample{
 }
 pub const TIME_SAMPLES_REQUIRED : usize = 10;
 impl ConnectNetEx {
-    pub fn perform_ping_tests_get_clock_offset(&mut self) -> i64{
+    fn perform_ping_tests_get_clock_offset(&self) -> i64{
         let mut ping_request_stopper = self.start_ping_sender_thread();
         let data = self.gather_ping_data();
 
         ping_request_stopper.send(()).unwrap();
-        return self.process_ping_data(data);
+
+
+        let clock_offset_ns = self.process_ping_data(data);
+        println!("Clock offset: {}nanos or {}ms", clock_offset_ns, clock_offset_ns / 1_000_000);
+        return clock_offset_ns;
     }
-    fn start_ping_sender_thread(&mut self) -> Sender<ThreadCloser>{
+    fn start_ping_sender_thread(&self) -> Sender<ThreadCloser>{
         let my_sender = self.net_sink.clone();
         let (stop_sink, stop_rec) = channel();
         thread::spawn(move ||{
@@ -49,7 +54,7 @@ impl ConnectNetEx {
         });
         return stop_sink;
     }
-    fn process_ping_data(&mut self, ping_data: Vec<FullPingSample>) -> i64{
+    fn process_ping_data(&self, ping_data: Vec<FullPingSample>) -> i64{
         let mut total_ping = Duration::from_millis(0);
         for data in &ping_data{
             total_ping = total_ping.add(data.c_receive_time.duration_since(data.c_send_time).unwrap());
@@ -70,10 +75,10 @@ impl ConnectNetEx {
         return average_difference_in_clocks;
 //        return SystemTime::now().add(Duration::from_nanos(average_difference_in_clocks as u64));
     }
-    fn gather_ping_data(&mut self) -> Vec<FullPingSample>{
+    fn gather_ping_data(&self) -> Vec<FullPingSample>{
         let mut results = vec![];
         while results.len() < TIME_SAMPLES_REQUIRED{
-            let returned_maybe = self.net_rec.recv();
+            let returned_maybe = self.net_rec.as_ref().unwrap().recv();
             let c_receive_time = SystemTime::now();
             if returned_maybe.is_ok(){
                 match returned_maybe.unwrap(){
@@ -94,43 +99,49 @@ impl ConnectNetEx {
         }
         return results;
     }
-    pub fn send_greeting(&mut self, player_name: &String){
+    fn send_greeting(&self, player_name: &String){
         let connection_init_query = ExternalMsg::ConnectionInitQuery(
-            NetMsgConnectionInitQuery{
+            NetMsgGreetingQuery {
                 my_player_name: player_name.clone()
             }
         );
         self.net_sink.send(connection_init_query).unwrap();
     }
-    pub fn receive_welcome_message(&mut self) -> NetMsgConnectionInitResponse{
+    pub fn receive_unsynced_greeting(&self) -> NetMsgGreetingResponse {
         loop{
-            let welcome_message = self.net_rec.recv().unwrap();
+            let welcome_message = self.net_rec.as_ref().unwrap().recv().unwrap();
             match welcome_message{
                 ExternalMsg::ConnectionInitResponse(info) =>{
                     if crate::DEBUG_MSGS_MAIN {
-                        println!("Received connection init response {:?}", info);
+                        println!("Received connection init response, init frame: {:?} {:?}",info.you_initialize_frame, info);
                     }
-
                     return info;
                 }
                 _ => {
+                    if crate::WARN_MSGS {
+                        println!("Ignoring first messages until welcome info: {:?}", welcome_message);
+                    }
                 }
 
             }
-            if crate::DEBUG_MSGS_MAIN {
-                println!("Ignoring first messages until welcome info: {:?}", welcome_message);
-            }
+
         }
     }
-    pub fn send_init_me_msg(&mut self, frame_to_init_on: FrameIndex, my_player_id: PlayerID){
-        let mut first_input = InputState::new();
-        first_input.new_player = true;
-        let syncer_data = FramedVecDataPack{
-            data: vec![first_input],
-            start_frame: frame_to_init_on,
-            owning_player: my_player_id
-        };
-        self.net_sink.send(ExternalMsg::GameUpdate(LogicInwardsMessage::SyncerInputsUpdate(syncer_data))).unwrap();
+    pub fn receive_synced_greeting(&self, player_name: &String) -> NetMsgGreetingResponse {
+        let clock_offset_ns = self.perform_ping_tests_get_clock_offset();
+        self.send_greeting(player_name);
+        let mut unsynced_greeting = self.receive_unsynced_greeting();
+        {
+            let synced_frame_info = &mut unsynced_greeting.known_frame;
+            println!("Before: {:?}", synced_frame_info);
+            synced_frame_info.apply_offset(-clock_offset_ns); // Things work out that this is negative.
+            // Known frame checks time between known and now.
+            // If the server clock is fast, then we want to decrease our known one so we're using info from the future and vice versa.
+            // Simpler explaination:
+            // If server is fast, then we need to pull it back to convert it into local client time.
+            println!("After: {:?}", synced_frame_info);
+        }
+        return unsynced_greeting;
     }
 }
 
@@ -156,7 +167,7 @@ impl ConnectNetIn {
         let in_rec = start_inwards_codec_thread(stream);
         return ConnectNetEx {
             net_sink: out_sink,
-            net_rec: in_rec
+            net_rec: Some(in_rec),
         };
     }
 }

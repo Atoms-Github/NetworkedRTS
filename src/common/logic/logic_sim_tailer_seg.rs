@@ -25,7 +25,7 @@ pub enum LogicOutwardsMessage {
 pub struct LogicSimTailerEx {
     pub from_logic_rec: Receiver<LogicOutwardsMessage>,
     pub tail_lock: Arc<RwLock<GameState>>,
-    pub new_tail_states_rec: Receiver<GameState>,
+    pub new_tail_states_rec: Option<Receiver<GameState>>,
 
 }
 impl LogicSimTailerEx {
@@ -105,7 +105,7 @@ impl LogicSegmentTailerIn {
         return LogicSimTailerEx {
             from_logic_rec,
             tail_lock,
-            new_tail_states_rec: new_tails_rec
+            new_tail_states_rec: Some(new_tails_rec)
         };
     }
 }

@@ -15,7 +15,7 @@ pub struct LogicSimHeaderIn {
     all_frames: Arc<RwLock<SimDataStorage>>,
 }
 pub struct LogicSimHeaderEx {
-    pub head_rec: Receiver<GameState>,
+    pub head_rec: Option<Receiver<GameState>>,
 }
 
 
@@ -51,7 +51,7 @@ impl LogicSimHeaderIn {
         });
 
         return LogicSimHeaderEx{
-            head_rec
+            head_rec: Some(head_rec)
         };
     }
     fn calculate_new_head(&mut self, mut state_tail: GameState) -> GameState{
