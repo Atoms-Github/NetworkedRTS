@@ -15,6 +15,7 @@ use crate::common::sim_data::input_state::*;
 use crate::common::sim_data::sim_data_storage::*;
 use crate::common::sim_data::sim_data_storage_manager::*;
 use crate::common::time::scheduler_segment::*;
+use crate::client::net_rec_seg::*;
 use crate::common::time::timekeeping::*;
 use crate::common::types::*;
 use crate::common::sim_data::framed_vec::*;
@@ -26,25 +27,7 @@ struct ClientIn{
 
 impl ClientIn{
     fn init_net_rec_handling(&self, incoming_messages: Receiver<ExternalMsg>, to_logic: Sender<LogicInwardsMessage>){ // TODO1: Move to segment with gather.
-        thread::spawn(move || {
-            loop{
-                match incoming_messages.recv().unwrap(){
-                    ExternalMsg::GameUpdate(update) => {
-                        if crate::DEBUG_MSGS_MAIN {
-                            println!("Net rec message: {:?}", update);
-                        }
-                        to_logic.send(update).unwrap();
-                    },
-                    ExternalMsg::LocalCommand(_) => {panic!("Not implemented!")},
-                    ExternalMsg::PingTestResponse(_) => {
-                        // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
-                    }
-                    _ => {
-                        panic!("Client shouldn't be getting a message of this type (or at this time)!")
-                    }
-                }
-            }
-        });
+
     }
 
     // Links up channels.
@@ -53,12 +36,12 @@ impl ClientIn{
         let welcome_info = seg_net.receive_synced_greeting(&self.player_name);
 
         let seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame.clone()).start();
-        let seg_data_storage = SimDataStorageManagerIn::new(welcome_info.frames_gathered_so_far).init_data_storage();
+        let seg_data_storage = SimDataStorageManagerIn::new(welcome_info.game_state.get_simmed_frame_index()).init_data_storage();
         let mut seg_logic_tailer = LogicSegmentTailerIn::new(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref()).start_logic_tail();
         let mut seg_logic_header = LogicSimHeaderIn::new(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone_lock_ref()).start();
         let input_changes = GraphicalSeg::new(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id).start();
 
-        self.init_net_rec_handling(seg_net.net_rec.take().unwrap(), seg_data_storage.logic_msgs_sink.clone());
+        let seg_net_rec = NetRecSegIn::new(seg_data_storage.logic_msgs_sink.clone(), seg_net.net_rec.take().unwrap(), welcome_info.known_frame.clone()).start();
 
         return ClientEx{
             seg_net,

@@ -49,8 +49,7 @@ impl ServerMainStateIn {
         return game_state;
     }
     fn init_storage_man(&self) -> SimDataStorageManagerEx{
-        let storage = SimDataStorage::new(0);
-        let data_store_setup = SimDataStorageManagerIn::new(storage);
+        let data_store_setup = SimDataStorageManagerIn::new(0);
         return data_store_setup.init_data_storage();
     }
     fn init_network_hub(&self) -> NetworkingHubEx{
@@ -115,10 +114,8 @@ impl ServerMainStateEx {
         }
         return NetMsgGreetingResponse {
             assigned_player_id: player_id,
-            frames_gathered_so_far: frames_to_send,
             known_frame: self.known_frame_zero.clone(),
             game_state: state_to_send,
-            you_initialize_frame: frame_to_init
         };
     }
 

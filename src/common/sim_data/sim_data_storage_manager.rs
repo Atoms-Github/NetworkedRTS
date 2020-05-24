@@ -3,6 +3,7 @@ use std::{thread};
 
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::sim_data::sim_data_storage::*;
+use crate::common::types::*;
 
 use std::sync::{Arc, RwLock};
 use std::sync::mpsc::{Receiver, Sender, channel};
@@ -23,9 +24,9 @@ pub struct SimDataStorageManagerIn {
 }
 
 impl SimDataStorageManagerIn {
-    pub fn new(storage: SimDataStorage) -> SimDataStorageManagerIn{
+    pub fn new(earliest_frame_possible: FrameIndex) -> SimDataStorageManagerIn{
         return SimDataStorageManagerIn {
-            data_storage: storage
+            data_storage: SimDataStorage::new(earliest_frame_possible)
         }
     }
     pub fn init_data_storage(self) -> SimDataStorageManagerEx{

@@ -10,7 +10,7 @@ use crate::common::sim_data::input_state::*;
 
 use crate::common::types::*;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct SimDataStorage {
     player_inputs: HashMap<PlayerID, FramedVec<InputState>>,
 }

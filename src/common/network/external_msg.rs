@@ -87,9 +87,7 @@ pub struct NetMsgGreetingQuery {
 pub struct NetMsgGreetingResponse {
     pub assigned_player_id: PlayerID,
     pub game_state: GameState,
-    pub frames_gathered_so_far: SimDataStorage,
     pub known_frame: KnownFrameInfo,
-    pub you_initialize_frame: FrameIndex
 }
 
 

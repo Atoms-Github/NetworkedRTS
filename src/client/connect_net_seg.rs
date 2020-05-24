@@ -113,7 +113,7 @@ impl ConnectNetEx {
             match welcome_message{
                 ExternalMsg::ConnectionInitResponse(info) =>{
                     if crate::DEBUG_MSGS_MAIN {
-                        println!("Received connection init response, init frame: {:?} {:?}",info.you_initialize_frame, info);
+                        println!("Received connection init response, init frame: {:?}", info);
                     }
                     return info;
                 }

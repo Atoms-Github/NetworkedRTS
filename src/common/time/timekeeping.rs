@@ -5,15 +5,15 @@ use std::time::{SystemTime, Duration};
 use serde::*;
 
 use crate::common::types::*;
-//pub const FRAME_DURATION_MILLIS: f64 = 200.0;
-//pub const FRAME_DURATION_MILLIS: f64 = 100.0;
-//pub const FRAME_DURATION_MILLIS: f64 = 50.0;
-pub const FRAME_DURATION_MILLIS: f64 = 30.0;
-//pub const FRAME_DURATION_MILLIS: f64 = 18.0;
-//pub const FRAME_DURATION_MILLIS: f64 = 16.67;
-//pub const FRAME_DURATION_MILLIS: f64 = 10.0;
-//pub const FRAME_DURATION_MILLIS: f64 = 5.0;
-//pub const FRAME_DURATION_MILLIS: f64 = 1.0;
+//pub const FRAME_DURATION_MILLIS: f32 = 200.0;
+//pub const FRAME_DURATION_MILLIS: f32 = 100.0;
+//pub const FRAME_DURATION_MILLIS: f32 = 50.0;
+pub const FRAME_DURATION_MILLIS: f32 = 30.0;
+//pub const FRAME_DURATION_MILLIS: f32 = 18.0;
+//pub const FRAME_DURATION_MILLIS: f32 = 16.667;
+//pub const FRAME_DURATION_MILLIS: f32 = 10.0;
+//pub const FRAME_DURATION_MILLIS: f32 = 5.0;
+//pub const FRAME_DURATION_MILLIS: f32 = 3.0; // Smaller than this doesn't make massive sense.
 
 use std::ops::Add;
 use std::ops::Sub;
@@ -91,7 +91,7 @@ impl KnownFrameInfo{
     pub fn get_intended_current_frame(&self) -> usize{
         let time_since_known_frame = SystemTime::now().duration_since(self.time).unwrap();
 
-        let intended_frame = self.known_frame_index + (time_since_known_frame.as_millis() as f64 / FRAME_DURATION_MILLIS).floor() as usize;
+        let intended_frame = self.known_frame_index + (time_since_known_frame.as_millis() as f32 / FRAME_DURATION_MILLIS).floor() as usize;
         return intended_frame;
     }
     pub fn start_frame_stream_from_any(&self, first_to_send: FrameIndex) -> Receiver<FrameIndex>{
@@ -118,5 +118,8 @@ impl KnownFrameInfo{
     }
     pub fn start_frame_stream_from_known(&self) -> Receiver<FrameIndex>{
         self.start_frame_stream_from_any(self.known_frame_index)
+    }
+    pub fn start_frame_stream_from_now(&self) -> Receiver<FrameIndex>{
+        self.start_frame_stream_from_any(self.get_intended_current_frame())
     }
 }
