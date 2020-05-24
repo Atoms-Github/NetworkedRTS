@@ -1,23 +1,12 @@
 use std::panic;
-use std::sync::{Arc, RwLock};
+use std::sync::{RwLock};
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration};
 
-use crate::client::connect_net_seg::*;
-use crate::client::graphical_seg::*;
-use crate::client::input_handler_seg::*;
-use crate::client::logic_sim_header_seg::*;
-use crate::common::gameplay::game::game_state::*;
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::network::external_msg::*;
-use crate::common::sim_data::input_state::*;
-use crate::common::sim_data::sim_data_storage::*;
-use crate::common::sim_data::sim_data_storage_manager::*;
-use crate::common::time::scheduler_segment::*;
 use crate::common::time::timekeeping::*;
-use crate::common::types::*;
-use crate::common::sim_data::framed_vec::*;
 
 
 

@@ -1,6 +1,5 @@
 
 use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
 
 
 use crate::common::logic::logic_sim_tailer_seg::*;

@@ -92,10 +92,6 @@ impl ServerMainStateEx {
     }
     pub fn startup_loop(mut self){
         let server_actable_msgs = self.merge_server_actable_msgs();
-//        let clients_rec = self.seg_net_hub.pickup_rec.take().unwrap();
-//        let server_actable_msgs =
-//            self.merge_server_actable_msgs(clients_rec,
-//                                           self.seg_bonus_msgs.scheduled_events.take().unwrap());
         loop{
             let incoming_actable_message = server_actable_msgs.recv().unwrap();
             match incoming_actable_message{
@@ -106,12 +102,9 @@ impl ServerMainStateEx {
 
         }
     }
-    fn gen_init_info(&self, player_id: PlayerID, frame_to_init: FrameIndex) -> NetMsgGreetingResponse {
+    fn gen_init_info(&self, player_id: PlayerID) -> NetMsgGreetingResponse {
         let state_to_send = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
-        let frames_to_send;
-        {
-            frames_to_send = self.seg_data_store.data_lock.read().unwrap().clone();
-        }
+
         return NetMsgGreetingResponse {
             assigned_player_id: player_id,
             known_frame: self.known_frame_zero.clone(),
@@ -124,9 +117,8 @@ impl ServerMainStateEx {
         let player_id = incoming_owned_message.owner;
         match incoming_message{
             ExternalMsg::ConnectionInitQuery(response) => {
-                let frame_to_init_player = self.known_frame_zero.get_intended_current_frame() + 40; // modival.
-                println!("Received initialization request for player with ID: {} scheduling init for: {}", player_id, frame_to_init_player);
-                let response = ExternalMsg::ConnectionInitResponse(self.gen_init_info(player_id, frame_to_init_player));
+                println!("Received initialization request for player with ID: {}", player_id);
+                let response = ExternalMsg::ConnectionInitResponse(self.gen_init_info(player_id));
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             },
             ExternalMsg::GameUpdate(update_info) => {

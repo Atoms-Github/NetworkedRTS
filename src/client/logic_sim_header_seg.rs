@@ -41,10 +41,10 @@ impl LogicSimHeaderIn {
         thread::spawn(move ||{
             loop{
                 let tail = self.tail_rec.recv().unwrap();
-                println!("Head got frame {}", tail.get_simmed_frame_index());
+//                println!("Head got frame {}", tail.get_simmed_frame_index());
 
                 let new_head = self.calculate_new_head(tail);
-                println!("Head sending {}", new_head.get_simmed_frame_index());
+//                println!("Head sending {}", new_head.get_simmed_frame_index());
                 head_sink.send(new_head).unwrap();
 
             }

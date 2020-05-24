@@ -82,11 +82,10 @@ impl ClientEx{
     // InterestingClientLogic.
     fn run_loop(self){
 
-        let my_init_frame = 100; //TODO1. Make real.
+        let my_init_frame = self.known_frame.get_intended_current_frame() + 50; // modival
         let init_me_msg = self.gen_init_me_msgs(my_init_frame, self.player_id);
         self.seg_net.net_sink.send(ExternalMsg::GameUpdate(init_me_msg.clone())).unwrap();
         self.seg_data_storage.logic_msgs_sink.send(init_me_msg).unwrap();
-
 
         let seg_input_dist = InputHandlerIn::new(self.known_frame, self.player_id,
                                                  my_init_frame, self.seg_data_storage.logic_msgs_sink.clone(),

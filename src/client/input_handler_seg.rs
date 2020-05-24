@@ -19,10 +19,12 @@ pub struct InputHandlerEx {
 impl InputHandlerEx {
 
 }
+#[derive(Debug)]
 enum InputHandlerMsg{
     NewFrame(FrameIndex),
     InputsUpdate(InputChange)
 }
+#[derive(Debug)]
 pub struct InputHandlerIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,
@@ -63,6 +65,7 @@ impl InputHandlerIn {
         thread::spawn(move ||{
             loop{
                 let next_change = inc_states.recv().unwrap();
+
                 out_msgs.send(InputHandlerMsg::InputsUpdate(next_change)).unwrap();
             }
         });
@@ -94,6 +97,7 @@ impl InputHandlerIn {
                     start_frame: inputs_arriving_for_frame,
                     owning_player: self.player_id,
                 });
+
                 match next_message{
                     InputHandlerMsg::NewFrame(next_frame_index) => {
                         self.to_net.send(ExternalMsg::GameUpdate(logic_message)).unwrap();
@@ -101,6 +105,7 @@ impl InputHandlerIn {
                     }
                     InputHandlerMsg::InputsUpdate(input_change) => {
                         self.to_logic.send(logic_message.clone()).unwrap();
+
                     }
                 }
             }
