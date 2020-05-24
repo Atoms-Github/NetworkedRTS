@@ -1,18 +1,14 @@
-use std::panic;
-use std::sync::{Arc, RwLock};
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration};
 
 use crate::client::connect_net_seg::*;
 use crate::client::graphical_seg::*;
 use crate::client::input_handler_seg::*;
 use crate::client::logic_sim_header_seg::*;
-use crate::common::gameplay::game::game_state::*;
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::network::external_msg::*;
 use crate::common::sim_data::input_state::*;
-use crate::common::sim_data::sim_data_storage::*;
 use crate::common::sim_data::sim_data_storage_manager::*;
 use crate::common::time::scheduler_segment::*;
 use crate::client::net_rec_seg::*;
@@ -83,6 +79,8 @@ impl ClientEx{
     fn run_loop(self){
 
         let my_init_frame = self.known_frame.get_intended_current_frame() + 50; // modival
+
+        println!("I'm gonna init me on {}", my_init_frame);
         let init_me_msg = self.gen_init_me_msgs(my_init_frame, self.player_id);
         self.seg_net.net_sink.send(ExternalMsg::GameUpdate(init_me_msg.clone())).unwrap();
         self.seg_data_storage.logic_msgs_sink.send(init_me_msg).unwrap();

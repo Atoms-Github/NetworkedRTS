@@ -1,7 +1,6 @@
 use std::thread;
 use std::sync::{Arc, RwLock};
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
@@ -61,6 +60,7 @@ impl LogicSegmentTailerIn {
         {
             let mut state_handle = self.tail_lock.write().unwrap();
             state_handle.simulate_tick(sim_query_result.sim_info, FRAME_DURATION_MILLIS);
+            println!("TailSim {}", state_handle.get_simmed_frame_index());
         }
 
 
@@ -71,6 +71,7 @@ impl LogicSegmentTailerIn {
     fn start_thread(mut self, outwards_messages: Sender<LogicOutwardsMessage>, mut new_tails_sink: Sender<GameState>){
         thread::spawn(move ||{
             let first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;
+            println!("Logic got state. Next frame to sim: {}", first_frame_to_sim);
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
 //            let (execution_sink, execution_rec) = channel();
             let mut frame_to_sim = first_frame_to_sim;

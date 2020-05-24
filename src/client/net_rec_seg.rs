@@ -1,5 +1,4 @@
 use std::panic;
-use std::sync::{RwLock};
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::time::{Duration};

@@ -100,12 +100,12 @@ impl InputHandlerIn {
 
                 match next_message{
                     InputHandlerMsg::NewFrame(next_frame_index) => {
-                        self.to_net.send(ExternalMsg::GameUpdate(logic_message)).unwrap();
+                        self.to_net.send(ExternalMsg::GameUpdate(logic_message.clone())).unwrap();
+                        self.to_logic.send(logic_message).unwrap(); // Even if there were no changes, still need to send.
                         inputs_arriving_for_frame = next_frame_index;
                     }
                     InputHandlerMsg::InputsUpdate(input_change) => {
                         self.to_logic.send(logic_message.clone()).unwrap();
-
                     }
                 }
             }

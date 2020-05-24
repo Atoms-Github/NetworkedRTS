@@ -7,12 +7,8 @@ use std::time::{Duration, SystemTime};
 use std::ops::Div;
 use std::ops::Sub;
 
-use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::network::external_msg::*;
-use crate::common::sim_data::framed_vec::*;
-use crate::common::sim_data::input_state::*;
 use crate::common::types::*;
-use core::borrow::Borrow;
 
 pub struct ConnectNetIn {
     conn_address_str: String,
