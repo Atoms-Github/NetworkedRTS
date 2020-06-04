@@ -108,15 +108,14 @@ impl ConnectNetEx {
             let welcome_message = self.net_rec.as_ref().unwrap().recv().unwrap();
             match welcome_message{
                 ExternalMsg::ConnectionInitResponse(info) =>{
+                    thread::sleep(Duration::from_millis(500)); // Shouldn't matter how long to take to download.
                     if crate::DEBUG_MSGS_MAIN {
-                        println!("Received connection init response, init frame: {:?}", info);
+                        println!("Received connection init response: {:?}", info);
                     }
                     return info;
                 }
                 _ => {
-                    if crate::WARN_MSGS {
-                        println!("Ignoring first messages until welcome info: {:?}", welcome_message);
-                    }
+                    println!("Ignoring first messages until welcome info: {:?}", welcome_message);
                 }
 
             }

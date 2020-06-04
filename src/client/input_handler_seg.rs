@@ -7,7 +7,9 @@ use crate::common::network::external_msg::*;
 use crate::common::sim_data::framed_vec::*;
 use crate::common::sim_data::input_state::*;
 use crate::common::time::timekeeping::*;
+use crate::common::sim_data::sim_data_storage::*;
 use crate::common::types::*;
+use std::sync::{Arc, RwLock};
 
 
 pub struct InputHandlerEx {
@@ -31,6 +33,9 @@ pub struct InputHandlerIn {
     first_frame_to_send: FrameIndex,
     to_logic: Sender<LogicInwardsMessage>,
     to_net: Sender<ExternalMsg>,
+    sim_data_storage: Arc<RwLock<SimDataStorage>>,
+    curret_input: InputState,
+    inputs_arriving_for_frame: FrameIndex,
 }
 impl InputHandlerIn {
     // This segment's job is to get the user's sync and send them to the logic data storage and the network.
@@ -39,14 +44,18 @@ impl InputHandlerIn {
     //
     // We can't duplicate the input receiver and have two separate gathering methods as it's super important that the frame count output of each of them is in sync.
     // So we're going to have one thread with a receiver which either gets a message to send away straight away, or a time notification meaning send net with current.
-
-    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex, to_logic: Sender<LogicInwardsMessage>, to_net: Sender<ExternalMsg>,) -> InputHandlerIn {
+// TODO2: Ponder how to make this smaller.
+    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
+               to_logic: Sender<LogicInwardsMessage>, to_net: Sender<ExternalMsg>, sim_data_storage: Arc<RwLock<SimDataStorage>>,) -> InputHandlerIn {
         return InputHandlerIn {
             known_frame,
             player_id,
             first_frame_to_send,
             to_logic,
-            to_net
+            to_net,
+            sim_data_storage,
+            curret_input: InputState::new(),
+            inputs_arriving_for_frame: std::usize::MAX
         }
     }
 
@@ -77,35 +86,38 @@ impl InputHandlerIn {
         return handler_msg_rec;
     }
 
+    fn send_current_to_self(&self ){
+        let logic_message = LogicInwardsMessage::SyncerInputsUpdate(FramedVecDataPack{
+            data: vec![curret_input.clone()],
+            start_frame: inputs_arriving_for_frame,
+            owning_player: self.player_id,
+        });
+        self.to_logic.send(logic_message.clone()).unwrap();
+    }
 
     pub fn start_dist(self, inputs_stream: Receiver<InputChange>) -> InputHandlerEx{
         thread::spawn(move ||{
 
             let handler_msg_rec = self.generate_msg_stream(inputs_stream);
-            let mut curret_input = InputState::new();
             let mut inputs_arriving_for_frame = self.known_frame.get_intended_current_frame() + HEAD_AHEAD_FRAME_COUNT;
             loop{
                 let next_message = handler_msg_rec.recv().unwrap();
-                match &next_message{
-                    InputHandlerMsg::InputsUpdate(input_change) => {
-                        input_change.apply_to_state(&mut curret_input);
-                    }
-                    _ => {}
-                }
-                let logic_message = LogicInwardsMessage::SyncerInputsUpdate(FramedVecDataPack{
-                    data: vec![curret_input.clone()],
-                    start_frame: inputs_arriving_for_frame,
-                    owning_player: self.player_id,
-                });
 
                 match next_message{
                     InputHandlerMsg::NewFrame(next_frame_index) => {
+                        let logic_message = LogicInwardsMessage::SyncerInputsUpdate(FramedVecDataPack{
+                            data: vec![curret_input.clone()],
+                            start_frame: inputs_arriving_for_frame,
+                            owning_player: self.player_id,
+                        });
                         self.to_net.send(ExternalMsg::GameUpdate(logic_message.clone())).unwrap();
                         self.to_logic.send(logic_message).unwrap(); // Even if there were no changes, still need to send.
                         inputs_arriving_for_frame = next_frame_index;
                     }
                     InputHandlerMsg::InputsUpdate(input_change) => {
-                        self.to_logic.send(logic_message.clone()).unwrap();
+                        input_change.apply_to_state(&mut curret_input);
+
+
                     }
                 }
             }

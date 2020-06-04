@@ -62,6 +62,7 @@ impl GameState{
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32){
         for (player_id, input) in &sim_info.inputs_map{
             if input.new_player{
+                println!("InitingNewPlayer {}", *player_id);
                 self.init_new_player(*player_id);
             }
         }
@@ -70,10 +71,10 @@ impl GameState{
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_with_inputs_system(&self.world, &mut pending, &mut self.storages.velocity_s,
-                                           &mut self.storages.velocity_with_input_s, &sim_info.inputs_map);
+                                           &mut self.storages.velocity_with_input_s, &sim_info.inputs_map, self.simmed_frame_index);
 
         self.world.update_entities(&mut self.storages, pending);
 
-        self.simmed_frame_index = self.simmed_frame_index + 1;
+        self.simmed_frame_index += 1;
     }
 }
