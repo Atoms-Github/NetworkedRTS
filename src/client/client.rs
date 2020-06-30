@@ -4,7 +4,6 @@ use std::time::{Duration};
 
 use crate::client::connect_net_seg::*;
 use crate::client::graphical_seg::*;
-use crate::client::input_handler_seg::*;
 use crate::client::logic_sim_header_seg::*;
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::network::external_msg::*;
@@ -85,19 +84,19 @@ impl ClientEx{
         self.seg_net.net_sink.send(ExternalMsg::GameUpdate(init_me_msg.clone())).unwrap();
         self.seg_data_storage.logic_msgs_sink.send(init_me_msg).unwrap();
 
-        let seg_input_dist = InputHandlerIn::new
-            (self.known_frame,
-             self.player_id,
-             my_init_frame,
-             self.seg_data_storage.logic_msgs_sink.clone(),
-             self.seg_net.net_sink.clone(),
-             self.seg_data_storage.clone_lock_ref()
-        );
-
-        let input_changes = self.input_changes;
-        self.seg_scheduler.schedule_event(Box::new(move ||{
-            seg_input_dist.start_dist(input_changes);
-        }), my_init_frame);
+//        let seg_input_dist = InputHandlerIn::new TODO1
+//            (self.known_frame,
+//             self.player_id,
+//             my_init_frame,
+//             self.seg_data_storage.logic_msgs_sink.clone(),
+//             self.seg_net.net_sink.clone(),
+//             self.seg_data_storage.clone_lock_ref()
+//        );
+//
+//        let input_changes = self.input_changes;
+//        self.seg_scheduler.schedule_event(Box::new(move ||{
+//            seg_input_dist.start_dist(input_changes);
+//        }), my_init_frame);
 
 
 
