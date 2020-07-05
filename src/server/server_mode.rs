@@ -46,26 +46,26 @@ impl ServerMainStateIn {
     fn init_state(&self) -> GameState{
         let mut game_state = GameState::new();
         game_state.init_rts();
-        return game_state;
+        game_state
     }
     fn init_storage_man(&self) -> SimDataStorageManagerEx{
         let data_store_setup = SimDataStorageManagerIn::new(0);
-        return data_store_setup.init_data_storage();
+        data_store_setup.init_data_storage()
     }
     fn init_network_hub(&self) -> NetworkingHubEx{
         let net_hub_setup = NetworkingHubIn::new(self.hosting_ip.clone());
-        return net_hub_setup.start_hosting();
+        net_hub_setup.start_hosting()
     }
     fn init_logic_tailer(&self, data_handle: Arc<RwLock<SimDataStorage>>) -> LogicSimTailerEx{
         let game_state = self.init_state();
         let setup = LogicSegmentTailerIn::new(self.known_frame.clone(), game_state, data_handle);
-        return setup.start_logic_tail();
+        setup.start_logic_tail()
     }
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = self.init_network_hub();
         let seg_data_store = self.init_storage_man();
         let seg_logic_tail = self.init_logic_tailer(seg_data_store.clone_lock_ref());
-        return ServerMainStateEx {
+        ServerMainStateEx {
             seg_net_hub,
             seg_data_store,
             seg_logic_tail,
@@ -81,14 +81,13 @@ impl ServerMainStateEx {
 
         let (actable_sink,actable_rec) = channel();
 
-        let actable_from_clients = actable_sink.clone();
         thread::spawn(move ||{
             loop{
                 let client_message = inc_clients.recv().unwrap();
-                actable_from_clients.send(ServerActableMessage::IncomingClientMsg(client_message)).unwrap();
+                actable_sink.send(ServerActableMessage::IncomingClientMsg(client_message)).unwrap();
             }
         });
-        return actable_rec;
+        actable_rec
     }
     pub fn startup_loop(mut self){
         let server_actable_msgs = self.merge_server_actable_msgs();
@@ -105,11 +104,11 @@ impl ServerMainStateEx {
     fn gen_init_info(&self, player_id: PlayerID) -> NetMsgGreetingResponse {
         let state_to_send = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
 
-        return NetMsgGreetingResponse {
+        NetMsgGreetingResponse {
             assigned_player_id: player_id,
             known_frame: self.known_frame_zero.clone(),
             game_state: state_to_send,
-        };
+        }
     }
 
     fn handle_incoming_client_msg(&mut self, incoming_owned_message: OwnedNetworkMessage){

@@ -20,11 +20,11 @@ pub struct ReadVec<T>{
 }
 
 impl<T> ReadVec<T>{
-    pub fn new(max_store: usize, block_size: usize) -> ReadVec<T>{
-        ReadVec{
-            data: vec![],
-            size: 0
-        }
-    }
+//    pub fn new(max_store: usize, block_size: usize) -> ReadVec<T>{
+//        ReadVec{
+//            data: vec![],
+//            size: 0
+//        }
+//    }
 }
 

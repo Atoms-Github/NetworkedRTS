@@ -1,4 +1,4 @@
-pub mod client;
+pub mod client_mode;
 pub mod connect_net_seg;
 pub mod graphical_seg;
 pub mod input_handler_seg;

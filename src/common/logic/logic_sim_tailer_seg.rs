@@ -53,7 +53,7 @@ impl LogicSegmentTailerIn {
         {
             sim_query_result = self.all_frames.read().unwrap().clone_info_for_sim(tail_frame_to_sim);
         }
-        if sim_query_result.missing_info.len() > 0{
+        if !sim_query_result.missing_info.is_empty(){
             return sim_query_result.missing_info;
         }
         // It's fine to hold the state for a while as this thread is important - and we shouldn't be long in comparison to head.
@@ -80,7 +80,7 @@ impl LogicSegmentTailerIn {
 
                 while frame_to_sim < frame_to_sim_if_no_problems{ // Try to catch up as much as possible.
                     let problems = self.try_sim_tail_frame(frame_to_sim);
-                    if problems.len() == 0 {
+                    if problems.is_empty() {
                         frame_to_sim += 1;
                     }else{
                         for problem in &problems{
@@ -105,11 +105,11 @@ impl LogicSegmentTailerIn {
 
         self.start_thread(from_logic_sink, new_tails_sink);
 
-        return LogicSimTailerEx {
+        LogicSimTailerEx {
             from_logic_rec,
             tail_lock,
             new_tail_states_rec: Some(new_tails_rec)
-        };
+        }
     }
 }
 

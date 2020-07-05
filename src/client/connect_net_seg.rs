@@ -33,7 +33,7 @@ impl ConnectNetEx {
 
         let clock_offset_ns = self.process_ping_data(data);
         println!("Clock offset: {}nanos or {}ms", clock_offset_ns, clock_offset_ns / 1_000_000);
-        return clock_offset_ns;
+        clock_offset_ns
     }
     fn start_ping_sender_thread(&self) -> Sender<ThreadCloser>{
         let my_sender = self.net_sink.clone();
@@ -48,7 +48,7 @@ impl ConnectNetEx {
             }
 
         });
-        return stop_sink;
+        stop_sink
     }
     fn process_ping_data(&self, ping_data: Vec<FullPingSample>) -> i64{
         let mut total_ping = Duration::from_millis(0);
@@ -61,14 +61,14 @@ impl ConnectNetEx {
             let recieve_ms = data.s_receive_time.sub(average_one_way_ping).duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos();
             let send_ms = data.c_send_time.duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos();
             // Time from send to recieve.
-            return recieve_ms as i64 - send_ms as i64;
+            recieve_ms as i64 - send_ms as i64
         });
         let mut total_difference_in_clocks = 0;
         data_clock_differences.for_each(|difference|{
             total_difference_in_clocks += difference;
         });
-        let average_difference_in_clocks = total_difference_in_clocks / ping_data.len() as i64;
-        return average_difference_in_clocks;
+        // TODO2: Rename method or something to make it clear we're returning the average difference in clocks.
+        total_difference_in_clocks / ping_data.len() as i64
 //        return SystemTime::now().add(Duration::from_nanos(average_difference_in_clocks as u64));
     }
     fn gather_ping_data(&self) -> Vec<FullPingSample>{
@@ -76,29 +76,26 @@ impl ConnectNetEx {
         while results.len() < TIME_SAMPLES_REQUIRED{
             let returned_maybe = self.net_rec.as_ref().unwrap().recv();
             let c_receive_time = SystemTime::now();
-            if returned_maybe.is_ok(){
-                match returned_maybe.unwrap(){
-                    ExternalMsg::PingTestResponse(response) => {
-                        let full_sample = FullPingSample{
-                            c_send_time: response.client_time,
-                            s_receive_time: response.server_time,
-                            c_receive_time,
-                        };
-                        results.push(full_sample);
-                    }
-                    _ => {
-                        println!("Received message which wasn't a a ping response.");
-                    }
+            match returned_maybe{
+                Ok(ExternalMsg::PingTestResponse(response)) => {
+                    let full_sample = FullPingSample{
+                        c_send_time: response.client_time,
+                        s_receive_time: response.server_time,
+                        c_receive_time,
+                    };
+                    results.push(full_sample);
                 }
-
+                _ => {
+                    println!("Received message which wasn't a a ping response.");
+                }
             }
         }
-        return results;
+        results
     }
-    fn send_greeting(&self, player_name: &String){
+    fn send_greeting(&self, player_name: &str){
         let connection_init_query = ExternalMsg::ConnectionInitQuery(
             NetMsgGreetingQuery {
-                my_player_name: player_name.clone()
+                my_player_name: player_name.to_string()
             }
         );
         self.net_sink.send(connection_init_query).unwrap();
@@ -122,7 +119,7 @@ impl ConnectNetEx {
 
         }
     }
-    pub fn receive_synced_greeting(&self, player_name: &String) -> NetMsgGreetingResponse {
+    pub fn receive_synced_greeting(&self, player_name: &str) -> NetMsgGreetingResponse {
         let clock_offset_ns = self.perform_ping_tests_get_clock_offset();
         self.send_greeting(player_name);
         let mut unsynced_greeting = self.receive_unsynced_greeting();
@@ -136,7 +133,7 @@ impl ConnectNetEx {
             // If server is fast, then we need to pull it back to convert it into local client time.
             println!("After: {:?}", synced_frame_info);
         }
-        return unsynced_greeting;
+        unsynced_greeting
     }
 }
 
@@ -160,21 +157,10 @@ impl ConnectNetIn {
             }
         });
         let in_rec = start_inwards_codec_thread(stream);
-        return ConnectNetEx {
+        ConnectNetEx {
             net_sink: out_sink,
             net_rec: Some(in_rec),
-        };
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 

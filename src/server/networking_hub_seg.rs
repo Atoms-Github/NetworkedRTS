@@ -126,12 +126,12 @@ impl NetworkingHubMid{
                         msg.encode_and_send(locked.get_mut(&target).unwrap());
                     }
                     DistributableNetMessage::ToAll(msg) => {
-                        for (player_id, stream) in locked.iter(){
+                        for (player_id, stream) in locked.iter_mut(){
                             msg.encode_and_send(stream);
                         }
                     }
                     DistributableNetMessage::ToAllExcept(do_not_send_to_id, msg) => {
-                        for (player_id, stream) in locked.iter(){
+                        for (player_id, stream) in locked.iter_mut(){
                             if *player_id != do_not_send_to_id{
                                 msg.encode_and_send(stream);
 
@@ -145,12 +145,12 @@ impl NetworkingHubMid{
     fn gen_next_player_id(&mut self) -> PlayerID{
         let id = self.next_player_id;
         self.next_player_id += 1;
-        return id;
+        id
     }
     fn bind_addr(&self) -> TcpListener{
         let host_addr = self.net_in.host_addr_str.parse::<SocketAddr>().unwrap();
         println!("Starting hosting on : {}", host_addr);
-        return TcpListener::bind(&host_addr).expect("Unable to bind hosting address.");
+        TcpListener::bind(&host_addr).expect("Unable to bind hosting address.")
     }
 
     fn handle_new_socket(&mut self, stream: TcpStream, player_id: PlayerID){
@@ -169,7 +169,7 @@ impl NetworkingHubMid{
 // Manages the server's incoming and outgoing network messages.
 impl NetworkingHubIn {
     pub fn new(host_addr_str: String) -> Self {
-        return NetworkingHubIn{
+        NetworkingHubIn{
             host_addr_str
         }
     }
@@ -184,7 +184,7 @@ impl NetworkingHubIn {
         };
         mid.startup(yeet_rec);
 
-        return NetworkingHubEx{
+        NetworkingHubEx{
             yeet_sink,
             pickup_rec: Some(pickup_rec)
         }

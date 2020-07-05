@@ -91,8 +91,7 @@ impl KnownFrameInfo{
     pub fn get_intended_current_frame(&self) -> usize{
         let time_since_known_frame = SystemTime::now().duration_since(self.time).unwrap();
 
-        let intended_frame = self.known_frame_index + (time_since_known_frame.as_millis() as f32 / FRAME_DURATION_MILLIS).floor() as usize;
-        return intended_frame;
+        self.known_frame_index + (time_since_known_frame.as_millis() as f32 / FRAME_DURATION_MILLIS).floor() as usize
     }
     pub fn start_frame_stream_from_any(&self, first_to_send: FrameIndex) -> Receiver<FrameIndex>{
         let (sender, receiver) = channel();
@@ -114,7 +113,7 @@ impl KnownFrameInfo{
 
             }
         });
-        return receiver;
+        receiver
     }
     pub fn start_frame_stream_from_known(&self) -> Receiver<FrameIndex>{
         self.start_frame_stream_from_any(self.known_frame_index)

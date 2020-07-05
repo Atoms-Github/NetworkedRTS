@@ -22,18 +22,18 @@ pub struct LogicSimHeaderEx {
 fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
     let guard = state_tail.read().unwrap();
     let head_state = (*guard).clone();
-    return Arc::new(RwLock::new(head_state));
+    Arc::new(RwLock::new(head_state))
 }
 
 impl LogicSimHeaderIn {
     pub fn new(known_frame_info: KnownFrameInfo, tail_rec: Receiver<GameState>,
                data_store: Arc<RwLock<SimDataStorage>>)
                -> LogicSimHeaderIn {
-        return LogicSimHeaderIn {
+        LogicSimHeaderIn {
             known_frame_info,
             all_frames: data_store,
             tail_rec
-        };
+        }
     }
 
     pub fn start(mut self) -> LogicSimHeaderEx{
@@ -50,9 +50,9 @@ impl LogicSimHeaderIn {
             }
         });
 
-        return LogicSimHeaderEx{
+        LogicSimHeaderEx{
             head_rec: Some(head_rec)
-        };
+        }
     }
     fn calculate_new_head(&mut self, mut state_tail: GameState) -> GameState{
         let first_head_to_sim = state_tail.get_simmed_frame_index() + 1;
@@ -73,7 +73,7 @@ impl LogicSimHeaderIn {
         for sim_info in infos_for_sims{
             state_tail.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
         }
-        return state_tail;
+        state_tail
     }
 }
 

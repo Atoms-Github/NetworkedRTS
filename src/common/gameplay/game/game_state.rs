@@ -23,9 +23,14 @@ pub struct GameState{
     /* Private */simmed_frame_index: FrameIndex,
 }
 
+impl Default for GameState{
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl GameState{
     pub fn get_simmed_frame_index(&self) -> FrameIndex{
-        return self.simmed_frame_index;
+        self.simmed_frame_index
     }
     pub fn new() -> GameState{
         GameState{

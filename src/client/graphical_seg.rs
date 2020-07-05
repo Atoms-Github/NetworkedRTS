@@ -56,9 +56,7 @@ impl GraphicalSeg {
             event::run(ctx, events_loop, &mut meme).unwrap();
         });
 
-
-
-        return receiver;
+        receiver
     }
     fn render_state(&self, state: &mut GameState, ctx: &mut Context){
         secret_render_system(&state.world, &mut PendingEntities::new(),
@@ -76,7 +74,7 @@ impl GraphicalSeg {
             render_state = next_state_maybe.unwrap();
             next_state_maybe = self.render_head_rec.try_recv();
         }
-        return render_state;
+        render_state
     }
 }
 

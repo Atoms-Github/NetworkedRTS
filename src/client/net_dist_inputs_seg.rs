@@ -1,11 +1,13 @@
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::{Sender};
 use std::thread;
+
+use crate::common::types::*;
 
 use crate::client::logic_sim_header_seg::*;
 use crate::common::network::external_msg::*;
 use crate::common::time::timekeeping::*;
 use crate::common::sim_data::sim_data_storage::*;
-use crate::common::types::*;
+
 use std::sync::{Arc, RwLock};
 
 
@@ -28,7 +30,7 @@ impl NetInputDistIn {
     // so it will correct the next time something is sent.
     pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
                 to_net: Sender<ExternalMsg>, sim_data_storage: Arc<RwLock<SimDataStorage>>) -> NetInputDistIn {
-        return NetInputDistIn {
+        NetInputDistIn {
             known_frame,
             player_id,
             first_frame_to_send,
@@ -54,7 +56,7 @@ impl NetInputDistIn {
         });
 
 
-        return NetInputDistEx{
+        NetInputDistEx{
         }
     }
 }

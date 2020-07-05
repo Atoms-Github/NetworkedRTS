@@ -37,18 +37,18 @@ pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<Extern
             }
         }
     }).unwrap();
-    return receive;
+    receive
 }
 
 impl ExternalMsg{
-    pub fn encode_and_send(&self, mut write_stream :&TcpStream){
+    pub fn encode_and_send(&self, write_stream :&mut TcpStream){
         let connection_init_bytes = bincode::serialize(self).unwrap();
         let message_size = connection_init_bytes.len() as u16;
 
         let mut buffer = [0; 2];
         byteorder::LittleEndian::write_u16(&mut buffer, message_size);
-        write_stream.write(&buffer).unwrap();
-        write_stream.write(&connection_init_bytes).unwrap();
+        write_stream.write_all(&buffer).unwrap();
+        write_stream.write_all(&connection_init_bytes).unwrap();
         write_stream.flush().unwrap();
 
         if crate::DEBUG_MSGS_NET{
@@ -88,25 +88,6 @@ pub struct NetMsgGreetingResponse {
     pub game_state: GameState,
     pub known_frame: KnownFrameInfo,
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -1,2 +1,2 @@
 pub mod networking_hub_seg;
-pub mod server;
+pub mod server_mode;

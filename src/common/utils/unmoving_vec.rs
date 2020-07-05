@@ -7,6 +7,12 @@ pub struct UnmovingVec<T>{
     free_stack: Vec<usize>,
 }
 
+impl <T>Default for UnmovingVec<T>{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> UnmovingVec<T>{
     pub fn new() -> UnmovingVec<T> {
         UnmovingVec {
@@ -18,14 +24,14 @@ impl<T> UnmovingVec<T>{
 
     pub fn get(&self, index: usize) -> Option<&T>{
         if !self.whats_free[index]{
-            return self.list.get(index);
+            self.list.get(index)
         }else{
             None
         }
     }
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T>{
         if !self.whats_free[index]{
-            return self.list.get_mut(index);
+            self.list.get_mut(index)
         }else{
             None
         }

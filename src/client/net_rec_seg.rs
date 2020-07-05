@@ -31,10 +31,10 @@ impl NetRecSegIn{
         }else{
             milis = FRAME_DURATION_MILLIS / 5.0 * 4.0; // Probably not going to manage calculations - don't care about timing, just don't want to crash.
         }
-        return Duration::from_secs_f32(milis / 1000.0);
+        Duration::from_secs_f32(milis / 1000.0)
     }
     pub fn new(to_logic: Sender<LogicInwardsMessage>, net_inc: Receiver<ExternalMsg>, known_frame: KnownFrameInfo) -> Self{
-        return Self{
+        Self{
             incoming_msgs: vec![],
             net_inc,
             known_frame,
@@ -68,7 +68,7 @@ impl NetRecSegIn{
             }
         });
 
-        return NetRecSegEx{
+        NetRecSegEx{
 
         }
     }

@@ -26,7 +26,7 @@ impl ClientIn{
     }
 
     // Links up channels.
-    fn init(self, test_arg: i64) -> ClientEx{
+    fn init(self) -> ClientEx{
         let mut seg_net = ConnectNetIn::new(self.connection_ip.clone()).start_net();
         let welcome_info = seg_net.receive_synced_greeting(&self.player_name);
 
@@ -38,7 +38,7 @@ impl ClientIn{
 
         let seg_net_rec = NetRecSegIn::new(seg_data_storage.logic_msgs_sink.clone(), seg_net.net_rec.take().unwrap(), welcome_info.known_frame.clone()).start();
 
-        return ClientEx{
+        ClientEx{
             seg_net,
             seg_scheduler,
             seg_data_storage,
@@ -47,7 +47,7 @@ impl ClientIn{
             input_changes,
             player_id: welcome_info.assigned_player_id,
             known_frame: welcome_info.known_frame,
-        };
+        }
     }
 }
 struct ClientEx{
@@ -71,7 +71,7 @@ impl ClientEx{
             start_frame: frame_to_init_on,
             owning_player: my_player_id
         };
-        return LogicInwardsMessage::SyncerInputsUpdate(syncer_data);
+        LogicInwardsMessage::SyncerInputsUpdate(syncer_data)
     }
 
     // InterestingClientLogic.
@@ -113,13 +113,13 @@ impl ClientEx{
 
 
 
-pub fn client_main(connection_target_ip: String, test_arg: i64){
+pub fn client_main(connection_target_ip: String){
     println!("Starting as client.");
     let client = ClientIn{
         player_name: String::from("Atomserdiah"),
         connection_ip: connection_target_ip,
     };
-    let client_ex = client.init(test_arg);
+    let client_ex = client.init();
     client_ex.run_loop();
 }
 

@@ -26,12 +26,7 @@ impl SimDataStorage{
     pub fn handle_inwards_msg(&mut self, msg: LogicInwardsMessage){
         match msg{
             LogicInwardsMessage::SyncerInputsUpdate(data) => {
-
-                if !self.player_inputs.contains_key(&data.owning_player){
-//                    assert!(is_new_player, "First input updates to storage weren't init ones.");
-                    self.player_inputs.insert(data.owning_player, FramedVec::<InputState>::new(data.start_frame));
-                }
-                let player_sync = self.player_inputs.get_mut(&data.owning_player).unwrap();
+                let player_sync = self.player_inputs.entry(data.owning_player).or_insert_with(|| FramedVec::<InputState>::new(data.start_frame));
                 player_sync.insert_data_segment(data);
             }
         }
@@ -49,12 +44,13 @@ impl SimDataStorage{
             let (player_inputs, problem_inputs) =
                 data.get_or_last_query(frame_index, FramedVecRequestType::PlayerInputs(*player_id));
 
-            latest_inputs.insert(*player_id, player_inputs.unwrap_or(InputState::new()));
-            if problem_inputs.is_some(){
-                missing_item_requests.push(problem_inputs.unwrap());
+            latest_inputs.insert(*player_id, player_inputs.unwrap_or_default());
+
+            if let Some(request) = problem_inputs {
+                missing_item_requests.push(request);
             }
         }
-        return SimDataQueryResults{
+        SimDataQueryResults{
             missing_info: missing_item_requests,
             sim_info: InfoForSim {
                 inputs_map: latest_inputs

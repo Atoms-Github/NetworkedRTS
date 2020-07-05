@@ -30,7 +30,11 @@ impl InputChange{
         }
     }
 }
-
+impl Default for InputState{
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl InputState{
     pub fn new() -> InputState{
@@ -42,10 +46,10 @@ impl InputState{
         }
     }
     pub fn is_keyid_pressed(&self, key_id: usize) -> bool{
-        return self.keys_pressed.contains(&key_id);
+        self.keys_pressed.contains(&key_id)
     }
     pub fn is_keycode_pressed(&self, code: KeyCode) -> bool{
-        return self.is_keyid_pressed(code as usize);
+        self.is_keyid_pressed(code as usize)
     }
     pub fn set_keyid_pressed(&mut self, key_id: usize, pressed: bool){
         if pressed{
@@ -55,7 +59,7 @@ impl InputState{
         }
     }
     pub fn set_keycode_pressed(&mut self, code: KeyCode, pressed: bool){
-        return self.set_keyid_pressed(code as usize, pressed);
+        self.set_keyid_pressed(code as usize, pressed)
     }
 
     pub fn get_directional(&self) -> (f32, f32){
@@ -75,7 +79,7 @@ impl InputState{
             x -= 1.0;
         }
 
-        return (x,y)
+        (x,y)
     }
 }
 

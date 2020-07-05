@@ -19,7 +19,7 @@ pub struct SchedulerSegIn {
 }
 impl SchedulerSegIn {
     pub fn new(known_frame: KnownFrameInfo) -> SchedulerSegIn {
-        return SchedulerSegIn {
+        SchedulerSegIn {
             known_frame,
             triggers: vec![]
         }
@@ -27,10 +27,13 @@ impl SchedulerSegIn {
     fn pull_latest_triggers(&mut self, trigger_stream: &mut Receiver<ScheduledTrigger>){
         loop{
             let pulled = trigger_stream.try_recv();
-            if pulled.is_ok(){
-                self.triggers.push(pulled.unwrap());
-            }else{
-                break;
+            match pulled{
+                Ok(trigger) => {
+                    self.triggers.push(trigger);
+                }
+                Err(error) => {
+                    break;
+                }
             }
         }
     }
@@ -42,14 +45,14 @@ impl SchedulerSegIn {
                 let now_frame = gen.recv().unwrap();
                 self.pull_latest_triggers(&mut trigger_rec);
                 for trigger in self.triggers.drain_filter(|t|{
-                    return t.frame_at == now_frame;
+                    t.frame_at == now_frame
                 }){
                     (trigger.event)();
                 }
 
             }
         });
-        return SchedulerSegEx{
+        SchedulerSegEx{
             trigger_sink
         }
     }

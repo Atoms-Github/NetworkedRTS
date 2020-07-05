@@ -34,7 +34,7 @@ pub struct FramedVec<T> {
 
 impl<T> FramedVec<T> where T: Clone{
     pub fn new(frames_index_offset: usize) -> FramedVec<T>{
-        return FramedVec{
+        FramedVec{
             frames_index_offset,
             data: vec![]
         }
@@ -44,7 +44,7 @@ impl<T> FramedVec<T> where T: Clone{
             // Since lists of player sync are inited when players join, we can sometimes try to get info from frames before 0.
             panic!("NOT ALLOWED TO QUERY INFORMATION FROM BEFORE PLAYER IS INITIALIZED.");
         }
-        return self.data.get(frame_index - self.frames_index_offset);
+        self.data.get(frame_index - self.frames_index_offset)
     }
     pub fn get_or_last_query(&self, frame_index: FrameIndex, request_type: FramedVecRequestType) -> (Option<T>, Option<FramedVecRequestTyped>){
         // Returns data if found at index or found at vec end.
@@ -68,10 +68,10 @@ impl<T> FramedVec<T> where T: Clone{
                 data = self.get_last().cloned();
             }
         }
-        return (data, missing);
+        (data, missing)
     }
     pub fn get_last(&self) -> Option<&T>{
-        return self.data.last();
+        self.data.last()
     }
     pub fn get_data_segment(&self, request: &FramedVecRequestTyped) -> FramedVecDataPack<T> { // This is used when server responds to client's missing input request.
         // Here we're assuming that the reqest is of the correct type.
@@ -91,7 +91,7 @@ impl<T> FramedVec<T> where T: Clone{
         }
         match request.type_needed{
             FramedVecRequestType::PlayerInputs(id) => {
-                return FramedVecDataPack{
+                FramedVecDataPack{
                     data: data_found,
                     start_frame: request.request.start_frame,
                     owning_player: id

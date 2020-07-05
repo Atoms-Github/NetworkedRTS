@@ -6,10 +6,11 @@
 #![allow(unused_unsafe)] // TODO2: Investigate the need for this.
 #![feature(drain_filter)]
 
+
 use std::env;
 
-use crate::client::client::*;
-use crate::server::server::*;
+use crate::client::client_mode::*;
+use crate::server::server_mode::*;
 
 
 pub mod client;
@@ -21,7 +22,9 @@ pub const DEBUG_MSGS_MAIN: bool = DEBUG_MSGS_ALL || true;
 pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || true;
 pub const WARN_MSGS: bool = DEBUG_MSGS_ALL || false; // TODO2 Could use warn/custom macros.
 
-
+fn woah(){
+    
+}
 
 fn main() {
     println!("STARTING2345.");
@@ -38,21 +41,20 @@ fn main() {
             let default = "25.84.114.249:5535".to_string();
             println!("Connection/hosting IP not specified! Using {}", default);
             default
-        }
+        }// s
     }; // args.pop().or_else().expect("Connection/hosting IP not specified!");
 
-    let test_arg = args.pop().unwrap_or(String::from("0")).parse::<i64>().unwrap();
-
+    let temp = 2;
     match launch_type.to_lowercase().as_ref() {
         "client" => {
-            client_main(ip, test_arg);
+            client_main(ip);
         }
         "server" => {
             server_main(ip);
         }
         _ => {
             println!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
-            client_main(ip, test_arg);
+            client_main(ip);
         }
     }
 }

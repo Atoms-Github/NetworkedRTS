@@ -38,7 +38,7 @@ impl Request {
 				return false;
 			}
 		}
-		return true;
+		true
 	}
 }
 
@@ -61,6 +61,13 @@ pub struct PendingEntity {
 	types: TypeSet,
 	components_to_add: AnyMap,
 }
+
+impl Default for PendingEntity {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 
 impl PendingEntity {
 	pub fn new() -> PendingEntity {
@@ -85,6 +92,12 @@ impl PendingEntity {
 pub struct PendingEntities {
 	pending_additions: Vec<PendingEntity>,
 	pending_deletions: HashSet<EntityID>,
+}
+
+impl Default for PendingEntities {
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 impl PendingEntities {
@@ -124,6 +137,11 @@ macro_rules! create_system {
 			$(
                     pub $var_name: VerticalStorage<$sty>,
             )*
+		}
+		impl Default for Storages {
+			fn default() -> Self {
+				Self::new()
+			}
 		}
 		
 		impl Storages {
@@ -173,6 +191,12 @@ pub struct World {
 
 }
 
+
+impl Default for World {
+	fn default() -> Self {
+		Self::new()
+	}
+}
 impl World {
 	pub fn get_entity_composition_id(&self, id: EntityID) -> CompositionID {
 		self.entity_storage.get(id).unwrap().composition_id
@@ -190,7 +214,7 @@ impl World {
 			let entity_internal_index = entity.internal_index;
 			
 			// This composition might now be empty. In which case, we're done
-			if self.composition_list[entity.composition_id].global_entity_ids.len() == 0 {
+			if self.composition_list[entity.composition_id].global_entity_ids.is_empty() {
 				continue;
 			}
 			
@@ -231,7 +255,7 @@ impl World {
 		let id = self.composition_list.len();
 		
 		self.composition_list.push(Composition {
-			id: id,
+			id,
 			types: (*type_set).clone(),
 			global_entity_ids: vec![],
 		});
@@ -258,7 +282,7 @@ impl World {
 	}
 	
 	/// Returns every composition this request needs to touch.
-	pub fn internal_make_request(composition_list: &Vec<Composition>, request: Request) -> Vec<CompositionID> {
+	pub fn internal_make_request(composition_list: &[Composition], request: Request) -> Vec<CompositionID> {
 		let mut to_return: Vec<CompositionID> = Vec::new();
 		for (index, composition) in composition_list.iter().enumerate() {
 			if request.matches(&composition) {

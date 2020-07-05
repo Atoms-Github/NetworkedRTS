@@ -1,4 +1,4 @@
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{Receiver};
 use std::thread;
 
 use crate::client::logic_sim_header_seg::*;
@@ -33,7 +33,7 @@ impl InputHandlerIn {
     // This segment's job is to get the user's inputs and just send them on to the data storage.
     pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
                inputs_stream: Receiver<InputChange>, sim_data_storage: Arc<RwLock<SimDataStorage>>,) -> InputHandlerIn {
-        return InputHandlerIn {
+        InputHandlerIn {
             known_frame,
             player_id,
             sim_data_storage,
@@ -60,8 +60,7 @@ impl InputHandlerIn {
             storage.handle_inwards_msg(logic_message);
         });
 
-        return InputHandlerEx{
-        }
+        InputHandlerEx{}
     }
 }
 
