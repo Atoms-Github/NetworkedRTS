@@ -15,8 +15,8 @@ use std::thread;
 // We don't want to allocate too much memory before it's used, so we're going to use a two tiered system.
 // This means our max capacity is around the square of the initial allocation.
 
-const BLOCK_SIZE: usize = 2; // Number of structs created at once.
-const BLOCK_COUNT: usize = 5000; // Number of pointers to struct blocks.
+const BLOCK_SIZE: usize = 1; // Number of structs created at once.
+const BLOCK_COUNT: usize = 5; // Number of pointers to struct blocks.
 const MAX_CAPACITY: usize = BLOCK_SIZE * BLOCK_COUNT;
 
 
@@ -54,12 +54,16 @@ impl<T:Copy> ReadVec<T>{
         }
     }
     pub fn push(&self, new_item: T){
-        let lock = self.write_lock.lock().unwrap(); // Lock other writes until write finished.
+        let mut lock = self.write_lock.lock().unwrap(); // Lock other writes until write finished.
 
         let self_mut = self.hack_make_mut();
 
         if self.blocks_full == self.blocks_vec.len(){ // If we need to make a new block because all blocks are full.
-            assert!(self.blocks_full < BLOCK_COUNT, "Capacity exceeded!");
+            if !(self.blocks_full < BLOCK_COUNT){ // TODO simple
+                std::mem::drop(lock);
+                assert!(false, "Capacity exceeded!"); // TODO1: Can merge.
+            }
+
             let new_block = ReadBlock{
                 items: [new_item; BLOCK_SIZE],
                 items_populated: 0
@@ -107,6 +111,108 @@ impl<T:Copy> ReadVec<T>{
 }
 
 
+
+fn assert_result_ok(r: thread::Result<()>) {
+    let ok = r.is_ok();
+    match r {
+        Ok(r) => {},
+        Err(e) => {
+            if let Some(e) = e.downcast_ref::<&'static str>() {
+                println!("Got an error: {}", e);
+            } else {
+                println!("Got an unknown error: {:?}", e);
+            }
+        }
+    }
+    assert!(ok, "Thread crashed. See print for msg.");
+}
+
+
+
+#[test]
+fn test_loads_of_write_fails(){
+    let read_vec = Arc::new(ReadVec::<usize>::new());
+
+    let mut write_threads = vec![];
+
+    let thread_count = 100;
+    let items_per_thread = 2;
+
+    // Is it when another thread asserts it poisons the mutex?
+
+    for index in 0..thread_count{
+        let capture_read = read_vec.clone();
+        let thread = thread::spawn(move ||{
+
+            let mut actions = 0;
+            while actions < items_per_thread{
+                actions += 1;
+                capture_read.push(3);
+            }
+        });
+        write_threads.push(thread);
+    }
+
+    for thread in write_threads{
+        assert_result_ok(thread.join());
+    }
+    assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);
+
+    assert!(read_vec.len() == thread_count * items_per_thread);
+}
+
+
+#[test]
+fn test_big_mess_of_everything(){
+    let read_vec = Arc::new(ReadVec::<usize>::new());
+
+    read_vec.push(2);
+
+
+    let thread_count = 200;
+    let items_per_thread = 200;
+
+    let mut write_threads = vec![];
+    let mut read_threads = vec![];
+    for index in 0..thread_count{
+        let capture_read = read_vec.clone();
+        let thread = thread::spawn(move ||{
+            let mut actions = 0;
+            while actions < items_per_thread{
+                actions += 1;
+                capture_read.push(3);
+            }
+        });
+        write_threads.push(thread);
+    }
+
+    for index in 0..thread_count{
+        let capture_read = read_vec.clone();
+        let thread = thread::spawn(move ||{
+            let mut actions = 0;
+            while actions < items_per_thread{
+                actions += 1;
+                assert!(*capture_read.get(0).unwrap() == 2);
+            }
+        });
+        read_threads.push(thread);
+    }
+
+    for thread in write_threads{
+        assert_result_ok(thread.join());
+    }
+    for thread in read_threads{
+        assert_result_ok(thread.join());
+    }
+    assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);
+
+
+    assert!(read_vec.len() == thread_count * items_per_thread + 1);
+
+    // TODO1: Add up results and test.
+}
+
+
 const BASIC_PUSH_GET_COUNT: usize = BLOCK_SIZE * 2 + 5;
 
 #[test]
@@ -145,11 +251,10 @@ fn test_write_while_read(){
             writes += 1;
             capture_write.push(100);
         }
-        return 2;
     });
 
-    assert!(read_thread.join().is_ok());
-    assert!(write_thread.join().is_ok());
+    assert_result_ok(read_thread.join());
+    assert_result_ok(write_thread.join());
 
     assert!(read_vec.len() == MAX_CAPACITY);
 }
@@ -174,84 +279,11 @@ fn test_loads_of_read(){
         read_threads.push(read_thread);
     }
 
-    for read_thread in read_threads{
-        assert!(read_thread.join().is_ok());
+    for thread in read_threads{
+        assert_result_ok(thread.join());
     }
 
     assert!(read_vec.len() == 1);
 }
 
-#[test]
-fn test_loads_of_write(){
-    let read_vec = Arc::new(ReadVec::<usize>::new());
 
-    let mut write_threads = vec![];
-
-    let thread_count = 20;
-    let items_per_thread = 2;
-
-    for index in 0..thread_count{
-        let capture_read = read_vec.clone();
-        let thread = thread::spawn(move ||{
-            let mut actions = 0;
-            while actions < items_per_thread{
-                actions += 1;
-                capture_read.push(3);
-            }
-        });
-        write_threads.push(thread);
-    }
-
-    for thread in write_threads{
-        assert!(thread.join().is_ok());
-    }
-    assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);
-
-    let length = read_vec.len();
-    let target_len = thread_count * items_per_thread;
-    assert!(length == target_len);
-}
-
-#[test]
-fn test_big_mess_of_everything(){
-    let read_vec = Arc::new(ReadVec::<usize>::new());
-
-    read_vec.push(2);
-
-
-    let thread_count = 200;
-    let items_per_thread = 200;
-
-    let mut threads = vec![];
-    for index in 0..thread_count{
-        let capture_read = read_vec.clone();
-        let thread = thread::spawn(move ||{
-            let mut actions = 0;
-            while actions < items_per_thread{
-                actions += 1;
-                capture_read.push(3);
-            }
-        });
-        threads.push(thread);
-    }
-
-    for index in 0..thread_count{
-        let capture_read = read_vec.clone();
-        let thread = thread::spawn(move ||{
-            let mut actions = 0;
-            while actions < items_per_thread{
-                actions += 1;
-                assert!(*capture_read.get(0).unwrap() == 2);
-            }
-        });
-        threads.push(thread);
-    }
-
-    for thread in threads{
-        assert!(thread.join().is_ok());
-    }
-    assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);
-
-
-    assert!(read_vec.len() == thread_count * items_per_thread + 1);
-}
