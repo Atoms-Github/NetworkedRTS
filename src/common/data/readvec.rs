@@ -15,11 +15,11 @@ use std::thread;
 // We don't want to allocate too much memory before it's used, so we're going to use a two tiered system.
 // This means our max capacity is around the square of the initial allocation.
 
-const BLOCK_SIZE: usize = 1; // Number of structs created at once.
-const BLOCK_COUNT: usize = 5; // Number of pointers to struct blocks.
+const BLOCK_SIZE: usize = 50; // Number of structs created at once.
+const BLOCK_COUNT: usize = 5000; // Number of pointers to struct blocks.
 const MAX_CAPACITY: usize = BLOCK_SIZE * BLOCK_COUNT;
 
-
+#[derive(Clone, Debug)]
 struct ReadBlock<T:Copy>{
     items: [T; BLOCK_SIZE],
     items_populated: usize
@@ -29,7 +29,7 @@ unsafe impl<T:Copy> Send for ReadBlock<T> {}
 unsafe impl<T:Copy> Sync for ReadBlock<T> {}
 
 
-
+#[derive(Clone, Debug)]
 pub struct ReadVec<T:Copy>{
     blocks_pointers: [*const ReadBlock<T>; BLOCK_COUNT],
     blocks_vec: Vec<Box<ReadBlock<T>>>, // This just stores a bunch of T and deletes them at the right time.
@@ -112,20 +112,7 @@ impl<T:Copy> ReadVec<T>{
 
 
 
-fn assert_result_ok(r: thread::Result<()>) {
-    let ok = r.is_ok();
-    match r {
-        Ok(r) => {},
-        Err(e) => {
-            if let Some(e) = e.downcast_ref::<&'static str>() {
-                println!("Got an error: {}", e);
-            } else {
-                println!("Got an unknown error: {:?}", e);
-            }
-        }
-    }
-    assert!(ok, "Thread crashed. See print for msg.");
-}
+
 
 
 
@@ -154,7 +141,8 @@ fn test_loads_of_write_fails(){
     }
 
     for thread in write_threads{
-        assert_result_ok(thread.join());
+        crate::assert_result_ok(thread.join());
+        crate::assert_result_ok(thread.join());
     }
     assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);
 
@@ -162,28 +150,43 @@ fn test_loads_of_write_fails(){
 }
 
 
+//#[test]
+//fn test_multi_big_mess_of_everything(){
+//
+//    let mut threads = vec![];
+//    for index in 0..1000{ This passed with 1000 :)
+//        let thread = thread::spawn(move ||{
+//            test_big_mess_of_everything();
+//        });
+//        threads.push(thread);
+//    }
+//    for thread in threads{
+//        crate::assert_result_ok(thread.join());
+//    }
+//}
+
 #[test]
 fn test_big_mess_of_everything(){
     let read_vec = Arc::new(ReadVec::<usize>::new());
 
-    read_vec.push(2);
+    read_vec.push(0);
 
 
     let thread_count = 200;
     let items_per_thread = 200;
 
-    let mut write_threads = vec![];
-    let mut read_threads = vec![];
+    let mut threads = vec![];
     for index in 0..thread_count{
         let capture_read = read_vec.clone();
         let thread = thread::spawn(move ||{
             let mut actions = 0;
             while actions < items_per_thread{
+                capture_read.push(actions);
                 actions += 1;
-                capture_read.push(3);
+
             }
         });
-        write_threads.push(thread);
+        threads.push(thread);
     }
 
     for index in 0..thread_count{
@@ -191,25 +194,31 @@ fn test_big_mess_of_everything(){
         let thread = thread::spawn(move ||{
             let mut actions = 0;
             while actions < items_per_thread{
+                assert!(*capture_read.get(0).unwrap() == 0);
                 actions += 1;
-                assert!(*capture_read.get(0).unwrap() == 2);
             }
         });
-        read_threads.push(thread);
+        threads.push(thread);
     }
 
-    for thread in write_threads{
-        assert_result_ok(thread.join());
+
+    for thread in threads{
+        crate::assert_result_ok(thread.join());
     }
-    for thread in read_threads{
-        assert_result_ok(thread.join());
+
+    let target_length = thread_count * items_per_thread + 1;
+    assert!(read_vec.len() == target_length);
+
+    let mut total = 0;
+    for index in 0..target_length{
+        total += *read_vec.get(index).unwrap();
     }
-    assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);
 
-
-    assert!(read_vec.len() == thread_count * items_per_thread + 1);
-
-    // TODO1: Add up results and test.
+    // 1/2bottom + top/2
+    let total_per_thread = (items_per_thread - 1) * items_per_thread / 2;
+    let target_total = total_per_thread * thread_count;
+    println!("Target: {} actual: {}", target_total, total);
+    assert!(target_total == total);
 }
 
 
@@ -253,8 +262,8 @@ fn test_write_while_read(){
         }
     });
 
-    assert_result_ok(read_thread.join());
-    assert_result_ok(write_thread.join());
+    crate::assert_result_ok(read_thread.join());
+    crate::assert_result_ok(write_thread.join());
 
     assert!(read_vec.len() == MAX_CAPACITY);
 }
@@ -280,7 +289,7 @@ fn test_loads_of_read(){
     }
 
     for thread in read_threads{
-        assert_result_ok(thread.join());
+        crate::assert_result_ok(thread.join());
     }
 
     assert!(read_vec.len() == 1);

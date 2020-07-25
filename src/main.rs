@@ -7,7 +7,7 @@
 #![feature(drain_filter)]
 
 
-use std::env;
+use std::{env, thread};
 
 use crate::client::client_mode::*;
 use crate::server::server_mode::*;
@@ -57,4 +57,20 @@ fn main() {
             client_main(ip);
         }
     }
+}
+
+
+fn assert_result_ok(r: thread::Result<()>) {
+    let ok = r.is_ok();
+    match r {
+        Ok(r) => {},
+        Err(e) => {
+            if let Some(e) = e.downcast_ref::<&'static str>() {
+                println!("Got an error: {}", e);
+            } else {
+                println!("Got an unknown error: {:?}", e);
+            }
+        }
+    }
+    assert!(ok, "Thread crashed. See print for msg.");
 }
