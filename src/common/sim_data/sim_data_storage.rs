@@ -1,6 +1,6 @@
 
 use std::collections::HashMap;
-
+use serde::{Deserialize, Serialize};
 
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::gameplay::game::game_state::*;
@@ -10,7 +10,24 @@ use crate::common::sim_data::superstore_seg::*;
 
 use crate::common::types::*;
 use std::sync::mpsc::channel;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, RwLockReadGuard};
+
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SimDataQuery {
+    pub frame_offset: FrameIndex,
+    pub player_id: PlayerID
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SimDataResponse {
+    pub player_id: PlayerID,
+    pub data: SuperstoreData<InputState>
+}
+
+
+
 
 #[derive(Clone, Debug)]
 pub struct SimDataStorageEx {
@@ -22,16 +39,65 @@ impl SimDataStorageEx{
             player_inputs: Default::default(),
         }
     }
-    // Need a 'GetForHead' and 'GetForTail'. 'GetForTail' returns err enum thing.
-
-
+    fn read_data(&self) -> RwLockReadGuard<HashMap<PlayerID, SuperstoreEx<InputState>>>{
+        return self.player_inputs.read().unwrap();
+    }
 
     pub fn clone_info_for_head(&self, frame_index: FrameIndex) -> InfoForSim{
+        let player_inputs = Default::default();
+        for (player_id, superstore) in self.read_data().iter(){
+            // Get or last or default.
+            let state = match superstore.get(frame_index).or_else(||{superstore.get_last()}){
+                Some(state_ref) => {
+                    state_ref.clone()
+                }
+                None => {
+                    Default::default()
+                }
+            };
+            player_inputs.insert(player_id, state);
+        }
+        return InfoForSim{
+            inputs_map: player_inputs
+        }
+    }
+    pub fn clone_info_for_tail(&self, frame_index: FrameIndex) -> Result<InfoForSim, Vec<SimDataQuery>>{
+        let player_inputs = Default::default();
+        let mut problems = vec![];
+        for (player_id, superstore) in self.read_data().iter(){
+            match superstore.get(frame_index){
+                Some(state) => {
+                    player_inputs.insert(player_id, state.clone())
+                }
+                None => {
+                    problems.push(SimDataQuery{
+                        frame_offset: frame_index,
+                        player_id: *player_id
+                    });
+                }
+            }
+        }
+        if problems.is_empty(){
+            return Ok(InfoForSim{
+                inputs_map: player_inputs
+            });
+        }else{
+            return Err(problems);
+        }
 
     }
-    pub fn clone_info_for_tail(&self, frame_index: FrameIndex) -> Result<InfoForSim, Vec<FramedVecRequestTyped>>{
+    pub fn fulfill_query(&self, query: &SimDataQuery) -> SimDataResponse{
+        let superstore = self.read_data().get(*query.player_id).expect("Can't find data for player.");
 
+        let mut query_response = vec![];
+        for i in 0..10{ // modival Amount of data returned from an 'I'm missing data!' request.
+            query_response.push(superstore.get(query.frame_offset + i).unwrap().clone()); // pointless_optimum: Shouldn't need to clone, but this'll likely be a painful fix.
+        }
 
+        SimDataResponse{
+            player_id: query.player_id,
+            data: SuperstoreData { data: vec![], frame_offset: query.frame_offset }
+        }
     }
 
 //    pub fn handle_inwards_msg(&mut self, msg: LogicInwardsMessage){

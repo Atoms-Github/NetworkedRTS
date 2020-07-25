@@ -12,6 +12,7 @@ use crate::common::types::*;
 use crate::common::data::readvec::*;
 use std::sync::{RwLock, Arc, RwLockWriteGuard};
 use std::collections::vec_deque::*;
+use std::io::Seek;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -19,6 +20,7 @@ pub struct SuperstoreData<T> {
     pub data: Vec<T>,
     pub frame_offset: FrameIndex
 }
+
 
 
 pub struct SuperstoreIn<T:Default + Send + Sync + Copy + Eq + 'static>{
@@ -62,7 +64,7 @@ impl<T:Default + Send + Sync + Copy + Eq + 'static> SuperstoreEx<T>{
         }
     }
 
-    pub fn get(&self, abs_index: FrameIndex) -> Option<T>{
+    pub fn get(&self, abs_index: FrameIndex) -> Option<&T>{
         let relative_index = abs_index - self.frame_offset;
 
         if self.cold.len() > relative_index{
@@ -80,6 +82,14 @@ impl<T:Default + Send + Sync + Copy + Eq + 'static> SuperstoreEx<T>{
                     return None;
                 }
             }
+        }
+    }
+    pub fn get_last(&self) -> Option<&T>{
+        let hot_read = self.hot_read.read().unwrap();
+        if hot_read.len() > 0{
+            hot_read.last()
+        }else{
+            self.cold.get(self.cold.len() - 1)
         }
     }
     pub fn push_simple(&self, data: T, frame_index: FrameIndex){

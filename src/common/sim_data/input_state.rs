@@ -5,11 +5,15 @@ use ggez::event::KeyCode;
 use crate::common::types::*;
 
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Copy, Serialize, Deserialize, Debug, PartialEq)]
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird.
     pub new_player: bool
+}
+
+impl Eq for InputState{
+
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
