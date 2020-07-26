@@ -2,14 +2,11 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::gameplay::game::game_state::*;
-use crate::common::sim_data::framed_vec::*;
 use crate::common::sim_data::input_state::*;
 use crate::common::sim_data::superstore_seg::*;
 
 use crate::common::types::*;
-use std::sync::mpsc::channel;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 
@@ -31,10 +28,10 @@ pub struct SimDataResponse {
 
 #[derive(Clone, Debug)]
 pub struct SimDataStorageEx {
-    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>,
+    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>
 }
 impl SimDataStorageEx{
-    pub fn new(bonus_frame_offset: FrameIndex) -> SimDataStorageEx{
+    pub fn new() -> SimDataStorageEx{
         SimDataStorageEx{
             player_inputs: Default::default(),
         }

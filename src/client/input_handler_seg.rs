@@ -24,7 +24,7 @@ impl InputHandlerEx {
 pub struct InputHandlerIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,
-    sim_data_storage: Arc<RwLock<SimDataStorage>>,
+    sim_data_storage: SimDataStorageEx,
     inputs_stream: Receiver<InputChange>,
     curret_input: InputState,
     inputs_arriving_for_frame: FrameIndex,
@@ -32,7 +32,7 @@ pub struct InputHandlerIn {
 impl InputHandlerIn {
     // This segment's job is to get the user's inputs and just send them on to the data storage.
     pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
-               inputs_stream: Receiver<InputChange>, sim_data_storage: Arc<RwLock<SimDataStorage>>,) -> InputHandlerIn {
+               inputs_stream: Receiver<InputChange>, sim_data_storage: SimDataStorageEx,) -> InputHandlerIn {
         InputHandlerIn {
             known_frame,
             player_id,

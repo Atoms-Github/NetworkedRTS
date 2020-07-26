@@ -8,7 +8,7 @@ use crate::client::logic_sim_header_seg::*;
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::network::external_msg::*;
 use crate::common::sim_data::input_state::*;
-use crate::common::sim_data::sim_data_storage_manager::*;
+use crate::common::sim_data::sim_data_storage::*;
 use crate::common::time::scheduler_segment::*;
 use crate::client::net_rec_seg::*;
 use crate::common::time::timekeeping::*;
@@ -31,7 +31,7 @@ impl ClientIn{
         let welcome_info = seg_net.receive_synced_greeting(&self.player_name);
 
         let seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame.clone()).start();
-        let seg_data_storage = SimDataStorageManagerIn::new(welcome_info.game_state.get_simmed_frame_index()).init_data_storage();
+        let seg_data_storage = SimDataStorageEx::new(/*welcome_info.game_state.get_simmed_frame_index()*/).init_data_storage();
         let mut seg_logic_tailer = LogicSegmentTailerIn::new(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone_lock_ref()).start_logic_tail();
         let mut seg_logic_header = LogicSimHeaderIn::new(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone_lock_ref()).start();
         let input_changes = GraphicalSeg::new(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id).start();

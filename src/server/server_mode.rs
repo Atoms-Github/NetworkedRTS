@@ -48,8 +48,8 @@ impl ServerMainStateIn {
         game_state.init_rts();
         game_state
     }
-    fn init_storage_man(&self) -> SimDataStorageManagerEx{
-        let data_store_setup = SimDataStorageManagerIn::new(0);
+    fn init_storage_man(&self) -> SimDataStorageEx{
+        let data_store_setup = SimDataStorageEx::new();
         data_store_setup.init_data_storage()
     }
     fn init_network_hub(&self) -> NetworkingHubEx{
