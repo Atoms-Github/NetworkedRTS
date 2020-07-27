@@ -12,15 +12,15 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SimDataQuery {
+pub struct QuerySimData {
     pub frame_offset: FrameIndex,
     pub player_id: PlayerID
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SimDataResponse {
+pub struct OwnedSimData {
     pub player_id: PlayerID,
-    pub data: SuperstoreData<InputState>
+    pub sim_data: SuperstoreData<InputState>
 }
 
 
@@ -38,6 +38,21 @@ impl SimDataStorageEx{
     }
     fn read_data(&self) -> RwLockReadGuard<HashMap<PlayerID, SuperstoreEx<InputState>>>{
         return self.player_inputs.read().unwrap();
+    }
+
+    pub fn write_data(&self, player_id: PlayerID, data: SuperstoreData<InputState>){
+        let superstore = self.read_data().get(&player_id).expect("Can't find data for player.");
+        superstore.write_requests_sink.send(data).unwrap();
+    }
+    pub fn write_data_single(&self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
+        let data = SuperstoreData{
+            data: vec![state],
+            frame_offset: frame_index
+        };
+        self.write_data(player_id, data);
+    }
+    pub fn write_owned_data(&self, response: OwnedSimData){
+        self.write_data(response.player_id, response.sim_data);
     }
 
     pub fn clone_info_for_head(&self, frame_index: FrameIndex) -> InfoForSim{
@@ -58,7 +73,7 @@ impl SimDataStorageEx{
             inputs_map: player_inputs
         }
     }
-    pub fn clone_info_for_tail(&self, frame_index: FrameIndex) -> Result<InfoForSim, Vec<SimDataQuery>>{
+    pub fn clone_info_for_tail(&self, frame_index: FrameIndex) -> Result<InfoForSim, Vec<QuerySimData>>{
         let player_inputs = Default::default();
         let mut problems = vec![];
         for (player_id, superstore) in self.read_data().iter(){
@@ -67,7 +82,7 @@ impl SimDataStorageEx{
                     player_inputs.insert(player_id, state.clone())
                 }
                 None => {
-                    problems.push(SimDataQuery{
+                    problems.push(QuerySimData {
                         frame_offset: frame_index,
                         player_id: *player_id
                     });
@@ -83,7 +98,7 @@ impl SimDataStorageEx{
         }
 
     }
-    pub fn fulfill_query(&self, query: &SimDataQuery) -> SimDataResponse{
+    pub fn fulfill_query(&self, query: &QuerySimData) -> OwnedSimData {
         let superstore = self.read_data().get(*query.player_id).expect("Can't find data for player.");
 
         let mut query_response = vec![];
@@ -91,11 +106,12 @@ impl SimDataStorageEx{
             query_response.push(superstore.get(query.frame_offset + i).unwrap().clone()); // pointless_optimum: Shouldn't need to clone, but this'll likely be a painful fix.
         }
 
-        SimDataResponse{
+        OwnedSimData {
             player_id: query.player_id,
-            data: SuperstoreData { data: vec![], frame_offset: query.frame_offset }
+            sim_data: SuperstoreData { data: vec![], frame_offset: query.frame_offset }
         }
     }
+
 
 //    pub fn handle_inwards_msg(&mut self, msg: LogicInwardsMessage){
 //        match msg{

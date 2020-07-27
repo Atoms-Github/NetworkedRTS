@@ -12,7 +12,7 @@ pub const HEAD_AHEAD_FRAME_COUNT: usize = 3;
 pub struct LogicSimHeaderIn {
     known_frame_info: KnownFrameInfo,
     tail_rec: Receiver<GameState>,
-    all_frames: Arc<RwLock<SimDataStorage>>,
+    data_store: SimDataStorageEx,
 }
 pub struct LogicSimHeaderEx {
     pub head_rec: Option<Receiver<GameState>>,
@@ -27,11 +27,11 @@ fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<Game
 
 impl LogicSimHeaderIn {
     pub fn new(known_frame_info: KnownFrameInfo, tail_rec: Receiver<GameState>,
-               data_store: Arc<RwLock<SimDataStorage>>)
+               data_store: SimDataStorageEx)
                -> LogicSimHeaderIn {
         LogicSimHeaderIn {
             known_frame_info,
-            all_frames: data_store,
+            data_store: data_store,
             tail_rec
         }
     }
@@ -60,7 +60,7 @@ impl LogicSimHeaderIn {
 
         let mut infos_for_sims = vec![];
         { // Get all information needed from frames database.
-            let all_frames = self.all_frames.read().unwrap();
+            let all_frames = self.data_store.read().unwrap();
 //            println!("{:?}", all_frames);
             for frame_index in frames_to_sim_range{
                 let clone_data_result = all_frames.clone_info_for_sim(frame_index);

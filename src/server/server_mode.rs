@@ -18,7 +18,7 @@ pub enum ServerActableMessage{
 }
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
-    seg_data_store: SimDataStorageManagerEx,
+    data_store: SimDataStorageEx,
     seg_logic_tail: LogicSimTailerEx,
     known_frame_zero: KnownFrameInfo
 }
@@ -56,7 +56,7 @@ impl ServerMainStateIn {
         let net_hub_setup = NetworkingHubIn::new(self.hosting_ip.clone());
         net_hub_setup.start_hosting()
     }
-    fn init_logic_tailer(&self, data_handle: Arc<RwLock<SimDataStorage>>) -> LogicSimTailerEx{
+    fn init_logic_tailer(&self, data_handle: SimDataStorageEx) -> LogicSimTailerEx{
         let game_state = self.init_state();
         let setup = LogicSegmentTailerIn::new(self.known_frame.clone(), game_state, data_handle);
         setup.start_logic_tail()
@@ -67,7 +67,7 @@ impl ServerMainStateIn {
         let seg_logic_tail = self.init_logic_tailer(seg_data_store.clone_lock_ref());
         ServerMainStateEx {
             seg_net_hub,
-            seg_data_store,
+            data_store: seg_data_store,
             seg_logic_tail,
             known_frame_zero: self.known_frame,
         }
@@ -121,7 +121,7 @@ impl ServerMainStateEx {
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             },
             ExternalMsg::GameUpdate(update_info) => {
-                self.seg_data_store.logic_msgs_sink.send(update_info.clone()).unwrap();
+                self.data_store.logic_msgs_sink.send(update_info.clone()).unwrap();
                 self.seg_net_hub.yeet_sink.send(
                     DistributableNetMessage::ToAllExcept(player_id, ExternalMsg::GameUpdate(update_info))
                 ).unwrap();

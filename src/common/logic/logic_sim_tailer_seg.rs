@@ -7,22 +7,15 @@ use serde::{Deserialize, Serialize};
 use crate::common::gameplay::game::game_state::*;
 use crate::common::sim_data::framed_vec::*;
 use crate::common::sim_data::input_state::*;
-use crate::common::sim_data::sim_data_storage::*;
 use crate::common::time::timekeeping::*;
 use crate::common::types::*;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum LogicInwardsMessage {
-    SyncerInputsUpdate(FramedVecDataPack<InputState>),
-}
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum LogicOutwardsMessage {
-    DataNeeded(FramedVecRequestTyped),
-    IAmInitialized()
-}
+use crate::common::sim_data::superstore_seg::*;
+use crate::common::sim_data::sim_data_storage::*;
+
 
 pub struct LogicSimTailerEx {
-    pub from_logic_rec: Receiver<LogicOutwardsMessage>,
+    pub from_logic_rec: Receiver<QuerySimData>,
     pub tail_lock: Arc<RwLock<GameState>>,
     pub new_tail_states_rec: Option<Receiver<GameState>>,
 
@@ -33,42 +26,37 @@ impl LogicSimTailerEx {
 pub struct LogicSegmentTailerIn {
     known_frame_info: KnownFrameInfo,
     tail_lock: Arc<RwLock<GameState>>,
-    all_frames: Arc<RwLock<SimDataStorage>>
+    data_store: SimDataStorageEx
     // Logic layer shouldn't know it's player ID.
 }
 
 impl LogicSegmentTailerIn {
     pub fn new(known_frame_info: KnownFrameInfo, state_tail: GameState,
-               data_store: Arc<RwLock<SimDataStorage>>) -> LogicSegmentTailerIn {
+               data_store: SimDataStorageEx) -> LogicSegmentTailerIn {
         LogicSegmentTailerIn {
             known_frame_info,
             tail_lock: Arc::new(RwLock::new(state_tail)),
-            all_frames: data_store
+            data_store
         }
     }
 
-    fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<FramedVecRequestTyped>{
-
-        let sim_query_result;
-        {
-            sim_query_result = self.all_frames.read().unwrap().clone_info_for_sim(tail_frame_to_sim);
+    fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<QuerySimData>{
+        let sim_query_result = self.data_store.clone_info_for_tail(tail_frame_to_sim);
+        match sim_query_result{
+            Ok(sim_info) => {
+                let mut state_handle = self.tail_lock.write().unwrap();
+                state_handle.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
+                println!("TailSim {}", state_handle.get_simmed_frame_index());
+                return vec![];
+            }
+            Err(problems) =>{
+                return problems;
+            }
         }
-        if !sim_query_result.missing_info.is_empty(){
-            return sim_query_result.missing_info;
-        }
-        // It's fine to hold the state for a while as this thread is important - and we shouldn't be long in comparison to head.
-        {
-            let mut state_handle = self.tail_lock.write().unwrap();
-            state_handle.simulate_tick(sim_query_result.sim_info, FRAME_DURATION_MILLIS);
-            println!("TailSim {}", state_handle.get_simmed_frame_index());
-        }
-
-
-        return vec![]; // No missing frames.
     }
 
 
-    fn start_thread(mut self, outwards_messages: Sender<LogicOutwardsMessage>, mut new_tails_sink: Sender<GameState>){
+    fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<GameState>){
         thread::spawn(move ||{
             let first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;
             println!("Logic got state. Next frame to sim: {}", first_frame_to_sim);
@@ -85,7 +73,7 @@ impl LogicSegmentTailerIn {
                     }else{
                         for problem in &problems{
                             println!("Logic missing info so asking: {:?}", problem);
-                            outwards_messages.send( LogicOutwardsMessage::DataNeeded(problem.clone()) ).unwrap();
+                            outwards_messages.send( problem.clone() ).unwrap();
                         }
                         break; // No more catch up possible without info.
                     }

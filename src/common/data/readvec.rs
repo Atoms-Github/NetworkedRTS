@@ -19,25 +19,25 @@ const BLOCK_SIZE: usize = 50; // Number of structs created at once.
 const BLOCK_COUNT: usize = 5000; // Number of pointers to struct blocks.
 const MAX_CAPACITY: usize = BLOCK_SIZE * BLOCK_COUNT;
 
-#[derive(Clone, Debug)]
-struct ReadBlock<T:Copy>{
+#[derive(Clone)]
+struct ReadBlock<T>{
     items: [T; BLOCK_SIZE],
     items_populated: usize
 }
 
-unsafe impl<T:Copy> Send for ReadBlock<T> {}
-unsafe impl<T:Copy> Sync for ReadBlock<T> {}
+unsafe impl<T> Send for ReadBlock<T> {}
+unsafe impl<T> Sync for ReadBlock<T> {}
 
 
-#[derive(Clone, Debug)]
-pub struct ReadVec<T:Copy>{
+#[derive(Clone)] // TODO2: Implement debug.
+pub struct ReadVec<T>{
     blocks_pointers: [*const ReadBlock<T>; BLOCK_COUNT],
     blocks_vec: Vec<Box<ReadBlock<T>>>, // This just stores a bunch of T and deletes them at the right time.
     blocks_full: usize,
     write_lock: Mutex<()>
 }
-unsafe impl<T:Copy> Send for ReadVec<T> {}
-unsafe impl<T:Copy> Sync for ReadVec<T> {}
+unsafe impl<T> Send for ReadVec<T> {}
+unsafe impl<T> Sync for ReadVec<T> {}
 
 impl<T:Copy> ReadVec<T>{
     pub fn new() -> ReadVec<T>{

@@ -11,6 +11,7 @@ use crate::common::gameplay::game::game_state::*;
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::time::timekeeping::*;
 use crate::common::types::*;
+use crate::common::sim_data::sim_data_storage::*;
 
 pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{
     let (sender, receive) = channel::<ExternalMsg>();
@@ -61,7 +62,7 @@ impl ExternalMsg{
 pub enum ExternalMsg {
     ConnectionInitQuery(NetMsgGreetingQuery),
     ConnectionInitResponse(NetMsgGreetingResponse),
-    GameUpdate(LogicInwardsMessage),
+    GameUpdate(OwnedSimData),
     LocalCommand(LocalCommandInfo),
     PingTestQuery(SystemTime),
     PingTestResponse(NetMsgPingTestResponse),

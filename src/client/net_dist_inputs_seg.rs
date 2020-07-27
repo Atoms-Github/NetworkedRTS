@@ -22,14 +22,14 @@ pub struct NetInputDistIn {
     player_id: PlayerID,
     first_frame_to_send: FrameIndex,
     to_net: Sender<ExternalMsg>,
-    sim_data_storage: Arc<RwLock<SimDataStorage>>,
+    sim_data_storage: SimDataStorageEx,
 }
 impl NetInputDistIn {
     // This segment's job is to send the player's last 20 inputs to the network.
     // We don't care if we get a very rare syncing issue where inputs come in after we send them off because we're going to be sending last 20
     // so it will correct the next time something is sent.
     pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
-                to_net: Sender<ExternalMsg>, sim_data_storage: Arc<RwLock<SimDataStorage>>) -> NetInputDistIn {
+                to_net: Sender<ExternalMsg>, sim_data_storage: SimDataStorageEx) -> NetInputDistIn {
         NetInputDistIn {
             known_frame,
             player_id,

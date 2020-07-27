@@ -48,16 +48,10 @@ impl InputHandlerIn {
         thread::spawn(move ||{
             let next_input = self.inputs_stream.recv().unwrap();
             next_input.apply_to_state(&mut self.curret_input);
-            let mut storage = self.sim_data_storage.write().unwrap();
-
+            // TODO2: What if there are no inputs from player?
             let mut inputs_arriving_for_frame = self.known_frame.get_intended_current_frame() + HEAD_AHEAD_FRAME_COUNT;
 
-            let logic_message = LogicInwardsMessage::SyncerInputsUpdate(FramedVecDataPack{
-                data: vec![self.curret_input.clone()],
-                start_frame: inputs_arriving_for_frame,
-                owning_player: self.player_id,
-            });
-            storage.handle_inwards_msg(logic_message);
+            self.sim_data_storage.write_data_single(self.player_id, self.curret_input.clone(), inputs_arriving_for_frame);
         });
 
         InputHandlerEx{}
