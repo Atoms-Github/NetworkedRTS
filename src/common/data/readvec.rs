@@ -64,13 +64,12 @@ impl<T> ReadVec<T>{
                 assert!(false, "Capacity exceeded!"); // TODO1: Can merge.
             }
 
-            let test_array;
+            let block_data;
             unsafe{
-                test_array = std::mem::MaybeUninit::zeroed().assume_init(); // dcwct TODO1: Run all tests again for this.
+                block_data = std::mem::MaybeUninit::zeroed().assume_init();
             }
-//            let test_array = [new_item; BLOCK_SIZE];
             let new_block = ReadBlock{
-                items: test_array,
+                items: block_data,
                 items_populated: 0
             };
             let boxed = Box::new(new_block);

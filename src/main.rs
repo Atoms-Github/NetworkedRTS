@@ -6,6 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_unsafe)] // TODO2: Investigate the need for this.
 #![feature(drain_filter)]
+#![allow(unused_attributes)]
 
 
 use std::{env, thread};

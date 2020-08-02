@@ -93,11 +93,11 @@ impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreEx<T>{
             self.cold.get(self.cold.len() - 1).cloned()
         }
     }
-    fn test_push_simple(&self, data: T, frame_index: FrameIndex){
+    fn test_set_simple(&self, data: T, frame_index: FrameIndex){
         self.write_requests_sink.lock().unwrap().send(SuperstoreData{
             data: vec![data],
             frame_offset: frame_index
-        });
+        }).unwrap();
     }
 }
 
@@ -164,9 +164,9 @@ impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreIn<T>{ // TODO2: 
                 // - Cool using local. (After lock so gets to read only aren't wrong)
                 let items_cooled = self.cool();
                 // - Swap pub and local.
-//                let swap_temp = *hot_read_handle; // Save pub. dcwct
-//                *hot_read_handle = self.hot_write; // Set pub to local. dcwct
-//                self.hot_write = swap_temp; dcwct
+                let swap_temp = *hot_read_handle; // Save pub.
+                *hot_read_handle = self.hot_write; // Set pub to local.
+                self.hot_write = swap_temp;
                 // - Unlock pub.
                 std::mem::drop(hot_read_handle);
                 // - Write same data to local again. (No need for validation)
@@ -178,44 +178,42 @@ impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreIn<T>{ // TODO2: 
     }
 }
 
-#[test]
-fn test_superstore(){
-    let simed_frame = Arc::new(RwLock::new(0));
-    let superstore = Arc::new(SuperstoreEx::start(0, simed_frame.clone()));
 
-    let mut threads = vec![];
+mod tests{
+    use super::*;
+
+    #[test]
+    fn test_superstore(){
+        let simed_frame = Arc::new(RwLock::new(0));
+        let superstore = Arc::new(SuperstoreEx::start(0, simed_frame.clone()));
 
 
-    let thread_count = 5;
-    let push_per_thread = 10;
-    for thread_index in 0..thread_count{
-        let capture = superstore.clone();
-        let thread = thread::spawn(move ||{
-            for i in 0..push_per_thread{
-                capture.test_push_simple(thread_index, i + thread_index * thread_count);
-            }
-        });
-        threads.push(thread);
+        // TODO1: Add a thing to the test which infini-reads the last item until it's set.
+
+        let items_per_bunch = 10;
+        for i in 0..items_per_bunch{
+            superstore.test_set_simple(i, i);
+        }
+
+        *simed_frame.write().unwrap() = 1;// dcwct Super crashes when this is 0.
+
+        for i in 0..items_per_bunch{
+            superstore.test_set_simple(i, i + items_per_bunch);
+        }
+
+        let expected_total = (items_per_bunch - 1) * items_per_bunch / 2;
+        let mut total = 0;
+        for i in 0..(items_per_bunch) * 2{
+            let result = superstore.get_clone(i);
+            assert!(result.is_some());
+            total += result.unwrap();
+            println!("I: {}", i);
+        }
+        assert_eq!(total, expected_total);
     }
 
-    *simed_frame.write().unwrap() = 30;
-
-    for thread_index in 0..thread_count{
-        let capture = superstore.clone();
-        let thread = thread::spawn(move ||{
-            for i in 0..push_per_thread{
-                capture.test_push_simple(thread_index, i + thread_index * thread_count);
-            }
-        });
-        threads.push(thread);
-    }
-
-    for thread in threads{
-        crate::assert_result_ok(thread.join());
-    }
-
-    // TODO1: Implement test that checks order too.
 }
+
 
 
 
