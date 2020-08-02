@@ -96,7 +96,6 @@ impl ClientEx{
 //            grabbed.start_dist();
         }), my_init_frame);
 
-
         loop{
             thread::sleep(Duration::from_millis(10000));
         }

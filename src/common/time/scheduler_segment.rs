@@ -58,7 +58,7 @@ impl SchedulerSegIn {
     }
 }
 impl SchedulerSegEx {
-    pub fn schedule_event(&self, event: Box<dyn FnOnce() + Send>, frame: FrameIndex){
+    pub fn schedule_event(&self, event: Box<dyn FnOnce()>, frame: FrameIndex){
         self.trigger_sink.send(
             ScheduledTrigger{
                 frame_at: frame,

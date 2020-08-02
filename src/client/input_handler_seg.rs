@@ -20,7 +20,7 @@ pub struct InputHandlerEx {
 impl InputHandlerEx {
 
 }
-#[derive(Debug)]
+#[derive()]
 pub struct InputHandlerIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,

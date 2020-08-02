@@ -24,7 +24,7 @@ pub struct SuperstoreData<T> {
 
 
 
-pub struct SuperstoreIn<T:Default + Send + Sync + Eq + 'static>{
+pub struct SuperstoreIn<T:Default + Send + Eq + 'static>{
     frame_offset: usize,
     hot_write: Box<VecDeque<T>>,
     hot_read: ArcRw<Box<VecDeque<T>>>,
@@ -33,16 +33,15 @@ pub struct SuperstoreIn<T:Default + Send + Sync + Eq + 'static>{
     tail_simed_index: ArcRw<FrameIndex> // pointless_optimum: Can swap out for a racy thing.
 }
 #[derive(Clone)]
-pub struct SuperstoreEx<T:Default + Send + Sync + Eq + 'static>{
+pub struct SuperstoreEx<T:Default + Send + Eq + 'static>{
     frame_offset: usize,
-    pub write_requests_sink: Sender<SuperstoreData<T>>,
     hot_read: ArcRw<Box<VecDeque<T>>>, // TODO2: Perhaps don't need box.
     cold: ReadVec<T>
 }
 
 
-impl<T:Default + Send + Sync + Eq + 'static> SuperstoreEx<T>{
-    pub fn start(frame_offset: usize, tail_simed_index: ArcRw<FrameIndex>)-> Self{
+impl<T:Default + Send + Eq + 'static> SuperstoreEx<T>{
+    pub fn start(frame_offset: usize, tail_simed_index: ArcRw<FrameIndex>)-> (Self, Sender<SuperstoreData<T>>){
         let (writes_sink, writes_rec) = channel();
         let hot_read = Arc::new(RwLock::new(Box::new([T::default(); 20])));
 
@@ -57,12 +56,11 @@ impl<T:Default + Send + Sync + Eq + 'static> SuperstoreEx<T>{
             tail_simed_index
         }.start();
 
-        Self{
+        (Self{
             frame_offset,
-            write_requests_sink: writes_sink,
             hot_read,
             cold
-        }
+        }, writes_sink)
     }
 
     pub fn get(&self, abs_index: FrameIndex) -> Option<&T>{
@@ -101,7 +99,7 @@ impl<T:Default + Send + Sync + Eq + 'static> SuperstoreEx<T>{
     }
 }
 
-impl<T:Default + Send + Sync + Eq + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
+impl<T:Default + Send + Eq + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
     fn write_data(&mut self, new_data: SuperstoreData<T>, validate_freezer: bool){
         let relative_index = new_data.frame_offset - self.frame_offset;
 

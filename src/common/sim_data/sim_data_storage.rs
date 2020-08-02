@@ -8,7 +8,8 @@ use crate::common::sim_data::superstore_seg::*;
 
 use crate::common::types::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
-
+use std::sync::mpsc::{Sender, channel};
+use std::thread;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -24,18 +25,38 @@ pub struct OwnedSimData {
 }
 
 
-
-
-#[derive(Clone, Debug)]
-pub struct SimDataStorageEx {
-    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>
+#[derive(Clone)]
+pub struct SimDataStorageIn {
+    write_sinks: HashMap<PlayerID, Sender<InputState>>
 }
-impl SimDataStorageEx{
-    pub fn new() -> SimDataStorageEx{
-        SimDataStorageEx{
-            player_inputs: Default::default(),
+
+#[derive(Clone)]
+pub struct SimDataStorageEx {
+    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>,
+    write_sink: Sender<OwnedSimData>
+}
+impl SimDataStorageIn{
+    pub fn new() -> Self{
+        SimDataStorageIn{
+            write_sinks: Default::default()
         }
     }
+    pub fn start(self) -> SimDataStorageEx{
+        let (write_sink, write_rec) = channel();
+        thread::spawn(move||{
+            loop{
+                let owned_msg = write_rec.recv().unwrap();
+
+                self.write_sinks.
+            }
+        });
+        SimDataStorageEx{
+            player_inputs: Default::default(),
+            write_sink
+        }
+    }
+}
+impl SimDataStorageEx{
     fn read_data(&self) -> RwLockReadGuard<HashMap<PlayerID, SuperstoreEx<InputState>>>{
         return self.player_inputs.read().unwrap();
     }
