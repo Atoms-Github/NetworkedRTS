@@ -25,45 +25,25 @@ pub struct OwnedSimData {
 }
 
 
-#[derive(Clone)]
-pub struct SimDataStorageIn {
-    write_sinks: HashMap<PlayerID, Sender<InputState>>
-}
 
 #[derive(Clone)]
 pub struct SimDataStorageEx {
-    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>,
-    write_sink: Sender<OwnedSimData>
-}
-impl SimDataStorageIn{
-    pub fn new() -> Self{
-        SimDataStorageIn{
-            write_sinks: Default::default()
-        }
-    }
-    pub fn start(self) -> SimDataStorageEx{
-        let (write_sink, write_rec) = channel();
-        thread::spawn(move||{
-            loop{
-                let owned_msg = write_rec.recv().unwrap();
-
-                self.write_sinks.
-            }
-        });
-        SimDataStorageEx{
-            player_inputs: Default::default(),
-            write_sink
-        }
-    }
+    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>
 }
 impl SimDataStorageEx{
+    pub fn new() -> SimDataStorageEx{
+        SimDataStorageEx{
+            player_inputs: Default::default()
+        }
+    }
     fn read_data(&self) -> RwLockReadGuard<HashMap<PlayerID, SuperstoreEx<InputState>>>{
         return self.player_inputs.read().unwrap();
     }
 
     pub fn write_data(&self, player_id: PlayerID, data: SuperstoreData<InputState>){
-        let superstore = self.read_data().get(&player_id).expect("Can't find data for player.");
-        superstore.write_requests_sink.send(data).unwrap();
+        let players = self.read_data();
+        let superstore = players.get(&player_id).expect("Can't find data for player.");
+        superstore.write_requests_sink.lock().unwrap().send(data).unwrap();
     }
     pub fn write_data_single(&self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
         let data = SuperstoreData{
@@ -77,30 +57,24 @@ impl SimDataStorageEx{
     }
 
     pub fn clone_info_for_head(&self, frame_index: FrameIndex) -> InfoForSim{
-        let player_inputs = Default::default();
+        let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         for (player_id, superstore) in self.read_data().iter(){
             // Get or last or default.
-            let state = match superstore.get(frame_index).or_else(||{superstore.get_last()}){
-                Some(state_ref) => {
-                    state_ref.clone()
-                }
-                None => {
-                    Default::default()
-                }
-            };
-            player_inputs.insert(player_id, state);
+            let state = superstore.get_clone(frame_index).or_else(||{superstore.get_last_clone()}).unwrap_or_default();
+
+            player_inputs.insert(*player_id, state);
         }
         return InfoForSim{
             inputs_map: player_inputs
         }
     }
     pub fn clone_info_for_tail(&self, frame_index: FrameIndex) -> Result<InfoForSim, Vec<QuerySimData>>{
-        let player_inputs = Default::default();
+        let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         let mut problems = vec![];
         for (player_id, superstore) in self.read_data().iter(){
-            match superstore.get(frame_index){
+            match superstore.get_clone(frame_index){
                 Some(state) => {
-                    player_inputs.insert(player_id, state.clone())
+                    player_inputs.insert(*player_id, state);
                 }
                 None => {
                     problems.push(QuerySimData {
@@ -120,11 +94,12 @@ impl SimDataStorageEx{
 
     }
     pub fn fulfill_query(&self, query: &QuerySimData) -> OwnedSimData {
-        let superstore = self.read_data().get(*query.player_id).expect("Can't find data for player.");
+        let players = self.read_data();
+        let superstore = players.get(&query.player_id).expect("Can't find data for player.");
 
         let mut query_response = vec![];
         for i in 0..10{ // modival Amount of data returned from an 'I'm missing data!' request.
-            query_response.push(superstore.get(query.frame_offset + i).unwrap().clone()); // pointless_optimum: Shouldn't need to clone, but this'll likely be a painful fix.
+            query_response.push(superstore.get_clone(query.frame_offset + i).unwrap()); // pointless_optimum: Shouldn't need to clone, but this'll likely be a painful fix.
         }
 
         OwnedSimData {

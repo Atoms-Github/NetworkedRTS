@@ -19,7 +19,7 @@ const BLOCK_SIZE: usize = 50; // Number of structs created at once.
 const BLOCK_COUNT: usize = 5000; // Number of pointers to struct blocks.
 const MAX_CAPACITY: usize = BLOCK_SIZE * BLOCK_COUNT;
 
-#[derive(Clone)]
+#[derive()]
 struct ReadBlock<T>{
     items: [T; BLOCK_SIZE],
     items_populated: usize
@@ -28,8 +28,8 @@ struct ReadBlock<T>{
 unsafe impl<T> Send for ReadBlock<T> {}
 unsafe impl<T> Sync for ReadBlock<T> {}
 
-
-#[derive(Clone)] // TODO2: Implement debug.
+// TODO1: T - copy?
+#[derive()] // TODO2: Implement debug.
 pub struct ReadVec<T>{
     blocks_pointers: [*const ReadBlock<T>; BLOCK_COUNT],
     blocks_vec: Vec<Box<ReadBlock<T>>>, // This just stores a bunch of T and deletes them at the right time.
@@ -39,7 +39,7 @@ pub struct ReadVec<T>{
 unsafe impl<T> Send for ReadVec<T> {}
 unsafe impl<T> Sync for ReadVec<T> {}
 
-impl<T:Copy> ReadVec<T>{
+impl<T> ReadVec<T>{
     pub fn new() -> ReadVec<T>{
         ReadVec{
             blocks_pointers: [null(); BLOCK_COUNT],
@@ -64,8 +64,13 @@ impl<T:Copy> ReadVec<T>{
                 assert!(false, "Capacity exceeded!"); // TODO1: Can merge.
             }
 
+            let test_array;
+            unsafe{
+                test_array = std::mem::MaybeUninit::zeroed().assume_init(); // dcwct TODO1: Run all tests again for this.
+            }
+//            let test_array = [new_item; BLOCK_SIZE];
             let new_block = ReadBlock{
-                items: [new_item; BLOCK_SIZE],
+                items: test_array,
                 items_populated: 0
             };
             let boxed = Box::new(new_block);
@@ -141,7 +146,6 @@ fn test_loads_of_write_fails(){
     }
 
     for thread in write_threads{
-        crate::assert_result_ok(thread.join());
         crate::assert_result_ok(thread.join());
     }
     assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);

@@ -31,7 +31,7 @@ impl LogicSimHeaderIn {
                -> LogicSimHeaderIn {
         LogicSimHeaderIn {
             known_frame_info,
-            data_store: data_store,
+            data_store,
             tail_rec
         }
     }
@@ -60,12 +60,9 @@ impl LogicSimHeaderIn {
 
         let mut infos_for_sims = vec![];
         { // Get all information needed from frames database.
-            let all_frames = self.data_store.read().unwrap();
 //            println!("{:?}", all_frames);
             for frame_index in frames_to_sim_range{
-                let clone_data_result = all_frames.clone_info_for_sim(frame_index);
-                // We don't care about the failures - we want any info we can get.
-                infos_for_sims.push(clone_data_result.sim_info);
+                infos_for_sims.push(self.data_store.clone_info_for_head(frame_index));
             }
         } // Discard frame info database lock.
 

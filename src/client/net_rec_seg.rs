@@ -56,8 +56,7 @@ impl NetRecSegIn{
                         if crate::DEBUG_MSGS_MAIN {
                             println!("Net rec message: {:?}", update);
                         }
-
-                        self.to_logic.send(update).unwrap();
+                        self.storage.write_owned_data(update);
                     },
                     ExternalMsg::LocalCommand(_) => {panic!("Not implemented!")},
                     ExternalMsg::PingTestResponse(_) => {

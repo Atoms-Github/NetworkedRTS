@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::common::network::external_msg::*;
 use crate::common::types::*;
 use crate::common::data::readvec::*;
-use std::sync::{RwLock, Arc, RwLockWriteGuard};
+use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 use std::collections::vec_deque::*;
 use std::io::Seek;
 use crate::client::input_handler_seg::*;
@@ -24,82 +24,84 @@ pub struct SuperstoreData<T> {
 
 
 
-pub struct SuperstoreIn<T:Default + Send + Eq + 'static>{
+pub struct SuperstoreIn<T:Clone + Default + Send + Eq + Sync + 'static>{
     frame_offset: usize,
     hot_write: Box<VecDeque<T>>,
     hot_read: ArcRw<Box<VecDeque<T>>>,
     write_requests_rec: Receiver<SuperstoreData<T>>,
-    cold: ReadVec<T>,
+    cold: Arc<ReadVec<T>>,
     tail_simed_index: ArcRw<FrameIndex> // pointless_optimum: Can swap out for a racy thing.
 }
-#[derive(Clone)]
-pub struct SuperstoreEx<T:Default + Send + Eq + 'static>{
+#[derive()]
+pub struct SuperstoreEx<T:Clone + Default + Send + Eq + Sync + 'static>{
     frame_offset: usize,
     hot_read: ArcRw<Box<VecDeque<T>>>, // TODO2: Perhaps don't need box.
-    cold: ReadVec<T>
+    cold: Arc<ReadVec<T>>,
+    pub write_requests_sink: Mutex<Sender<SuperstoreData<T>>>, // pointless_optimum: Could setup a system where each thread has a local clone of this instead.
 }
 
 
-impl<T:Default + Send + Eq + 'static> SuperstoreEx<T>{
-    pub fn start(frame_offset: usize, tail_simed_index: ArcRw<FrameIndex>)-> (Self, Sender<SuperstoreData<T>>){
+impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreEx<T>{
+    pub fn start(frame_offset: usize, tail_simed_index: ArcRw<FrameIndex>)-> Self{
         let (writes_sink, writes_rec) = channel();
-        let hot_read = Arc::new(RwLock::new(Box::new([T::default(); 20])));
+        let hot_read = Arc::new(RwLock::new(Box::new(VecDeque::new())));
 
         let cold = Arc::new(ReadVec::new());
 
         SuperstoreIn{
             frame_offset,
-            hot_write: Box::new([T::default(); 20]),
+            hot_write: Box::new(VecDeque::new()),
             hot_read: hot_read.clone(),
             write_requests_rec: writes_rec,
             cold: cold.clone(),
             tail_simed_index
         }.start();
 
-        (Self{
+        Self{
             frame_offset,
             hot_read,
-            cold
-        }, writes_sink)
+            cold,
+            write_requests_sink: Mutex::new(writes_sink)
+        }
     }
 
-    pub fn get(&self, abs_index: FrameIndex) -> Option<&T>{
+    pub fn get_clone(&self, abs_index: FrameIndex) -> Option<T>{ // optimum Shouldn't need to clone so much. Should be possible never cloning.
         let relative_index = abs_index - self.frame_offset;
 
         if self.cold.len() > relative_index{
-            return self.cold.get(relative_index);
+            return self.cold.get(relative_index).cloned();
         }else{
             // Need to go into hot. We'll need to lock hot and re-check cold length as it might have changed.
             let hot_lock = self.hot_read.read().unwrap();
             if self.cold.len() > relative_index{
-                return self.cold.get(relative_index);
+                return self.cold.get(relative_index).cloned();
             }else{
                 let relative_to_hot = relative_index - self.cold.len();
                 if hot_lock.len() > relative_to_hot{
-                    return hot_lock[relative_to_hot];
+                    return hot_lock.get(relative_to_hot).cloned();
                 }else{
                     return None;
                 }
             }
         }
     }
-    pub fn get_last(&self) -> Option<&T>{
+    pub fn get_last_clone(&self) -> Option<T>{
         let hot_read = self.hot_read.read().unwrap();
         if hot_read.len() > 0{
-            hot_read.last()
+            hot_read.get(hot_read.len() - 1).cloned()
         }else{
-            self.cold.get(self.cold.len() - 1)
+            self.cold.get(self.cold.len() - 1).cloned()
         }
     }
-    pub fn push_simple(&self, data: T, frame_index: FrameIndex){
-        self.write_requests_sink.send(SuperstoreData{
+    fn test_push_simple(&self, data: T, frame_index: FrameIndex){
+        self.write_requests_sink.lock().unwrap().send(SuperstoreData{
             data: vec![data],
             frame_offset: frame_index
         });
     }
 }
 
-impl<T:Default + Send + Eq + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
+impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
     fn write_data(&mut self, new_data: SuperstoreData<T>, validate_freezer: bool){
         let relative_index = new_data.frame_offset - self.frame_offset;
 
@@ -114,7 +116,7 @@ impl<T:Default + Send + Eq + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T 
                 }
             }else{
                 if validate_freezer{ // pointless_optimum
-                    assert!(self.cold.get(relative_index).unwrap().eq(item), "Tried to write over cold data with different data!");
+                    assert!(self.cold.get(relative_index).unwrap().eq(&item), "Tried to write over cold data with different data!");
                 }
             }
         }
@@ -140,6 +142,7 @@ impl<T:Default + Send + Eq + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T 
     }
     pub fn start(mut self){
         thread::spawn(move||{
+            let hot_read_handle = self.hot_read.clone();
             loop{
                 let new_data = self.write_requests_rec.recv().unwrap();
 
@@ -157,13 +160,13 @@ impl<T:Default + Send + Eq + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T 
                 // - Write to local. (With cold validation)
                 self.write_data(new_data.clone(), true);
                 // - Lock pub.
-                let mut hot_read_handle = self.hot_read.write().unwrap();
+                let mut hot_read_handle = hot_read_handle.write().unwrap();
                 // - Cool using local. (After lock so gets to read only aren't wrong)
                 let items_cooled = self.cool();
                 // - Swap pub and local.
-                let swap_temp = *hot_read_handle; // Save pub.
-                *hot_read_handle = self.hot_write; // Set pub to local.
-                self.hot_write = swap_temp;
+//                let swap_temp = *hot_read_handle; // Save pub. dcwct
+//                *hot_read_handle = self.hot_write; // Set pub to local. dcwct
+//                self.hot_write = swap_temp; dcwct
                 // - Unlock pub.
                 std::mem::drop(hot_read_handle);
                 // - Write same data to local again. (No need for validation)
@@ -189,7 +192,7 @@ fn test_superstore(){
         let capture = superstore.clone();
         let thread = thread::spawn(move ||{
             for i in 0..push_per_thread{
-                capture.push_simple(thread_index, i + thread_index * thread_count);
+                capture.test_push_simple(thread_index, i + thread_index * thread_count);
             }
         });
         threads.push(thread);
@@ -201,7 +204,7 @@ fn test_superstore(){
         let capture = superstore.clone();
         let thread = thread::spawn(move ||{
             for i in 0..push_per_thread{
-                capture.push_simple(thread_index, i + thread_index * thread_count);
+                capture.test_push_simple(thread_index, i + thread_index * thread_count);
             }
         });
         threads.push(thread);

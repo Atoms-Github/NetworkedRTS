@@ -16,7 +16,7 @@ pub struct NetInputDistEx {
 impl NetInputDistEx {
 
 }
-#[derive(Debug)]
+#[derive()]
 pub struct NetInputDistIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,

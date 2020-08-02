@@ -49,8 +49,7 @@ impl ServerMainStateIn {
         game_state
     }
     fn init_storage_man(&self) -> SimDataStorageEx{
-        let data_store_setup = SimDataStorageEx::new();
-        data_store_setup.init_data_storage()
+        SimDataStorageEx::new()
     }
     fn init_network_hub(&self) -> NetworkingHubEx{
         let net_hub_setup = NetworkingHubIn::new(self.hosting_ip.clone());
@@ -64,7 +63,7 @@ impl ServerMainStateIn {
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = self.init_network_hub();
         let seg_data_store = self.init_storage_man();
-        let seg_logic_tail = self.init_logic_tailer(seg_data_store.clone_lock_ref());
+        let seg_logic_tail = self.init_logic_tailer(seg_data_store.clone());
         ServerMainStateEx {
             seg_net_hub,
             data_store: seg_data_store,
@@ -121,7 +120,7 @@ impl ServerMainStateEx {
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             },
             ExternalMsg::GameUpdate(update_info) => {
-                self.data_store.logic_msgs_sink.send(update_info.clone()).unwrap();
+                self.data_store.write_owned_data(update_info.clone());
                 self.seg_net_hub.yeet_sink.send(
                     DistributableNetMessage::ToAllExcept(player_id, ExternalMsg::GameUpdate(update_info))
                 ).unwrap();
