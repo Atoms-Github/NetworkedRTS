@@ -132,7 +132,8 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         let mut num_to_cool = *simed_index + 1 - self.cold.len();
 
         for i in 0..num_to_cool{
-            let new_item_to_freeze = self.hot_write.pop_front().unwrap_or_default();
+            assert!(self.hot_write.len() > 0, "Simed frame was ahead of the cooling wave! How did we sim tail without data?");
+            let new_item_to_freeze = self.hot_write.pop_front().unwrap();
             self.cold.push(new_item_to_freeze);
         }
 
@@ -210,8 +211,9 @@ mod tests{
             superstore.test_set_simple(i, i);
         }
 
-        *simed_frame.write().unwrap() = 1;// dcwct Super crashes when this is 0.
-        // dcwct Might all not work as race. Need to wait before query.
+        thread::sleep(Duration::from_millis(1000)); // dcwct Needed?
+        *simed_frame.write().unwrap() = 5;// dcwct Super crashes when this is 0.
+        // dcwct By writing waits in tests we're admitting it's a race.
 
         for i in 0..items_per_bunch{
             superstore.test_set_simple(i, i + items_per_bunch);
@@ -220,7 +222,7 @@ mod tests{
         let expected_total = (items_per_bunch - 1) * items_per_bunch / 2;
         let mut total = 0;
         thread::sleep(Duration::from_millis(100)); // dcwct Needed?
-        for i in 0..(items_per_bunch) * 2{
+        for i in 0..(items_per_bunch * 2){
             let result = superstore.get_clone(i);
             assert!(result.is_some());
             total += result.unwrap();
