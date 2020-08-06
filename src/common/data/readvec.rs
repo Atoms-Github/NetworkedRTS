@@ -93,11 +93,12 @@ impl<T> ReadVec<T>{
         let outblock_index = (index - inblock_index) / BLOCK_SIZE;
 
         if self.blocks_pointers[outblock_index] != null() {
+            let block;
             unsafe{
-                let block = &*self.blocks_pointers[outblock_index];
-                if inblock_index < block.items_populated{
-                    return Some(&block.items[inblock_index]);
-                }
+                block = &*self.blocks_pointers[outblock_index];
+            }
+            if inblock_index < block.items_populated{
+                return Some(&block.items[inblock_index]);
             }
         }
         return None;
@@ -147,9 +148,9 @@ fn test_loads_of_write_fails(){
     for thread in write_threads{
         crate::assert_result_ok(thread.join());
     }
-    assert!(*read_vec.get(BLOCK_SIZE + 1).unwrap() == 3);
+    assert_eq!(*read_vec.get(BLOCK_SIZE + 1).unwrap(), 3);
 
-    assert!(read_vec.len() == thread_count * items_per_thread);
+    assert_eq!(read_vec.len(), thread_count * items_per_thread);
 }
 
 
@@ -197,7 +198,7 @@ fn test_big_mess_of_everything(){
         let thread = thread::spawn(move ||{
             let mut actions = 0;
             while actions < items_per_thread{
-                assert!(*capture_read.get(0).unwrap() == 0);
+                assert_eq!(*capture_read.get(0).unwrap(), 0);
                 actions += 1;
             }
         });
@@ -210,7 +211,7 @@ fn test_big_mess_of_everything(){
     }
 
     let target_length = thread_count * items_per_thread + 1;
-    assert!(read_vec.len() == target_length);
+    assert_eq!(read_vec.len(), target_length);
 
     let mut total = 0;
     for index in 0..target_length{
@@ -221,7 +222,7 @@ fn test_big_mess_of_everything(){
     let total_per_thread = (items_per_thread - 1) * items_per_thread / 2;
     let target_total = total_per_thread * thread_count;
     println!("Target: {} actual: {}", target_total, total);
-    assert!(target_total == total);
+    assert_eq!(target_total, total);
 }
 
 
@@ -230,14 +231,14 @@ const BASIC_PUSH_GET_COUNT: usize = BLOCK_SIZE * 2 + 5;
 #[test]
 fn test_basic_write_read(){
     let small_vec = ReadVec::<usize>::new();
-    assert!(small_vec.len() == 0);
+    assert_eq!(small_vec.len(), 0);
 
     for test_index in 0..BASIC_PUSH_GET_COUNT{
         small_vec.push(test_index);
-        assert!(*small_vec.get(test_index).unwrap() == test_index);
+        assert_eq!(*small_vec.get(test_index).unwrap(), test_index);
     }
 
-    assert!(small_vec.len() == BASIC_PUSH_GET_COUNT);
+    assert_eq!(small_vec.len(), BASIC_PUSH_GET_COUNT);
 }
 
 
@@ -251,7 +252,7 @@ fn test_write_while_read(){
         let mut reads = 0;
         while reads < 100_000{
             reads += 1;
-            assert!(*capture_read.get(0).unwrap() == 6);
+            assert_eq!(*capture_read.get(0).unwrap(), 6);
         }
     });
 
@@ -268,7 +269,7 @@ fn test_write_while_read(){
     crate::assert_result_ok(read_thread.join());
     crate::assert_result_ok(write_thread.join());
 
-    assert!(read_vec.len() == MAX_CAPACITY);
+    assert_eq!(read_vec.len(), MAX_CAPACITY);
 }
 
 
@@ -285,7 +286,7 @@ fn test_loads_of_read(){
             let mut reads = 0;
             while reads < 10_000{
                 reads += 1;
-                assert!(*capture_read.get(0).unwrap() == 6);
+                assert_eq!(*capture_read.get(0).unwrap(), 6);
             }
         });
         read_threads.push(read_thread);
@@ -295,7 +296,7 @@ fn test_loads_of_read(){
         crate::assert_result_ok(thread.join());
     }
 
-    assert!(read_vec.len() == 1);
+    assert_eq!(read_vec.len(), 1);
 }
 
 

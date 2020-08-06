@@ -24,7 +24,7 @@ pub struct SuperstoreData<T> {
 
 
 
-pub struct SuperstoreIn<T:Clone + Default + Send + Eq + Sync + 'static>{
+pub struct SuperstoreIn<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
     frame_offset: usize,
     hot_write: Box<VecDeque<T>>,
     hot_read: ArcRw<Box<VecDeque<T>>>,
@@ -33,7 +33,7 @@ pub struct SuperstoreIn<T:Clone + Default + Send + Eq + Sync + 'static>{
     tail_simed_index: ArcRw<FrameIndex> // pointless_optimum: Can swap out for a racy thing.
 }
 #[derive()]
-pub struct SuperstoreEx<T:Clone + Default + Send + Eq + Sync + 'static>{
+pub struct SuperstoreEx<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
     frame_offset: usize,
     hot_read: ArcRw<Box<VecDeque<T>>>, // TODO2: Perhaps don't need box.
     cold: Arc<ReadVec<T>>,
@@ -41,7 +41,7 @@ pub struct SuperstoreEx<T:Clone + Default + Send + Eq + Sync + 'static>{
 }
 
 
-impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreEx<T>{
+impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreEx<T>{
     pub fn start(frame_offset: usize, tail_simed_index: ArcRw<FrameIndex>)-> Self{
         let (writes_sink, writes_rec) = channel();
         let hot_read = Arc::new(RwLock::new(Box::new(VecDeque::new())));
@@ -100,8 +100,14 @@ impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreEx<T>{
         }).unwrap();
     }
 }
+// Ah. The internal thread paniced, then the extenal thread found nothing.
 
-impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
+// When the non-active thread panics or asserts, the main one quits unexpectedly.
+
+//Ah. Console only shows basic test results and successful print msgs. Need to look at the console.
+
+
+impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
     fn write_data(&mut self, new_data: SuperstoreData<T>, validate_freezer: bool){
         let relative_index = new_data.frame_offset - self.frame_offset;
 
@@ -116,7 +122,7 @@ impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreIn<T>{ // TODO2: 
                 }
             }else{
                 if validate_freezer{ // pointless_optimum
-                    assert!(self.cold.get(relative_index).unwrap().eq(&item), "Tried to write over cold data with different data!");
+                    assert_eq!(self.cold.get(relative_index).unwrap(), &item, "Tried to write over cold data with different data!");
                 }
             }
         }
@@ -135,14 +141,14 @@ impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreIn<T>{ // TODO2: 
 
 
     }
-    fn pop_hot/*I get to call a function "cool" :)*/(&mut self, num_to_pop: usize){
+    fn pop_hot(&mut self, num_to_pop: usize){
         for i in 0..num_to_pop{
             self.hot_write.pop_front(); // pointless_optimum
         }
     }
     pub fn start(mut self){
         thread::spawn(move||{
-            let hot_read_handle = self.hot_read.clone();
+            let hot_read_arc = self.hot_read.clone();
             loop{
                 let new_data = self.write_requests_rec.recv().unwrap();
 
@@ -160,13 +166,22 @@ impl<T:Clone + Default + Send + Eq + Sync + 'static> SuperstoreIn<T>{ // TODO2: 
                 // - Write to local. (With cold validation)
                 self.write_data(new_data.clone(), true);
                 // - Lock pub.
-                let mut hot_read_handle = hot_read_handle.write().unwrap();
+                let mut hot_read_handle = hot_read_arc.write().unwrap();
                 // - Cool using local. (After lock so gets to read only aren't wrong)
                 let items_cooled = self.cool();
                 // - Swap pub and local.
-                let swap_temp = *hot_read_handle; // Save pub.
-                *hot_read_handle = self.hot_write; // Set pub to local.
-                self.hot_write = swap_temp;
+
+
+
+                std::mem::swap(&mut self.hot_write, &mut hot_read_handle);
+//                let save_pub = hot_read_handle.clone(); // dcwct TODO1 No clone should be required.
+//                *hot_read_handle = self.hot_write; // Set pub to local.
+//                self.hot_write = save_pub;
+
+
+
+
+
                 // - Unlock pub.
                 std::mem::drop(hot_read_handle);
                 // - Write same data to local again. (No need for validation)
@@ -196,6 +211,7 @@ mod tests{
         }
 
         *simed_frame.write().unwrap() = 1;// dcwct Super crashes when this is 0.
+        // dcwct Might all not work as race. Need to wait before query.
 
         for i in 0..items_per_bunch{
             superstore.test_set_simple(i, i + items_per_bunch);
@@ -203,6 +219,7 @@ mod tests{
 
         let expected_total = (items_per_bunch - 1) * items_per_bunch / 2;
         let mut total = 0;
+        thread::sleep(Duration::from_millis(100)); // dcwct Needed?
         for i in 0..(items_per_bunch) * 2{
             let result = superstore.get_clone(i);
             assert!(result.is_some());
