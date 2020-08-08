@@ -30,7 +30,7 @@ pub struct SuperstoreIn<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync 
     hot_read: ArcRw<Box<VecDeque<T>>>,
     write_requests_rec: Receiver<SuperstoreData<T>>,
     cold: Arc<ReadVec<T>>,
-    tail_simed_index: ArcRw<FrameIndex> // pointless_optimum: Can swap out for a racy thing.
+    tail_simed_index: ArcRw<i32> // pointless_optimum: Can swap out for a racy thing.
 }
 #[derive()]
 pub struct SuperstoreEx<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
@@ -42,7 +42,7 @@ pub struct SuperstoreEx<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync 
 
 
 impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreEx<T>{
-    pub fn start(frame_offset: usize, tail_simed_index: ArcRw<FrameIndex>)-> Self{
+    pub fn start(frame_offset: usize, tail_simed_index: ArcRw<i32>)-> Self{
         let (writes_sink, writes_rec) = channel();
         let hot_read = Arc::new(RwLock::new(Box::new(VecDeque::new())));
 
@@ -77,6 +77,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
                 return self.cold.get(relative_index).cloned();
             }else{
                 let relative_to_hot = relative_index - self.cold.len();
+                let test_hot_lock_len = hot_lock.len();
                 if hot_lock.len() > relative_to_hot{
                     return hot_lock.get(relative_to_hot).cloned();
                 }else{
@@ -109,6 +110,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 
 impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
     fn write_data(&mut self, new_data: SuperstoreData<T>, validate_freezer: bool){
+//        println!("Writing {} datas, first one {:?} to {} validate: {}", new_data.data.len(), new_data.data.get(0).unwrap(), new_data.frame_offset, validate_freezer);
         let relative_index = new_data.frame_offset - self.frame_offset;
 
         let cold_length = self.cold.len();
@@ -118,6 +120,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
                 if hot_index < self.hot_write.len(){
                     self.hot_write[hot_index] = item;
                 }else{
+                    assert_eq!(hot_index, self.hot_write.len(), "Tried to write item more than 1 past the end! Support could be added."); // dcwct Should do something about blanks
                     self.hot_write.push_back(item);
                 }
             }else{
@@ -129,7 +132,11 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
     }
     fn cool/*I get to call a function "cool" :)*/(&mut self) -> usize{
         let simed_index = self.tail_simed_index.read().unwrap();
-        let mut num_to_cool = *simed_index + 1 - self.cold.len();
+
+        let test_simed_index = *simed_index;
+        let test_cold_len = self.cold.len();
+
+        let mut num_to_cool = *simed_index + 1 - self.cold.len() as i32;
 
         for i in 0..num_to_cool{
             assert!(self.hot_write.len() > 0, "Simed frame was ahead of the cooling wave! How did we sim tail without data?");
@@ -138,11 +145,12 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         }
 
 
-        return num_to_cool;
+        return num_to_cool as usize;
 
 
     }
     fn pop_hot(&mut self, num_to_pop: usize){
+        assert!(num_to_pop < 100_000, "Cooled too many. Probably integer underflow.");
         for i in 0..num_to_pop{
             self.hot_write.pop_front(); // pointless_optimum
         }
@@ -151,20 +159,20 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         thread::spawn(move||{
             let hot_read_arc = self.hot_read.clone();
             loop{
-                let new_data = self.write_requests_rec.recv().unwrap();
-
+                let new_data = self.write_requests_rec.recv().expect("Poison. Don't care.");
                 // We want to:
                 // - Write to local. (With cold validation)
                 // - Lock pub.
                 // - Cool using local. (After lock so gets to read only aren't wrong)
                 // - Swap pub and local.
                 // - Unlock pub.
-                // - Write same data to local again. (No need for validation)
                 // - Pop local same as other local.
+                // - Write same data to local again. (No need for validation)
 
 
                 // We want to:
                 // - Write to local. (With cold validation)
+                println!("LocalHotLen {}.", self.hot_write.len());
                 self.write_data(new_data.clone(), true);
                 // - Lock pub.
                 let mut hot_read_handle = hot_read_arc.write().unwrap();
@@ -173,22 +181,16 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
                 // - Swap pub and local.
 
 
-
-                std::mem::swap(&mut self.hot_write, &mut hot_read_handle);
-//                let save_pub = hot_read_handle.clone(); // dcwct TODO1 No clone should be required.
-//                *hot_read_handle = self.hot_write; // Set pub to local.
-//                self.hot_write = save_pub;
-
-
-
-
+                std::mem::swap(&mut self.hot_write, &mut hot_read_handle); // TODO1: Should just need to swap boxes. This might be copying data.
 
                 // - Unlock pub.
                 std::mem::drop(hot_read_handle);
-                // - Write same data to local again. (No need for validation)
-                self.write_data(new_data, false);
+
                 // - Pop local same as other local.
                 self.pop_hot(items_cooled);
+                // - Write same data to local again. (No need for validation)
+                self.write_data(new_data.clone() /* dcwct No clone*/, false);
+
             }
         });
     }
@@ -200,7 +202,7 @@ mod tests{
 
     #[test]
     fn test_superstore(){
-        let simed_frame = Arc::new(RwLock::new(0));
+        let simed_frame = Arc::new(RwLock::new(-1));
         let superstore = Arc::new(SuperstoreEx::start(0, simed_frame.clone()));
 
 
@@ -209,28 +211,30 @@ mod tests{
         let items_per_bunch = 10;
         for i in 0..items_per_bunch{
             superstore.test_set_simple(i, i);
+
         }
 
-        thread::sleep(Duration::from_millis(1000)); // dcwct Needed?
+        thread::sleep(Duration::from_millis(500)); // dcwct Needed?
         *simed_frame.write().unwrap() = 5;// dcwct Super crashes when this is 0.
         // dcwct By writing waits in tests we're admitting it's a race.
 
         for i in 0..items_per_bunch{
-            superstore.test_set_simple(i, i + items_per_bunch);
+            superstore.test_set_simple(i + items_per_bunch, i + items_per_bunch);
         }
 
-        let expected_total = (items_per_bunch - 1) * items_per_bunch / 2;
+        let expected_total = (items_per_bunch * 2 - 1) * items_per_bunch * 2 / 2;
         let mut total = 0;
-        thread::sleep(Duration::from_millis(100)); // dcwct Needed?
+        thread::sleep(Duration::from_millis(500)); // dcwct Needed?
         for i in 0..(items_per_bunch * 2){
+            if i == 19{
+                let test = 2;
+            }
             let result = superstore.get_clone(i);
             assert!(result.is_some());
             total += result.unwrap();
-            println!("I: {}", i);
         }
         assert_eq!(total, expected_total);
     }
-
 }
 
 
@@ -286,13 +290,3 @@ mod tests{
 // The idea was we wouldn't ever need to lock.
 
 // Can you lock the arc, advance the push, then unlock the arc?
-
-
-
-
-
-
-
-
-
-
