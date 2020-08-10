@@ -24,9 +24,6 @@ pub const DEBUG_MSGS_MAIN: bool = DEBUG_MSGS_ALL || true;
 pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || true;
 pub const WARN_MSGS: bool = DEBUG_MSGS_ALL || false; // TODO2 Could use warn/custom macros.
 
-fn woah(){
-    
-}
 
 fn main() {
     println!("STARTING2345.");

@@ -155,11 +155,19 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
             self.hot_write.pop_front(); // pointless_optimum
         }
     }
+    // TODO1: Replace recv loops with channel.iter()
     pub fn start(mut self){
         thread::spawn(move||{
             let hot_read_arc = self.hot_read.clone();
             loop{
-                let new_data = self.write_requests_rec.recv().expect("Poison. Don't care.");
+                let new_data = match self.write_requests_rec.recv(){
+                    Ok(data) => {
+                        data
+                    }
+                    Err(error) => {
+                        return; // If no more writes needed, can close thread.
+                    }
+                };
                 // We want to:
                 // - Write to local. (With cold validation)
                 // - Lock pub.
@@ -172,7 +180,6 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 
                 // We want to:
                 // - Write to local. (With cold validation)
-                println!("LocalHotLen {}.", self.hot_write.len());
                 self.write_data(new_data.clone(), true);
                 // - Lock pub.
                 let mut hot_read_handle = hot_read_arc.write().unwrap();
@@ -256,9 +263,6 @@ mod tests{
 
 
 
-
-
-// // // // // //
 
 
 
