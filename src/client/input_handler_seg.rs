@@ -42,18 +42,20 @@ impl InputHandlerIn {
             inputs_arriving_for_frame: std::usize::MAX
         }
     }
-    // You should be able to send anything you want to
-
     pub fn start_dist(mut self) -> InputHandlerEx{
         thread::spawn(move ||{
-            let next_input = self.inputs_stream.recv().unwrap();
-            next_input.apply_to_state(&mut self.curret_input);
-            // TODO2: What if there are no inputs from player?
-            let mut inputs_arriving_for_frame = self.known_frame.get_intended_current_frame() + HEAD_AHEAD_FRAME_COUNT;
+            let frame_gen = self.known_frame.start_frame_stream_from_now();
+            loop{
+                let tail_frame = frame_gen.recv().unwrap();
+                let next_input = self.inputs_stream.recv().unwrap();
+                next_input.apply_to_state(&mut self.curret_input);
+                // TODO2: What if there are no inputs from player?
+                let mut inputs_arriving_for_frame = self.known_frame.get_intended_current_frame() + HEAD_AHEAD_FRAME_COUNT;
 
-            self.sim_data_storage.write_data_single(self.player_id, self.curret_input.clone(), inputs_arriving_for_frame);
+                self.sim_data_storage.write_data_single(self.player_id, self.curret_input.clone(), inputs_arriving_for_frame);
+            }
+
         });
-
         InputHandlerEx{}
     }
 }

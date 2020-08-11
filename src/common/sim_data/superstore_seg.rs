@@ -24,7 +24,7 @@ pub struct SuperstoreData<T> {
 
 
 
-pub struct SuperstoreIn<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
+struct SuperstoreIn<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
     frame_offset: usize,
     hot_write: Box<VecDeque<T>>,
     hot_read: ArcRw<Box<VecDeque<T>>>,
@@ -65,7 +65,11 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         }
     }
 
+    pub fn get_first_frame_index(&self) -> FrameIndex{
+        return self.frame_offset;
+    }
     pub fn get_clone(&self, abs_index: FrameIndex) -> Option<T>{ // optimum Shouldn't need to clone so much. Should be possible never cloning.
+        assert!(abs_index >= self.frame_offset, format!("Tried to get data from before superstore starte. TargetIndex: {}, FirstDataAt: {}", abs_index, self.frame_offset));
         let relative_index = abs_index - self.frame_offset;
 
         if self.cold.len() > relative_index{
@@ -133,13 +137,14 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
     fn cool/*I get to call a function "cool" :)*/(&mut self) -> usize{
         let simed_index = self.tail_simed_index.read().unwrap();
 
-        let test_simed_index = *simed_index;
-        let test_cold_len = self.cold.len();
+        let simed_index_relative = *simed_index - self.frame_offset as i32;
 
-        let mut num_to_cool = *simed_index + 1 - self.cold.len() as i32;
+        let mut num_to_cool = (simed_index_relative + 1 - self.cold.len() as i32).max(0);
+
+//        assert!(num_to_cool >= 0, format!("Cooling negative amounts: {} simed_index: {} frame offset: {}", num_to_cool, *simed_index, self.frame_offset)); // dcwct. Hmm.
 
         for i in 0..num_to_cool{
-            assert!(self.hot_write.len() > 0, "Simed frame was ahead of the cooling wave! How did we sim tail without data?");
+            assert!(self.hot_write.len() > 0, format!("Simed frame was ahead of the cooling wave! How did we sim tail without data? SimedFrame: {}", *simed_index));
             let new_item_to_freeze = self.hot_write.pop_front().unwrap();
             self.cold.push(new_item_to_freeze);
         }
@@ -150,7 +155,6 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 
     }
     fn pop_hot(&mut self, num_to_pop: usize){
-        assert!(num_to_pop < 100_000, "Cooled too many. Probably integer underflow.");
         for i in 0..num_to_pop{
             self.hot_write.pop_front(); // pointless_optimum
         }

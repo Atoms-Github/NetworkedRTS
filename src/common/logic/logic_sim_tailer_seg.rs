@@ -46,6 +46,7 @@ impl LogicSegmentTailerIn {
             Ok(sim_info) => {
                 let mut state_handle = self.tail_lock.write().unwrap();
                 state_handle.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
+                self.data_store.set_tail_frame(tail_frame_to_sim as i32);
                 println!("TailSim {}", state_handle.get_simmed_frame_index());
                 return vec![];
             }
@@ -59,7 +60,7 @@ impl LogicSegmentTailerIn {
     fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<GameState>){
         thread::spawn(move ||{
             let first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;
-            println!("Logic got state. Next frame to sim: {}", first_frame_to_sim);
+            println!("Logic next frame to sim: {}", first_frame_to_sim);
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
 //            let (execution_sink, execution_rec) = channel();
             let mut frame_to_sim = first_frame_to_sim;

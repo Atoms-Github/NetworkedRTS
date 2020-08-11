@@ -25,25 +25,46 @@ pub struct OwnedSimData {
 }
 
 
-
 #[derive(Clone)]
 pub struct SimDataStorageEx {
-    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>
+    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>,
+    tail_simed_index: ArcRw<i32>
 }
 impl SimDataStorageEx{
     pub fn new() -> SimDataStorageEx{
         SimDataStorageEx{
-            player_inputs: Default::default()
+            player_inputs: Default::default(),
+            tail_simed_index: Arc::new(RwLock::new(-1))
         }
+    }
+    pub fn set_tail_frame(&self, tail_frame: i32){
+        *self.tail_simed_index.write().unwrap() = tail_frame;
     }
     fn read_data(&self) -> RwLockReadGuard<HashMap<PlayerID, SuperstoreEx<InputState>>>{
         return self.player_inputs.read().unwrap();
     }
+    fn init_new_player(&self, player_id: PlayerID, frame_offset: FrameIndex){
+        println!("Creating new superstore for new player {}", player_id);
+        let mut players_writable = self.player_inputs.write().unwrap();
+
+        let new_superstore = SuperstoreEx::start(frame_offset, self.tail_simed_index.clone());
+        players_writable.insert(player_id, new_superstore);
+    }
 
     pub fn write_data(&self, player_id: PlayerID, data: SuperstoreData<InputState>){
+
         let players = self.read_data();
-        let superstore = players.get(&player_id).expect("Can't find data for player.");
-        superstore.write_requests_sink.lock().unwrap().send(data).unwrap();
+
+        let players_containing_target_player = if players.contains_key(&player_id){
+            players
+        }else{
+            // On new player, we do want to read, then write, then read again. This doesn't happen often.
+            std::mem::drop(players); // So can write to.
+            assert!(data.data.get(0).unwrap().new_player, "New data for unknown player which didn't have 'newplayer' flag set on first input. Packet misordering might cause this, so we can remove this assert and just ignore instead.");
+            self.init_new_player(player_id, data.frame_offset);
+            self.read_data()
+        };
+        players_containing_target_player.get(&player_id).unwrap().write_requests_sink.lock().unwrap().send(data).unwrap();
     }
     pub fn write_data_single(&self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
         let data = SuperstoreData{
@@ -59,10 +80,13 @@ impl SimDataStorageEx{
     pub fn clone_info_for_head(&self, frame_index: FrameIndex) -> InfoForSim{
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         for (player_id, superstore) in self.read_data().iter(){
-            // Get or last or default.
-            let state = superstore.get_clone(frame_index).or_else(||{superstore.get_last_clone()}).unwrap_or_default();
+            if frame_index >= superstore.get_first_frame_index() { // If we're not talking about before the player joined.
+                // Get or last or default.
+                let state = superstore.get_clone(frame_index).or_else(||{superstore.get_last_clone()}).unwrap_or_default();
 
-            player_inputs.insert(*player_id, state);
+                player_inputs.insert(*player_id, state);
+            }
+
         }
         return InfoForSim{
             inputs_map: player_inputs
@@ -72,17 +96,20 @@ impl SimDataStorageEx{
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         let mut problems = vec![];
         for (player_id, superstore) in self.read_data().iter(){
-            match superstore.get_clone(frame_index){
-                Some(state) => {
-                    player_inputs.insert(*player_id, state);
-                }
-                None => {
-                    problems.push(QuerySimData {
-                        frame_offset: frame_index,
-                        player_id: *player_id
-                    });
+            if frame_index >= superstore.get_first_frame_index(){ // If we're not talking about before the player joined.
+                match superstore.get_clone(frame_index){
+                    Some(state) => {
+                        player_inputs.insert(*player_id, state);
+                    }
+                    None => {
+                        problems.push(QuerySimData {
+                            frame_offset: frame_index,
+                            player_id: *player_id
+                        });
+                    }
                 }
             }
+
         }
         if problems.is_empty(){
             return Ok(InfoForSim{

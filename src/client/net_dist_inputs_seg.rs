@@ -43,8 +43,8 @@ impl NetInputDistIn {
         let tail_frame_rec = self.known_frame.start_frame_stream_from_any(self.first_frame_to_send);
         thread::spawn(move ||{
             loop{
-                let head_frame = tail_frame_rec.recv().unwrap() + HEAD_AHEAD_FRAME_COUNT;
-//                let logic_message = LogicInwardsMessage::SyncerInputsUpdate(FramedVecDataPack{ TODO1
+//                let head_frame = tail_frame_rec.recv().unwrap() + HEAD_AHEAD_FRAME_COUNT;
+//                let logic_message = LogicInwardsMessage::SyncerInputsUpdate(FramedVecDataPack{
 //                    data: vec![curret_input.clone()],
 //                    start_frame: inputs_arriving_for_frame,
 //                    owning_player: self.player_id,

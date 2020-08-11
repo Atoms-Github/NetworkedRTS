@@ -44,7 +44,7 @@ impl GraphicalSeg {
 
         let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
-            .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path(""); // TODO: Find what resource path.
+            .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path(""); // TODO3: Find what resource path.
 
 
 

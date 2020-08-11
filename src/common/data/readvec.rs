@@ -28,7 +28,6 @@ struct ReadBlock<T>{
 unsafe impl<T> Send for ReadBlock<T> {}
 unsafe impl<T> Sync for ReadBlock<T> {}
 
-// TODO1: T - copy?
 #[derive()] // TODO2: Implement debug.
 pub struct ReadVec<T>{
     blocks_pointers: [*const ReadBlock<T>; BLOCK_COUNT],
@@ -59,10 +58,7 @@ impl<T> ReadVec<T>{
         let self_mut = self.hack_make_mut();
 
         if self.blocks_full == self.blocks_vec.len(){ // If we need to make a new block because all blocks are full.
-            if !(self.blocks_full < BLOCK_COUNT){ // TODO simple
-                std::mem::drop(lock);
-                assert!(false, "Capacity exceeded!"); // TODO1: Can merge.
-            }
+            assert!(self.blocks_full < BLOCK_COUNT, "Capacity exceeded!");
 
             let block_data;
             unsafe{

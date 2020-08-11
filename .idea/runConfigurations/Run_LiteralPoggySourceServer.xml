@@ -3,7 +3,7 @@
     <option name="channel" value="DEFAULT" />
     <option name="command" value="run --package literal_poggy_source --bin literal_poggy_source Server" />
     <option name="allFeatures" value="false" />
-    <option name="nocapture" value="false" />
+    <option name="nocapture" value="true" />
     <option name="backtrace" value="SHORT" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
