@@ -108,34 +108,14 @@ impl EventHandler for GraphicalSeg {
 
 
 
-    fn key_down_event(
-        &mut self,
-        ctx: &mut Context,
-        keycode: KeyCode,
-        _keymod: KeyMods,
-        repeat: bool,
-    ) {
+    fn key_down_event(&mut self, ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods, repeat: bool) {
         if !repeat{
-            self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, true)).unwrap();
+            let send_result = self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, true));
+            assert!(send_result.is_ok(), format!("Failed to take input: {:?}", send_result));
         }
-
-
-//        match keycode {
-//            KeyCode::Escape => event::quit(ctx),
-//            _ => (), // Do nothing
-//        }
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods) {
         self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, false)).unwrap();
     }
 }
-
-//fn update(&mut self, ctx: &mut Context) -> GameResult {
-//        const DESIRED_FPS: u32 = 120;
-//        while timer::check_update_time(ctx, DESIRED_FPS) {
-//            let seconds = 1.0 / (DESIRED_FPS as f32);
-//            // No logic currently :)
-//        }
-//        Ok(())
-//    }
