@@ -58,29 +58,25 @@ impl LogicSegmentTailerIn {
 
 
     fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<GameState>){
-        thread::spawn(move ||{
-            let first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;
+        thread::spawn(move ||
+        {
+            let mut first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;
             println!("Logic next frame to sim: {}", first_frame_to_sim);
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
-//            let (execution_sink, execution_rec) = channel();
-            let mut frame_to_sim = first_frame_to_sim;
             loop{
-                let frame_to_sim_if_no_problems = generator.recv().unwrap();
-
-                while frame_to_sim < frame_to_sim_if_no_problems{ // Try to catch up as much as possible.
+                let frame_to_sim = generator.recv().unwrap();
+                loop{
                     let problems = self.try_sim_tail_frame(frame_to_sim);
-                    if problems.is_empty() {
-                        frame_to_sim += 1;
+                    if problems.is_empty(){
+                        break;
                     }else{
                         for problem in &problems{
                             println!("Logic missing info so asking: {:?}", problem);
                             outwards_messages.send( problem.clone() ).unwrap();
                         }
-                        break; // No more catch up possible without info.
                     }
                 }
                 new_tails_sink.send(self.tail_lock.read().unwrap().clone()).unwrap(); // Send new head regardless of success.
-
             }
         });
     }
