@@ -73,21 +73,21 @@ impl KnownFrameInfo{
     pub fn start_frame_stream_from_any(&self, first_to_send: FrameIndex) -> Receiver<FrameIndex>{
         let (sender, receiver) = channel();
         let frame_info = self.clone();
-        // TODO2: Remove the +1 -1 and such.
         thread::spawn( move|| {
-            let sink = sender;
-
-            let mut last_frame_simed: i32 = first_to_send as i32 - 1 ;
+            // I'm gonna:
+            // 1. Rewrite this.
+            // 2. If it fixes it, see why.
+            // 3. See why it didn't crash and fail not having the ';'.
+            let mut next_frame_to_send = first_to_send;
             loop{
-                let intended_frame = frame_info.get_intended_current_frame() as i32;
-                if last_frame_simed < intended_frame {
-                    last_frame_simed += 1;
-                    sink.send(last_frame_simed as usize).unwrap();
+                let intended_frame = frame_info.get_intended_current_frame();
+
+                while intended_frame >= next_frame_to_send {
+                    sender.send(next_frame_to_send).unwrap();
+                    next_frame_to_send += 1;
                 }
                 thread::sleep(Duration::from_millis(1))
                 // modival Sleep until just before next frame to help performance.
-                // TODO2: Use a clever sleep amount.
-
             }
         });
         receiver
@@ -99,6 +99,7 @@ impl KnownFrameInfo{
         self.start_frame_stream_from_any(self.get_intended_current_frame())
     }
 }
+
 pub struct DT{ // Debug Timer.
     time: SystemTime,
     name: String

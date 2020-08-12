@@ -66,6 +66,7 @@ impl LogicSegmentTailerIn {
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
             loop{
                 let dt_get_frame = DT::start_fmt(format!("to get a frame"));
+                println!("Known frame this one: {}", self.known_frame_info.get_intended_current_frame());
                 let frame_to_sim = generator.recv().unwrap();
                 dt_get_frame.stop();
                 let dt = DT::start_fmt(format!("to sim frame {}", frame_to_sim));
