@@ -25,9 +25,6 @@ struct ReadBlock<T>{
     items_populated: usize
 }
 
-unsafe impl<T> Send for ReadBlock<T> {}
-unsafe impl<T> Sync for ReadBlock<T> {}
-
 #[derive()] // TODO2: Implement debug.
 pub struct ReadVec<T>{
     blocks_pointers: [*const ReadBlock<T>; BLOCK_COUNT],

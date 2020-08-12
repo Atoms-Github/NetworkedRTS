@@ -48,7 +48,7 @@ impl LogicSegmentTailerIn {
                 let mut state_handle = self.tail_lock.write().unwrap();
                 state_handle.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
                 self.data_store.set_tail_frame(tail_frame_to_sim as i32);
-                println!("TailSim {}", state_handle.get_simmed_frame_index());
+//                println!("TailSim {}", state_handle.get_simmed_frame_index());
                 return vec![];
             }
             Err(problems) =>{

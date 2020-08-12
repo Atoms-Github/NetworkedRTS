@@ -47,7 +47,7 @@ impl NetInputDistIn {
                     player_id: self.player_id
                 };
                 let my_inputs = self.sim_data_storage.fulfill_query(&query);
-                println!("Sending to net my inputs for frames {} to {} inclusive", my_inputs.sim_data.frame_offset, my_inputs.sim_data.frame_offset + my_inputs.sim_data.data.len() - 1);
+//                println!("Sending to net my inputs for frames {} to {} inclusive", my_inputs.sim_data.frame_offset, my_inputs.sim_data.frame_offset + my_inputs.sim_data.data.len() - 1);
                 self.to_net.send(ExternalMsg::GameUpdate(my_inputs)).unwrap();
             }
         });
