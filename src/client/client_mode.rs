@@ -16,6 +16,7 @@ use crate::common::types::*;
 use crate::common::sim_data::framed_vec::*;
 use crate::common::sim_data::superstore_seg::*;
 use crate::client::input_handler_seg::*;
+use ggez::input::keyboard::KeyCode;
 
 struct ClientIn{
     player_name: String,
@@ -35,6 +36,7 @@ impl ClientIn{
         let input_changes = GraphicalSeg::new(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id).start();
 
         let seg_net_rec = NetRecSegIn::new(seg_data_storage.clone(), seg_net.net_rec.take().unwrap(), welcome_info.known_frame.clone()).start();
+
 
         ClientEx{
             seg_net,
@@ -83,18 +85,14 @@ impl ClientEx{
         self.seg_net.net_sink.send(ExternalMsg::GameUpdate(init_me_msg.clone())).unwrap();
         self.seg_data_storage.write_owned_data(init_me_msg);
 
+
         let seg_input_dist = InputHandlerIn::new
             (self.known_frame,
              self.player_id,
-             my_init_frame,
+             my_init_frame + 1 /*Don't want to override existing frame which has 'NewPlayer' = true.*/,
              self.input_changes,
              self.seg_data_storage.clone()
-        );
-
-        self.seg_scheduler.schedule_event(Box::new( move||{
-            let grabbed = seg_input_dist;
-//            grabbed.start_dist();
-        }), my_init_frame);
+        ).start();
 
         loop{
             thread::sleep(Duration::from_millis(10000));

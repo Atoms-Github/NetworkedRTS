@@ -67,7 +67,7 @@ impl GameState{
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32){
         for (player_id, input) in &sim_info.inputs_map{
             if input.new_player{
-                println!("InitingNewPlayer {}", *player_id);
+//                println!("InitingNewPlayer {}", *player_id);
                 self.init_new_player(*player_id);
             }
         }

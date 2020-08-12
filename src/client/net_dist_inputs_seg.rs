@@ -39,7 +39,7 @@ impl NetInputDistIn {
         }
     }
 
-    pub fn start_dist(mut self) -> NetInputDistEx{
+    pub fn start_net_dist(mut self) -> NetInputDistEx{
         let tail_frame_rec = self.known_frame.start_frame_stream_from_any(self.first_frame_to_send);
         thread::spawn(move ||{
             loop{

@@ -6,7 +6,7 @@ use crate::common::gameplay::game::game_state::*;
 use crate::common::sim_data::sim_data_storage::*;
 use crate::common::time::timekeeping::*;
 
-pub const HEAD_AHEAD_FRAME_COUNT: usize = 3;
+pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
 
 pub struct LogicSimHeaderIn {
@@ -66,7 +66,7 @@ impl LogicSimHeaderIn {
             }
         } // Discard frame info database lock.
 
-        println!("Simming head with: {:?}", infos_for_sims);
+//        println!("Simming head with: {:?}", infos_for_sims);
         for sim_info in infos_for_sims{
             state_tail.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
         }

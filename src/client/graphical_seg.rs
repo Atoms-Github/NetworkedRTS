@@ -40,6 +40,7 @@ impl GraphicalSeg {
 
     pub fn start(mut self) -> Receiver<InputChange>{
         let (sender,receiver) = channel();
+
         self.sender = Some(sender);
 
         let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
@@ -55,6 +56,7 @@ impl GraphicalSeg {
             let mut meme = self;
             event::run(ctx, events_loop, &mut meme).unwrap();
         });
+
 
         receiver
     }
@@ -92,8 +94,6 @@ impl EventHandler for GraphicalSeg {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::BLACK);
-
-
 
         let mut render_state = self.pull_newest_usable_state();
         self.render_state(&mut render_state, ctx);
