@@ -26,29 +26,6 @@ pub struct KnownFrameInfo{
     known_frame_index: FrameIndex,
     time: SystemTime
 }
-
-//pub struct SimableFrameGenerator{
-//    frame_stream: Receiver<FrameIndex>
-//}
-//impl SimableFrameGenerator{
-//    pub fn recv(&mut self) -> KnownFrameInfo{
-//        let frame_number = self.recv();
-//
-//
-//
-//        KnownFrameInfo{
-//            known_frame_index: 0,
-//            time: ()
-//        }
-//    }
-//    pub fn start_new_generator(frame_info: KnownFrameInfo) -> SimableFrameGenerator{
-//        let stream = frame_info.start_frame_stream();
-//        SimableFrameGenerator{
-//            frame_stream: stream
-//        }
-//    }
-//}
-
 impl KnownFrameInfo{
 //    pub fn new_from_ntp_server(known_frame: FrameIndex) -> KnownFrameInfo{
 //        println!("Getting time");
@@ -120,5 +97,25 @@ impl KnownFrameInfo{
     }
     pub fn start_frame_stream_from_now(&self) -> Receiver<FrameIndex>{
         self.start_frame_stream_from_any(self.get_intended_current_frame())
+    }
+}
+pub struct DT{ // Debug Timer.
+    time: SystemTime,
+    name: String
+}
+impl DT{
+    pub fn start(name: &str) -> DT{
+        DT::start_fmt(String::from(name))
+    }
+    pub fn start_fmt(name: String) -> DT{
+        DT{
+            time: SystemTime::now(),
+            name
+        }
+    }
+    pub fn stop(self){
+        if crate::DEBUG_MSGS_TIMERS{
+            println!("TIMER {} -> {:?}", self.name, SystemTime::now().duration_since(self.time).unwrap());
+        }
     }
 }
