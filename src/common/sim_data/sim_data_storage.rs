@@ -125,13 +125,23 @@ impl SimDataStorageEx{
         let superstore = players.get(&query.player_id).expect("Can't find data for player.");
 
         let mut query_response = vec![];
-        for i in 0..10{ // modival Amount of data returned from an 'I'm missing data!' request.
-            query_response.push(superstore.get_clone(query.frame_offset + i).unwrap()); // pointless_optimum: Shouldn't need to clone, but this'll likely be a painful fix.
+
+        let slice_first_frame = query.frame_offset.max(superstore.get_first_frame_index());
+        for target_index in slice_first_frame..(slice_first_frame + 20){ // modival Amount of data returned from an 'I'm missing data!' request, and how many of your last inputs get sent.
+            let input_maybe = superstore.get_clone(target_index); // pointless_optimum: Shouldn't need to clone, but this'll likely be a painful fix.
+            match input_maybe{
+                Some(input) => {
+                    query_response.push(input);
+                }
+                None => {
+                    break;
+                }
+            }
         }
 
         OwnedSimData {
             player_id: query.player_id,
-            sim_data: SuperstoreData { data: vec![], frame_offset: query.frame_offset }
+            sim_data: SuperstoreData { data: query_response, frame_offset: slice_first_frame }
         }
     }
 

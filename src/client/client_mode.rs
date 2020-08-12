@@ -5,6 +5,7 @@ use std::time::{Duration};
 use crate::client::connect_net_seg::*;
 use crate::client::graphical_seg::*;
 use crate::client::logic_sim_header_seg::*;
+use crate::client::net_dist_inputs_seg::*;
 use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::network::external_msg::*;
 use crate::common::sim_data::input_state::*;
@@ -87,12 +88,14 @@ impl ClientEx{
 
 
         let seg_input_dist = InputHandlerIn::new
-            (self.known_frame,
+            (self.known_frame.clone(),
              self.player_id,
              my_init_frame + 1 /*Don't want to override existing frame which has 'NewPlayer' = true.*/,
              self.input_changes,
              self.seg_data_storage.clone()
         ).start();
+
+        let seg_net_dist = NetInputDistIn::new(self.known_frame.clone(), self.player_id, self.seg_net.net_sink.clone(), self.seg_data_storage.clone()).start_net_dist();
 
         loop{
             thread::sleep(Duration::from_millis(10000));

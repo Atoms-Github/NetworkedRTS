@@ -69,7 +69,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         return self.frame_offset;
     }
     pub fn get_clone(&self, abs_index: FrameIndex) -> Option<T>{ // optimum Shouldn't need to clone so much. Should be possible never cloning.
-        assert!(abs_index >= self.frame_offset, format!("Tried to get data from before superstore starte. TargetIndex: {}, FirstDataAt: {}", abs_index, self.frame_offset));
+        assert!(abs_index >= self.frame_offset, format!("Tried to get data from before superstore start. TargetIndex: {}, FirstDataAt: {}", abs_index, self.frame_offset));
         let relative_index = abs_index - self.frame_offset;
 
         if self.cold.len() > relative_index{
@@ -115,6 +115,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
     fn write_data(&mut self, new_data: SuperstoreData<T>, validate_freezer: bool){
 //        println!("Writing {} datas, first one {:?} to {} validate: {}", new_data.data.len(), new_data.data.get(0).unwrap(), new_data.frame_offset, validate_freezer);
+        assert!(new_data.frame_offset >= self.frame_offset, format!("Tried to write data earlier than superstore handles. TargetFrame: {} SuperstoresFirst: {}", new_data.frame_offset, self.frame_offset));
         let relative_index = new_data.frame_offset - self.frame_offset;
 
         let cold_length = self.cold.len();

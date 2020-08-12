@@ -12,7 +12,7 @@ use crate::common::types::*;
 
 use crate::common::sim_data::superstore_seg::*;
 use crate::common::sim_data::sim_data_storage::*;
-use std::time::SystemTime;
+use std::time::{SystemTime, Duration};
 
 
 pub struct LogicSimTailerEx {
@@ -66,7 +66,6 @@ impl LogicSegmentTailerIn {
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
             loop{
                 let dt_get_frame = DT::start_fmt(format!("to get a frame"));
-                println!("Known frame this one: {}", self.known_frame_info.get_intended_current_frame());
                 let frame_to_sim = generator.recv().unwrap();
                 dt_get_frame.stop();
                 let dt = DT::start_fmt(format!("to sim frame {}", frame_to_sim));
@@ -79,6 +78,7 @@ impl LogicSegmentTailerIn {
                             println!("Logic missing info so asking: {:?}", problem);
                             outwards_messages.send( problem.clone() ).unwrap();
                         }
+                        thread::sleep(Duration::from_millis(15)); // modival Resend period.
                     }
                 }
                 new_tails_sink.send(self.tail_lock.read().unwrap().clone()).unwrap(); // Send new head regardless of success.
