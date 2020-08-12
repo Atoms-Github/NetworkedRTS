@@ -69,7 +69,7 @@ impl InputHandlerIn {
                     // 1. Apply any inputs.
                     self.apply_input_changes();
                     // 2. Send it off.
-                    println!("Sending local input for frame: {}", head_frame);
+//                    println!("Sending local input for frame: {}", head_frame);
                     self.sim_data_storage.write_data_single(self.player_id, self.curret_input.clone(), head_frame);
                     // 3. Increment next_frame_to_send.
                     self.next_frame_to_send += 1;

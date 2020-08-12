@@ -114,12 +114,16 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 
 impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreIn<T>{ // TODO2: Not sure why T needs to be sync to be sent into thread. Why not just send?
     fn write_data(&mut self, new_data: SuperstoreData<T>, validate_freezer: bool){
-//        println!("Writing {} datas, first one {:?} to {} validate: {}", new_data.data.len(), new_data.data.get(0).unwrap(), new_data.frame_offset, validate_freezer);
+        if validate_freezer{
+//            println!("Writing {} datas to {}", new_data.data.len(), new_data.frame_offset);
+        }
+
         assert!(new_data.frame_offset >= self.frame_offset, format!("Tried to write data earlier than superstore handles. TargetFrame: {} SuperstoresFirst: {}", new_data.frame_offset, self.frame_offset));
-        let relative_index = new_data.frame_offset - self.frame_offset;
+
 
         let cold_length = self.cold.len();
-        for item in new_data.data{
+        for (i, item) in new_data.data.into_iter().enumerate(){ // dcwct Here's the bug! Need to set a different index. This is likely why sometimes crash with not right new player either.
+            let relative_index = new_data.frame_offset + i - self.frame_offset;
             if cold_length <= relative_index{ // If past cold bit.
                 let hot_index = relative_index - cold_length;
                 if hot_index < self.hot_write.len(){

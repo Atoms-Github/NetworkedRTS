@@ -23,15 +23,7 @@ pub struct ServerMainStateEx {
     known_frame_zero: KnownFrameInfo
 }
 
-pub fn server_main(hosting_ip: String){
-    println!("Starting as server. Going to host on {}", hosting_ip);
 
-    let server_in = ServerMainStateIn::new(hosting_ip);
-    let server_ex = server_in.start_segments();
-    server_ex.startup_loop();
-
-    println!("Server finished.");
-}
 pub struct ServerMainStateIn {
     known_frame: KnownFrameInfo,
     hosting_ip: String,
@@ -78,7 +70,7 @@ impl ServerMainStateEx {
                                      -> Receiver<ServerActableMessage>{
         let inc_clients = self.seg_net_hub.pickup_rec.take().unwrap();
 
-        let (actable_sink,actable_rec) = channel();
+        let (actable_sink, actable_rec) = channel();
 
         thread::spawn(move ||{
             loop{
@@ -88,7 +80,7 @@ impl ServerMainStateEx {
         });
         actable_rec
     }
-    pub fn startup_loop(mut self){
+    pub fn main_loop(mut self){
         let server_actable_msgs = self.merge_server_actable_msgs();
         loop{
             let incoming_actable_message = server_actable_msgs.recv().unwrap();
@@ -120,13 +112,14 @@ impl ServerMainStateEx {
                 self.seg_net_hub.yeet_sink.send(DistributableNetMessage::ToSingle(player_id, response)).unwrap();
             },
             ExternalMsg::GameUpdate(update_info) => {
+//                println!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.player_id, update_info.sim_data.frame_offset, update_info.sim_data.frame_offset + update_info.sim_data.data.len() - 1);
                 self.data_store.write_owned_data(update_info.clone());
                 self.seg_net_hub.yeet_sink.send(
                     DistributableNetMessage::ToAllExcept(player_id, ExternalMsg::GameUpdate(update_info))
                 ).unwrap();
             },
             ExternalMsg::PingTestQuery(client_time) => {
-                // Do nothing. This message arrived too late.
+                // Do nothing. This message arrived too late. It should be handled in a different place on a different thread.
             }
             _ => {
                 panic!("Unexpected message");
@@ -136,8 +129,15 @@ impl ServerMainStateEx {
 }
 
 
+pub fn server_main(hosting_ip: String){
+    println!("Starting as server. Going to host on {}", hosting_ip);
 
+    let server_in = ServerMainStateIn::new(hosting_ip);
+    let server_ex = server_in.start_segments();
+    server_ex.main_loop();
 
+    println!("Server finished.");
+}
 
 
 
