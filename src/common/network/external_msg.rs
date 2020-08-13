@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use std::net::TcpStream;
+use std::net::{TcpStream, UdpSocket, SocketAddr};
 use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 use std::time::SystemTime;
@@ -13,9 +13,9 @@ use crate::common::time::timekeeping::*;
 use crate::common::types::*;
 use crate::common::sim_data::sim_data_storage::*;
 
-pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{
+pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{
     let (sender, receive) = channel::<ExternalMsg>();
-    thread::Builder::new().name("StreamDeserializer".to_string()).spawn(move ||{
+    thread::Builder::new().name("StreamDeserializerTCP".to_string()).spawn(move ||{
         loop{
             let mut message_size_buffer = [0; 2];
             let message_size_bytes = read_stream.read_exact(&mut message_size_buffer).unwrap();
@@ -41,8 +41,36 @@ pub fn start_inwards_codec_thread(mut read_stream :TcpStream) -> Receiver<Extern
     receive
 }
 
+pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(ExternalMsg, SocketAddr)>{
+    let (sender, receive) = channel();
+    thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
+        loop{
+            let mut message_size_buffer = [0; 2]; // TODO dcwct Order is an issue. Need to find flush or something.
+            let (message_size_bytes, address) = read_stream.recv_from(&mut message_size_buffer).unwrap();
+            let message_size = byteorder::LittleEndian::read_u16(&message_size_buffer);
+
+            let mut message_buffer = vec![0; message_size as usize];
+            read_stream.recv_from(&mut message_buffer).unwrap();
+
+            let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+            match result{
+                Ok(msg) => {
+                    if crate::DEBUG_MSGS_NET{
+                        println!("<- {:?}", msg);
+                    }
+                    sender.send((msg, address)).unwrap();
+                }
+                err => {
+                    panic!("Err {:?}", err)
+                }
+            }
+        }
+    }).unwrap();
+    receive
+}
+
 impl ExternalMsg{
-    pub fn encode_and_send(&self, write_stream :&mut TcpStream){
+    pub fn encode_and_send_tcp(&self, write_stream :&mut TcpStream){
         let connection_init_bytes = bincode::serialize(self).unwrap();
         let message_size = connection_init_bytes.len() as u16;
 
@@ -51,6 +79,21 @@ impl ExternalMsg{
         write_stream.write_all(&buffer).unwrap();
         write_stream.write_all(&connection_init_bytes).unwrap();
         write_stream.flush().unwrap();
+
+        if crate::DEBUG_MSGS_NET{
+            println!("->: {:?}", self);
+        }
+    }
+
+    pub fn encode_and_send_udp(&self, write_stream :&mut UdpSocket, address: SocketAddr){
+        let connection_init_bytes = bincode::serialize(self).unwrap();
+        let message_size = connection_init_bytes.len() as u16;
+
+        let mut buffer = [0; 2];
+        byteorder::LittleEndian::write_u16(&mut buffer, message_size);
+        write_stream.send_to(&buffer, address.clone()).unwrap();
+        write_stream.send_to(&connection_init_bytes, address).unwrap();
+//        write_stream.flush().unwrap(); dcwct No need to flush UDP?
 
         if crate::DEBUG_MSGS_NET{
             println!("->: {:?}", self);

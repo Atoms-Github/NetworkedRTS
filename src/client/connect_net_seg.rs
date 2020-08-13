@@ -153,10 +153,10 @@ impl ConnectNetIn {
         thread::spawn(move ||{
             loop{
                 let message_to_send: ExternalMsg = out_rec.recv().unwrap();
-                message_to_send.encode_and_send(&mut stream_outgoing);
+                message_to_send.encode_and_send_tcp(&mut stream_outgoing);
             }
         });
-        let in_rec = start_inwards_codec_thread(stream);
+        let in_rec = start_inwards_codec_thread_tcp(stream);
         ConnectNetEx {
             net_sink: out_sink,
             net_rec: Some(in_rec),

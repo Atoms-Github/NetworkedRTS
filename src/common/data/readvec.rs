@@ -15,7 +15,7 @@ use std::thread;
 // We don't want to allocate too much memory before it's used, so we're going to use a two tiered system.
 // This means our max capacity is around the square of the initial allocation.
 
-const BLOCK_SIZE: usize = 50; // Number of structs created at once.
+const BLOCK_SIZE: usize = 100; // Number of structs created at once.
 const BLOCK_COUNT: usize = 5000; // Number of pointers to struct blocks.
 const MAX_CAPACITY: usize = BLOCK_SIZE * BLOCK_COUNT;
 
