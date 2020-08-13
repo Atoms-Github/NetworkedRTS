@@ -12,6 +12,7 @@ use crate::common::logic::logic_sim_tailer_seg::*;
 use crate::common::time::timekeeping::*;
 use crate::common::types::*;
 use crate::common::sim_data::sim_data_storage::*;
+use std::intrinsics::add_with_overflow;
 
 pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{
     let (sender, receive) = channel::<ExternalMsg>();
@@ -41,8 +42,23 @@ pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<Ex
     receive
 }
 
+pub fn start_inwards_codec_thread_udp_filtered(mut read_stream :UdpSocket, filter_address: SocketAddr) -> Receiver<ExternalMsg>{ // This also ignores msgs from wrong address.
+    let (sender, receiver) = channel();
+
+    let unfiltered = start_inwards_codec_thread_udp(read_stream);
+    thread::Builder::new().name("StreamDeserializerUDPFiltered".to_string()).spawn(move ||{
+        loop{
+            let (new_msg, addr) = unfiltered.recv().unwrap();
+            if addr == filter_address{
+                sender.send(new_msg).unwrap();
+            }
+        }
+    }).unwrap();
+    receiver
+}
+
 pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(ExternalMsg, SocketAddr)>{
-    let (sender, receive) = channel();
+    let (sender, receiver) = channel();
     thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
         loop{
             let mut message_size_buffer = [0; 2]; // TODO dcwct Order is an issue. Need to find flush or something.
@@ -66,7 +82,7 @@ pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(E
             }
         }
     }).unwrap();
-    receive
+    receiver
 }
 
 impl ExternalMsg{

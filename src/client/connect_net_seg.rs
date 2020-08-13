@@ -1,4 +1,4 @@
-use std::net::{SocketAddr, TcpStream};
+use std::net::{SocketAddr, TcpStream, UdpSocket};
 use std::ops::Add;
 use std::str::FromStr;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -145,18 +145,19 @@ impl ConnectNetIn {
     }
     pub fn start_net(self) -> ConnectNetEx {
         let conn_address = SocketAddr::from_str(&self.conn_address_str).expect("Ill formed ip");
-        let connection_result = TcpStream::connect(conn_address);
-        let mut stream = connection_result.expect("Failed to connect.");
+        let socket = UdpSocket::bind("0.0.0.0:0").expect("Client couldn't bind to socket.");
+        socket.connect(conn_address.clone()).expect("Client couldn't connect to server.");
 
         let (out_sink, out_rec) = channel();
-        let mut stream_outgoing = stream.try_clone().unwrap();
+        let mut socket_outgoing = socket.try_clone().unwrap();
         thread::spawn(move ||{
             loop{
                 let message_to_send: ExternalMsg = out_rec.recv().unwrap();
-                message_to_send.encode_and_send_tcp(&mut stream_outgoing);
+                message_to_send.encode_and_send_udp(&mut socket_outgoing, conn_address);
             }
         });
-        let in_rec = start_inwards_codec_thread_tcp(stream);
+        let local_address = socket.local_addr().unwrap();
+        let in_rec = start_inwards_codec_thread_udp_filtered(socket, local_address);
         ConnectNetEx {
             net_sink: out_sink,
             net_rec: Some(in_rec),
