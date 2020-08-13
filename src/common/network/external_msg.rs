@@ -42,21 +42,6 @@ pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<Ex
     receive
 }
 
-pub fn start_inwards_codec_thread_udp_filtered(mut read_stream :UdpSocket, filter_address: SocketAddr) -> Receiver<ExternalMsg>{ // This also ignores msgs from wrong address.
-    let (sender, receiver) = channel();
-
-    let unfiltered = start_inwards_codec_thread_udp(read_stream);
-    thread::Builder::new().name("StreamDeserializerUDPFiltered".to_string()).spawn(move ||{
-        loop{
-            let (new_msg, addr) = unfiltered.recv().unwrap();
-            if addr == filter_address{
-                sender.send(new_msg).unwrap();
-            }
-        }
-    }).unwrap();
-    receiver
-}
-
 pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(ExternalMsg, SocketAddr)>{
     let (sender, receiver) = channel();
     thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
@@ -84,6 +69,23 @@ pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(E
     }).unwrap();
     receiver
 }
+
+
+pub fn start_inwards_codec_thread_udp_filtered(mut read_stream :UdpSocket, filter_address: SocketAddr) -> Receiver<ExternalMsg>{ // This also ignores msgs from wrong address.
+    let (sender, receiver) = channel();
+
+    let unfiltered = start_inwards_codec_thread_udp(read_stream);
+    thread::Builder::new().name("StreamDeserializerUDPFiltered".to_string()).spawn(move ||{
+        loop{
+            let (new_msg, addr) = unfiltered.recv().unwrap();
+            assert_eq!(addr, filter_address, "Got message from wrong address.");
+            sender.send(new_msg).unwrap();
+        }
+    }).unwrap();
+    receiver
+}
+
+
 
 impl ExternalMsg{
     pub fn encode_and_send_tcp(&self, write_stream :&mut TcpStream){

@@ -74,10 +74,10 @@ impl ConnectNetEx {
     fn gather_ping_data(&self) -> Vec<FullPingSample>{
         let mut results = vec![];
         while results.len() < TIME_SAMPLES_REQUIRED{
-            let returned_maybe = self.net_rec.as_ref().unwrap().recv();
+            let returned_maybe = self.net_rec.as_ref().unwrap().recv().unwrap();
             let c_receive_time = SystemTime::now();
             match returned_maybe{
-                Ok(ExternalMsg::PingTestResponse(response)) => {
+                ExternalMsg::PingTestResponse(response) => {
                     let full_sample = FullPingSample{
                         c_send_time: response.client_time,
                         s_receive_time: response.server_time,
@@ -85,8 +85,8 @@ impl ConnectNetEx {
                     };
                     results.push(full_sample);
                 }
-                _ => {
-                    println!("Received message which wasn't a a ping response.");
+                other_msg => {
+                    println!("Received message which wasn't a a ping response: {:?}", other_msg);
                 }
             }
         }
@@ -157,7 +157,7 @@ impl ConnectNetIn {
             }
         });
         let local_address = socket.local_addr().unwrap();
-        let in_rec = start_inwards_codec_thread_udp_filtered(socket, local_address);
+        let in_rec = start_inwards_codec_thread_udp_filtered(socket, conn_address);
         ConnectNetEx {
             net_sink: out_sink,
             net_rec: Some(in_rec),
