@@ -3,7 +3,7 @@ use std::net::{SocketAddr, TcpListener, TcpStream, UdpSocket};
 use std::sync::{Arc, Mutex, RwLock};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use std::time::{SystemTime};
+use std::time::{SystemTime, Duration};
 
 use crate::common::network::external_msg::*;
 use crate::common::types::*;
@@ -59,25 +59,27 @@ impl NetworkingHubIn {
         let mut addresses_to_ids = Arc::new(RwLock::new(bimap::BiHashMap::new()));
 
 
-        let mut outgoing_socket = socket.try_clone().expect("Can't clone socket.");
+        let mut socket_outgoing = socket.try_clone().expect("Can't clone socket.");
         let mut outgoing_map = addresses_to_ids.clone();
+
+        // Outoing messages.
         thread::spawn(move ||{
             loop{
                 let msg_to_yeet = yeet_rec.recv().unwrap();
                 let read_only_map = outgoing_map.read().unwrap();
                 match msg_to_yeet {
                     DistributableNetMessage::ToSingle(target, msg) => {
-                        msg.encode_and_send_udp(&mut outgoing_socket, *read_only_map.get_by_right(&target).unwrap());
+                        msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(&target).unwrap());
                     }
                     DistributableNetMessage::ToAll(msg) => {
                         for (address, player_id) in read_only_map.iter(){
-                            msg.encode_and_send_udp(&mut outgoing_socket, *read_only_map.get_by_right(player_id).unwrap());
+                            msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(player_id).unwrap());
                         }
                     }
                     DistributableNetMessage::ToAllExcept(do_not_send_to_id, msg) => {
                         for (address, player_id) in read_only_map.iter(){
                             if *player_id != do_not_send_to_id{
-                                msg.encode_and_send_udp(&mut outgoing_socket, *read_only_map.get_by_right(player_id).unwrap());
+                                msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(player_id).unwrap());
                             }
                         }
                     }
@@ -85,8 +87,10 @@ impl NetworkingHubIn {
             }
         });
 
+        // Incoming messages.
         thread::spawn(move ||{
             let new_msgs_rec = start_inwards_codec_thread_udp(socket.try_clone().expect("Can't clone socket"));
+            let mut test_socket = socket;
             loop{
                 let (reced_message, address) = new_msgs_rec.recv().unwrap();
                 match reced_message{
@@ -107,7 +111,7 @@ impl NetworkingHubIn {
                                 server_time
                             }
                         );
-                        response.encode_and_send_udp(&mut socket, address);
+                        response.encode_and_send_udp(&mut test_socket, address);
                     }
                     ExternalMsg::ConnectionInitQuery(query_data) => {
                         let new_player_id = self.gen_next_player_id();
@@ -131,6 +135,8 @@ impl NetworkingHubIn {
                 }
             }
         });
+
+
         NetworkingHubEx{
             yeet_sink,
             pickup_rec: Some(pickup_rec)

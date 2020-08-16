@@ -145,8 +145,9 @@ impl ConnectNetIn {
     }
     pub fn start_net(self) -> ConnectNetEx {
         let conn_address = SocketAddr::from_str(&self.conn_address_str).expect("Ill formed ip");
-        let socket = UdpSocket::bind("0.0.0.0:0").expect("Client couldn't bind to socket.");
-        socket.connect(conn_address.clone()).expect("Client couldn't connect to server.");
+        let socket = UdpSocket::bind("127.0.0.1:0").expect("Client couldn't bind to socket.");
+        println!("Client local socket address: {:?}", socket.local_addr());
+//        socket.connect(conn_address.clone()).expect("Client couldn't connect to server."); dcwct
 
         let (out_sink, out_rec) = channel();
         let mut socket_outgoing = socket.try_clone().unwrap();
