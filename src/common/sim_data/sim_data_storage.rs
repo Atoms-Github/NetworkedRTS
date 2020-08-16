@@ -60,7 +60,7 @@ impl SimDataStorageEx{
         }else{
             // On new player, we do want to read, then write, then read again. This doesn't happen often.
             std::mem::drop(players); // So can write to.
-            assert!(data.data.get(0).unwrap().new_player, "New data for unknown player which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.");
+//    See notes. Allowed to desync if p1 disconnects while p2 is connecting (wouldn't happen when more than 2 players already joined)        assert!(data.data.get(0).unwrap().new_player, "New data for unknown player which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.");
             self.init_new_player(player_id, data.frame_offset);
             self.read_data()
         };
