@@ -40,10 +40,20 @@ impl SimDataStorageEx{
     pub fn set_tail_frame(&self, tail_frame: i32){
         *self.tail_simed_index.write().unwrap() = tail_frame;
     }
+    pub fn get_player_list(&self, filter_must_have_inputs_on: FrameIndex) -> Vec<PlayerID>{
+        let mut players = vec![];
+
+        for (player_id, storage) in self.player_inputs.read().unwrap().iter(){
+            if filter_must_have_inputs_on >= storage.get_first_frame_index(){
+                players.push(*player_id);
+            }
+        }
+        return players;
+    }
     fn read_data(&self) -> RwLockReadGuard<HashMap<PlayerID, SuperstoreEx<InputState>>>{
         return self.player_inputs.read().unwrap();
     }
-    fn init_new_player(&self, player_id: PlayerID, frame_offset: FrameIndex){
+    pub fn init_new_player(&self, player_id: PlayerID, frame_offset: FrameIndex){
         println!("Creating new superstore for new player {}", player_id);
         let mut players_writable = self.player_inputs.write().unwrap();
 
@@ -60,7 +70,8 @@ impl SimDataStorageEx{
         }else{
             // On new player, we do want to read, then write, then read again. This doesn't happen often.
             std::mem::drop(players); // So can write to.
-//    See notes. Allowed to desync if p1 disconnects while p2 is connecting (wouldn't happen when more than 2 players already joined)        assert!(data.data.get(0).unwrap().new_player, "New data for unknown player which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.");
+            // Existing players should have been initialized in the 'ExistingPlayers' list in the welcome message - therefor all new players should have the new player flag.
+            assert!(data.data.get(0).unwrap().new_player, "New data for unknown player {} which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.", player_id);
             self.init_new_player(player_id, data.frame_offset);
             self.read_data()
         };

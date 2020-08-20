@@ -44,7 +44,6 @@ fn main() {
         }// s
     }; // args.pop().or_else().expect("Connection/hosting IP not specified!");
 
-    let temp = 2;
     match launch_type.to_lowercase().as_ref() {
         "client" => {
             client_main(ip);

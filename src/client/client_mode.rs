@@ -30,8 +30,14 @@ impl ClientIn{
         let mut seg_net = ConnectNetIn::new(self.connection_ip.clone()).start_net();
         let welcome_info = seg_net.receive_synced_greeting(&self.player_name);
 
+        let seg_data_storage = SimDataStorageEx::new();
+
+        for existing_player in welcome_info.players_in_state{
+            seg_data_storage.init_new_player(existing_player, welcome_info.game_state.get_simmed_frame_index() + 1);
+        }
+
+
         let seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame.clone()).start();
-        let seg_data_storage = SimDataStorageEx::new(/*welcome_info.game_state.get_simmed_frame_index()*/);
         let mut seg_logic_tailer = LogicSegmentTailerIn::new(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone()).start_logic_tail();
         let mut seg_logic_header = LogicSimHeaderIn::new(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone()).start();
         let input_changes = GraphicalSeg::new(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id).start();
@@ -108,6 +114,7 @@ impl ClientEx{
 
 
 pub fn client_main(connection_target_ip: String){
+    thread::sleep(Duration::from_millis(2000)); // TODO1
     println!("Starting as client.");
     let client = ClientIn{
         player_name: String::from("Atomserdiah"),

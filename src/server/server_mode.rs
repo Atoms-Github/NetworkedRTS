@@ -93,12 +93,16 @@ impl ServerMainStateEx {
         }
     }
     fn gen_init_info(&self, player_id: PlayerID) -> NetMsgGreetingResponse {
-        let state_to_send = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
+        let game_state = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
+
+
+        let existing_players = self.data_store.get_player_list(game_state.get_simmed_frame_index());
 
         NetMsgGreetingResponse {
             assigned_player_id: player_id,
             known_frame: self.known_frame_zero.clone(),
-            game_state: state_to_send,
+            game_state,
+            players_in_state: existing_players
         }
     }
 
