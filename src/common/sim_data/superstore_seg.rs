@@ -118,11 +118,14 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 //            println!("Writing {} datas to {}", new_data.data.len(), new_data.frame_offset);
         }
 
-        assert!(new_data.frame_offset >= self.frame_offset, format!("Tried to write data earlier than superstore handles. TargetFrame: {} SuperstoresFirst: {}", new_data.frame_offset, self.frame_offset));
+//        Instead ignore any data before. assert!(new_data.frame_offset >= self.frame_offset, format!("Tried to write data earlier than superstore handles. TargetFrame: {} SuperstoresFirst: {}", new_data.frame_offset, self.frame_offset));
 
 
         let cold_length = self.cold.len();
-        for (i, item) in new_data.data.into_iter().enumerate(){ // dcwct Here's the bug! Need to set a different index. This is likely why sometimes crash with not right new player either.
+        for (i, item) in new_data.data.into_iter().enumerate(){
+            if new_data.frame_offset + i < self.frame_offset{
+                continue; // Ignore any frames of data about before where we start.
+            }
             let relative_index = new_data.frame_offset + i - self.frame_offset;
             if cold_length <= relative_index{ // If past cold bit.
                 let hot_index = relative_index - cold_length;
