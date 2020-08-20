@@ -114,7 +114,7 @@ impl ClientEx{
 
 
 pub fn client_main(connection_target_ip: String){
-    thread::sleep(Duration::from_millis(2000)); // TODO1
+    thread::sleep(Duration::from_millis(1000)); // TODO1
     println!("Starting as client.");
     let client = ClientIn{
         player_name: String::from("Atomserdiah"),

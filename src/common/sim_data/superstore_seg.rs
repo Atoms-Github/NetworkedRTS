@@ -94,8 +94,10 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         let hot_read = self.hot_read.read().unwrap();
         if hot_read.len() > 0{
             hot_read.get(hot_read.len() - 1).cloned()
-        }else{
+        }else if self.cold.len() > 0{ // Can be false when client receives player list and all the superstores are inited.
             self.cold.get(self.cold.len() - 1).cloned()
+        }else{
+            return None;
         }
     }
     fn test_set_simple(&self, data: T, frame_index: FrameIndex){
