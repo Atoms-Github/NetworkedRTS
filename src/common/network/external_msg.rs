@@ -105,7 +105,7 @@ impl ExternalMsg{
         write_stream.send_to(&msg_buffer, address).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            println!("->: {:?}", self);
+            println!("->({}): {:?}", msg_buffer.len(), self);
         }
     }
 }
