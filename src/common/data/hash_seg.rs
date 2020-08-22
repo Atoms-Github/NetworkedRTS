@@ -59,7 +59,7 @@ impl HasherIn {
                         self.hashes.insert(framed_hash.frame, framed_hash.hash);
                     }
                     Some(existing_hash) => {
-//                        assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
+                        assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
                         println!("HashPassed! Existing: {:?} new: {:?}", *existing_hash, framed_hash.hash);
                     }
                 }

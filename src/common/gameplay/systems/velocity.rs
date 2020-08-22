@@ -13,8 +13,10 @@ create_system!( velocity_system | secret_velocity_system
 );
 
 fn velocity_system(d: &mut Data, e: Entity){
+	
 	e.my_position(d).x += e.my_velocity(d).x;
 	e.my_position(d).y += e.my_velocity(d).y;
+
 }
 
 #[derive(Debug,Serialize, Deserialize, Clone)]
