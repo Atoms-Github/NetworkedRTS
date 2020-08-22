@@ -16,7 +16,7 @@ create_system!( render_system | secret_render_system
 	| ctx:&mut Context
 );
 
-#[derive(Debug,Serialize, Deserialize, Clone)]
+#[derive(Debug,Serialize, Deserialize, Clone, Hash)]
 pub struct RenderComp {
     pub hue: (u8,u8,u8)//graphics::Color,
 }

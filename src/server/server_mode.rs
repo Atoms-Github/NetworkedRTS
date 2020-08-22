@@ -55,7 +55,18 @@ impl ServerMainStateIn {
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = self.init_network_hub();
         let seg_data_store = self.init_storage_man();
-        let seg_logic_tail = self.init_logic_tailer(seg_data_store.clone());
+        let mut seg_logic_tail = self.init_logic_tailer(seg_data_store.clone());
+
+
+        let hash_rec = seg_logic_tail.new_tail_hashes.take().unwrap(); // dans_game.
+        let hash_net_yeet_sink = seg_net_hub.yeet_sink.clone();
+        thread::spawn(move ||{
+            loop{
+                let framed_hash = hash_rec.recv().unwrap();
+                hash_net_yeet_sink.send(DistributableNetMessage::ToAll(ExternalMsg::NewHash(framed_hash))).unwrap();
+            }
+        });
+
         ServerMainStateEx {
             seg_net_hub,
             data_store: seg_data_store,
@@ -71,6 +82,8 @@ impl ServerMainStateEx {
         let inc_clients = self.seg_net_hub.pickup_rec.take().unwrap();
 
         let (actable_sink, actable_rec) = channel();
+
+
 
         thread::spawn(move ||{
             loop{

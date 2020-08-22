@@ -13,6 +13,7 @@ use crate::common::time::timekeeping::*;
 use crate::common::types::*;
 use crate::common::sim_data::sim_data_storage::*;
 use std::intrinsics::add_with_overflow;
+use crate::common::data::hash_seg::FramedHash;
 
 //pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{ If this is needed, need to match udp. (Need to include size in main msg)
 //    let (sender, receive) = channel::<ExternalMsg>();
@@ -114,6 +115,7 @@ impl ExternalMsg{
 pub enum ExternalMsg {
     ConnectionInitQuery(NetMsgGreetingQuery),
     ConnectionInitResponse(NetMsgGreetingResponse),
+    NewHash(FramedHash),
     GameUpdate(OwnedSimData),
     LocalCommand(LocalCommandInfo),
     PingTestQuery(SystemTime),

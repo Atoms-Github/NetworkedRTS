@@ -28,7 +28,7 @@ fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &HashMap<
     e.my_velocity(d).y = MOVEMENT_SPEED * -directional_y;
 }
 
-#[derive(Debug,Serialize, Deserialize, Clone)]
+#[derive(Debug,Serialize, Deserialize, Clone, Hash)]
 pub struct VelocityWithInputComp {
     pub owner_id: PlayerID
 }

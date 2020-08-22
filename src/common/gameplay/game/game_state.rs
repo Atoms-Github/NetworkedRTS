@@ -9,6 +9,8 @@ use crate::common::gameplay::systems::position::*;
 use crate::common::gameplay::systems::velocity::*;
 use crate::common::gameplay::systems::velocity_with_input::*;
 use crate::common::gameplay::systems::size::*;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InfoForSim {
@@ -16,7 +18,7 @@ pub struct InfoForSim {
 }
 
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct GameState{
     pub world: World,
     pub storages: Storages,
@@ -29,6 +31,11 @@ impl Default for GameState{
     }
 }
 impl GameState{
+    pub fn get_hash(&self) -> HashType{
+        let mut s = DefaultHasher::new();
+        self.hash(&mut s);
+        s.finish()
+    }
     pub fn get_simmed_frame_index(&self) -> FrameIndex{
         self.simmed_frame_index
     }

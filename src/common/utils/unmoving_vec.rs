@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash)]
 pub struct UnmovingVec<T>{
     list: Vec<T>,
     whats_free: Vec<bool>,

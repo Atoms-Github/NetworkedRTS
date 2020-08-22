@@ -2,6 +2,7 @@ use std::collections::{BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
+use std::hash::*;
 use crate::create_system;
 use crate::common::gameplay::ecs::world::*;
 use crate::common::gameplay::systems::velocity::VelocityComp;
@@ -18,41 +19,18 @@ pub struct PositionComp {
 	pub y: f32,
 }
 
-
-
-fn position_system(d: &mut Data, e: Entity) {
-
-
+impl Hash for PositionComp{
+	fn hash<H: Hasher>(&self, state: &mut H) { // Can fix with fixed and/or cordick first.
+		self.x.to_be_bytes().hash(state);
+		self.y.to_be_bytes().hash(state);
+	}
 }
 
 
 
+fn position_system(d: &mut Data, e: Entity) {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
 
 

@@ -1,5 +1,5 @@
 
-use std::collections::{HashMap, HashSet, BTreeSet};
+use std::collections::{HashMap, HashSet, BTreeSet, BTreeMap};
 
 
 use crate::common::gameplay::systems::velocity::*;
@@ -42,14 +42,14 @@ impl Request {
 	}
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct Composition {
 	id: CompositionID,
 	types: TypeSet,
 	pub global_entity_ids: Vec<EntityID>,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 struct InternalEntity {
 	global_id: EntityID,
 	composition_id: CompositionID,
@@ -132,7 +132,7 @@ impl PendingEntities {
 
 macro_rules! create_system {
 	($($var_name:ident : $sty:ty),*) => {
-		#[derive(Clone, Debug,Serialize, Deserialize)]
+		#[derive(Clone, Debug, Serialize, Deserialize, Hash)]
 		pub struct Storages {
 			$(
                     pub $var_name: VerticalStorage<$sty>,
@@ -183,10 +183,10 @@ macro_rules! create_system {
 
 create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, velocity_with_input_s: VelocityWithInputComp);
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Hash)]
 pub struct World {
 	entity_storage: UnmovingVec<InternalEntity>,
-	composition_types_to_id_map: HashMap<TypeSet, CompositionID>,
+	composition_types_to_id_map: BTreeMap<TypeSet, CompositionID>,
 	composition_list: Vec<Composition>,
 
 }

@@ -14,11 +14,14 @@ use crate::common::sim_data::superstore_seg::*;
 use crate::common::sim_data::sim_data_storage::*;
 use std::time::{SystemTime, Duration};
 
+use crate::common::data::hash_seg::*;
+use std::hash::Hash;
 
 pub struct LogicSimTailerEx {
     pub from_logic_rec: Receiver<QuerySimData>,
     pub tail_lock: Arc<RwLock<GameState>>,
     pub new_tail_states_rec: Option<Receiver<GameState>>,
+    pub new_tail_hashes: Option<Receiver<FramedHash>>,
 
 }
 impl LogicSimTailerEx {
@@ -58,7 +61,7 @@ impl LogicSegmentTailerIn {
     }
 
 
-    fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<GameState>){
+    fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<GameState>, new_hashes: Sender<FramedHash>){
         thread::spawn(move ||
         {
             let mut first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;
@@ -81,7 +84,9 @@ impl LogicSegmentTailerIn {
                         thread::sleep(Duration::from_millis(15)); // modival Resend period.
                     }
                 }
-                new_tails_sink.send(self.tail_lock.read().unwrap().clone()).unwrap(); // Send new head regardless of success.
+                let new_tail = self.tail_lock.read().unwrap().clone();
+                new_hashes.send(FramedHash::new(frame_to_sim, new_tail.get_hash())).unwrap();
+                new_tails_sink.send(new_tail).unwrap(); // Send new head regardless of success.
 
                 dt.stop();
             }
@@ -91,16 +96,18 @@ impl LogicSegmentTailerIn {
     pub fn start_logic_tail(mut self) -> LogicSimTailerEx {
         let (from_logic_sink, from_logic_rec) = channel();
         let (new_tails_sink, new_tails_rec) = channel();
+        let (new_hashes_sink, new_hashes_rec) = channel();
 
 
         let tail_lock = self.tail_lock.clone();
 
-        self.start_thread(from_logic_sink, new_tails_sink);
+        self.start_thread(from_logic_sink, new_tails_sink, new_hashes_sink);
 
         LogicSimTailerEx {
             from_logic_rec,
             tail_lock,
-            new_tail_states_rec: Some(new_tails_rec)
+            new_tail_states_rec: Some(new_tails_rec),
+            new_tail_hashes: Some(new_hashes_rec)
         }
     }
 }

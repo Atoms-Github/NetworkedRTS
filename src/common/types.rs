@@ -5,3 +5,4 @@ pub type FrameIndex = usize;
 pub type PointFloat = nalgebra::Point2<f32>;
 pub type ThreadCloser = ();
 pub type ArcRw<T> = Arc<RwLock<T>>;
+pub type HashType = u64;
