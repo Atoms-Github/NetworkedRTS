@@ -14,7 +14,9 @@ use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 use std::collections::vec_deque::*;
 use std::io::Seek;
 use crate::client::input_handler_seg::*;
+use crate::common::data::fake_read_vec::FakeReadVec;
 
+type UsedReadVec<T> = FakeReadVec<T>;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SuperstoreData<T> {
@@ -29,14 +31,14 @@ struct SuperstoreIn<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 's
     hot_write: Box<VecDeque<T>>,
     hot_read: ArcRw<Box<VecDeque<T>>>,
     write_requests_rec: Receiver<SuperstoreData<T>>,
-    cold: Arc<ReadVec<T>>,
+    cold: Arc<UsedReadVec<T>>,
     tail_simed_index: ArcRw<i32> // pointless_optimum: Can swap out for a racy thing.
 }
 #[derive()]
 pub struct SuperstoreEx<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
     frame_offset: usize,
     hot_read: ArcRw<Box<VecDeque<T>>>, // TODO2: Perhaps don't need box.
-    cold: Arc<ReadVec<T>>,
+    cold: Arc<UsedReadVec<T>>,
     pub write_requests_sink: Mutex<Sender<SuperstoreData<T>>>, // pointless_optimum: Could setup a system where each thread has a local clone of this instead.
 }
 
@@ -46,7 +48,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         let (writes_sink, writes_rec) = channel();
         let hot_read = Arc::new(RwLock::new(Box::new(VecDeque::new())));
 
-        let cold = Arc::new(ReadVec::new());
+        let cold = Arc::new(UsedReadVec::new());
 
         SuperstoreIn{
             frame_offset,
