@@ -14,9 +14,8 @@ use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 use std::collections::vec_deque::*;
 use std::io::Seek;
 use crate::client::input_handler_seg::*;
-use crate::common::data::fake_read_vec::FakeReadVec;
 
-type UsedReadVec<T> = FakeReadVec<T>;
+type UsedReadVec<T> = ReadVec<T>;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SuperstoreData<T> {
@@ -31,14 +30,14 @@ struct SuperstoreIn<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 's
     hot_write: Box<VecDeque<T>>,
     hot_read: ArcRw<Box<VecDeque<T>>>,
     write_requests_rec: Receiver<SuperstoreData<T>>,
-    cold: Arc<UsedReadVec<T>>,
+    cold: ArcRw<Vec<T>>,
     tail_simed_index: ArcRw<i32> // pointless_optimum: Can swap out for a racy thing.
 }
 #[derive()]
 pub struct SuperstoreEx<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
     frame_offset: usize,
     hot_read: ArcRw<Box<VecDeque<T>>>, // TODO2: Perhaps don't need box.
-    cold: Arc<UsedReadVec<T>>,
+    cold: ArcRw<Vec<T>>,
     pub write_requests_sink: Mutex<Sender<SuperstoreData<T>>>, // pointless_optimum: Could setup a system where each thread has a local clone of this instead.
 }
 
@@ -48,7 +47,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         let (writes_sink, writes_rec) = channel();
         let hot_read = Arc::new(RwLock::new(Box::new(VecDeque::new())));
 
-        let cold = Arc::new(UsedReadVec::new());
+        let cold = Arc::new(RwLock::new(vec![]));
 
         SuperstoreIn{
             frame_offset,
@@ -73,16 +72,16 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
     pub fn get_clone(&self, abs_index: FrameIndex) -> Option<T>{ // optimum Shouldn't need to clone so much. Should be possible never cloning.
         assert!(abs_index >= self.frame_offset, format!("Tried to get data from before superstore start. TargetIndex: {}, FirstDataAt: {}", abs_index, self.frame_offset));
         let relative_index = abs_index - self.frame_offset;
-
-        if self.cold.len() > relative_index{
-            return self.cold.get(relative_index).cloned();
+        let cold = self.cold.read().unwrap();
+        if cold.len() > relative_index{
+            return cold.get(relative_index).cloned();
         }else{
             // Need to go into hot. We'll need to lock hot and re-check cold length as it might have changed.
             let hot_lock = self.hot_read.read().unwrap();
-            if self.cold.len() > relative_index{
-                return self.cold.get(relative_index).cloned();
+            if cold.len() > relative_index{
+                return cold.get(relative_index).cloned();
             }else{
-                let relative_to_hot = relative_index - self.cold.len();
+                let relative_to_hot = relative_index - cold.len();
                 let test_hot_lock_len = hot_lock.len();
                 if hot_lock.len() > relative_to_hot{
                     return hot_lock.get(relative_to_hot).cloned();
@@ -94,10 +93,13 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
     }
     pub fn get_last_clone(&self) -> Option<T>{
         let hot_read = self.hot_read.read().unwrap();
+
+        let cold = self.cold.read().unwrap();
+
         if hot_read.len() > 0{
             hot_read.get(hot_read.len() - 1).cloned()
-        }else if self.cold.len() > 0{ // Can be false when client receives player list and all the superstores are inited.
-            self.cold.get(self.cold.len() - 1).cloned()
+        }else if cold.len() > 0{ // Can be false when client receives player list and all the superstores are inited.
+            cold.get(cold.len() - 1).cloned()
         }else{
             return None;
         }
@@ -124,8 +126,8 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 
 //        Instead ignore any data before. assert!(new_data.frame_offset >= self.frame_offset, format!("Tried to write data earlier than superstore handles. TargetFrame: {} SuperstoresFirst: {}", new_data.frame_offset, self.frame_offset));
 
-
-        let cold_length = self.cold.len();
+        let cold = self.cold.write().unwrap();
+        let cold_length = cold.len();
         for (i, item) in new_data.data.into_iter().enumerate(){
             if new_data.frame_offset + i < self.frame_offset{
                 continue; // Ignore any frames of data about before where we start.
@@ -141,7 +143,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
                 }
             }else{
                 if validate_freezer{ // pointless_optimum
-                    assert_eq!(self.cold.get(relative_index).unwrap(), &item, "Tried to write over cold data with different data!");
+                    assert_eq!(cold.get(relative_index).unwrap(), &item, "Tried to write over cold data with different data!");
                 }
             }
         }
@@ -151,14 +153,18 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
 
         let simed_index_relative = *simed_index - self.frame_offset as i32;
 
-        let mut num_to_cool = (simed_index_relative + 1 - self.cold.len() as i32).max(0);
+        let mut cold = self.cold.write().unwrap();
+
+
+
+        let mut num_to_cool = (simed_index_relative + 1 - cold.len() as i32).max(0);
 
 //        assert!(num_to_cool >= 0, format!("Cooling negative amounts: {} simed_index: {} frame offset: {}", num_to_cool, *simed_index, self.frame_offset)); // dcwct. Hmm.
 
         for i in 0..num_to_cool{
             assert!(self.hot_write.len() > 0, format!("Simed frame was ahead of the cooling wave! How did we sim tail without data? SimedFrame: {}", *simed_index));
             let new_item_to_freeze = self.hot_write.pop_front().unwrap();
-            self.cold.push(new_item_to_freeze);
+            cold.push(new_item_to_freeze);
         }
 
 
