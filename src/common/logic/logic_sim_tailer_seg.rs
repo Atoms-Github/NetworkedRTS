@@ -81,7 +81,7 @@ impl LogicSegmentTailerIn {
                             println!("Logic missing info so asking: {:?}", problem);
                             outwards_messages.send( problem.clone() ).unwrap();
                         }
-                        thread::sleep(Duration::from_millis(15)); // modival Resend period.
+                        thread::sleep(Duration::from_millis(1000)); // modival Resend period.
                     }
                 }
                 let new_tail = self.tail_lock.read().unwrap().clone();

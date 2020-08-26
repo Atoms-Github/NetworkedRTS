@@ -24,6 +24,7 @@ pub const DEBUG_MSGS_MAIN: bool = DEBUG_MSGS_ALL || false;
 pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || false;
 pub const WARN_MSGS: bool = DEBUG_MSGS_ALL || false; // TODO2 Could use warn/custom macros.
 pub const DEBUG_MSGS_TIMERS: bool = DEBUG_MSGS_ALL || false;
+pub const DEBUG_MSGS_PROCESS: bool = DEBUG_MSGS_ALL || true;
 
 
 fn main() {

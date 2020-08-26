@@ -52,6 +52,7 @@ impl KnownFrameInfo{
 //    }
 
     pub fn apply_offset(&mut self, offset_ns: i64){
+        // TODO1: Fix this rubbish. Here's abs: let test = i64::abs(offset_ns);
         // TODO3: Find the abs function.
         if offset_ns > 0{
             self.time = self.time.add(Duration::from_nanos(offset_ns as u64));

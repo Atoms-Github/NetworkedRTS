@@ -123,15 +123,14 @@ impl ConnectNetEx {
         let clock_offset_ns = self.perform_ping_tests_get_clock_offset();
         self.send_greeting(player_name);
         let mut unsynced_greeting = self.receive_unsynced_greeting();
+        println!("I'm player {}", unsynced_greeting.assigned_player_id);
         {
             let synced_frame_info = &mut unsynced_greeting.known_frame;
-            println!("Before: {:?}", synced_frame_info);
             synced_frame_info.apply_offset(-clock_offset_ns); // Things work out that this is negative.
             // Known frame checks time between known and now.
             // If the server clock is fast, then we want to decrease our known one so we're using info from the future and vice versa.
             // Simpler explaination:
             // If server is fast, then we need to pull it back to convert it into local client time.
-            println!("After: {:?}", synced_frame_info);
         }
         unsynced_greeting
     }
