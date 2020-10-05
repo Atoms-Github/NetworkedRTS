@@ -57,7 +57,7 @@ impl SimDataStorageEx{
         println!("Creating new superstore for new player {}", player_id);
         let mut players_writable = self.player_inputs.write().unwrap();
 
-        let new_superstore = SuperstoreEx::start(frame_offset, self.tail_simed_index.clone());
+        let new_superstore = SuperstoreEx::start(frame_offset);
         players_writable.insert(player_id, new_superstore);
     }
 
