@@ -41,7 +41,7 @@ impl ServerMainStateIn {
         game_state
     }
     fn init_storage_man(&self) -> SimDataStorageEx{
-        SimDataStorageEx::new()
+        SimDataStorageEx::new(vec![], 0)
     }
     fn init_network_hub(&self) -> NetworkingHubEx{
         let net_hub_setup = NetworkingHubIn::new(self.hosting_ip.clone());

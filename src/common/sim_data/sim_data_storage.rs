@@ -31,11 +31,17 @@ pub struct SimDataStorageEx {
     tail_simed_index: ArcRw<i32>
 }
 impl SimDataStorageEx{
-    pub fn new() -> SimDataStorageEx{
-        SimDataStorageEx{
+    pub fn new(existing_players: Vec<PlayerID>, first_frame_to_store: FrameIndex) -> SimDataStorageEx{
+
+        let mut storage = SimDataStorageEx {
             player_inputs: Default::default(),
             tail_simed_index: Arc::new(RwLock::new(-1))
+        };
+        for existing_player in existing_players{
+            storage.init_new_player(existing_player, first_frame_to_store);
         }
+        println!("Done pre-init existing players.");
+        storage
     }
     pub fn set_tail_frame(&self, tail_frame: i32){
         *self.tail_simed_index.write().unwrap() = tail_frame;
@@ -155,112 +161,5 @@ impl SimDataStorageEx{
             sim_data: SuperstoreData { data: query_response, frame_offset: slice_first_frame }
         }
     }
-
-
-//    pub fn handle_inwards_msg(&mut self, msg: LogicInwardsMessage){
-//        match msg{
-//            LogicInwardsMessage::SyncerInputsUpdate(data) => {
-//                let player_sync = self.player_inputs.entry(data.owning_player).or_insert_with(|| FramedVec::<InputState>::new(data.start_frame));
-//                player_sync.insert_data_segment(data);
-//            }
-//        }
-//    }
-//    pub fn clone_info_for_sim(&self, frame_index: FrameIndex) -> SimDataQueryResults{
-//        // Should return that there's no error when getting value before player inited but just blank
-//        let mut missing_item_requests = vec![];
-////        let (bonus_list, problem_bonus) = ;
-//
-//        let mut latest_inputs = HashMap::new();
-//        for (player_id, data) in self.player_inputs.iter(){
-//            if frame_index < data.frames_index_offset{
-//                continue;
-//            }
-//            let (player_inputs, problem_inputs) =
-//                data.get_or_last_query(frame_index, FramedVecRequestType::PlayerInputs(*player_id));
-//
-//            latest_inputs.insert(*player_id, player_inputs.unwrap_or_default());
-//
-//            if let Some(request) = problem_inputs {
-//                missing_item_requests.push(request);
-//            }
-//        }
-//        SimDataQueryResults{
-//            missing_info: missing_item_requests,
-//            sim_info: InfoForSim {
-//                inputs_map: latest_inputs
-//            }
-//        }
-//    }
-//
-//
-//
-//
-//
-//
-//
-////    pub fn calculate_last_inputs(&self) -> HashMap<PlayerID, InputState>{
-////        let mut to_return = HashMap::new();
-////
-////        for (player_id,player_record) in self.player_inputs.iter(){
-////            let last_input= player_record.data.last();
-////            let usable_input;
-////            match last_input{
-////                Some(state) => {
-////                    usable_input = state.clone();
-////                }
-////                None => {
-////                    usable_input = InputState::new();
-////                }
-////
-////            }
-////            to_return.insert(*player_id, usable_input);
-////        }
-////
-////        return to_return;
-////    }
-////    pub fn get_frames_segment(&self, segment_needed: &Sync) -> Option<LogicInwardsMessage> {
-////        match segment_needed.type_needed{
-////            LogicInfoRequestType::PlayerInputs(player_id) => {
-////                // Eventually..., this whole thing can probably be sped up by not cloning anywhere. Just using fancy lifetimed references.
-////                let player_record = self.frames_map.get(&player_id)?; // Wayyyy, using question marks like a boss. :)
-////                let relative_start_frame = segment_needed.start_frame - player_record.start_frame;
-////
-////
-////                let mut input_states_found = vec![];
-////                for relative_index in relative_start_frame..(relative_start_frame + segment_needed.number_of_frames /*No need for +1 */){
-////                    let sync = player_record.sync.get(relative_index);
-////                    if sync.is_some(){
-////                        let input_segment = PlayerInputSegmentType::WholeState(sync.unwrap().clone());
-////                        input_states_found.push(input_segment);
-////                    }
-////
-////                }
-////
-////                return Some(LogicInwardsMessage::InputsUpdate(LogicInputsResponse{
-////                    player_id,
-////                    start_frame_index: segment_needed.start_frame,
-////                    input_states: input_states_found
-////                }));
-////            }
-////            LogicInfoRequestType::BonusEvents => {
-////                // This should never be called on the client.
-////                let mut events = vec![];
-////                for abs_index in segment_needed.start_frame..(segment_needed.start_frame + segment_needed.number_of_frames){
-////                    let relative_index = abs_index - self.bonus_start_frame;
-////                    let events_list = self.bonus_events.get(abs_index);
-////                    if events_list.is_some(){
-////                        events.push(events_list.unwrap().clone());
-////                    }else{
-////                        break; // Reached end of list.
-////                    }
-////                }
-////                let msg = LogicInwardsMessage::BonusMsgsUpdate(BonusMsgsResponse{
-////                    start_frame_index: segment_needed.start_frame,
-////                    event_lists: events
-////                });
-////                return Some(msg);
-////            }
-////        }
-////    }
 }
 

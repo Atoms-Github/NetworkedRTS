@@ -32,12 +32,7 @@ impl ClientIn{
         let mut welcome_info = seg_net_connect.receive_synced_greeting(&self.player_name);
 
 
-        let seg_data_storage = SimDataStorageEx::new();
-
-        for existing_player in welcome_info.players_in_state{
-            seg_data_storage.init_new_player(existing_player, welcome_info.game_state.get_simmed_frame_index() + 1);
-        }
-
+        let seg_data_storage = SimDataStorageEx::new(welcome_info.players_in_state, welcome_info.game_state.get_simmed_frame_index() + 1);
 
         let seg_hasher = HasherIn::start();
         let seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame.clone()).start();

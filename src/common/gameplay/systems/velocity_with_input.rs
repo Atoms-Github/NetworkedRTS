@@ -15,7 +15,7 @@ create_system!( velocity_with_inputs_system | secret_velocity_with_inputs_system
 	|
 	| players_input: &HashMap<PlayerID, InputState>, frame_index: FrameIndex
 );
-const MOVEMENT_SPEED: f32 = 10.0;
+const MOVEMENT_SPEED: f32 = 2.0;
 
 fn velocity_with_inputs_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID, InputState>, frame_index: FrameIndex){
 
