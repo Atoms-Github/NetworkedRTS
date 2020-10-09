@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use std::collections::{HashSet};
-use ggez::event::KeyCode;
+use ggez::event::{KeyCode, MouseButton};
 
 use crate::common::types::*;
 
@@ -9,7 +9,8 @@ use crate::common::types::*;
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird.
-    pub new_player: bool
+    pub new_player: bool,
+    pub mouse_btns_pressed: HashSet<MouseButton>
 }
 
 impl Eq for InputState{
@@ -19,6 +20,8 @@ impl Eq for InputState{
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum InputChange {
     KeyDownUp(KeyCode, bool),
+    NewMousePosition(f32, f32),
+    MouseUpDown(MouseButton, bool),
     MouseMove(PointFloat)
 }
 
@@ -30,6 +33,16 @@ impl InputChange{ // TODO2: Swap round. Should be state.apply_change(InputChange
             },
             InputChange::MouseMove(position) => {
                 state.mouse_loc = position.clone();
+            }
+            InputChange::NewMousePosition(x, y) => {
+                state.mouse_loc = PointFloat::new(*x,*y);
+            }
+            InputChange::MouseUpDown(button, is_down) => {
+                if *is_down{
+                    state.mouse_btns_pressed.insert(*button);
+                }else{
+                    state.mouse_btns_pressed.remove(button);
+                }
             }
         }
     }
@@ -46,7 +59,8 @@ impl InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
             keys_pressed: HashSet::new(),
 //            keys_pressed: vec![false; 260]
-            new_player: false
+            new_player: false,
+            mouse_btns_pressed: Default::default()
         }
     }
     pub fn is_keyid_pressed(&self, key_id: usize) -> bool{

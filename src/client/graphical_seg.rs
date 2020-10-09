@@ -3,7 +3,7 @@ use std::thread;
 
 use ggez::*;
 use ggez::{ContextBuilder, event};
-use ggez::event::{EventHandler, KeyMods};
+use ggez::event::{EventHandler, KeyMods, MouseButton};
 use ggez::input::keyboard::KeyCode;
 
 use crate::common::gameplay::ecs::world::*;
@@ -17,24 +17,14 @@ pub struct GraphicalSeg {
 //    my_current_input_state: Arc<Mutex<InputState>>,
 render_head_rec: Receiver<GameState>,
     my_player_id: PlayerID,
-    sender: Option<Sender<InputChange>>,
-    init_time: SystemTime
+    sender: Option<Sender<InputChange>> // TODO3: Hmm. Option?
 }
-/*
-let (logic_layer, head_handle) =
-            GameLogicLayer::new(true, known_frame_info, game_state);
-        let channels = channel();
-        thread::spawn(move ||{
-            logic_layer.run_logic_loop();
-        });\
-*/
 impl GraphicalSeg {
     pub fn new(head_render_handle: Receiver<GameState>, my_player_id: PlayerID) -> GraphicalSeg {
         GraphicalSeg {
             render_head_rec: head_render_handle,
             my_player_id,
             sender: None,
-            init_time: SystemTime::now()
         }
     }
 
@@ -82,9 +72,6 @@ impl GraphicalSeg {
 
 impl EventHandler for GraphicalSeg {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
-
-
-
         Ok(())
     }
 
@@ -113,6 +100,29 @@ impl EventHandler for GraphicalSeg {
             let send_result = self.sender.as_ref().unwrap().send(InputChange::KeyDownUp(keycode, true));
             assert!(send_result.is_ok(), format!("Failed to take input: {:?}", send_result));
         }
+    }
+    fn mouse_motion_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32, _dx: f32, _dy: f32) {
+
+    }
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
+        self.sender.as_ref().unwrap().send(InputChange::NewMousePosition(x, y)).unwrap();
+        self.sender.as_ref().unwrap().send(InputChange::MouseUpDown(button, false)).unwrap();
+    }
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
+        self.sender.as_ref().unwrap().send(InputChange::NewMousePosition(x, y)).unwrap();
+        self.sender.as_ref().unwrap().send(InputChange::MouseUpDown(button, true)).unwrap();
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods) {

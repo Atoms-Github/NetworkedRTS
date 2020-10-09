@@ -6,7 +6,7 @@ use crate::common::gameplay::systems::velocity::*;
 use crate::common::gameplay::systems::position::*;
 use crate::common::gameplay::systems::size::*;
 use crate::common::gameplay::systems::render::*;
-use crate::common::gameplay::systems::velocity_with_input::*;
+use crate::common::gameplay::systems::movershooter::*;
 use crate::common::utils::unmoving_vec::*;
 use anymap::AnyMap;
 
@@ -181,7 +181,7 @@ macro_rules! create_system {
 	}
 }
 
-create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, velocity_with_input_s: VelocityWithInputComp);
+create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, mover_shooter_s: MoverShooterComp);
 
 #[derive(Debug, Serialize, Deserialize, Clone, Hash)]
 pub struct World {
