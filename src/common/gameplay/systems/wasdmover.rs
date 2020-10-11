@@ -19,7 +19,7 @@ create_system!( wasdmover_system | secret_wasdmover_system
 	|
 	| players_input: &HashMap<PlayerID, InputState>, frame_index: FrameIndex
 );
-const MOVEMENT_SPEED: f32 = 2.0;
+const MOVEMENT_SPEED: f32 = 6.0;
 
 #[derive(Debug,Serialize, Deserialize, Clone, Hash)]
 pub struct WasdMoverComp {

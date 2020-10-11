@@ -11,19 +11,27 @@ use winit::MouseCursor::Move;
 use crate::common::gameplay::systems::position::PositionComp;
 use crate::common::gameplay::systems::size::SizeComp;
 use crate::common::gameplay::systems::render::RenderComp;
+use std::ops::{Sub, Mul};
+use std::hash::Hasher;
+use std::hash::*;
 
 
 create_system!( clickshooter_system | secret_clickshooter_system
-	| my_velocity: VelocityComp, my_clickshooter_comp: ClickShooterComp
+	| my_velocity: VelocityComp, my_clickshooter_comp: ClickShooterComp, my_position: PositionComp
 	|
 	| players_input: &HashMap<PlayerID, InputState>, frame_index: FrameIndex
 );
 
-const MOVEMENT_SPEED: f32 = 2.0;
-
-#[derive(Debug,Serialize, Deserialize, Clone, Hash)]
+#[derive(Debug,Serialize, Deserialize, Clone)]
 pub struct ClickShooterComp {
-    pub owner_id: PlayerID
+    pub owner_id: PlayerID,
+    pub cooldown: f32
+}
+impl Hash for ClickShooterComp{
+    fn hash<H: Hasher>(&self, state: &mut H) { // Can fix with fixed and/or cordick first.
+        self.owner_id.to_be_bytes().hash(state);
+        self.cooldown.to_be_bytes().hash(state);
+    }
 }
 
 fn clickshooter_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID, InputState>, frame_index: FrameIndex){
@@ -31,13 +39,27 @@ fn clickshooter_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID
     let my_inputs = player_inputs.get(&owner_id).unwrap_or_else(||{panic!("Can't find unit owner: {} Simmed: {}", owner_id, frame_index)});
     if my_inputs.mouse_btns_pressed.len() > 0{
 
-        let mut pending_entity_online_player = PendingEntity::new();
+        if e.my_clickshooter_comp(d).cooldown <= 0.0{
+            let target = my_inputs.mouse_loc.coords.clone();
+            let current_location = PointFloat::new(e.my_position(d).x, e.my_position(d).y).coords;
+            let velocity_vec = PointFloat::new(target.x - current_location.x, target.y - current_location.y).coords.normalize().mul(4.0);
+            println!("Velocity: {}", velocity_vec.x);
+            let velocity = VelocityComp{ x: velocity_vec.x, y: velocity_vec.y };
 
-        pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
-        pending_entity_online_player.add_component(VelocityComp{ x: 1.0, y: 0.0 });
-        pending_entity_online_player.add_component(SizeComp{ x: 25.0, y: 25.0 });
-        pending_entity_online_player.add_component(RenderComp{ hue: (99,200,30)});
-        d.pending.create_entity(pending_entity_online_player);
+            let mut pending_entity_bullet = PendingEntity::new();
+            pending_entity_bullet.add_component(e.my_position(d).clone());
+            pending_entity_bullet.add_component(velocity);
+            pending_entity_bullet.add_component(SizeComp{ x: 25.0, y: 25.0 });
+            pending_entity_bullet.add_component(RenderComp{ hue: (99,200,30)});
+            d.pending.create_entity(pending_entity_bullet);
+
+            e.my_clickshooter_comp(d).cooldown = 20.0;
+        }else{
+            e.my_clickshooter_comp(d).cooldown -= 1.0;
+        }
+
+
+
     }
 }
 

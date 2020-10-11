@@ -66,7 +66,7 @@ impl GameState{
         pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
         pending_entity_online_player.add_component(VelocityComp{ x: 1.0, y: 0.0 });
         pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
-        pending_entity_online_player.add_component(ClickShooterComp { owner_id: player_id });
+        pending_entity_online_player.add_component(ClickShooterComp { owner_id: player_id, cooldown: 0.0 });
         pending_entity_online_player.add_component(WasdMoverComp { owner_id: player_id });
         pending_entity_online_player.add_component(RenderComp{ hue: (255,150,150)});
         pending.create_entity(pending_entity_online_player);
@@ -86,7 +86,7 @@ impl GameState{
         secret_velocity_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
 
         secret_clickshooter_system(&self.world, &mut pending, &mut self.storages.velocity_s,
-                                           &mut self.storages.click_shooter_s, &sim_info.inputs_map, self.simmed_frame_index);
+                                           &mut self.storages.click_shooter_s, &mut self.storages.position_s, &sim_info.inputs_map, self.simmed_frame_index);
         secret_wasdmover_system(&self.world, &mut pending, &mut self.storages.velocity_s,
                                    &mut self.storages.wasdmover_s, &sim_info.inputs_map, self.simmed_frame_index);
 
