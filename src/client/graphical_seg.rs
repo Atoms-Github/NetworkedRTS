@@ -101,8 +101,8 @@ impl EventHandler for GraphicalSeg {
             assert!(send_result.is_ok(), format!("Failed to take input: {:?}", send_result));
         }
     }
-    fn mouse_motion_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32, _dx: f32, _dy: f32) {
-
+    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
+        self.sender.as_ref().unwrap().send(InputChange::NewMousePosition(x, y)).unwrap();
     }
     fn mouse_button_up_event(
         &mut self,

@@ -43,7 +43,6 @@ fn clickshooter_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID
             let target = my_inputs.mouse_loc.coords.clone();
             let current_location = PointFloat::new(e.my_position(d).x, e.my_position(d).y).coords;
             let velocity_vec = PointFloat::new(target.x - current_location.x, target.y - current_location.y).coords.normalize().mul(4.0);
-            println!("Velocity: {}", velocity_vec.x);
             let velocity = VelocityComp{ x: velocity_vec.x, y: velocity_vec.y };
 
             let mut pending_entity_bullet = PendingEntity::new();
