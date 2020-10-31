@@ -22,14 +22,15 @@ use ggez::input::keyboard::KeyCode;
 
 struct ClientIn{
     player_name: String,
-    connection_ip: String
+    connection_ip: String,
+    preferred_id: i32,
 }
 
 impl ClientIn{
     // Links up channels.
     fn init(self) -> ClientEx{
         let mut seg_net_connect = ConnectNetIn::new(self.connection_ip.clone()).start_net();
-        let mut welcome_info = seg_net_connect.receive_synced_greeting(&self.player_name);
+        let mut welcome_info = seg_net_connect.receive_synced_greeting(&self.player_name, self.preferred_id);
 
 
         let seg_data_storage = SimDataStorageEx::new(welcome_info.players_in_state, welcome_info.game_state.get_simmed_frame_index() + 1);
@@ -116,12 +117,13 @@ impl ClientEx{
 
 
 
-pub fn client_main(connection_target_ip: String){
+pub fn client_main(connection_target_ip: String, prefered_id: i32){
     thread::sleep(Duration::from_millis(1000)); // TODO1
     println!("Starting as client.");
     let client = ClientIn{
         player_name: String::from("Atomserdiah"),
         connection_ip: connection_target_ip,
+        preferred_id: prefered_id
     };
     let client_ex = client.init();
     client_ex.run_loop();

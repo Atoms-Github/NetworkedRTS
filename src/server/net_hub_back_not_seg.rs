@@ -1,66 +1,58 @@
 use std::collections::HashMap;
 use std::net::{SocketAddr, TcpListener, TcpStream, UdpSocket};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::{SystemTime, Duration};
 
 use crate::common::network::external_msg::*;
 use crate::common::types::*;
+use bimap::BiHashMap;
+use std::borrow::Borrow;
+use crate::server::net_hub_front_seg::DistributableNetMessage;
 
-pub struct NetworkingHubEx {
-    pub yeet_sink: Sender<DistributableNetMessage>,
-    pub pickup_rec: Option<Receiver<OwnedNetworkMessage>>,
+
+
+// For down to the wire stuff about TCP and UDP.
+// Outputs friendly byte arrays with addresses.
+// Inputs messages with 'reliable' boolean.
+// Not a proper segment. Integrated into net hub front
+
+pub enum NetHubBackMsgOut{
+    NewPlayer(SocketAddr),
+    PlayerDiscon(SocketAddr),
+    NewMsg(SocketAddr)
+}
+pub enum NetHubBackMsgIn{
+    SendMsg(SocketAddr, ExternalMsg, /*Reliable*/bool),
+    DropPlayer(SocketAddr)
 }
 
-pub struct NetworkingHubIn {
-    host_addr_str: String,
-    next_player_id: PlayerID
+pub struct NetHubBackEx {
+    pub msg_in: Sender<NetHubBackMsgIn>,
+    pub msg_out: Receiver<NetHubBackMsgOut>,
 }
 
-pub struct OwnedNetworkMessage{
-    pub owner: PlayerID,
-    pub message: ExternalMsg
+pub struct NetHubBackIn {
+    host_addr_str: String
 }
-
-pub enum DistributableNetMessage{
-    ToSingle(PlayerID, ExternalMsg),
-    ToAllExcept(PlayerID, ExternalMsg),
-    ToAll(ExternalMsg)
+pub fn net_hub_start_hosting(host_addr_str: String) -> NetHubBackEx{
+    NetHubBackIn{
+        host_addr_str
+    }.start()
 }
 
 // Manages the server's incoming and outgoing network messages.
-impl NetworkingHubIn {
-    pub fn new(host_addr_str: String) -> Self {
-        NetworkingHubIn{
-            host_addr_str,
-            next_player_id: 0
-        }
-    }
+impl NetHubBackIn {
+    fn start(&self) -> NetHubBackEx{
+        let (in_sink, in_rec) = channel();
+        let (out_sink, out_rec) = channel();
 
-    fn gen_next_player_id(&mut self) -> PlayerID{
-        let id = self.next_player_id;
-        self.next_player_id += 1;
-        id
-    }
+        let mut udp_socket = self.bind_udp_addr();
 
-    fn bind_addr(&self) -> UdpSocket{
-        let host_addr = self.host_addr_str.parse::<SocketAddr>().unwrap();
-        println!("Starting hosting on : {}", host_addr);
-        UdpSocket::bind(&host_addr).expect("Unable to bind hosting address.")
-    }
-
-    pub fn start_hosting(mut self) -> NetworkingHubEx{
-        let (yeet_sink, yeet_rec) = channel();
-        let (pickup_sink, pickup_rec) = channel();
-
-        // dcwct Split into send and rec.
-        let mut socket = self.bind_addr();
-        let mut addresses_to_ids = Arc::new(RwLock::new(bimap::BiHashMap::new()));
-
-
-        let mut socket_outgoing = socket.try_clone().expect("Can't clone socket.");
+        let mut socket_outgoing = udp_socket.try_clone().expect("Can't clone socket.");
         let mut outgoing_map = addresses_to_ids.clone();
+
 
         // Outoing messages.
         thread::spawn(move ||{
@@ -89,8 +81,8 @@ impl NetworkingHubIn {
 
         // Incoming messages.
         thread::spawn(move ||{
-            let new_msgs_rec = start_inwards_codec_thread_udp(socket.try_clone().expect("Can't clone socket"));
-            let mut test_socket = socket;
+            let new_msgs_rec = start_inwards_codec_thread_udp(udp_socket.try_clone().expect("Can't clone socket"));
+            let mut test_socket = udp_socket;
             loop{
                 let (reced_message, address) = new_msgs_rec.recv().unwrap();
                 match reced_message{
@@ -114,8 +106,8 @@ impl NetworkingHubIn {
                         response.encode_and_send_udp(&mut test_socket, address);
                     }
                     ExternalMsg::ConnectionInitQuery(query_data) => {
-                        let new_player_id = self.gen_next_player_id();
                         let mut write_handle = addresses_to_ids.write().unwrap();
+                        let new_player_id = self.gen_next_player_id(&write_handle);
                         write_handle.insert(address, new_player_id);
                         let owned_msg = OwnedNetworkMessage{
                             owner: new_player_id,
@@ -135,11 +127,14 @@ impl NetworkingHubIn {
                 }
             }
         });
-
-
-        NetworkingHubEx{
-            yeet_sink,
-            pickup_rec: Some(pickup_rec)
+        NetHubBackEx{
+            msg_in: in_sink,
+            msg_out: out_rec,
         }
+    }
+    fn bind_udp_addr(&self) -> UdpSocket{
+        let host_addr = self.host_addr_str.parse::<SocketAddr>().unwrap();
+        println!("Starting hosting on : {}", host_addr);
+        UdpSocket::bind(&host_addr).expect("Unable to bind hosting address.")
     }
 }

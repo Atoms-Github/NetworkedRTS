@@ -13,6 +13,9 @@ use std::{env, thread};
 
 use crate::client::client_mode::*;
 use crate::server::server_mode::*;
+use crate::common::types::*;
+use std::str::FromStr;
+
 
 
 pub mod client;
@@ -43,19 +46,28 @@ fn main() {
             println!("Connection/hosting IP not specified! Using {}", default);
             default
         }// s
-    }; // args.pop().or_else().expect("Connection/hosting IP not specified!");
+    };
 
+
+
+    let mut is_server = false;
     match launch_type.to_lowercase().as_ref() {
         "client" => {
-            client_main(ip);
         }
         "server" => {
-            server_main(ip);
+            is_server = true;
         }
         _ => {
             println!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
-            client_main(ip);
         }
+    }
+    if is_server{
+        server_main(ip);
+    }else{
+        let prefered_player_id = args.pop().map(|as_str|{
+            i32::from_str(as_str.as_str()).ok()
+        }).flatten().unwrap_or(0); // Conflict means auto-assign.
+        client_main(ip, prefered_player_id);
     }
 }
 

@@ -12,6 +12,7 @@ use crate::common::types::*;
 
 pub struct ConnectNetIn {
     conn_address_str: String,
+
 }
 pub struct ConnectNetEx {
     pub net_sink: Sender<ExternalMsg>,
@@ -92,10 +93,11 @@ impl ConnectNetEx {
         }
         results
     }
-    fn send_greeting(&self, player_name: &str){
+    fn send_greeting(&self, player_name: &str, preferred_id: i32){
         let connection_init_query = ExternalMsg::ConnectionInitQuery(
             NetMsgGreetingQuery {
-                my_player_name: player_name.to_string()
+                my_player_name: player_name.to_string(),
+                preferred_id
             }
         );
         self.net_sink.send(connection_init_query).unwrap();
@@ -119,9 +121,9 @@ impl ConnectNetEx {
 
         }
     }
-    pub fn receive_synced_greeting(&self, player_name: &str) -> NetMsgGreetingResponse {
+    pub fn receive_synced_greeting(&self, player_name: &str, preferred_id: i32) -> NetMsgGreetingResponse {
         let clock_offset_ns = self.perform_ping_tests_get_clock_offset();
-        self.send_greeting(player_name);
+        self.send_greeting(player_name, preferred_id);
         let mut unsynced_greeting = self.receive_unsynced_greeting();
         println!("I'm player {}", unsynced_greeting.assigned_player_id);
         {

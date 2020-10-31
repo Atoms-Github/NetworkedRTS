@@ -135,7 +135,8 @@ pub struct LocalCommandInfo{
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgGreetingQuery {
-    pub my_player_name: String
+    pub my_player_name: String,
+    pub preferred_id: i32
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgGreetingResponse {

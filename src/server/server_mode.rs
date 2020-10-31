@@ -11,7 +11,7 @@ use crate::common::sim_data::sim_data_storage::*;
 use crate::common::sim_data::sim_data_storage_manager::*;
 use crate::common::time::timekeeping::*;
 use crate::common::types::*;
-use crate::server::networking_hub_seg::*;
+use crate::server::net_hub_front_seg::*;
 
 pub enum ServerActableMessage{
     IncomingClientMsg(OwnedNetworkMessage),
