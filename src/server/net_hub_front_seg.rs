@@ -103,6 +103,8 @@ impl NetworkingHubIn {
 
         // Incoming messages.
         thread::spawn(move ||{
+            let (in_msgs_sink, in_msgs_rec) = unbounded();
+            // TODO1: Reform.
             let new_msgs_rec = start_inwards_codec_thread_udp(socket.try_clone().expect("Can't clone socket"));
             let mut test_socket = socket;
             loop{

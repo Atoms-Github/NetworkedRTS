@@ -15,102 +15,83 @@ use std::intrinsics::add_with_overflow;
 use crate::common::data::hash_seg::FramedHash;
 use crossbeam_channel::*;
 
-pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{
-    let (sink, rec) = unbounded::<ExternalMsg>();
-    thread::Builder::new().name("StreamDeserializerTCP".to_string()).spawn(move ||{
-        loop{
-//            let mut message_size_buffer = [0; 2];
-//            let message_size_bytes = read_stream.read_exact(&mut message_size_buffer).unwrap();
-//            let message_size = byteorder::LittleEndian::read_u16(&message_size_buffer);
+pub trait GameSocket{
+    fn start_listening(self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>);
+}
+pub trait GameSocketTcp{
+    fn send_msg(&mut self, message: &ExternalMsg);
+}
+pub trait GameSocketUdp{
+    fn send_msg(&mut self, message: &ExternalMsg, addr: &SocketAddr);
+}
+impl GameSocketTcp for TcpStream{
+    fn send_msg(&mut self, message: &ExternalMsg) {
+        let connection_init_bytes = bincode::serialize(message).unwrap();
+        self.write_all(&connection_init_bytes).unwrap();
+        self.flush().unwrap();
 
-            let mut message_buffer = vec![0; 65_535];
-            read_stream.read(&mut message_buffer).unwrap();
-
-            let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
-            match result{
-                Ok(msg) => {
-                    if crate::DEBUG_MSGS_NET{
-                        println!("<- {:?}", msg);
+        if crate::DEBUG_MSGS_NET{
+            println!("->: {:?}", self);
+        }
+    }
+}
+impl GameSocket for TcpStream{
+    fn start_listening(mut self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>) {
+        thread::Builder::new().name("StreamDeserializerTCP".to_string()).spawn(move ||{
+            let peer_address = self.peer_addr().unwrap();
+            loop{
+                let mut message_buffer = vec![0; 65_535];
+                let value = self.read(&mut message_buffer).unwrap();
+                let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+                match result{
+                    Ok(msg) => {
+                        if crate::DEBUG_MSGS_NET{
+                            println!("<- {:?}", msg);
+                        }
+                        msgs_sink.send((msg, peer_address.clone())).unwrap();
                     }
-                    sink.send(msg).unwrap();
-                }
-                err => {
-                    panic!("Err {:?}", err)
+                    err => {
+                        panic!("Err {:?}", err)
+                    }
                 }
             }
-        }
-    }).unwrap();
-    rec
+        }).unwrap();
+    }
 }
+impl GameSocket for UdpSocket{
+    fn start_listening(self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>) {
+        thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
+            let mut message_buffer = [0; 65_535];
+            loop{
+                let (message_size_bytes, address) = self.recv_from(&mut message_buffer).unwrap();
 
-pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(ExternalMsg, SocketAddr)>{
-    let (sender, receiver) = unbounded();
-    thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
-        let mut message_buffer = [0; 65_535];
-        loop{
-            let (message_size_bytes, address) = read_stream.recv_from(&mut message_buffer).unwrap();
-
-            let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
-            match result{
-                Ok(msg) => {
-                    if crate::DEBUG_MSGS_NET{
-                        println!("<- {:?}", msg);
+                let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+                match result{
+                    Ok(msg) => {
+                        if crate::DEBUG_MSGS_NET{
+                            println!("<- {:?}", msg);
+                        }
+                        msgs_sink.send((msg, address)).unwrap();
                     }
-                    sender.send((msg, address)).unwrap();
-                }
-                err => {
-                    panic!("Err {:?}", err)
+                    err => {
+                        panic!("Err {:?}", err)
+                    }
                 }
             }
-        }
-    }).unwrap();
-    receiver
+        }).unwrap();
+    }
 }
+impl GameSocketUdp for UdpSocket{
+    fn send_msg(&mut self, message: &ExternalMsg, address: &SocketAddr) {
+        let msg_buffer = bincode::serialize(message).unwrap();
 
-
-pub fn start_inwards_codec_thread_udp_filtered(mut read_stream :UdpSocket, filter_address: SocketAddr) -> Receiver<ExternalMsg>{ // This also ignores msgs from wrong address.
-    let (sender, receiver) = unbounded();
-
-    let unfiltered = start_inwards_codec_thread_udp(read_stream);
-    thread::Builder::new().name("StreamDeserializerUDPFiltered".to_string()).spawn(move ||{
-        loop{
-            let (new_msg, addr) = unfiltered.recv().unwrap();
-            assert_eq!(addr, filter_address, "Got message from wrong address.");
-            sender.send(new_msg).unwrap();
-        }
-    }).unwrap();
-    receiver
-}
-
-
-
-impl ExternalMsg{
-//    pub fn encode_and_send_tcp(&self, write_stream :&mut TcpStream){ If this is needed, need to match udp. (Need to include size in main msg)
-//        let connection_init_bytes = bincode::serialize(self).unwrap();
-//        let message_size = connection_init_bytes.len() as u16;
-//
-//        let mut buffer = [0; 2];
-//        byteorder::LittleEndian::write_u16(&mut buffer, message_size);
-//        write_stream.write_all(&buffer).unwrap();
-//        write_stream.write_all(&connection_init_bytes).unwrap();
-//        write_stream.flush().unwrap();
-//
-//        if crate::DEBUG_MSGS_NET{
-//            println!("->: {:?}", self);
-//        }
-//    }
-
-    pub fn encode_and_send_udp(&self, write_stream :&mut UdpSocket, address: SocketAddr){
-        let msg_buffer = bincode::serialize(self).unwrap();
-
-        write_stream.send_to(&msg_buffer, address).unwrap();
+        self.send_to(&msg_buffer, address).unwrap();
 
         if crate::DEBUG_MSGS_NET{
             println!("->({}): {:?}", msg_buffer.len(), self);
         }
     }
 }
-
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum ExternalMsg {
     ConnectionInitQuery(NetMsgGreetingQuery),

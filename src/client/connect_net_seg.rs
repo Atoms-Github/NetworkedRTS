@@ -154,15 +154,15 @@ impl ConnectNetIn {
         let mut socket_outgoing = socket.try_clone().unwrap();
         thread::spawn(move ||{
             loop{
-                let message_to_send: ExternalMsg = out_rec.recv().unwrap();
-                message_to_send.encode_and_send_udp(&mut socket_outgoing, conn_address);
+                socket_outgoing.send_msg(&out_rec.recv().unwrap(), &conn_address);
             }
         });
-        let local_address = socket.local_addr().unwrap();
-        let in_rec = start_inwards_codec_thread_udp_filtered(socket, conn_address);
+        let (in_msgs_sink, in_msgs_rec) = unbounded();
+        socket.start_listening(in_msgs_sink);
         ConnectNetEx {
             net_sink: out_sink,
-            net_rec: Some(in_rec),
+//            net_rec: Some(in_msgs_rec), TODO1. Fix.
+            net_rec: None
         }
     }
 }
