@@ -1,6 +1,6 @@
 use std::thread;
 use std::sync::{Arc, RwLock};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use crossbeam_channel::*;
 
 use serde::{Deserialize, Serialize};
 

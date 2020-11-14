@@ -1,4 +1,4 @@
-use std::sync::mpsc::{Receiver, TryRecvError};
+use crossbeam_channel::*;
 use std::thread;
 
 use crate::client::logic_sim_header_seg::*;

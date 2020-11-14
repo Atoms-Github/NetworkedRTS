@@ -1,4 +1,4 @@
-use std::sync::mpsc::{Receiver, Sender};
+use crossbeam_channel::*;
 use std::thread;
 use std::time::{Duration};
 
@@ -25,7 +25,7 @@ struct ClientIn{
     connection_ip: String,
     preferred_id: i32,
 }
-
+// TODO2: Also, that refactor seems good. To prevent threads just repassing messages, the message generator should also be formatted for new version.
 impl ClientIn{
     // Links up channels.
     fn init(self) -> ClientEx{

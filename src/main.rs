@@ -29,9 +29,29 @@ pub const WARN_MSGS: bool = DEBUG_MSGS_ALL || true; // TODO2 Could use warn/cust
 pub const DEBUG_MSGS_TIMERS: bool = DEBUG_MSGS_ALL || false;
 pub const DEBUG_MSGS_PROCESS: bool = DEBUG_MSGS_ALL || true;
 
+use crossbeam_channel::{unbounded, Select};
 
 fn main() {
     println!("STARTING2345.");
+
+
+
+    use crossbeam_channel::unbounded;
+
+// Create a channel of unbounded capacity.
+    let (s, r) = unbounded();
+
+// Send a message into the channel.
+
+// Receive the message from the channel.
+    assert_eq!(r.recv(), Ok("Hello, world!"));
+
+
+
+
+
+
+
     let mut args: Vec<String> = env::args().collect();
 
     args.reverse();

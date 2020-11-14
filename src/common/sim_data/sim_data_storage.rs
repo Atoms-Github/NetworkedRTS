@@ -8,7 +8,7 @@ use crate::common::sim_data::superstore_seg::*;
 
 use crate::common::types::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
-use std::sync::mpsc::{Sender, channel};
+use crossbeam_channel::*;
 use std::thread;
 
 

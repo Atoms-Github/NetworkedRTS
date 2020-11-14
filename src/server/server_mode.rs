@@ -1,6 +1,6 @@
 use std::panic;
 use std::sync::{Arc, RwLock};
-use std::sync::mpsc::{channel, Receiver};
+use crossbeam_channel::*;
 use std::thread;
 use std::time::SystemTime;
 

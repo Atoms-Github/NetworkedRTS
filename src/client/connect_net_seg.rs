@@ -1,11 +1,11 @@
 use std::net::{SocketAddr, TcpStream, UdpSocket};
 use std::ops::Add;
 use std::str::FromStr;
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, SystemTime};
 use std::ops::Div;
 use std::ops::Sub;
+use crossbeam_channel::*;
 
 use crate::common::network::external_msg::*;
 use crate::common::types::*;
@@ -38,7 +38,7 @@ impl ConnectNetEx {
     }
     fn start_ping_sender_thread(&self) -> Sender<ThreadCloser>{
         let my_sender = self.net_sink.clone();
-        let (stop_sink, stop_rec) = channel();
+        let (stop_sink, stop_rec) = unbounded();
         thread::spawn(move ||{
             loop{
                 my_sender.send(ExternalMsg::PingTestQuery(SystemTime::now())).unwrap();
@@ -150,7 +150,7 @@ impl ConnectNetIn {
         println!("Client local socket address: {:?}", socket.local_addr());
 //        socket.connect(conn_address.clone()).expect("Client couldn't connect to server."); dcwct
 
-        let (out_sink, out_rec) = channel();
+        let (out_sink, out_rec) = unbounded();
         let mut socket_outgoing = socket.try_clone().unwrap();
         thread::spawn(move ||{
             loop{

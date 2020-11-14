@@ -1,6 +1,5 @@
 use std::io::{Read, Write};
 use std::net::{TcpStream, UdpSocket, SocketAddr};
-use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 use std::time::SystemTime;
 
@@ -14,37 +13,38 @@ use crate::common::types::*;
 use crate::common::sim_data::sim_data_storage::*;
 use std::intrinsics::add_with_overflow;
 use crate::common::data::hash_seg::FramedHash;
+use crossbeam_channel::*;
 
-//pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{ If this is needed, need to match udp. (Need to include size in main msg)
-//    let (sender, receive) = channel::<ExternalMsg>();
-//    thread::Builder::new().name("StreamDeserializerTCP".to_string()).spawn(move ||{
-//        loop{
+pub fn start_inwards_codec_thread_tcp(mut read_stream :TcpStream) -> Receiver<ExternalMsg>{
+    let (sink, rec) = unbounded::<ExternalMsg>();
+    thread::Builder::new().name("StreamDeserializerTCP".to_string()).spawn(move ||{
+        loop{
 //            let mut message_size_buffer = [0; 2];
 //            let message_size_bytes = read_stream.read_exact(&mut message_size_buffer).unwrap();
 //            let message_size = byteorder::LittleEndian::read_u16(&message_size_buffer);
-//
-//            let mut message_buffer = vec![0; message_size as usize];
-//            read_stream.read_exact(&mut message_buffer).unwrap();
-//
-//            let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
-//            match result{
-//                Ok(msg) => {
-//                    if crate::DEBUG_MSGS_NET{
-//                        println!("<- {:?}", msg);
-//                    }
-//                    sender.send(msg).unwrap();
-//                }
-//                err => {
-//                    panic!("Err {:?}", err)
-//                }
-//            }
-//        }
-//    }).unwrap();
-//    receive
-//}
+
+            let mut message_buffer = vec![0; 65_535];
+            read_stream.read(&mut message_buffer).unwrap();
+
+            let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+            match result{
+                Ok(msg) => {
+                    if crate::DEBUG_MSGS_NET{
+                        println!("<- {:?}", msg);
+                    }
+                    sink.send(msg).unwrap();
+                }
+                err => {
+                    panic!("Err {:?}", err)
+                }
+            }
+        }
+    }).unwrap();
+    rec
+}
 
 pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(ExternalMsg, SocketAddr)>{
-    let (sender, receiver) = channel();
+    let (sender, receiver) = unbounded();
     thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
         let mut message_buffer = [0; 65_535];
         loop{
@@ -69,7 +69,7 @@ pub fn start_inwards_codec_thread_udp(mut read_stream :UdpSocket) -> Receiver<(E
 
 
 pub fn start_inwards_codec_thread_udp_filtered(mut read_stream :UdpSocket, filter_address: SocketAddr) -> Receiver<ExternalMsg>{ // This also ignores msgs from wrong address.
-    let (sender, receiver) = channel();
+    let (sender, receiver) = unbounded();
 
     let unfiltered = start_inwards_codec_thread_udp(read_stream);
     thread::Builder::new().name("StreamDeserializerUDPFiltered".to_string()).spawn(move ||{

@@ -1,5 +1,5 @@
 use std::panic;
-use std::sync::mpsc::{Receiver, Sender};
+use crossbeam_channel::*;
 use std::thread;
 use std::time::{Duration};
 

@@ -1,4 +1,4 @@
-use std::sync::mpsc::{channel, Receiver, Sender};
+use crossbeam_channel::*;
 use std::thread;
 
 use ggez::*;

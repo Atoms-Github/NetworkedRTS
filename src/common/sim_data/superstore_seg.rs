@@ -1,7 +1,7 @@
 use std::net::{SocketAddr, TcpStream};
 use std::ops::Add;
 use std::str::FromStr;
-use std::sync::mpsc::{channel, Receiver, Sender};
+use crossbeam_channel::*;
 use std::thread;
 use std::time::{Duration, SystemTime};
 use std::ops::Div;

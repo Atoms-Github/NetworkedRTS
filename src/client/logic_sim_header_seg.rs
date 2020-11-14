@@ -1,6 +1,6 @@
 use std::thread;
 use std::sync::{Arc, RwLock};
-use std::sync::mpsc::{channel, Receiver};
+use crossbeam_channel::*;
 
 use crate::common::gameplay::game::game_state::*;
 use crate::common::sim_data::sim_data_storage::*;

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::net::{SocketAddr, TcpListener, TcpStream, UdpSocket};
 use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::{SystemTime, Duration};
 
@@ -9,6 +8,11 @@ use crate::common::network::external_msg::*;
 use crate::common::types::*;
 use bimap::BiHashMap;
 use std::borrow::Borrow;
+
+use crossbeam_channel::{unbounded, Select};
+use crossbeam_channel::Sender;
+use crossbeam_channel::Receiver;
+use crate::common::data::hash_seg::FramedHash;
 
 pub struct NetworkingHubEx {
     pub yeet_sink: Sender<DistributableNetMessage>,
@@ -58,8 +62,11 @@ impl NetworkingHubIn {
     }
 
     pub fn start_hosting(mut self) -> NetworkingHubEx{
-        let (yeet_sink, yeet_rec) = channel();
-        let (pickup_sink, pickup_rec) = channel();
+        let (yeet_sink, yeet_rec) = unbounded();
+        let (pickup_sink, pickup_rec) = unbounded();
+
+//        yeet_rec.send(DistributableNetMessage::ToSingle(10, ExternalMsg::NewHash(FramedHash::new(10,10))));
+
 
         // dcwct Split into send and rec.
         let mut socket = self.bind_addr();
