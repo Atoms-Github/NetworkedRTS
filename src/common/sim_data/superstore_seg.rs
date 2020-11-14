@@ -36,7 +36,7 @@ pub struct SuperstoreEx<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync 
 
 impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreEx<T>{
     pub fn start(frame_offset: usize)-> Self{
-        let (writes_sink, writes_rec) = channel();
+        let (writes_sink, writes_rec) = unbounded();
         let lukewarm = Arc::new(RwLock::new(vec![]));
         SuperstoreIn{
             frame_offset,

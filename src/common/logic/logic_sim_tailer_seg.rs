@@ -94,9 +94,9 @@ impl LogicSegmentTailerIn {
     }
 
     pub fn start_logic_tail(mut self) -> LogicSimTailerEx {
-        let (from_logic_sink, from_logic_rec) = channel();
-        let (new_tails_sink, new_tails_rec) = channel();
-        let (new_hashes_sink, new_hashes_rec) = channel();
+        let (from_logic_sink, from_logic_rec) = unbounded();
+        let (new_tails_sink, new_tails_rec) = unbounded();
+        let (new_hashes_sink, new_hashes_rec) = unbounded();
 
 
         let tail_lock = self.tail_lock.clone();

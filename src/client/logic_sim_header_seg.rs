@@ -37,7 +37,7 @@ impl LogicSimHeaderIn {
     }
 
     pub fn start(mut self) -> LogicSimHeaderEx{
-        let (mut head_sink, mut head_rec) = channel();
+        let (mut head_sink, mut head_rec) = unbounded();
         thread::spawn(move ||{
             loop{
                 let tail = self.tail_rec.recv().unwrap();

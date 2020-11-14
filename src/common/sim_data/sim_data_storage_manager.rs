@@ -30,7 +30,7 @@
 //        }
 //    }
 //    pub fn init_data_storage(self) -> SimDataStorageManagerEx{
-//        let (logic_inwards_sink, logic_inwards_rec) = channel();
+//        let (logic_inwards_sink, logic_inwards_rec) = unbounded();
 //        let lock = Arc::new(RwLock::new(self.data_storage));
 //
 //        SimDataStorageManagerIn::start_thread(lock.clone(), logic_inwards_rec);

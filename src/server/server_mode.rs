@@ -81,7 +81,7 @@ impl ServerMainStateEx {
                                      -> Receiver<ServerActableMessage>{
         let inc_clients = self.seg_net_hub.pickup_rec.take().unwrap();
 
-        let (actable_sink, actable_rec) = channel();
+        let (actable_sink, actable_rec) = unbounded();
 
 
 

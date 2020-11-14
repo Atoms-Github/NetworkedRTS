@@ -29,7 +29,7 @@ impl GraphicalSeg {
     }
 
     pub fn start(mut self) -> Receiver<InputChange>{
-        let (sender,receiver) = channel();
+        let (sender,receiver) = unbounded();
 
         self.sender = Some(sender);
 

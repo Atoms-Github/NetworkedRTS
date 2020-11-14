@@ -48,7 +48,7 @@ impl KnownFrameInfo{
         self.known_frame_index + (time_since_known_frame.as_millis() as f32 / FRAME_DURATION_MILLIS).floor() as usize
     }
     pub fn start_frame_stream_from_any(&self, first_to_send: FrameIndex) -> Receiver<FrameIndex>{
-        let (sender, receiver) = channel();
+        let (sender, receiver) = unbounded();
         let frame_info = self.clone();
         thread::spawn( move|| {
             // I'm gonna:

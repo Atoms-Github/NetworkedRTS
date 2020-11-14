@@ -38,7 +38,7 @@ impl SchedulerSegIn {
         }
     }
     pub fn start(mut self) -> SchedulerSegEx{
-        let (mut trigger_sink, mut trigger_rec) = channel();
+        let (mut trigger_sink, mut trigger_rec) = unbounded();
         thread::spawn(move ||{
             let gen = self.known_frame.start_frame_stream_from_known();
             loop{

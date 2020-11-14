@@ -67,7 +67,7 @@ impl HasherIn {
         });
     }
     pub fn start() -> HasherEx{
-        let (hashes_sink, hashes_rec) = channel();
+        let (hashes_sink, hashes_rec) = unbounded();
         let hasher_in = HasherIn{
             hashes: HashMap::default(),
             hashes_rec
