@@ -13,26 +13,28 @@ use crossbeam_channel::{unbounded, Select};
 use crossbeam_channel::Sender;
 use crossbeam_channel::Receiver;
 use crate::common::data::hash_seg::FramedHash;
+use crate::server::net_hub_back_not_seg::{NetHubBackIn, NetHubBackMsgOut, NetHubBackMsgIn};
 
 pub struct NetworkingHubEx {
-    pub yeet_sink: Sender<DistributableNetMessage>,
-    pub pickup_rec: Option<Receiver<OwnedNetworkMessage>>,
+    pub down_sink: Sender<NetHubFrontMsgIn>,
+    pub up_rec: Receiver<NetHubFrontMsgOut>,
 }
 
 pub struct NetworkingHubIn {
     host_addr_str: String,
-    next_player_id: PlayerID
+    next_player_id: PlayerID,
+    player_id_map: ArcRw<BiHashMap<SocketAddr, PlayerID>>,
 }
-
-pub struct OwnedNetworkMessage{
-    pub owner: PlayerID,
-    pub message: ExternalMsg
+pub enum NetHubFrontMsgOut{
+    NewPlayer(PlayerID),
+    PlayerDiscon(PlayerID),
+    NewMsg(ExternalMsg, PlayerID)
 }
-
-pub enum DistributableNetMessage{
-    ToSingle(PlayerID, ExternalMsg),
-    ToAllExcept(PlayerID, ExternalMsg),
-    ToAll(ExternalMsg)
+pub enum NetHubFrontMsgIn{
+    MsgToSingle(ExternalMsg, PlayerID, /*Reliable*/bool),
+    MsgToAllExcept(ExternalMsg, PlayerID, /*Reliable*/bool),
+    MsgToAll(ExternalMsg, /*Reliable*/bool),
+    DropPlayer(PlayerID)
 }
 
 // Manages the server's incoming and outgoing network messages.
@@ -40,122 +42,99 @@ impl NetworkingHubIn {
     pub fn new(host_addr_str: String) -> Self {
         NetworkingHubIn{
             host_addr_str,
-            next_player_id: 0
+            next_player_id: 0,
+            player_id_map: Default::default()
         }
     }
-
-    // TODO2: This is a mess. Redesign it all with UDP/TCP in mind? Also, https://docs.rs/multi-map/1.3.0/multi_map/ for ids and addresses?
-    // The bit that handles player IDs shouldn't be in the network section. Need another layer.
-
-    // Maybe it should only be that player that can reconnect as them, so
-    fn gen_next_player_id(&mut self, map: &RwLockWriteGuard<BiHashMap<SocketAddr, PlayerID>>) -> PlayerID{
-
-        let id = self.next_player_id;
-        self.next_player_id += 1;
-        id
-    }
-
-    fn bind_addr(&self) -> UdpSocket{
-        let host_addr = self.host_addr_str.parse::<SocketAddr>().unwrap();
-        println!("Starting hosting on : {}", host_addr);
-        UdpSocket::bind(&host_addr).expect("Unable to bind hosting address.")
-    }
-
     pub fn start_hosting(mut self) -> NetworkingHubEx{
-        let (yeet_sink, yeet_rec) = unbounded();
-        let (pickup_sink, pickup_rec) = unbounded();
-
-//        yeet_rec.send(DistributableNetMessage::ToSingle(10, ExternalMsg::NewHash(FramedHash::new(10,10))));
+        let (down_sink, down_rec) = unbounded();
+        let (up_sink, up_rec) = unbounded();
 
 
-        // dcwct Split into send and rec.
-        let mut socket = self.bind_addr();
-        let mut addresses_to_ids = Arc::new(RwLock::new(bimap::BiHashMap::new()));
+        let net_hub_backend = NetHubBackIn::new(self.host_addr_str.clone()).start();
 
-
-        let mut socket_outgoing = socket.try_clone().expect("Can't clone socket.");
-        let mut outgoing_map = addresses_to_ids.clone();
-
-        // Outoing messages.
-        thread::spawn(move ||{
-            loop{
-                let msg_to_yeet = yeet_rec.recv().unwrap();
-                let read_only_map = outgoing_map.read().unwrap();
-                match msg_to_yeet {
-                    DistributableNetMessage::ToSingle(target, msg) => {
-                        msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(&target).unwrap());
-                    }
-                    DistributableNetMessage::ToAll(msg) => {
-                        for (address, player_id) in read_only_map.iter(){
-                            msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(player_id).unwrap());
-                        }
-                    }
-                    DistributableNetMessage::ToAllExcept(do_not_send_to_id, msg) => {
-                        for (address, player_id) in read_only_map.iter(){
-                            if *player_id != do_not_send_to_id{
-                                msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(player_id).unwrap());
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Incoming messages.
-        thread::spawn(move ||{
-            let (in_msgs_sink, in_msgs_rec) = unbounded();
-            // TODO1: Reform.
-            let new_msgs_rec = start_inwards_codec_thread_udp(socket.try_clone().expect("Can't clone socket"));
-            let mut test_socket = socket;
-            loop{
-                let (reced_message, address) = new_msgs_rec.recv().unwrap();
-                match reced_message{
-                    ExternalMsg::PingTestQuery(client_time) => {
-                        // This section is like a fine wine in that it is a balance of trying to have equal calculation before and after the time measurement.
-
-//                        thread::sleep(Duration::from_nanos(1)); // Modival This makes server offset go bigger.
-                        let server_time = SystemTime::now();
-                        // thread::sleep(Duration::from_nanos(1));
-                        let mut useless_total = 0;
-                        for useless_num in 0..2377{ // Modival This makes server offset go smaller.
-                            useless_total += useless_num;
-                        }
-
-                        let response = ExternalMsg::PingTestResponse(
-                            NetMsgPingTestResponse{
-                                client_time,
-                                server_time
-                            }
-                        );
-                        response.encode_and_send_udp(&mut test_socket, address);
-                    }
-                    ExternalMsg::ConnectionInitQuery(query_data) => {
-                        let mut write_handle = addresses_to_ids.write().unwrap();
-                        let new_player_id = self.gen_next_player_id(&write_handle);
-                        write_handle.insert(address, new_player_id);
-                        let owned_msg = OwnedNetworkMessage{
-                            owner: new_player_id,
-                            message: ExternalMsg::ConnectionInitQuery(query_data),
-                        };
-                        pickup_sink.send(owned_msg).unwrap(); // Redirect message to server main listener.
-                    }
-                    non_query_msg => {
-                        let read_handle =  addresses_to_ids.read().unwrap();
-                        let player_id = read_handle.get_by_left(&address).expect("Received a non-init non-ping message from address without playerID.");
-                        let owned_msg = OwnedNetworkMessage{
-                            owner: *player_id,
-                            message: non_query_msg,
-                        };
-                        pickup_sink.send(owned_msg).unwrap(); // Redirect message to server main listener.
-                    }
-                }
-            }
-        });
-
+        self.start_handling_upwards(up_sink, net_hub_backend.msg_out);
+        self.start_handling_downwards(down_rec, net_hub_backend.msg_in);
 
         NetworkingHubEx{
-            yeet_sink,
-            pickup_rec: Some(pickup_rec)
+            down_sink,
+            up_rec,
         }
     }
+    fn start_handling_upwards(&self, above_out_sink: Sender<NetHubFrontMsgOut>, back_up_rec: Receiver<NetHubBackMsgOut>){
+        let mut next_player_id = 0;
+        let players = self.player_id_map.clone();
+        thread::spawn(move ||{
+            loop{
+                let next_msg = back_up_rec.recv().unwrap();
+                let mut players_map = players.read().unwrap();
+                match next_msg {
+                    NetHubBackMsgOut::NewMsg(msg, address) => {
+                        let player_id = players_map.get_by_left(&address).unwrap();
+                        above_out_sink.send(NetHubFrontMsgOut::NewMsg(msg, *player_id)).unwrap();
+                    }
+                    NetHubBackMsgOut::NewPlayer(address) => {
+                        let mut player_id;
+                        let player_id_option = players_map.get_by_left(&address);
+                        match player_id_option {
+                            Some(existing_player_id) => {
+                                player_id = *existing_player_id;
+                            }
+                            None => {
+                                std::mem::drop(players_map);
+                                let mut writable_players_map = players.write().unwrap();
+                                player_id = next_player_id;
+                                next_player_id += 1;
+                                writable_players_map.insert(address, player_id);
+                            }
+                        }
+                        above_out_sink.send(NetHubFrontMsgOut::NewPlayer(player_id)).unwrap();
+                    }
+                    NetHubBackMsgOut::PlayerDiscon(address) => {
+                        let player_id = players_map.get_by_left(&address).unwrap();
+                        above_out_sink.send(NetHubFrontMsgOut::NewPlayer(*player_id)).unwrap();
+                    }
+                }
+            }
+        });
+    }
+    fn start_handling_downwards(&self, above_in_rec: Receiver<NetHubFrontMsgIn>, back_down_sink: Sender<NetHubBackMsgIn>){
+        let players = self.player_id_map.clone();
+        thread::spawn(move ||{
+            loop{
+                let next_msg = above_in_rec.recv().unwrap();
+                let players_map = players.read().unwrap();
+                match next_msg {
+                    NetHubFrontMsgIn::DropPlayer(player_id) => {
+                        let address = players_map.get_by_right(&player_id).unwrap();
+                        back_down_sink.send(NetHubBackMsgIn::DropPlayer(*address)).unwrap();
+                    }
+                    NetHubFrontMsgIn::MsgToSingle(msg, player_id, reliable) => {
+                        let address = players_map.get_by_right(&player_id).unwrap();
+                        back_down_sink.send(NetHubBackMsgIn::SendMsg(*address, msg, reliable)).unwrap();
+                    }
+                    NetHubFrontMsgIn::MsgToAllExcept(msg, non_player_id, reliable) => {
+                        for (address, player_id) in players_map.iter(){
+                            if *player_id != non_player_id{
+                                back_down_sink.send(NetHubBackMsgIn::SendMsg(*address, msg.clone(), reliable)).unwrap();
+                            }
+                        }
+                    }
+                    NetHubFrontMsgIn::MsgToAll(msg, reliable) => {
+                        for (address, player_id) in players_map.iter(){
+                            back_down_sink.send(NetHubBackMsgIn::SendMsg(*address, msg.clone(), reliable)).unwrap();
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
+
+
+
+
+
+
+
+

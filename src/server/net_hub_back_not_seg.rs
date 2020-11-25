@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::net::{SocketAddr, TcpListener, TcpStream, UdpSocket};
+use std::net::{SocketAddr, TcpListener, TcpStream, UdpSocket, Shutdown};
 use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
 use std::thread;
 use std::time::{SystemTime, Duration};
@@ -8,9 +8,8 @@ use crate::common::network::external_msg::*;
 use crate::common::types::*;
 use bimap::BiHashMap;
 use std::borrow::Borrow;
-use crate::server::net_hub_front_seg::DistributableNetMessage;
-
-use crossbeam_channel::*;
+use crossbeam_channel::{Sender, Receiver, Select, unbounded};
+use crossbeam_channel::internal::select;
 
 
 // For down to the wire stuff about TCP and UDP.
@@ -45,39 +44,74 @@ pub fn net_hub_start_hosting(host_addr_str: String) -> NetHubBackEx{
 // This section is pretty single threaded, so main thread waits for new tcp streams, or new messages from above, or new messages from existing tcp stream.
 // New messages from udp streams are streamlined, so just ignore this area and go straight on up to level above.
 impl NetHubBackIn {
-    fn start(&self) -> NetHubBackEx{
-        let (in_sink, in_rec) = unbounded();
-        let (out_sink, out_rec) = unbounded();
-
+    pub fn new(host_addr_str: String) -> Self{
+        Self{
+            host_addr_str
+        }
+    }
+    pub fn start(self) -> NetHubBackEx{
+        let (above_in_sink, above_in_rec) = unbounded();
+        let (above_out_sink, above_out_rec) = unbounded();
 
         let (udp_socket, tcp_listener) = self.bind_sockets();
 
-        self.handle_receiving_udp(udp_socket.try_clone().expect("Can't clone socket."), out_sink.clone());
-        let new_tcp_streams = self.handle_new_tcp_connections(tcp_listener);
+        // Send udp straight up.
+        self.handle_receiving_udp(udp_socket.try_clone().expect("Can't clone socket."), above_out_sink.clone());
+
+        let new_tcps_rec = self.handle_new_tcp_connections(tcp_listener);
+        let (inc_tcp_msgs_sink, inc_tcp_msgs_rec) : (Sender<(ExternalMsg, SocketAddr)>,Receiver<(ExternalMsg, SocketAddr)>) = unbounded();
+
+        let mut sel = Select::new();
+
 
         thread::spawn(move ||{
-            // The things we want to blocking wait for:
-            // New tcp streams.
-            // New tcp messages from existing streams.
-            // New messages from level above.
+//             The things we want to blocking wait for:
+//             New tcp streams. (new_tcps_rec)
+//             New tcp messages from existing streams. (inc_tcp_msgs_rec)
+//             New messages from level above. (above_in_rec)
+            let mut connections_map = HashMap::new();
 
-//            let mut tcp_map = HashMap::new();
-            let new_tcp : TcpStream = new_tcp_streams.recv().unwrap();
-            let msg_stream = start_inwards_codec_thread_tcp(new_tcp);
-//            select!{
-//            recv(new_tcp_streams) -> new_tcp_stream => {
-//            }
-//            recv(in_rec) -> new_in_msg => {
-//            }
-//            }
+            crossbeam_channel::select!{
+                // New tcp streams.
+                recv(new_tcps_rec) -> new_tcp => {
+                    let new_stream : TcpStream = new_tcp.unwrap();
+                    // Listen for new msgs.
+                    new_stream.try_clone().unwrap().start_listening(inc_tcp_msgs_sink.clone());
+                    let address = new_stream.peer_addr().unwrap();
+                    println!("New client connected {}", address);
+                    connections_map.insert(address.clone(), new_stream);
+                    above_out_sink.send(NetHubBackMsgOut::NewPlayer(address)).unwrap();
+                },
+                // New tcp msgs.
+                recv(inc_tcp_msgs_rec) -> new_msg_tuple => {
+                    let (new_tcp_msg, address) = new_msg_tuple.unwrap();
+                    above_out_sink.send(NetHubBackMsgOut::NewMsg(new_tcp_msg, address)).unwrap();
+                },
+                // New msgs from above.
+                recv(above_in_rec) -> msg_from_above => {
+                    match msg_from_above.unwrap(){
+                        NetHubBackMsgIn::SendMsg(address, external_msg, is_reliable) => {
+                            if is_reliable{
+                                connections_map.get_mut(&address).unwrap().send_msg(&external_msg);
+                            }else{ // Unreliable:
+                                udp_socket.send_msg(&external_msg, &address);
+                            }
+                        }
 
+                        NetHubBackMsgIn::DropPlayer(address) => {
+                            connections_map.get(&address).unwrap().shutdown(Shutdown::Both).unwrap();
+                            connections_map.remove(&address);
+                            println!("Dropped client {}", address);
+                        }
+                    }
+
+                }
+            }
         });
-
         NetHubBackEx{
-            msg_in: in_sink,
-            msg_out: out_rec,
+            msg_in: above_in_sink,
+            msg_out: above_out_rec,
         }
-
     }
     fn handle_new_tcp_connections(&self, listener: TcpListener) -> Receiver<TcpStream>{
         let (sink, rec) = unbounded();
@@ -90,10 +124,10 @@ impl NetHubBackIn {
     }
     fn handle_receiving_udp(&self, socket: UdpSocket, out_msgs: Sender<NetHubBackMsgOut>){
         thread::spawn(move||{
-            let mut outgoing_socket = socket.try_clone().unwrap();
-            let new_msgs = start_inwards_codec_thread_udp(socket);
+            let (new_msgs_sink, new_msgs_rec) = unbounded();
+            socket.try_clone().unwrap().start_listening(new_msgs_sink);
             loop{
-                let (msg, address) = new_msgs.recv().unwrap();
+                let (msg, address) = new_msgs_rec.recv().unwrap();
                 // If a ping test, just 420 blaze out a response.
                 if let ExternalMsg::PingTestQuery(client_time) = msg{
                         // This section is like a fine wine in that it is a balance of trying to have equal calculation before and after the time measurement.
@@ -104,7 +138,7 @@ impl NetHubBackIn {
                                 server_time
                             }
                         );
-                        response.encode_and_send_udp(&mut outgoing_socket, address);
+                    socket.send_msg(&response, &address);
                 }else{
                     out_msgs.send(NetHubBackMsgOut::NewMsg(msg, address)).unwrap();
                 }
@@ -124,80 +158,3 @@ impl NetHubBackIn {
         return (udp_socket, tcp_listener);
     }
 }
-// Outoing messages.
-//        thread::spawn(move ||{
-//            loop{
-//                let msg_to_yeet = yeet_rec.recv().unwrap();
-//                let read_only_map = outgoing_map.read().unwrap();
-//                match msg_to_yeet {
-//                    DistributableNetMessage::ToSingle(target, msg) => {
-//                        msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(&target).unwrap());
-//                    }
-//                    DistributableNetMessage::ToAll(msg) => {
-//                        for (address, player_id) in read_only_map.iter(){
-//                            msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(player_id).unwrap());
-//                        }
-//                    }
-//                    DistributableNetMessage::ToAllExcept(do_not_send_to_id, msg) => {
-//                        for (address, player_id) in read_only_map.iter(){
-//                            if *player_id != do_not_send_to_id{
-//                                msg.encode_and_send_udp(&mut socket_outgoing, *read_only_map.get_by_right(player_id).unwrap());
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        });
-//
-//        // Incoming messages.
-//        thread::spawn(move ||{
-//            let new_msgs_rec = start_inwards_codec_thread_udp(udp_socket.try_clone().expect("Can't clone socket"));
-//            let mut test_socket = udp_socket;
-//            loop{
-//                let (reced_message, address) = new_msgs_rec.recv().unwrap();
-//                match reced_message{
-//                    ExternalMsg::PingTestQuery(client_time) => {
-//                        // This section is like a fine wine in that it is a balance of trying to have equal calculation before and after the time measurement.
-//
-////                        thread::sleep(Duration::from_nanos(1)); // Modival This makes server offset go bigger.
-//                        let server_time = SystemTime::now();
-//                        // thread::sleep(Duration::from_nanos(1));
-//                        let mut useless_total = 0;
-//                        for useless_num in 0..2377{ // Modival This makes server offset go smaller.
-//                            useless_total += useless_num;
-//                        }
-//
-//                        let response = ExternalMsg::PingTestResponse(
-//                            NetMsgPingTestResponse{
-//                                client_time,
-//                                server_time
-//                            }
-//                        );
-//                        response.encode_and_send_udp(&mut test_socket, address);
-//                    }
-//                    ExternalMsg::ConnectionInitQuery(query_data) => {
-//                        let mut write_handle = addresses_to_ids.write().unwrap();
-//                        let new_player_id = self.gen_next_player_id(&write_handle);
-//                        write_handle.insert(address, new_player_id);
-//                        let owned_msg = OwnedNetworkMessage{
-//                            owner: new_player_id,
-//                            message: ExternalMsg::ConnectionInitQuery(query_data),
-//                        };
-//                        pickup_sink.send(owned_msg).unwrap(); // Redirect message to server main listener.
-//                    }
-//                    non_query_msg => {
-//                        let read_handle =  addresses_to_ids.read().unwrap();
-//                        let player_id = read_handle.get_by_left(&address).expect("Received a non-init non-ping message from address without playerID.");
-//                        let owned_msg = OwnedNetworkMessage{
-//                            owner: *player_id,
-//                            message: non_query_msg,
-//                        };
-//                        pickup_sink.send(owned_msg).unwrap(); // Redirect message to server main listener.
-//                    }
-//                }
-//            }
-//        });
-//        NetHubBackEx{
-//            msg_in: in_sink,
-//            msg_out: out_rec,
-//        }

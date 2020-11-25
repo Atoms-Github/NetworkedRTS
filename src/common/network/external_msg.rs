@@ -22,7 +22,7 @@ pub trait GameSocketTcp{
     fn send_msg(&mut self, message: &ExternalMsg);
 }
 pub trait GameSocketUdp{
-    fn send_msg(&mut self, message: &ExternalMsg, addr: &SocketAddr);
+    fn send_msg(&self, message: &ExternalMsg, addr: &SocketAddr);
 }
 impl GameSocketTcp for TcpStream{
     fn send_msg(&mut self, message: &ExternalMsg) {
@@ -82,7 +82,7 @@ impl GameSocket for UdpSocket{
     }
 }
 impl GameSocketUdp for UdpSocket{
-    fn send_msg(&mut self, message: &ExternalMsg, address: &SocketAddr) {
+    fn send_msg(&self, message: &ExternalMsg, address: &SocketAddr) {
         let msg_buffer = bincode::serialize(message).unwrap();
 
         self.send_to(&msg_buffer, address).unwrap();

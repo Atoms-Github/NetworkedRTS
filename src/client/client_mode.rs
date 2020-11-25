@@ -71,7 +71,6 @@ struct ClientEx{
     input_changes: Receiver<InputChange>,
     player_id: PlayerID,
     known_frame: KnownFrameInfo,
-
 }
 
 impl ClientEx{
