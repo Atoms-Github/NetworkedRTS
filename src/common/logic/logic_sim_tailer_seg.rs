@@ -19,7 +19,7 @@ use std::hash::Hash;
 
 pub struct LogicSimTailerEx {
     pub from_logic_rec: Receiver<QuerySimData>,
-    pub tail_lock: Arc<RwLock<GameState>>,
+    pub tail_lock: ArcRw<GameState>,
     pub new_tail_states_rec: Option<Receiver<GameState>>,
     pub new_tail_hashes: Option<Receiver<FramedHash>>,
 
@@ -29,7 +29,7 @@ impl LogicSimTailerEx {
 }
 pub struct LogicSegmentTailerIn {
     known_frame_info: KnownFrameInfo,
-    tail_lock: Arc<RwLock<GameState>>,
+    tail_lock: ArcRw<GameState>,
     data_store: SimDataStorageEx
     // Logic layer shouldn't know it's player ID.
 }

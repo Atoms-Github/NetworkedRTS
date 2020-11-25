@@ -5,6 +5,7 @@ use crossbeam_channel::*;
 use crate::common::gameplay::game::game_state::*;
 use crate::common::sim_data::sim_data_storage::*;
 use crate::common::time::timekeeping::*;
+use crate::common::types::ArcRw;
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
@@ -19,7 +20,7 @@ pub struct LogicSimHeaderEx {
 }
 
 
-fn deep_clone_state_lock(state_tail: &Arc<RwLock<GameState>>) -> Arc<RwLock<GameState>>{
+fn deep_clone_state_lock(state_tail: &ArcRw<GameState>) -> ArcRw<GameState>{
     let guard = state_tail.read().unwrap();
     let head_state = (*guard).clone();
     Arc::new(RwLock::new(head_state))
