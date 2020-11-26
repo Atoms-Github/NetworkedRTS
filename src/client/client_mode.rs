@@ -93,7 +93,7 @@ impl ClientEx{
 
         println!("I'm gonna init me on {}", my_init_frame);
         let init_me_msg = self.gen_init_me_msgs(my_init_frame, self.player_id);
-        self.seg_net_connect.net_sink.send(ExternalMsg::GameUpdate(init_me_msg.clone())).unwrap();
+        self.seg_net_connect.net_sink.send((ExternalMsg::GameUpdate(init_me_msg.clone()),true)).unwrap();
         self.seg_data_storage.write_owned_data(init_me_msg);
 
         let seg_input_dist = InputHandlerIn::new

@@ -154,7 +154,7 @@ impl NetHubBackIn {
         let tcp_listener = TcpListener::bind(&tcp_address).expect("Unable to bind ");
         let udp_socket = UdpSocket::bind(&udp_address).expect("Unable to bind udp hosting address.");
 
-        println!("Starting hosting on : {} and port +1", udp_address);
+        println!("Starting hosting on tcp {} and udp on port +1", tcp_address);
         return (udp_socket, tcp_listener);
     }
 }

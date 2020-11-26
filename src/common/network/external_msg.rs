@@ -23,6 +23,7 @@ pub trait GameSocketTcp{
 }
 pub trait GameSocketUdp{
     fn send_msg(&self, message: &ExternalMsg, addr: &SocketAddr);
+    fn send_msg_to_connected(&self, message: &ExternalMsg);
 }
 impl GameSocketTcp for TcpStream{
     fn send_msg(&mut self, message: &ExternalMsg) {
@@ -58,6 +59,7 @@ impl GameSocket for TcpStream{
         }).unwrap();
     }
 }
+
 impl GameSocket for UdpSocket{
     fn start_listening(self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>) {
         thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
@@ -90,6 +92,30 @@ impl GameSocketUdp for UdpSocket{
         if crate::DEBUG_MSGS_NET{
             println!("->({}): {:?}", msg_buffer.len(), self);
         }
+    }
+    fn send_msg_to_connected(&self, message: &ExternalMsg) {
+        let msg_buffer = bincode::serialize(message).unwrap();
+
+        self.send(&msg_buffer).unwrap();
+
+        if crate::DEBUG_MSGS_NET{
+            println!("->({}): {:?}", msg_buffer.len(), self);
+        }
+    }
+}
+pub trait Filterable{
+    fn filter_address(self, msg: Option<ExternalMsg>) -> Receiver<ExternalMsg>;
+}
+impl Filterable for Receiver<(ExternalMsg, SocketAddr)>{
+    fn filter_address(self, msg: Option<ExternalMsg>) -> Receiver<ExternalMsg>{
+        let (sink,rec) = unbounded();
+        thread::spawn(move ||{
+            loop{
+                let (msg, address) = self.recv().unwrap();
+                sink.send(msg).unwrap();
+            }
+        });
+        return rec;
     }
 }
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.

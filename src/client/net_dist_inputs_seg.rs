@@ -20,14 +20,14 @@ impl NetInputDistEx {
 pub struct NetInputDistIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,
-    to_net: Sender<ExternalMsg>,
+    to_net: Sender<(ExternalMsg,bool)>,
     sim_data_storage: SimDataStorageEx,
 }
 impl NetInputDistIn {
     // This segment's job is to send the player's last 20 inputs to the network.
     // We don't care if we get a very rare syncing issue where inputs come in after we send them off because we're going to be sending last 20
     // so it will correct the next time something is sent.
-    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, to_net: Sender<ExternalMsg>, sim_data_storage: SimDataStorageEx) -> NetInputDistIn {
+    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, to_net: Sender<(ExternalMsg,bool)>, sim_data_storage: SimDataStorageEx) -> NetInputDistIn {
         NetInputDistIn {
             known_frame,
             player_id,
@@ -48,7 +48,7 @@ impl NetInputDistIn {
                 };
                 let my_inputs = self.sim_data_storage.fulfill_query(&query);
 //                println!("Sending to net my inputs for frames {} to {} inclusive", my_inputs.sim_data.frame_offset, my_inputs.sim_data.frame_offset + my_inputs.sim_data.data.len() - 1);
-                self.to_net.send(ExternalMsg::GameUpdate(my_inputs)).unwrap();
+                self.to_net.send((ExternalMsg::GameUpdate(my_inputs),false)).unwrap();
             }
         });
 
