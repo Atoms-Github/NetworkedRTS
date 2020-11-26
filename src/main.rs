@@ -32,19 +32,10 @@ pub const DEBUG_MSGS_PROCESS: bool = DEBUG_MSGS_ALL || true;
 use crossbeam_channel::{unbounded, Select};
 
 fn main() {
+    println!("Test1");
     println!("STARTING2345.");
 
 
-
-    use crossbeam_channel::unbounded;
-
-// Create a channel of unbounded capacity.
-    let (s, r) = unbounded();
-
-// Send a message into the channel.
-
-// Receive the message from the channel.
-    assert_eq!(r.recv(), Ok("Hello, world!"));
 
 
 
@@ -69,10 +60,10 @@ fn main() {
     };
 
 
-
     let mut is_server = false;
     match launch_type.to_lowercase().as_ref() {
         "client" => {
+            // Nothing.
         }
         "server" => {
             is_server = true;
