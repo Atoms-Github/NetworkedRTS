@@ -71,40 +71,41 @@ impl NetHubBackIn {
 //             New messages from level above. (above_in_rec)
             let mut connections_map = HashMap::new();
 
-            crossbeam_channel::select!{
-                // New tcp streams.
-                recv(new_tcps_rec) -> new_tcp => {
-                    let new_stream : TcpStream = new_tcp.unwrap();
-                    // Listen for new msgs.
-                    new_stream.try_clone().unwrap().start_listening(inc_tcp_msgs_sink.clone());
-                    let address = new_stream.peer_addr().unwrap();
-                    println!("New client connected {}", address);
-                    connections_map.insert(address.clone(), new_stream);
-                    above_out_sink.send(NetHubBackMsgOut::NewPlayer(address)).unwrap();
-                },
-                // New tcp msgs.
-                recv(inc_tcp_msgs_rec) -> new_msg_tuple => {
-                    let (new_tcp_msg, address) = new_msg_tuple.unwrap();
-                    above_out_sink.send(NetHubBackMsgOut::NewMsg(new_tcp_msg, address)).unwrap();
-                },
-                // New msgs from above.
-                recv(above_in_rec) -> msg_from_above => {
-                    match msg_from_above.unwrap(){
-                        NetHubBackMsgIn::SendMsg(address, external_msg, is_reliable) => {
-                            if is_reliable{
-                                connections_map.get_mut(&address).unwrap().send_msg(&external_msg);
-                            }else{ // Unreliable:
-                                udp_socket.send_msg(&external_msg, &address);
+            loop{
+                crossbeam_channel::select!{
+                    // New tcp streams.
+                    recv(new_tcps_rec) -> new_tcp => {
+                        let new_stream : TcpStream = new_tcp.unwrap();
+                        // Listen for new msgs.
+                        new_stream.try_clone().unwrap().start_listening(inc_tcp_msgs_sink.clone());
+                        let address = new_stream.peer_addr().unwrap();
+                        println!("New client connected {}", address);
+                        connections_map.insert(address.clone(), new_stream);
+                        above_out_sink.send(NetHubBackMsgOut::NewPlayer(address)).unwrap();
+                    },
+                    // New tcp msgs.
+                    recv(inc_tcp_msgs_rec) -> new_msg_tuple => {
+                        let (new_tcp_msg, address) = new_msg_tuple.unwrap();
+                        above_out_sink.send(NetHubBackMsgOut::NewMsg(new_tcp_msg, address)).unwrap();
+                    },
+                    // New msgs from above.
+                    recv(above_in_rec) -> msg_from_above => {
+                        match msg_from_above.unwrap(){
+                            NetHubBackMsgIn::SendMsg(address, external_msg, is_reliable) => {
+                                if is_reliable{
+                                    connections_map.get_mut(&address).unwrap().send_msg(&external_msg);
+                                }else{ // Unreliable:
+                                    udp_socket.send_msg(&external_msg, &address);
+                                }
+                            }
+                            NetHubBackMsgIn::DropPlayer(address) => {
+                                connections_map.get(&address).unwrap().shutdown(Shutdown::Both).unwrap();
+                                connections_map.remove(&address);
+                                println!("Dropped client {}", address);
                             }
                         }
 
-                        NetHubBackMsgIn::DropPlayer(address) => {
-                            connections_map.get(&address).unwrap().shutdown(Shutdown::Both).unwrap();
-                            connections_map.remove(&address);
-                            println!("Dropped client {}", address);
-                        }
                     }
-
                 }
             }
         });

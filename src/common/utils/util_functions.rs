@@ -2,6 +2,8 @@
 
 // I know util functions are sins, but still ....
 
+use std::net::{SocketAddr, SocketAddrV4, Ipv4Addr};
+
 pub fn vec_replace_or_end<T>(vec: &mut Vec<T>, insertion_index: usize, item: T){
     if vec.is_empty() || vec.len()-1 < insertion_index{
         vec.push(item);
@@ -21,4 +23,8 @@ impl<T> Flatten<T> for Option<Option<T>> {
             Some(v) => v,
         }
     }
+}
+
+pub fn gen_fake_address() -> SocketAddr{
+    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(7,1,2,3),251))
 }

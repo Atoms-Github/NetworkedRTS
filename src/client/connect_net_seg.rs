@@ -97,7 +97,7 @@ impl ConnectNetEx {
         let connection_init_query = ExternalMsg::ConnectionInitQuery(
             NetMsgGreetingQuery {
                 my_player_name: player_name.to_string(),
-                preferred_id
+                preferred_id: 5
             }
         );
         self.net_sink.send((connection_init_query, true)).unwrap();

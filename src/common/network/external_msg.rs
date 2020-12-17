@@ -1,5 +1,5 @@
 use std::io::{Read, Write};
-use std::net::{TcpStream, UdpSocket, SocketAddr};
+use std::net::{TcpStream, UdpSocket, SocketAddr, SocketAddrV4, Ipv4Addr};
 use std::thread;
 use std::time::SystemTime;
 
@@ -14,6 +14,7 @@ use crate::common::sim_data::sim_data_storage::*;
 use std::intrinsics::add_with_overflow;
 use crate::common::data::hash_seg::FramedHash;
 use crossbeam_channel::*;
+use crate::common::utils::util_functions::gen_fake_address;
 
 pub trait GameSocket{
     fn start_listening(self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>);
@@ -24,6 +25,7 @@ pub trait GameSocketTcp{
 pub trait GameSocketUdp{
     fn send_msg(&self, message: &ExternalMsg, addr: &SocketAddr);
     fn send_msg_to_connected(&self, message: &ExternalMsg);
+//    fn start_listening_connected(self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>);
 }
 impl GameSocketTcp for TcpStream{
     fn send_msg(&mut self, message: &ExternalMsg) {
@@ -40,9 +42,14 @@ impl GameSocket for TcpStream{
     fn start_listening(mut self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>) {
         thread::Builder::new().name("StreamDeserializerTCP".to_string()).spawn(move ||{
             let peer_address = self.peer_addr().unwrap();
+
             loop{
                 let mut message_buffer = vec![0; 65_535];
-                let value = self.read(&mut message_buffer).unwrap();
+                let bytes_read = self.read(&mut message_buffer).unwrap();
+                if bytes_read == 0{
+                    println!("Tcp read 0 bytes so closing.");
+                    break;
+                }
                 let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
                 match result{
                     Ok(msg) => {
@@ -65,13 +72,18 @@ impl GameSocket for UdpSocket{
         thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
             let mut message_buffer = [0; 65_535];
             loop{
+
                 let (message_size_bytes, address) = self.recv_from(&mut message_buffer).unwrap();
 
+                if message_size_bytes == 0{
+                    println!("Udp read 0 bytes so closing.");
+                    break;
+                }
                 let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
                 match result{
                     Ok(msg) => {
                         if crate::DEBUG_MSGS_NET{
-                            println!("<- {:?}", msg);
+                            println!("<-- {:?}", msg);
                         }
                         msgs_sink.send((msg, address)).unwrap();
                     }
@@ -87,10 +99,12 @@ impl GameSocketUdp for UdpSocket{
     fn send_msg(&self, message: &ExternalMsg, address: &SocketAddr) {
         let msg_buffer = bincode::serialize(message).unwrap();
 
+
+
         self.send_to(&msg_buffer, address).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            println!("->({}): {:?}", msg_buffer.len(), self);
+            println!("->({}): {:?}", msg_buffer.len(), message);
         }
     }
     fn send_msg_to_connected(&self, message: &ExternalMsg) {
@@ -99,9 +113,36 @@ impl GameSocketUdp for UdpSocket{
         self.send(&msg_buffer).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            println!("->({}): {:?}", msg_buffer.len(), self);
+            println!("->({}): {:?}", msg_buffer.len(), message);
         }
     }
+//    fn start_listening_connected(self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>) {
+//        thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
+//            let mut message_buffer = [0; 65_535];
+//            loop{
+//
+//                let message_size_bytes = self.recv(&mut message_buffer).unwrap();
+//
+//                if message_size_bytes == 0{
+//                    println!("Udp read 0 bytes so closing.");
+//                    break;
+//                }
+//                let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+//                match result{
+//                    Ok(msg) => {
+//                        if crate::DEBUG_MSGS_NET{
+//                            println!("<-- {:?}", msg);
+//                        }
+//                        let dcwct_address = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(1,2,3,4), 25566));
+//                        msgs_sink.send((msg, dcwct_address)).unwrap();
+//                    }
+//                    err => {
+//                        panic!("Err {:?}", err)
+//                    }
+//                }
+//            }
+//        }).unwrap();
+//    }
 }
 pub trait Filterable{
     fn filter_address(self, msg: Option<ExternalMsg>) -> Receiver<ExternalMsg>;
