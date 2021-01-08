@@ -14,7 +14,14 @@ use std::sync::{Arc, RwLock};
 pub struct NetInputDistEx {
 }
 impl NetInputDistEx {
-
+    pub fn start(known_frame: KnownFrameInfo, player_id: PlayerID, to_net: Sender<(ExternalMsg,bool)>, sim_data_storage: SimDataStorageEx) -> NetInputDistEx {
+        NetInputDistIn {
+            known_frame,
+            player_id,
+            to_net,
+            sim_data_storage,
+        }.start_net_dist()
+    }
 }
 #[derive()]
 pub struct NetInputDistIn {
@@ -27,15 +34,6 @@ impl NetInputDistIn {
     // This segment's job is to send the player's last 20 inputs to the network.
     // We don't care if we get a very rare syncing issue where inputs come in after we send them off because we're going to be sending last 20
     // so it will correct the next time something is sent.
-    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, to_net: Sender<(ExternalMsg,bool)>, sim_data_storage: SimDataStorageEx) -> NetInputDistIn {
-        NetInputDistIn {
-            known_frame,
-            player_id,
-            to_net,
-            sim_data_storage,
-        }
-    }
-
     pub fn start_net_dist(mut self) -> NetInputDistEx{
         let gen_timekeeper = self.known_frame.start_frame_stream_from_now();
         thread::spawn(move ||{

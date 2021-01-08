@@ -19,7 +19,18 @@ pub struct InputHandlerEx {
 //    player_id: PlayerID
 }
 impl InputHandlerEx {
-
+    pub fn start(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
+               inputs_stream: Receiver<InputChange>, sim_data_storage: SimDataStorageEx,) -> InputHandlerEx {
+        InputHandlerIn {
+            known_frame,
+            player_id,
+            sim_data_storage,
+            inputs_stream,
+            curret_input: InputState::new(),
+            next_frame_to_send: first_frame_to_send,
+            inputs_arriving_for_frame: std::usize::MAX
+        }.start()
+    }
 }
 #[derive()]
 pub struct InputHandlerIn {
@@ -33,18 +44,7 @@ pub struct InputHandlerIn {
 }
 impl InputHandlerIn {
     // This segment's job is to get the user's inputs and just send them on to the data storage.
-    pub fn new(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
-               inputs_stream: Receiver<InputChange>, sim_data_storage: SimDataStorageEx,) -> InputHandlerIn {
-        InputHandlerIn {
-            known_frame,
-            player_id,
-            sim_data_storage,
-            inputs_stream,
-            curret_input: InputState::new(),
-            next_frame_to_send: first_frame_to_send,
-            inputs_arriving_for_frame: std::usize::MAX
-        }
-    }
+
     fn apply_input_changes(&mut self){
         loop{
             let mut next_input = self.inputs_stream.try_recv();

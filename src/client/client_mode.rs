@@ -82,17 +82,17 @@ impl ConnectedClient{
         // Send local logic hashes. TODO2: move to interesting?
         seg_hasher.link_hash_stream(seg_logic_tailer.new_tail_hashes.take().unwrap());
         let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone());
-        let input_changes = GraphicalSeg::new(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id).start();
+        let seg_graphical = GraphicalEx::start(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id);
         let seg_net_rec = NetRecSegEx::start(seg_data_storage.clone(), self.seg_connect_net.net_rec.take().unwrap(), welcome_info.known_frame.clone(), seg_hasher.clone());
-        let seg_input_dist = InputHandlerIn::new
-            (welcome_info.known_frame.clone(),
+        let seg_input_dist = InputHandlerEx::start(
+            welcome_info.known_frame.clone(),
              welcome_info.assigned_player_id,
              my_init_frame + 1 /*Don't want to override existing frame which has 'NewPlayer' = true.*/,
-             input_changes,
+             seg_graphical.input_rec,
              seg_data_storage.clone()
-            ).start();
-        let seg_net_dist = NetInputDistIn::new(welcome_info.known_frame.clone(), welcome_info.assigned_player_id,
-                                               self.seg_connect_net.net_sink.clone(), seg_data_storage.clone()).start_net_dist();
+            );
+        let seg_net_dist = NetInputDistEx::start(welcome_info.known_frame.clone(), welcome_info.assigned_player_id,
+                                               self.seg_connect_net.net_sink.clone(), seg_data_storage.clone());
         ClientEx{
             seg_scheduler,
             seg_data_storage,
