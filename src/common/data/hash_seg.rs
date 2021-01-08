@@ -45,6 +45,17 @@ impl HasherEx {
             }
         });
     }
+    pub fn start() -> Self{
+        let (hashes_sink, hashes_rec) = unbounded();
+        let hasher_in = HasherIn{
+            hashes: HashMap::default(),
+            hashes_rec
+        };
+        hasher_in.start_thread();
+        HasherEx{
+            hashes_sink
+        }
+    }
 }
 pub struct HasherIn {
     hashes: HashMap<FrameIndex, HashType>, // pointless_optimum Could use vec, but easier to use hashmap.
@@ -65,19 +76,6 @@ impl HasherIn {
                 }
             }
         });
-    }
-    pub fn start() -> HasherEx{
-        let (hashes_sink, hashes_rec) = unbounded();
-        let hasher_in = HasherIn{
-            hashes: HashMap::default(),
-            hashes_rec
-        };
-        hasher_in.start_thread();
-
-
-        HasherEx{
-            hashes_sink
-        }
     }
 }
 

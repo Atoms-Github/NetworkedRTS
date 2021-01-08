@@ -25,25 +25,22 @@ pub struct LogicSimTailerEx {
 
 }
 impl LogicSimTailerEx {
-
+    pub fn start(known_frame_info: KnownFrameInfo, state_tail: GameState, data_store: SimDataStorageEx) -> Self {
+        LogicSimTailerIn {
+            known_frame_info,
+            tail_lock: Arc::new(RwLock::new(state_tail)),
+            data_store
+        }.start_logic_tail()
+    }
 }
-pub struct LogicSegmentTailerIn {
+pub struct LogicSimTailerIn {
     known_frame_info: KnownFrameInfo,
     tail_lock: ArcRw<GameState>,
     data_store: SimDataStorageEx
     // Logic layer shouldn't know it's player ID.
 }
 
-impl LogicSegmentTailerIn {
-    pub fn new(known_frame_info: KnownFrameInfo, state_tail: GameState,
-               data_store: SimDataStorageEx) -> LogicSegmentTailerIn {
-        LogicSegmentTailerIn {
-            known_frame_info,
-            tail_lock: Arc::new(RwLock::new(state_tail)),
-            data_store
-        }
-    }
-
+impl LogicSimTailerIn {
     fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<QuerySimData>{
         let sim_query_result = self.data_store.clone_info_for_tail(tail_frame_to_sim);
         match sim_query_result{

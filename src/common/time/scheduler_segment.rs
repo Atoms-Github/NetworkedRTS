@@ -18,12 +18,6 @@ pub struct SchedulerSegIn {
 //    player_id: PlayerID
 }
 impl SchedulerSegIn {
-    pub fn new(known_frame: KnownFrameInfo) -> SchedulerSegIn {
-        SchedulerSegIn {
-            known_frame,
-            triggers: vec![]
-        }
-    }
     fn pull_latest_triggers(&mut self, trigger_stream: &mut Receiver<ScheduledTrigger>){
         loop{
             let pulled = trigger_stream.try_recv();
@@ -58,6 +52,12 @@ impl SchedulerSegIn {
     }
 }
 impl SchedulerSegEx {
+    pub fn start(known_frame: KnownFrameInfo) -> Self{
+        SchedulerSegIn {
+            known_frame,
+            triggers: vec![]
+        }.start()
+    }
     pub fn schedule_event(&self, event: Box<dyn FnOnce() + Send>, frame: FrameIndex){
         self.trigger_sink.send(
             ScheduledTrigger{

@@ -46,8 +46,7 @@ impl ServerMainStateIn {
     }
     fn init_logic_tailer(&self, data_handle: SimDataStorageEx) -> LogicSimTailerEx{
         let game_state = self.init_state();
-        let setup = LogicSegmentTailerIn::new(self.known_frame.clone(), game_state, data_handle);
-        setup.start_logic_tail()
+        LogicSimTailerEx::start(self.known_frame.clone(), game_state, data_handle)
     }
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = self.init_network_hub();

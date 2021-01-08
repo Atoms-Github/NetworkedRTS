@@ -6,7 +6,7 @@ use crate::client::connect_net_seg::*;
 use crate::client::graphical_seg::*;
 use crate::client::logic_sim_header_seg::*;
 use crate::client::net_dist_inputs_seg::*;
-use crate::common::logic::logic_sim_tailer_seg::*;
+use crate::common::logic::logic_sim_tailer_seg::LogicSimTailerEx;
 use crate::common::network::external_msg::*;
 use crate::common::sim_data::input_state::*;
 use crate::common::sim_data::sim_data_storage::*;
@@ -29,23 +29,21 @@ struct ClientIn{
 impl ClientIn{
     // Links up channels.
     fn init(self) -> ClientEx{
-        let mut seg_net_connect = ConnectNetIn::new(self.connection_ip.clone()).start_net();
+        let mut seg_net_connect = ConnectNetEx::start(self.connection_ip.clone());
         let mut welcome_info = seg_net_connect.receive_synced_greeting(&self.player_name, self.preferred_id);
 
-
         let seg_data_storage = SimDataStorageEx::new(welcome_info.players_in_state, welcome_info.game_state.get_simmed_frame_index() + 1);
-
-        let seg_hasher = HasherIn::start();
-        let seg_scheduler = SchedulerSegIn::new(welcome_info.known_frame.clone()).start();
-        let mut seg_logic_tailer = LogicSegmentTailerIn::new(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone()).start_logic_tail();
+        let seg_hasher = HasherEx::start();
+        let seg_scheduler = SchedulerSegEx::start(welcome_info.known_frame.clone());
+        let mut seg_logic_tailer = LogicSimTailerEx::start(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone());
 
         // Send local logic hashes.
         seg_hasher.link_hash_stream(seg_logic_tailer.new_tail_hashes.take().unwrap());
-        let mut seg_logic_header = LogicSimHeaderIn::new(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone()).start();
+        let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone());
         let input_changes = GraphicalSeg::new(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id).start();
 
 
-        let seg_net_rec = NetRecSegIn::new(seg_data_storage.clone(), seg_net_connect.net_rec.take().unwrap(), welcome_info.known_frame.clone(), seg_hasher.clone()).start();
+        let seg_net_rec = NetRecSegEx::start(seg_data_storage.clone(), seg_net_connect.net_rec.take().unwrap(), welcome_info.known_frame.clone(), seg_hasher.clone());
 
 
         ClientEx{
@@ -117,6 +115,11 @@ impl ClientEx{
 
 
 pub fn client_main(connection_target_ip: String, prefered_id: i32){
+    // 1. Init connection and download world.
+    // 2. Do pre interesting.
+    // 3. Create segs, and pass in init frame.
+    // 4. Do post interesting.
+
     thread::sleep(Duration::from_millis(1000)); // TODO1
     println!("Starting as client.");
     let client = ClientIn{

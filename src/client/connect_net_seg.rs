@@ -136,14 +136,14 @@ impl ConnectNetEx {
         }
         unsynced_greeting
     }
+    pub fn start(conn_address_str :String) -> Self{
+        ConnectNetIn{
+            conn_address_str
+        }.start_net()
+    }
 }
 
 impl ConnectNetIn {
-    pub fn new(conn_address_str :String) -> ConnectNetIn{
-        ConnectNetIn{
-            conn_address_str
-        }
-    }
     fn bind_sockets(&self) -> (UdpSocket, TcpStream){
         let tcp_address = SocketAddr::from_str(&self.conn_address_str).expect("Ill formed ip");
 

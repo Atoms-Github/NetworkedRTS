@@ -17,6 +17,20 @@ pub struct NetRecSegIn{
     storage: SimDataStorageEx,
     seg_hasher: HasherEx,
 }
+pub struct NetRecSegEx{
+
+}
+impl NetRecSegEx{
+    pub fn start(storage: SimDataStorageEx, net_inc: Receiver<ExternalMsg>, known_frame: KnownFrameInfo, seg_hasher: HasherEx) -> Self{
+        NetRecSegIn{
+            incoming_msgs: vec![],
+            net_inc,
+            known_frame,
+            storage,
+            seg_hasher
+        }.start()
+    }
+}
 impl NetRecSegIn{
     fn pull_from_net(&mut self){
 
@@ -33,15 +47,7 @@ impl NetRecSegIn{
         }
         Duration::from_secs_f32(milis / 1000.0)
     }
-    pub fn new(storage: SimDataStorageEx, net_inc: Receiver<ExternalMsg>, known_frame: KnownFrameInfo, seg_hasher: HasherEx) -> Self{
-        Self{
-            incoming_msgs: vec![],
-            net_inc,
-            known_frame,
-            storage,
-            seg_hasher
-        }
-    }
+
     pub fn start(mut self) -> NetRecSegEx{
         thread::spawn(move || {
             let frame_counter = self.known_frame.start_frame_stream_from_now();
@@ -78,9 +84,3 @@ impl NetRecSegIn{
     }
 }
 
-pub struct NetRecSegEx{
-
-}
-impl NetRecSegEx{
-
-}

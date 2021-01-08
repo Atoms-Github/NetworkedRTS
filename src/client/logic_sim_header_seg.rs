@@ -18,6 +18,15 @@ pub struct LogicSimHeaderIn {
 pub struct LogicSimHeaderEx {
     pub head_rec: Option<Receiver<GameState>>,
 }
+impl LogicSimHeaderEx{
+    pub fn start(known_frame_info: KnownFrameInfo, tail_rec: Receiver<GameState>, data_store: SimDataStorageEx) -> Self {
+        LogicSimHeaderIn {
+            known_frame_info,
+            data_store,
+            tail_rec
+        }.start()
+    }
+}
 
 
 fn deep_clone_state_lock(state_tail: &ArcRw<GameState>) -> ArcRw<GameState>{
@@ -27,15 +36,7 @@ fn deep_clone_state_lock(state_tail: &ArcRw<GameState>) -> ArcRw<GameState>{
 }
 
 impl LogicSimHeaderIn {
-    pub fn new(known_frame_info: KnownFrameInfo, tail_rec: Receiver<GameState>,
-               data_store: SimDataStorageEx)
-               -> LogicSimHeaderIn {
-        LogicSimHeaderIn {
-            known_frame_info,
-            data_store,
-            tail_rec
-        }
-    }
+
 
     pub fn start(mut self) -> LogicSimHeaderEx{
         let (mut head_sink, mut head_rec) = unbounded();
