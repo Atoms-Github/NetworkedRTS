@@ -34,14 +34,6 @@ use crossbeam_channel::{unbounded, Select};
 fn main() {
     println!("STARTING2345.");
 
-
-
-
-
-
-
-
-
     let mut args: Vec<String> = env::args().collect();
 
     args.reverse();
@@ -77,7 +69,7 @@ fn main() {
         let prefered_player_id = args.pop().map(|as_str|{
             i32::from_str(as_str.as_str()).ok()
         }).flatten().unwrap_or(0); // Conflict means auto-assign.
-        client_main(ip, prefered_player_id);
+        ClientApp::go(String::from("A_toms"), ip, prefered_player_id);
     }
 }
 

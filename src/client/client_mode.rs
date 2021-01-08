@@ -19,59 +19,106 @@ use crate::common::sim_data::framed_vec::*;
 use crate::common::sim_data::superstore_seg::*;
 use crate::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
-
-struct ClientIn{
+pub struct ClientApp{
     player_name: String,
     connection_ip: String,
     preferred_id: i32,
 }
-// TODO2: Also, that refactor seems good. To prevent threads just repassing messages, the message generator should also be formatted for new version.
-impl ClientIn{
-    // Links up channels.
-    fn init(self) -> ClientEx{
-        let mut seg_net_connect = ConnectNetEx::start(self.connection_ip.clone());
-        let mut welcome_info = seg_net_connect.receive_synced_greeting(&self.player_name, self.preferred_id);
+impl ClientApp{
+    pub fn go(player_name: String, connection_ip: String, preferred_id: i32){
+        // Steps are:
+        // 1. Init connection and download world.
+        // 2. Do pre interesting.
+        // 3. Create segs, and pass in init frame.
+        // 4. Do post interesting.
+        //
+        // 1 is executed by the app and results in a connected client.
+        // 2 and 3 are executed by the connected client and result in a ClientEx.
+        // 4 is executed on the ClientEx.
+
+        println!("Starting as client.");
+        let mut app = ClientApp{
+            player_name,
+            connection_ip,
+            preferred_id
+        };
+        let connected_client = app.init_connection();
+        connected_client.start();
+    }
+    fn init_connection(self) -> ConnectedClient{
+        thread::sleep(Duration::from_millis(1000)); // TODO1
+        let mut seg_connect_net = ConnectNetEx::start(self.connection_ip.clone());
+        let mut welcome_info = seg_connect_net.receive_synced_greeting(&self.player_name, self.preferred_id);
+
+        return ConnectedClient{
+            welcome_info,
+            seg_connect_net,
+        }
+    }
+}
+struct ConnectedClient{
+    welcome_info: NetMsgGreetingResponse,
+    seg_connect_net: ConnectNetEx,
+}
+impl ConnectedClient{
+    pub fn start(mut self){
+        let my_init_frame = self.pre_interesting();
+        let ex = self.init_segs(my_init_frame);
+        ex.post_interesting(self, my_init_frame);
+    }
+    fn pre_interesting(&self) -> FrameIndex{
+        let my_init_frame = self.welcome_info.known_frame.get_intended_current_frame() + 50; // modival How far in the future to plonk yourself.
+        println!("I'm gonna init me on {}", my_init_frame);
+        return my_init_frame;
+    }
+    fn init_segs(&mut self, my_init_frame: FrameIndex) -> ClientEx{
+        let welcome_info = self.welcome_info.clone();
 
         let seg_data_storage = SimDataStorageEx::new(welcome_info.players_in_state, welcome_info.game_state.get_simmed_frame_index() + 1);
         let seg_hasher = HasherEx::start();
         let seg_scheduler = SchedulerSegEx::start(welcome_info.known_frame.clone());
         let mut seg_logic_tailer = LogicSimTailerEx::start(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone());
 
-        // Send local logic hashes.
+        // Send local logic hashes. TODO2: move to interesting?
         seg_hasher.link_hash_stream(seg_logic_tailer.new_tail_hashes.take().unwrap());
         let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone());
         let input_changes = GraphicalSeg::new(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id).start();
-
-
-        let seg_net_rec = NetRecSegEx::start(seg_data_storage.clone(), seg_net_connect.net_rec.take().unwrap(), welcome_info.known_frame.clone(), seg_hasher.clone());
-
-
+        let seg_net_rec = NetRecSegEx::start(seg_data_storage.clone(), self.seg_connect_net.net_rec.take().unwrap(), welcome_info.known_frame.clone(), seg_hasher.clone());
+        let seg_input_dist = InputHandlerIn::new
+            (welcome_info.known_frame.clone(),
+             welcome_info.assigned_player_id,
+             my_init_frame + 1 /*Don't want to override existing frame which has 'NewPlayer' = true.*/,
+             input_changes,
+             seg_data_storage.clone()
+            ).start();
+        let seg_net_dist = NetInputDistIn::new(welcome_info.known_frame.clone(), welcome_info.assigned_player_id,
+                                               self.seg_connect_net.net_sink.clone(), seg_data_storage.clone()).start_net_dist();
         ClientEx{
-            seg_net_connect,
             seg_scheduler,
             seg_data_storage,
             seg_logic_tailer,
             seg_logic_header,
-            seg_hasher,
-            input_changes,
-            player_id: welcome_info.assigned_player_id,
-            known_frame: welcome_info.known_frame,
+            seg_hasher
         }
     }
+
 }
 struct ClientEx{
-    seg_net_connect: ConnectNetEx,
     seg_scheduler: SchedulerSegEx,
     seg_data_storage: SimDataStorageEx,
     seg_logic_tailer: LogicSimTailerEx,
     seg_logic_header: LogicSimHeaderEx,
     seg_hasher: HasherEx,
-    input_changes: Receiver<InputChange>,
-    player_id: PlayerID,
-    known_frame: KnownFrameInfo,
 }
-
 impl ClientEx{
+    fn post_interesting(self, connected_client: ConnectedClient, my_init_frame: FrameIndex){
+        let init_me_msg = self.gen_init_me_msgs(my_init_frame, connected_client.welcome_info.assigned_player_id);
+        connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(init_me_msg.clone()),true)).unwrap();
+        self.seg_data_storage.write_owned_data(init_me_msg);
+        loop{
+            thread::sleep(Duration::from_millis(10000));
+        }
+    }
     fn gen_init_me_msgs(&self, frame_to_init_on: FrameIndex, my_player_id: PlayerID) -> OwnedSimData{
         let mut first_input = InputState::new();
         first_input.new_player = true;
@@ -83,65 +130,7 @@ impl ClientEx{
             }
         }
     }
-
-    // InterestingClientLogic.
-    fn run_loop(self){
-
-        let my_init_frame = self.known_frame.get_intended_current_frame() + 50; // modival How far in the future to plonk yourself.
-
-        println!("I'm gonna init me on {}", my_init_frame);
-        let init_me_msg = self.gen_init_me_msgs(my_init_frame, self.player_id);
-        self.seg_net_connect.net_sink.send((ExternalMsg::GameUpdate(init_me_msg.clone()),true)).unwrap();
-        self.seg_data_storage.write_owned_data(init_me_msg);
-
-        let seg_input_dist = InputHandlerIn::new
-            (self.known_frame.clone(),
-             self.player_id,
-             my_init_frame + 1 /*Don't want to override existing frame which has 'NewPlayer' = true.*/,
-             self.input_changes,
-             self.seg_data_storage.clone()
-        ).start();
-
-        let seg_net_dist = NetInputDistIn::new(self.known_frame.clone(), self.player_id, self.seg_net_connect.net_sink.clone(), self.seg_data_storage.clone()).start_net_dist();
-
-        loop{
-            thread::sleep(Duration::from_millis(10000));
-        }
-    }
-
 }
-
-
-
-
-pub fn client_main(connection_target_ip: String, prefered_id: i32){
-    // 1. Init connection and download world.
-    // 2. Do pre interesting.
-    // 3. Create segs, and pass in init frame.
-    // 4. Do post interesting.
-
-    thread::sleep(Duration::from_millis(1000)); // TODO1
-    println!("Starting as client.");
-    let client = ClientIn{
-        player_name: String::from("Atomserdiah"),
-        connection_ip: connection_target_ip,
-        preferred_id: prefered_id
-    };
-    let client_ex = client.init();
-    client_ex.run_loop();
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
