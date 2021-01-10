@@ -25,4 +25,21 @@ impl<S,R> TwoWay<S,R>{
     pub fn send(&mut self, value: S) -> Result<(), SendError<S>>{
         self.sink.send(value)
     }
+    pub fn split(self) -> (Sender<S>, Receiver<R>){
+        return(self.sink, self.rec);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -61,9 +61,6 @@ impl NetHubBackIn {
         let new_tcps_rec = self.handle_new_tcp_connections(tcp_listener);
         let (inc_tcp_msgs_sink, inc_tcp_msgs_rec) : (Sender<(ExternalMsg, SocketAddr)>,Receiver<(ExternalMsg, SocketAddr)>) = unbounded();
 
-        let mut sel = Select::new();
-
-
         thread::spawn(move ||{
 //             The things we want to blocking wait for:
 //             New tcp streams. (new_tcps_rec)
