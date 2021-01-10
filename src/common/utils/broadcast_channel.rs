@@ -1,90 +1,82 @@
-use crossbeam_channel::{Sender, Receiver, Select, unbounded, SendError, RecvError};
+use crossbeam_channel::{Sender, Receiver, Select, unbounded, SendError, RecvError, TryRecvError};
 use crossbeam_channel::internal::select;
 
 pub fn new_bc_multi<T: Clone>(rec_count: u8) -> (BcTx<T>, BcRx<T>){
-    let (initial_tx, initial_rx) = unbounded();
-    let (hooks_tx, hooks_rx) = unbounded();
+    let mut txes = vec![];
+    let mut rxes = vec![];
+    for i in 0..rec_count{
+        let (tx, rx) = unbounded();
+        txes.push(tx);
+        rxes.push(rx);
+    }
     return (BcTx{
-        txs: vec![initial_tx.clone()],
-        new_hooks_rx: hooks_rx,
-        new_hooks_tx: hooks_tx.clone()
+        txes
     }, BcRx{
-        rx: initial_rx,
-        self_tx: initial_tx,
-        new_hooks_tx: hooks_tx,
+        rxes
     });
 }
-
 pub fn new_bc<T: Clone>() -> (BcTx<T>, BcRx<T>){
-    return new_bc_multi(1);
+    new_bc_multi(1)
 }
 
+#[derive(Clone)]
 pub struct BcTx<T: Clone>{
-    txs: Vec<Sender<T>>,
-    new_hooks_rx: Receiver<Sender<T>>,
-    new_hooks_tx: Sender<Sender<T>>,
+    txes: Vec<Sender<T>>,
 }
 pub struct BcRx<T: Clone>{
-    pub rx: Receiver<T>,
-    self_tx: Sender<T>,
-    new_hooks_tx: Sender<Sender<T>>,
+    rxes: Vec<Receiver<T>>,
 }
 impl<T: Clone> BcTx<T>{
     pub fn send(&mut self, value: T) -> Result<(), SendError<T>>{
-        let mut next = self.new_hooks_rx.try_recv();
-        while next.is_ok(){
-            self.txs.push(next.unwrap());
-            next = self.new_hooks_rx.try_recv();
-        }
-        for sink in &self.txs {
-            let result = sink.send(value.clone()); //TODO2: 1 unnec clone.
+        for sink in &self.txes {
+            let result = sink.send(value.clone()); //optimum: 1 unnec clone.
             if result.is_err(){
                 return result;
             }
         }
         return Ok(());
     }
-    pub fn gen_rx(&mut self) -> BcRx<T>{
-        let (tx, rx) = unbounded();
-        self.txs.push(tx.clone());
-
-        return BcRx{
-            rx,
-            self_tx: tx,
-            new_hooks_tx: self.new_hooks_tx.clone()
-        };
-    }
 }
 impl<T: Clone> BcRx<T>{
     pub fn recv(&self) -> Result<T, RecvError>{
-        self.rx.recv()
+        self.rx().recv()
     }
-}
-impl<T: Clone> Clone for BcRx<T>{
-    fn clone(&self) -> Self {
-        let (tx, rx) = unbounded();
-        self.new_hooks_tx.send(tx.clone()).unwrap();
+    pub fn try_recv(&self) -> Result<T, TryRecvError>{
+        self.rx().try_recv()
+    }
+    pub fn rx(&self) -> &Receiver<T>{
+        return self.rxes.get(0).expect("No broadcasting rx left in me! Increase multi count by one.");
+    }
+
+    pub fn take_one_rv(&mut self) -> Self {
+        let rec = self.rxes.pop().expect("No broadcasting rx left in me! Increase multi count by one.");
         return BcRx{
-            rx,
-            self_tx: tx,
-            new_hooks_tx: self.new_hooks_tx.clone(),
+            rxes: vec![rec]
         };
     }
 }
-
 #[cfg(test)]
 mod tests {
-    use crate::common::utils::broadcast_channel::new_bc;
+    use crate::common::utils::broadcast_channel::{new_bc, new_bc_multi};
     use std::thread;
+    use crossbeam_channel::TryRecvError;
+    use std::time::Duration;
 
     #[test]
-    fn it_works() {
-        let (mut tx, mut rx) = new_bc();
+    fn battlecruiser_test() {
+        let (mut tx, mut rx) = new_bc_multi(2);
 
+        assert_eq!(rx.try_recv(), Result::Err(TryRecvError::Empty));
         thread::spawn(move ||{
             tx.send(12).unwrap();
         });
+        std::thread::sleep(Duration::from_millis(50));
+
         assert_eq!(rx.recv().unwrap(), 12);
+        let split = rx.take_one_rv();
+
+        assert_eq!(split.recv().unwrap(), 12);
+
         println!("TestsPass");
     }
 }
