@@ -72,7 +72,6 @@ impl GameSocket for UdpSocket{
         thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
             let mut message_buffer = [0; 65_535];
             loop{
-
                 let (message_size_bytes, address) = self.recv_from(&mut message_buffer).unwrap();
 
                 if message_size_bytes == 0{

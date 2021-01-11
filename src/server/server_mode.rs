@@ -37,29 +37,16 @@ impl ServerMainStateIn {
         game_state.init_rts();
         game_state
     }
-    fn init_storage_man(&self) -> SimDataStorageEx{
-        SimDataStorageEx::new(vec![], 0)
-    }
-    fn init_network_hub(&self) -> NetworkingHubEx{
-        let net_hub_setup = NetworkingHubIn::new(self.hosting_ip.clone());
-        net_hub_setup.start_hosting()
-    }
-    fn init_logic_tailer(&self, data_handle: SimDataStorageEx) -> LogicSimTailerEx{
-        let game_state = self.init_state();
-        LogicSimTailerEx::start(self.known_frame.clone(), game_state, data_handle)
-    }
     pub fn start_segments(self) -> ServerMainStateEx {
-        let seg_net_hub = self.init_network_hub();
-        let seg_data_store = self.init_storage_man();
-        let mut seg_logic_tail = self.init_logic_tailer(seg_data_store.clone());
-
-
+        let seg_net_hub = NetworkingHubEx::start(self.hosting_ip.clone());
+        let seg_data_store = SimDataStorageEx::new(vec![], 0);
+        let mut seg_logic_tail = LogicSimTailerEx::start(self.known_frame.clone(), self.init_state(), seg_data_store.clone());
         let hash_rec = seg_logic_tail.new_tail_hashes.take().unwrap(); // dans_game.
-        let hash_net_yeet_sink = seg_net_hub.down_sink.clone();
+        let hash_net_tx = seg_net_hub.down_sink.clone();
         thread::spawn(move ||{
             loop{
                 let framed_hash = hash_rec.recv().unwrap();
-                hash_net_yeet_sink.send(NetHubFrontMsgIn::MsgToAll(ExternalMsg::NewHash(framed_hash), false)).unwrap();
+                //hash_net_tx.send(NetHubFrontMsgIn::MsgToAll(ExternalMsg::NewHash(framed_hash), false)).unwrap();
             }
         });
 

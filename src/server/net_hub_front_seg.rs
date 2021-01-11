@@ -36,16 +36,17 @@ pub enum NetHubFrontMsgIn{
     MsgToAll(ExternalMsg, /*Reliable*/bool),
     DropPlayer(PlayerID)
 }
-
-// Manages the server's incoming and outgoing network messages.
-impl NetworkingHubIn {
-    pub fn new(host_addr_str: String) -> Self {
+impl NetworkingHubEx{
+    pub fn start(host_addr_str: String) -> Self {
         NetworkingHubIn{
             host_addr_str,
             next_player_id: 0,
             player_id_map: Default::default()
-        }
+        }.start_hosting()
     }
+}
+// Manages the server's incoming and outgoing network messages.
+impl NetworkingHubIn {
     pub fn start_hosting(mut self) -> NetworkingHubEx{
         let (down_sink, down_rec) = unbounded();
         let (up_sink, up_rec) = unbounded();
@@ -86,6 +87,7 @@ impl NetworkingHubIn {
                                 player_id = next_player_id;
                                 next_player_id += 1;
                                 writable_players_map.insert(address, player_id);
+                                std::mem::drop(writable_players_map);
                             }
                         }
                         above_out_sink.send(NetHubFrontMsgOut::NewPlayer(player_id)).unwrap();
