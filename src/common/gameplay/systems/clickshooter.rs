@@ -53,12 +53,8 @@ fn clickshooter_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID
             d.pending.create_entity(pending_entity_bullet);
 
             e.my_clickshooter_comp(d).cooldown = 20.0;
-        }else{
-            e.my_clickshooter_comp(d).cooldown -= 1.0;
         }
-
-
-
     }
+    e.my_clickshooter_comp(d).cooldown -= 1.0;
 }
 

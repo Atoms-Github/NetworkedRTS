@@ -37,7 +37,7 @@ fn wasdmover_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID, I
     let mut my_speed = MOVEMENT_SPEED;
 
     if my_inputs.mouse_btns_pressed.len() > 0{
-        my_speed *= 0.5;
+        //my_speed *= 0.5;
     }
 
     e.my_velocity(d).x = my_speed * directional_x;
