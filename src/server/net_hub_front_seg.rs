@@ -71,7 +71,7 @@ impl NetworkingHubIn {
                 let mut players_map = players.read().unwrap();
                 match next_msg {
                     NetHubBackMsgOut::NewMsg(msg, address) => {
-                        let player_id = players_map.get_by_left(&address).unwrap();
+                        let player_id = players_map.get_by_left(&address).unwrap_or_else(|| panic!("Can't find player address {}", address));
                         above_out_sink.send(NetHubFrontMsgOut::NewMsg(msg, *player_id)).unwrap();
                     }
                     NetHubBackMsgOut::NewPlayer(address) => {
@@ -86,6 +86,7 @@ impl NetworkingHubIn {
                                 let mut writable_players_map = players.write().unwrap();
                                 player_id = next_player_id;
                                 next_player_id += 1;
+                                println!("NEW PLAYER! {} {}", address, player_id);
                                 writable_players_map.insert(address, player_id);
                                 std::mem::drop(writable_players_map);
                             }

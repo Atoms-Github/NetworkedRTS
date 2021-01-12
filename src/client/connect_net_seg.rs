@@ -17,6 +17,7 @@ pub struct ConnectNetIn {
 pub struct ConnectNetEx {
     pub net_sink: Sender<(ExternalMsg, bool)>,
     pub net_rec: Option<Receiver<ExternalMsg>>,
+    pub udp_port: u16,
 }
 struct FullPingSample{
     c_send_time: SystemTime,
@@ -93,12 +94,9 @@ impl ConnectNetEx {
         }
         results
     }
-    fn send_greeting(&self, player_name: &str, preferred_id: i32){
+    fn send_greeting(&self, my_details: NetMsgGreetingQuery){
         let connection_init_query = ExternalMsg::ConnectionInitQuery(
-            NetMsgGreetingQuery {
-                my_player_name: player_name.to_string(),
-                preferred_id: 5
-            }
+            my_details
         );
         self.net_sink.send((connection_init_query, true)).unwrap();
     }
@@ -121,9 +119,9 @@ impl ConnectNetEx {
 
         }
     }
-    pub fn receive_synced_greeting(&self, player_name: &str, preferred_id: i32) -> NetMsgGreetingResponse {
+    pub fn receive_synced_greeting(&self, my_details: NetMsgGreetingQuery) -> NetMsgGreetingResponse {
         let clock_offset_ns = self.perform_ping_tests_get_clock_offset();
-        self.send_greeting(player_name, preferred_id);
+        self.send_greeting(my_details);
         let mut unsynced_greeting = self.receive_unsynced_greeting();
         println!("I'm player {}", unsynced_greeting.assigned_player_id);
         {
@@ -145,17 +143,18 @@ impl ConnectNetEx {
 
 impl ConnectNetIn {
     fn bind_sockets(&self) -> (UdpSocket, TcpStream){
-        let tcp_address = SocketAddr::from_str(&self.conn_address_str).expect("Ill formed ip");
+        let target_tcp_address = SocketAddr::from_str(&self.conn_address_str).expect("Ill formed ip");
 
-        let mut udp_address = tcp_address.clone();
-        udp_address.set_port(tcp_address.port() + 1);
+        let mut target_udp_address = target_tcp_address.clone();
+        target_udp_address.set_port(target_tcp_address.port() + 1);
 
-        let tcp_stream = TcpStream::connect(tcp_address).expect("Client failed to connect TCP.");
-        let udp_socket = UdpSocket::bind("127.0.0.1:0"/*Auto assign*/).expect("Client couldn't bind to socket.");
+        // /*"127.0.0.1:0"/*Auto assign*/
+        let tcp_stream = TcpStream::connect(target_tcp_address).expect("Client failed to connect TCP.");
+        let udp_socket = UdpSocket::bind(tcp_stream.local_addr().unwrap()).expect("Client couldn't bind to socket.");
 
-        udp_socket.connect(udp_address).expect("Client failed to connect UDP.");
-
-        println!("Connected to server on on tcp {} and udp on port +1", tcp_address);
+        udp_socket.connect(target_udp_address).expect("Client failed to connect UDP.");
+        println!("Client using udp {:?}" , udp_socket.local_addr());
+        println!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
         return (udp_socket, tcp_stream);
     }
     pub fn start_net(self) -> ConnectNetEx {
@@ -180,7 +179,8 @@ impl ConnectNetIn {
 
         ConnectNetEx {
             net_sink: down_sink,
-            net_rec: Some(up_rec.filter_address(None))
+            net_rec: Some(up_rec.filter_address(None)),
+            udp_port: 0,//udp_socket.local_addr().unwrap().port(),
         }
     }
 }

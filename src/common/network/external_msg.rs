@@ -183,7 +183,8 @@ pub struct LocalCommandInfo{
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgGreetingQuery {
     pub my_player_name: String,
-    pub preferred_id: i32
+    pub preferred_id: i32,
+    pub udp_port: u16,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgGreetingResponse {

@@ -48,7 +48,15 @@ impl ClientApp{
     fn init_connection(self) -> ConnectedClient{
         //thread::sleep(Duration::from_millis(1000)); // TODO1
         let mut seg_connect_net = ConnectNetEx::start(self.connection_ip.clone());
-        let mut welcome_info = seg_connect_net.receive_synced_greeting(&self.player_name, self.preferred_id);
+
+        let my_details = NetMsgGreetingQuery {
+            my_player_name: self.player_name.to_string(),
+            preferred_id: 5,
+            udp_port: seg_connect_net.udp_port,
+        };
+
+
+        let mut welcome_info = seg_connect_net.receive_synced_greeting(my_details);
 
         return ConnectedClient{
             welcome_info,
