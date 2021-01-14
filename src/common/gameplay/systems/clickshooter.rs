@@ -7,7 +7,6 @@ use crate::common::gameplay::ecs::world::*;
 use crate::common::gameplay::systems::velocity::VelocityComp;
 use crate::common::types::*;
 use crate::common::sim_data::input_state::*;
-use winit::MouseCursor::Move;
 use crate::common::gameplay::systems::position::PositionComp;
 use crate::common::gameplay::systems::size::SizeComp;
 use crate::common::gameplay::systems::render::RenderComp;

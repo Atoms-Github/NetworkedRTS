@@ -11,10 +11,10 @@ time = "0.2.10"
 sntpc = "0.2"
 paste = "0.1.5"
 anymap = "0.12.1"
+#winit = {version = "*", features = ["serde"]}
 ggez = {version = "*"}#, features = ["serde"] }
 #ggez = {path = "C:\\Users\\A_toms\\.cargo\\registry\\src\\github.com-1ecc6299db9ec823\\ggez-0.5.1"}
 #winit = {path = "C:\\Users\\A_toms\\.cargo\\registry\\src\\github.com-1ecc6299db9ec823\\winit-0.19.4", features = ["serde"] }
-winit = {version = "*", features = ["serde"]}
 #PogformanceTest = { path = "C:\\Users\\A_toms\\Desktop\\Coding\\Projects\\Rust\\PogformanceTest" }
 nalgebra = {version = "0.18", features = ["mint", "serde-serialize"] }
 bincode = "1.1.4"
@@ -31,4 +31,8 @@ bus = "2.2.2"
 bimap = "*"
 crossbeam-channel = "0.5.0"
 
-[features]
+[dependencies.winit]
+version = "0.19" # To match ggez.
+default-features = false # do not include the default features, and optionally
+# cherry-pick individual features
+features = ["serde"]

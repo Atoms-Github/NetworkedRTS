@@ -1,8 +1,10 @@
 use serde::{Serialize, Deserialize};
 use std::collections::{HashSet};
-use ggez::event::{KeyCode, MouseButton};
+use ggez::event::{KeyCode};
 
 use crate::common::types::*;
+//use ggez::input::mouse::MouseButton;
+use ggez::input::mouse::MouseButton;
 
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
