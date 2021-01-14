@@ -12,11 +12,15 @@ use crate::common::sim_data::input_state::*;
 use crate::common::gameplay::systems::render::*;
 use std::time::SystemTime;
 use crate::common::types::*;
+use ggez::graphics::Text;
+use std::collections::BTreeMap;
+use nalgebra::Point2;
 
 pub struct GraphicalIn {
     render_head_rec: Receiver<GameState>,
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
+    texts: BTreeMap<&'static str, Text>,
 }
 pub struct GraphicalEx {
     pub input_rec: Receiver<InputChange>,
@@ -24,10 +28,19 @@ pub struct GraphicalEx {
 impl GraphicalEx{
     pub fn start(head_render_handle: Receiver<GameState>, my_player_id: PlayerID) -> GraphicalEx{
         let (input_sink, input_rec) = unbounded();
+
+
+        let mut texts = BTreeMap::new();
+        let text = Text::new("Hello, World!");
+        // Store the text in `App`s map, for drawing in main loop.
+        texts.insert("0_hello", text);
+
+
         GraphicalIn{
             render_head_rec: head_render_handle,
             my_player_id,
             input_sink,
+            texts,
         }.start();
 
         GraphicalEx{
@@ -40,6 +53,8 @@ impl GraphicalIn {
         let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
             .window_mode(conf::WindowMode::default().dimensions(500.0, 300.0)).add_resource_path(""); // TODO3: Find what resource path.
+
+
 
 
         thread::spawn(move ||{
@@ -79,6 +94,15 @@ impl EventHandler for GraphicalIn {
 
         let mut render_state = self.pull_newest_usable_state();
         self.render_state(&mut render_state, ctx);
+
+        let fps = timer::fps(ctx);
+        let fps_display = Text::new(format!("FPS: {}", fps));
+        // When drawing through these calls, `DrawParam` will work as they are documented.
+        graphics::draw(
+            ctx,
+            &fps_display,
+            (Point2::new(200.0, 0.0), graphics::WHITE),
+        )?;
 
 
 

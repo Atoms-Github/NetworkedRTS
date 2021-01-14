@@ -76,8 +76,10 @@ impl SimDataStorageEx{
         }else{
             // On new player, we do want to read, then write, then read again. This doesn't happen often.
             std::mem::drop(players); // So can write to.
+            if data.data.len() > 0{
+                assert!(data.data.get(0).unwrap().new_player, "New data for unknown player {} which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.", player_id);
+            }
             // Existing players should have been initialized in the 'ExistingPlayers' list in the welcome message - therefor all new players should have the new player flag.
-            assert!(data.data.get(0).unwrap().new_player, "New data for unknown player {} which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.", player_id);
             self.init_new_player(player_id, data.frame_offset);
             self.read_data()
         };
