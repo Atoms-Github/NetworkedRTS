@@ -16,8 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Get package
+    - name: My get package1
       run: sudo apt install libasound2-dev
+    - name: My get package2
+      run: apt-get install libudev-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
