@@ -35,7 +35,7 @@ impl ClientApp{
         // 1 is executed by the app and results in a connected client.
         // 2 and 3 are executed by the connected client and result in a ClientEx.
         // 4 is executed on the ClientEx.
-
+        //
         println!("Starting as client.");
         let mut app = ClientApp{
             player_name,
