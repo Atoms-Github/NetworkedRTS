@@ -148,14 +148,26 @@ impl ConnectNetIn {
         let mut target_udp_address = target_tcp_address.clone();
         target_udp_address.set_port(target_tcp_address.port() + 1);
 
-        // /*"127.0.0.1:0"/*Auto assign*/
-        let tcp_stream = TcpStream::connect(target_tcp_address).expect("Client failed to connect TCP.");
-        let udp_socket = UdpSocket::bind(tcp_stream.local_addr().unwrap()).expect("Client couldn't bind to socket.");
+        loop{
+            let tcp_stream;
+            match TcpStream::connect(target_tcp_address){
+                Err(error) => {
+                    println!("Failed to connect to server. Retrying ... ({})", error.to_string());
+                    thread::sleep(Duration::from_millis(1000));
+                    continue;
+                }
+                Ok(stream) => {
+                    tcp_stream = stream;
+                }
+            }
+            let udp_socket = UdpSocket::bind(tcp_stream.local_addr().unwrap()).expect("Client couldn't bind to socket.");
 
-        udp_socket.connect(target_udp_address).expect("Client failed to connect UDP.");
-        println!("Client using udp {:?}" , udp_socket.local_addr());
-        println!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
-        return (udp_socket, tcp_stream);
+            udp_socket.connect(target_udp_address).expect("Client failed to connect UDP.");
+            println!("Client using udp {:?}" , udp_socket.local_addr());
+            println!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
+            return (udp_socket, tcp_stream);
+        }
+
     }
     pub fn start_net(self) -> ConnectNetEx {
         let (down_sink, down_rec) = unbounded();
