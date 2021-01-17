@@ -56,7 +56,7 @@ impl ClientApp{
         };
 
 
-        let mut welcome_info = seg_connect_net.receive_synced_greeting(my_details);
+        let mut welcome_info = seg_connect_net.get_synced_greeting(my_details);
 
         return ConnectedClient{
             welcome_info,
