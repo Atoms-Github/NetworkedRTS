@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Server+Client+Client+Client" type="CompoundRunConfigurationType">
+    <toRun name="Run LiteralPoggySourceServer" type="CargoCommandRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>
