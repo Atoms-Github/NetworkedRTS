@@ -20,6 +20,8 @@ jobs:
       run: sudo apt install libasound2-dev
     - name: My get package2
       run: sudo apt-get install libudev-dev
+    - name: Switch to nightly
+      run: rustup default nightly
     - name: Build
       run: cargo build --verbose
     - name: Run tests
