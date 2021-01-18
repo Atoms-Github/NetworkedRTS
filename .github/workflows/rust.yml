@@ -29,15 +29,10 @@ jobs:
       
       
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2
-    - run: mkdir -p path/to/artifact
-
-    - run: echo hello > path/to/artifact/world.txt
-
     - uses: actions/upload-artifact@v2
       with:
-        name: my-artifact
-        path: path/to/artifact/world.txt
+        name: bibble
+        path: target\release\literal_poggy_source.exe
       
       
       
