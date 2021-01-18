@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - run: ls
+    - run: pwd 
     - uses: actions/checkout@v2
     - name: My get package1
       run: sudo apt install libasound2-dev
