@@ -119,13 +119,24 @@ struct ClientEx{
     seg_hasher: HasherEx,
 }
 impl ClientEx{
+
+    fn upload_logic_requests(){
+
+    }
     fn post_interesting(self, connected_client: ConnectedClient, my_init_frame: FrameIndex){
         let init_me_msg = self.gen_init_me_msgs(my_init_frame, connected_client.welcome_info.assigned_player_id);
         connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(init_me_msg.clone()),true)).unwrap();
         self.seg_data_storage.write_owned_data(init_me_msg);
 
-
-
+        // Upload logic requests.
+        let logic_req_tx = connected_client.seg_connect_net.net_sink.clone();
+        let inc_logic_msgs = self.seg_logic_tailer.from_logic_rec;
+        thread::spawn(move ||{
+            loop{
+                let next_request = inc_logic_msgs.recv().unwrap();
+                logic_req_tx.send((ExternalMsg::InputQuery(next_request), false)).unwrap();
+            }
+        });
 
         let inc_msgs = connected_client.seg_connect_net.net_rec.unwrap();
         loop{
@@ -134,7 +145,6 @@ impl ClientEx{
                     if crate::DEBUG_MSGS_MAIN {
                         println!("Net rec message: {:?}", update);
                     }
-
                     self.seg_data_storage.write_owned_data(update);
                 },
                 ExternalMsg::InputQuery(query) => {
