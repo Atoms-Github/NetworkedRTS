@@ -18,6 +18,8 @@ use crate::common::sim_data::framed_vec::*;
 use crate::common::sim_data::superstore_seg::*;
 use crate::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
+use crate::server::net_hub_front_seg::NetHubFrontMsgIn;
+
 pub struct ClientApp{
     player_name: String,
     connection_ip: String,
@@ -134,6 +136,12 @@ impl ClientEx{
                     }
 
                     self.seg_data_storage.write_owned_data(update);
+                },
+                ExternalMsg::InputQuery(query) => {
+                    let owned_data = self.seg_data_storage.fulfill_query(&query);
+                    if owned_data.sim_data.data.len() > 0{
+                        connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
+                    }
                 },
                 ExternalMsg::PingTestResponse(_) => {
                     // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
