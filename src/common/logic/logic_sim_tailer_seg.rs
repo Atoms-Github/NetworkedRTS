@@ -90,7 +90,7 @@ impl LogicSimTailerIn {
         });
     }
 
-    pub fn start_logic_tail(mut self) -> LogicSimTailerEx {
+    fn start_logic_tail(mut self) -> LogicSimTailerEx {
         let (from_logic_sink, from_logic_rec) = unbounded();
         let (new_tails_sink, new_tails_rec) = unbounded();
         let (new_hashes_sink, new_hashes_rec) = unbounded();

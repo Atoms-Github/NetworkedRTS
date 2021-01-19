@@ -81,16 +81,19 @@ impl ServerMainStateEx {
                             self.data_store.write_owned_data(update_info.clone());
                             self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                         },
+                        ExternalMsg::InputQuery(query) => {
+                            let owned_data = self.data_store.fulfill_query(&query);
+                            if owned_data.sim_data.data.len() > 0{
+                                self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
+                            }
+                        },
                         _ => {
                             panic!("Unexpected message");
                         }
                     }
                 }
             }
-
         }
-
-
     }
     fn gen_init_info(&self, player_id: PlayerID) -> NetMsgGreetingResponse {
         let game_state = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
@@ -116,6 +119,9 @@ pub fn server_main(hosting_ip: String){
 
     println!("Server finished.");
 }
+
+
+
 
 
 

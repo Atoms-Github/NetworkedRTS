@@ -164,7 +164,7 @@ pub enum ExternalMsg {
     ConnectionInitResponse(NetMsgGreetingResponse),
     NewHash(FramedHash),
     GameUpdate(OwnedSimData),
-    LocalCommand(LocalCommandInfo),
+    InputQuery(QuerySimData),
     PingTestQuery(SystemTime),
     PingTestResponse(NetMsgPingTestResponse),
 }

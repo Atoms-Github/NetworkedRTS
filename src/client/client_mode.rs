@@ -12,7 +12,6 @@ use crate::common::sim_data::input_state::*;
 use crate::common::sim_data::sim_data_storage::*;
 use crate::common::data::hash_seg::*;
 use crate::common::time::scheduler_segment::*;
-use crate::client::net_rec_seg::*;
 use crate::common::time::timekeeping::*;
 use crate::common::types::*;
 use crate::common::sim_data::framed_vec::*;
@@ -91,7 +90,6 @@ impl ConnectedClient{
         seg_hasher.link_hash_stream(seg_logic_tailer.new_tail_hashes.take().unwrap());
         let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone());
         let seg_graphical = GraphicalEx::start(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id);
-        let seg_net_rec = NetRecSegEx::start(seg_data_storage.clone(), self.seg_connect_net.net_rec.take().unwrap(), welcome_info.known_frame.clone(), seg_hasher.clone());
         let seg_input_dist = InputHandlerEx::start(
             welcome_info.known_frame.clone(),
              welcome_info.assigned_player_id,
@@ -123,8 +121,30 @@ impl ClientEx{
         let init_me_msg = self.gen_init_me_msgs(my_init_frame, connected_client.welcome_info.assigned_player_id);
         connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(init_me_msg.clone()),true)).unwrap();
         self.seg_data_storage.write_owned_data(init_me_msg);
+
+
+
+
+        let inc_msgs = connected_client.seg_connect_net.net_rec.unwrap();
         loop{
-            thread::sleep(Duration::from_millis(10000));
+            match inc_msgs.recv().unwrap(){
+                ExternalMsg::GameUpdate(update) => {
+                    if crate::DEBUG_MSGS_MAIN {
+                        println!("Net rec message: {:?}", update);
+                    }
+
+                    self.seg_data_storage.write_owned_data(update);
+                },
+                ExternalMsg::PingTestResponse(_) => {
+                    // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
+                }
+                ExternalMsg::NewHash(framed_hash) => {
+                    self.seg_hasher.add_hash(framed_hash);
+                },
+                _ => {
+                    panic!("Client shouldn't be getting a message of this type (or at this time)!")
+                }
+            }
         }
     }
     fn gen_init_me_msgs(&self, frame_to_init_on: FrameIndex, my_player_id: PlayerID) -> OwnedSimData{
