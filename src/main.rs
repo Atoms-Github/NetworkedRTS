@@ -31,8 +31,27 @@ pub const DEBUG_MSGS_PROCESS: bool = DEBUG_MSGS_ALL || true;
 
 use crossbeam_channel::{unbounded, Select};
 
+
+use std::io::Write;
+use chrono::Local;
+use env_logger::Builder;
+use log::LevelFilter;
+use std::time::Duration;
+
+
 fn main() {
+    Builder::new()
+        .format(|buf, record| {
+            writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args())
+        }).filter(None, LevelFilter::Debug).init();
+
+
+
     println!("STARTING2345.");
+    log::warn!("TestWarning");
+    log::warn!("TestWarning2");
+    thread::sleep(Duration::from_millis(50));
+    log::warn!("TestWarning3");
 
     let mut args: Vec<String> = env::args().collect();
 

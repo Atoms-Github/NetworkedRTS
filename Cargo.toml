@@ -14,6 +14,10 @@ anymap = "0.12.1"
 ggez = {version = "*"}#, features = ["serde"] }
 nalgebra = {version = "0.18", features = ["mint", "serde-serialize"] }
 bincode = "1.1.4"
+log = { version = "0.4.13", features = ["max_level_debug", "release_max_level_warn"] }
+env_logger = "0.8.2"
+chrono = "0.4.19"
+
 #futures = "0.1.29"
 #bytes = "0.4.12"
 rand = "0.7"

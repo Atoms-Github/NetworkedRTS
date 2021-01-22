@@ -22,8 +22,6 @@ impl LogicReqHandlerIn {
                 let request = self.server_logic_reqs_rc.recv().unwrap();
                 let target = request.player_id;
                 self.net_manager_tx.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::InputQuery(request), target, false)).unwrap();
-
-
             }
         });
     }

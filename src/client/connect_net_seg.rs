@@ -151,6 +151,8 @@ impl ConnectNetIn {
             udp_socket.connect(target_udp_address).expect("Client failed to connect UDP.");
             println!("Client using udp {:?}" , udp_socket.local_addr());
             println!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
+            println!();
+            println!();
             return (udp_socket, tcp_stream);
         }
 
