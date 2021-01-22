@@ -40,11 +40,13 @@ use std::time::Duration;
 
 
 fn main() {
+    std::env::set_var("RUST_LOG", "warn");
     Builder::new()
         .format(|buf, record| {
             writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args())
         }).filter(None, LevelFilter::Warn).init();
     log::info!("Starting!");
+    println!("Starting");
 
 
     let mut args: Vec<String> = env::args().collect();
