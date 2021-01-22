@@ -151,7 +151,7 @@ impl ConnectNetIn {
             udp_socket.connect(target_udp_address).expect("Client failed to connect UDP.");
             log::info!("Client using udp {:?}" , udp_socket.local_addr());
             log::info!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
-            log::info!();
+            log::info!("");
             return (udp_socket, tcp_stream);
         }
 
