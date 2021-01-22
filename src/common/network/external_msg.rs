@@ -34,7 +34,7 @@ impl GameSocketTcp for TcpStream{
         self.flush().unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            println!("->: {:?}", message);
+            log::debug!("->: {:?}", message);
         }
     }
 }
@@ -47,14 +47,14 @@ impl GameSocket for TcpStream{
                 let mut message_buffer = vec![0; 65_535];
                 let bytes_read = self.read(&mut message_buffer).unwrap();
                 if bytes_read == 0{
-                    println!("Tcp read 0 bytes so closing.");
+                    log::warn!("Tcp read 0 bytes so closing.");
                     break;
                 }
                 let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
                 match result{
                     Ok(msg) => {
                         if crate::DEBUG_MSGS_NET{
-                            println!("<- {:?}", msg);
+                            log::debug!("<- {:?}", msg);
                         }
                         msgs_sink.send((msg, peer_address.clone())).unwrap();
                     }
@@ -75,14 +75,14 @@ impl GameSocket for UdpSocket{
                 let (message_size_bytes, address) = self.recv_from(&mut message_buffer).unwrap();
 
                 if message_size_bytes == 0{
-                    println!("Udp read 0 bytes so closing.");
+                    log::warn!("Udp read 0 bytes so closing.");
                     break;
                 }
                 let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
                 match result{
                     Ok(msg) => {
                         if crate::DEBUG_MSGS_NET{
-                            println!("<-- {:?}", msg);
+                            log::debug!("<-- {:?}", msg);
                         }
                         msgs_sink.send((msg, address)).unwrap();
                     }
@@ -103,7 +103,7 @@ impl GameSocketUdp for UdpSocket{
         self.send_to(&msg_buffer, address).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            println!("->({}): {:?}", msg_buffer.len(), message);
+            log::debug!("->({}): {:?}", msg_buffer.len(), message);
         }
     }
     fn send_msg_to_connected(&self, message: &ExternalMsg) {
@@ -112,7 +112,7 @@ impl GameSocketUdp for UdpSocket{
         self.send(&msg_buffer).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            println!("->({}): {:?}", msg_buffer.len(), message);
+            log::debug!("->({}): {:?}", msg_buffer.len(), message);
         }
     }
 //    fn start_listening_connected(self, msgs_sink: Sender<(ExternalMsg, SocketAddr)>) {
@@ -123,14 +123,14 @@ impl GameSocketUdp for UdpSocket{
 //                let message_size_bytes = self.recv(&mut message_buffer).unwrap();
 //
 //                if message_size_bytes == 0{
-//                    println!("Udp read 0 bytes so closing.");
+//                    log::warn!("Udp read 0 bytes so closing.");
 //                    break;
 //                }
 //                let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
 //                match result{
 //                    Ok(msg) => {
 //                        if crate::DEBUG_MSGS_NET{
-//                            println!("<-- {:?}", msg);
+//                            log::debug!("<-- {:?}", msg);
 //                        }
 //                        let dcwct_address = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(1,2,3,4), 25566));
 //                        msgs_sink.send((msg, dcwct_address)).unwrap();

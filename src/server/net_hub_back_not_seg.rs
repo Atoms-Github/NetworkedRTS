@@ -77,7 +77,7 @@ impl NetHubBackIn {
                         // Listen for new msgs.
                         new_stream.try_clone().unwrap().start_listening(inc_tcp_msgs_sink.clone());
                         let address = new_stream.peer_addr().unwrap();
-                        println!("New client connected {}", address);
+                        log::info!("New client connected {}", address);
                         connections_map.insert(address.clone(), new_stream);
                         above_out_sink.send(NetHubBackMsgOut::NewPlayer(address)).unwrap();
                     },
@@ -99,7 +99,7 @@ impl NetHubBackIn {
                             NetHubBackMsgIn::DropPlayer(address) => {
                                 connections_map.get(&address).unwrap().shutdown(Shutdown::Both).unwrap();
                                 connections_map.remove(&address);
-                                println!("Dropped client {}", address);
+                                log::info!("Dropped client {}", address);
                             }
                         }
 
@@ -153,7 +153,7 @@ impl NetHubBackIn {
         let tcp_listener = TcpListener::bind(&tcp_address).expect("Unable to bind ");
         let udp_socket = UdpSocket::bind(&udp_address).expect("Unable to bind udp hosting address.");
 
-        println!("Starting hosting on tcp {} and udp on port +1", tcp_address);
+        log::info!("Starting hosting on tcp {} and udp on port +1", tcp_address);
         return (udp_socket, tcp_listener);
     }
 }

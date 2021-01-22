@@ -48,7 +48,7 @@ impl LogicSimTailerIn {
                 let mut state_handle = self.tail_lock.write().unwrap();
                 state_handle.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
                 self.data_store.set_tail_frame(tail_frame_to_sim as i32);
-//                println!("TailSim {}", state_handle.get_simmed_frame_index());
+                log::trace!("TailSim {}", state_handle.get_simmed_frame_index());
                 return vec![];
             }
             Err(problems) =>{
@@ -62,7 +62,7 @@ impl LogicSimTailerIn {
         thread::spawn(move ||
         {
             let mut first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;
-            println!("Logic next frame to sim: {}", first_frame_to_sim);
+            log::trace!("Logic next frame to sim: {}", first_frame_to_sim);
             let mut generator = self.known_frame_info.start_frame_stream_from_any(first_frame_to_sim);
             loop{
                 let dt_get_frame = DT::start_fmt(format!("to get a frame"));
@@ -75,7 +75,7 @@ impl LogicSimTailerIn {
                         break;
                     }else{
                         for problem in &problems{
-                            println!("Logic missing info so asking: {:?}", problem);
+                            log::warn!("Logic missing info so asking: {:?}", problem);
                             outwards_messages.send( problem.clone() ).unwrap();
                         }
                         thread::sleep(Duration::from_millis(1000)); // modival Resend period.

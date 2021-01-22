@@ -77,7 +77,7 @@ mod tests {
 
         assert_eq!(split.recv().unwrap(), 12);
 
-        println!("TestsPass");
+        log::info!("TestsPass");
     }
 }
 

@@ -43,10 +43,10 @@ impl LogicSimHeaderIn {
         thread::spawn(move ||{
             loop{
                 let tail = self.tail_rec.recv().unwrap();
-//                println!("Head got frame {}", tail.get_simmed_frame_index());
+                log::trace!("Head got frame {}", tail.get_simmed_frame_index());
 
                 let new_head = self.calculate_new_head(tail);
-//                println!("Head sending {}", new_head.get_simmed_frame_index());
+                log::trace!("Head sending {}", new_head.get_simmed_frame_index());
                 head_sink.send(new_head).unwrap();
 
             }
@@ -62,13 +62,12 @@ impl LogicSimHeaderIn {
 
         let mut infos_for_sims = vec![];
         { // Get all information needed from frames database.
-//            println!("{:?}", all_frames);
             for frame_index in frames_to_sim_range{
                 infos_for_sims.push(self.data_store.clone_info_for_head(frame_index));
             }
         } // Discard frame info database lock.
 
-//        println!("Simming head with: {:?}", infos_for_sims);
+        log::trace!("Simming head with: {:?}", infos_for_sims);
         for sim_info in infos_for_sims{
             state_tail.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
         }

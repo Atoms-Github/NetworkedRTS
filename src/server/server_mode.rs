@@ -72,12 +72,12 @@ impl ServerMainStateEx {
                 NetHubFrontMsgOut::NewMsg(msg, player_id) => {
                     match msg{
                         ExternalMsg::ConnectionInitQuery(response) => {
-                            println!("Received initialization request for player with ID: {}", player_id);
+                            log::info!("Received initialization request for player with ID: {}", player_id);
                             let response = ExternalMsg::ConnectionInitResponse(self.gen_init_info(player_id));
                             self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
                         },
                         ExternalMsg::GameUpdate(update_info) => {
-//                          println!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.player_id, update_info.sim_data.frame_offset, update_info.sim_data.frame_offset + update_info.sim_data.data.len() - 1);
+                            log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.player_id, update_info.sim_data.frame_offset, update_info.sim_data.frame_offset + update_info.sim_data.data.len() - 1);
                             self.data_store.write_owned_data(update_info.clone());
                             self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                         },
@@ -111,13 +111,13 @@ impl ServerMainStateEx {
 
 
 pub fn server_main(hosting_ip: String){
-    println!("Starting as server. Going to host on {}", hosting_ip);
+    log::info!("Starting as server. Going to host on {}", hosting_ip);
 
     let server_in = ServerMainStateIn::new(hosting_ip);
     let server_ex = server_in.start_segments();
     server_ex.main_loop();
 
-    println!("Server finished.");
+    log::info!("Server finished.");
 }
 
 

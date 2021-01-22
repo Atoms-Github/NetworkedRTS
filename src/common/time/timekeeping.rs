@@ -93,7 +93,7 @@ impl DT{
     }
     pub fn stop(self){
         if crate::DEBUG_MSGS_TIMERS{
-            println!("TIMER {} -> {:?}", self.name, SystemTime::now().duration_since(self.time).unwrap());
+            log::debug!("TIMER {} -> {:?}", self.name, SystemTime::now().duration_since(self.time).unwrap());
         }
     }
 }

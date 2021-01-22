@@ -86,7 +86,7 @@ impl NetworkingHubIn {
                                 let mut writable_players_map = players.write().unwrap();
                                 player_id = next_player_id;
                                 next_player_id += 1;
-                                println!("NEW PLAYER! {} {}", address, player_id);
+                                log::info!("NEW PLAYER! {} {}", address, player_id);
                                 writable_players_map.insert(address, player_id);
                                 std::mem::drop(writable_players_map);
                             }

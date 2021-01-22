@@ -40,7 +40,7 @@ impl SimDataStorageEx{
         for existing_player in existing_players{
             storage.init_new_player(existing_player, first_frame_to_store);
         }
-        println!("Done pre-init existing players.");
+        log::debug!("Done pre-init existing players.");
         storage
     }
     pub fn set_tail_frame(&self, tail_frame: i32){
@@ -60,7 +60,7 @@ impl SimDataStorageEx{
         return self.player_inputs.read().unwrap();
     }
     pub fn init_new_player(&self, player_id: PlayerID, frame_offset: FrameIndex){
-        println!("Creating new superstore for new player {}", player_id);
+        log::debug!("Creating new superstore for new player {}", player_id);
         let mut players_writable = self.player_inputs.write().unwrap();
 
         let new_superstore = SuperstoreEx::start(frame_offset);

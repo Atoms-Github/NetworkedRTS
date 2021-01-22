@@ -217,7 +217,7 @@
 //    // 1/2bottom + top/2
 //    let total_per_thread = (items_per_thread - 1) * items_per_thread / 2;
 //    let target_total = total_per_thread * thread_count;
-//    println!("Target: {} actual: {}", target_total, total);
+//    log::debug!("Target: {} actual: {}", target_total, total);
 //    assert_eq!(target_total, total);
 //}
 //

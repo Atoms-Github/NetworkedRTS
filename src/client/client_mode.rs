@@ -37,7 +37,7 @@ impl ClientApp{
         // 2 and 3 are executed by the connected client and result in a ClientEx.
         // 4 is executed on the ClientEx.
         //
-        println!("Starting as client.");
+        log::info!("Starting as client.");
         let mut app = ClientApp{
             player_name,
             connection_ip,
@@ -77,7 +77,7 @@ impl ConnectedClient{
     }
     fn pre_interesting(&self) -> FrameIndex{
         let my_init_frame = self.welcome_info.known_frame.get_intended_current_frame() + 50; // modival How far in the future to plonk yourself.
-        println!("I'm gonna init me on {}", my_init_frame);
+        log::debug!("I'm gonna init me on {}", my_init_frame);
         return my_init_frame;
     }
     fn init_segs(&mut self, my_init_frame: FrameIndex) -> ClientEx{
@@ -143,7 +143,7 @@ impl ClientEx{
             match inc_msgs.recv().unwrap(){
                 ExternalMsg::GameUpdate(update) => {
                     if crate::DEBUG_MSGS_MAIN {
-                        println!("Net rec message: {:?}", update);
+                        log::debug!("Net rec message: {:?}", update);
                     }
                     self.seg_data_storage.write_owned_data(update);
                 },

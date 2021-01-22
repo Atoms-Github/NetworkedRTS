@@ -43,15 +43,9 @@ fn main() {
     Builder::new()
         .format(|buf, record| {
             writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args())
-        }).filter(None, LevelFilter::Debug).init();
+        }).filter(None, LevelFilter::Warn).init();
+    log::info!("Starting!");
 
-
-
-    println!("STARTING2345.");
-    log::warn!("TestWarning");
-    log::warn!("TestWarning2");
-    thread::sleep(Duration::from_millis(50));
-    log::warn!("TestWarning3");
 
     let mut args: Vec<String> = env::args().collect();
 
@@ -64,9 +58,9 @@ fn main() {
         }
         _ => {
             let default = "127.0.0.1:1414".to_string();
-            println!("Connection/hosting IP not specified! Using {}", default);
+            log::info!("Connection/hosting IP not specified! Using {}", default);
             default
-        }// s
+        }
     };
 
 
@@ -79,7 +73,7 @@ fn main() {
             is_server = true;
         }
         _ => {
-            println!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
+            log::debug!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
         }
     }
     if is_server{
@@ -90,20 +84,4 @@ fn main() {
         }).flatten().unwrap_or(0); // Conflict means auto-assign.
         ClientApp::go(String::from("A_toms"), ip, prefered_player_id);
     }
-}
-
-
-fn assert_result_ok(r: thread::Result<()>) {
-    let ok = r.is_ok();
-    match r {
-        Ok(r) => {},
-        Err(e) => {
-            if let Some(e) = e.downcast_ref::<&'static str>() {
-                println!("Got an error: {}", e);
-            } else {
-                println!("Got an unknown error: {:?}", e);
-            }
-        }
-    }
-    assert!(ok, "Thread crashed. See print for msg.");
 }

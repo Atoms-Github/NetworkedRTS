@@ -91,7 +91,7 @@ impl ConnectNetEx {
                 }
                 ExternalMsg::ConnectionInitResponse(info) =>{
                     if crate::DEBUG_MSGS_MAIN {
-                        println!("Received connection init response: {:?}", info);
+                        log::info!("Received connection init response: {:?}", info);
                     }
                     opt_greetings = Some(info);
                 }
@@ -99,7 +99,7 @@ impl ConnectNetEx {
                     // Nothing.
                 }
                 other_msg => {
-                    println!("Received message which wasn't a a ping response: {:?}", other_msg);
+                    log::debug!("Received message which wasn't a a ping response: {:?}", other_msg);
                 }
             }
         }
@@ -116,7 +116,7 @@ impl ConnectNetEx {
         let (ping_data, mut greeting) = self.gather_ping_and_init_data(my_details);
 
         greeting.known_frame = self.calculate_local_time(ping_data, greeting.known_frame);
-        println!("I'm player {}", greeting.assigned_player_id);
+        log::info!("I'm player {}", greeting.assigned_player_id);
 
         greeting
     }
@@ -138,7 +138,7 @@ impl ConnectNetIn {
             let tcp_stream;
             match TcpStream::connect(target_tcp_address){
                 Err(error) => {
-                    println!("Failed to connect to server. Retrying ... ({})", error.to_string());
+                    log::warn!("Failed to connect to server. Retrying ... ({})", error.to_string());
                     thread::sleep(Duration::from_millis(1000));
                     continue;
                 }
@@ -149,10 +149,9 @@ impl ConnectNetIn {
             let udp_socket = UdpSocket::bind(tcp_stream.local_addr().unwrap()).expect("Client couldn't bind to socket.");
 
             udp_socket.connect(target_udp_address).expect("Client failed to connect UDP.");
-            println!("Client using udp {:?}" , udp_socket.local_addr());
-            println!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
-            println!();
-            println!();
+            log::info!("Client using udp {:?}" , udp_socket.local_addr());
+            log::info!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
+            log::info!();
             return (udp_socket, tcp_stream);
         }
 
