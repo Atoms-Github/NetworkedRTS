@@ -42,10 +42,12 @@ use std::time::Duration;
 fn main() {
     Builder::new()
         .format(|buf, record| {
+            if !record.target().contains("poggy"){
+                return std::io::Result::Ok(());
+            }
             writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args())
         }).filter(None, LevelFilter::Debug).init();
     log::info!("Starting!");
-    println!("Starting");
 
 
     let mut args: Vec<String> = env::args().collect();

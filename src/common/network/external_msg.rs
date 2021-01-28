@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::{Read, Write, Error};
 use std::net::{TcpStream, UdpSocket, SocketAddr, SocketAddrV4, Ipv4Addr};
 use std::thread;
 use std::time::SystemTime;
@@ -45,23 +45,35 @@ impl GameSocket for TcpStream{
 
             loop{
                 let mut message_buffer = vec![0; 65_535];
-                let bytes_read = self.read(&mut message_buffer).unwrap();
-                if bytes_read == 0{
-                    log::warn!("Tcp read 0 bytes so closing.");
-                    break;
-                }
-                let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
-                match result{
-                    Ok(msg) => {
-                        if crate::DEBUG_MSGS_NET{
-                            log::debug!("<- {:?}", msg);
+                let bytes_read_maybe = self.read(&mut message_buffer);
+
+                match bytes_read_maybe{
+                    Result::Err(error) => {
+                        log::warn!("Player disconnected. {}", error.to_string());
+                        break;
+                    }
+                    Result::Ok(0) => {
+                        log::warn!("Player disconnected. No tcp bytes read.");
+                        break;
+                    }
+                    Result::Ok(bytes_read) => {
+                        let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+                        match result{
+                            Ok(msg) => {
+                                if crate::DEBUG_MSGS_NET{
+                                    log::debug!("<- {:?}", msg);
+                                }
+                                msgs_sink.send((msg, peer_address.clone())).unwrap();
+                            }
+                            err => {
+                                panic!("Err {:?}", err)
+                            }
                         }
-                        msgs_sink.send((msg, peer_address.clone())).unwrap();
                     }
-                    err => {
-                        panic!("Err {:?}", err)
-                    }
+
                 }
+
+
             }
         }).unwrap();
     }
@@ -72,22 +84,26 @@ impl GameSocket for UdpSocket{
         thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
             let mut message_buffer = [0; 65_535];
             loop{
-                let (message_size_bytes, address) = self.recv_from(&mut message_buffer).unwrap();
-
-                if message_size_bytes == 0{
-                    log::warn!("Udp read 0 bytes so closing.");
-                    break;
-                }
-                let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
-                match result{
-                    Ok(msg) => {
-                        if crate::DEBUG_MSGS_NET{
-                            log::debug!("<-- {:?}", msg);
-                        }
-                        msgs_sink.send((msg, address)).unwrap();
+                match self.recv_from(&mut message_buffer){
+                    Result::Err(error) => {
+                        log::warn!("Failed to receive udp message from someone")
                     }
-                    err => {
-                        panic!("Err {:?}", err)
+                    Result::Ok((0, address)) => {
+                        log::warn!("Udp read 0 bytes from {}", address.to_string());
+                    }
+                    Ok((message_size_bytes, address)) => {
+                        let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+                        match result{
+                            Ok(msg) => {
+                                if crate::DEBUG_MSGS_NET{
+                                    log::debug!("<-- {:?}", msg);
+                                }
+                                msgs_sink.send((msg, address)).unwrap();
+                            }
+                            err => {
+                                panic!("Err {:?}", err)
+                            }
+                        }
                     }
                 }
             }
