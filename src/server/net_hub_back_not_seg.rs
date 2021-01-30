@@ -10,7 +10,8 @@ use crate::common::types::*;
 use bimap::BiHashMap;
 use std::borrow::Borrow;
 use crossbeam_channel::{Sender, Receiver, Select, unbounded};
-use crossbeam_channel::internal::select;
+use crossbeam_channel::internal::{select, SelectHandle};
+use crate::common::network::channel_threads::*;
 
 
 // For down to the wire stuff about TCP and UDP.
@@ -60,7 +61,7 @@ impl NetHubBackIn {
         self.handle_receiving_udp(udp_socket.try_clone().expect("Can't clone socket."), above_out_sink.clone());
 
         let new_tcps_rec = self.handle_new_tcp_connections(tcp_listener);
-        let (inc_tcp_msgs_sink, inc_tcp_msgs_rec) : (Sender<(ExternalMsg, SocketAddr)>,Receiver<(ExternalMsg, SocketAddr)>) = unbounded();
+        let (inc_tcp_msgs_sink, inc_tcp_msgs_rec) = unbounded();
 
         thread::spawn(move ||{
 //             The things we want to blocking wait for:
@@ -82,9 +83,16 @@ impl NetHubBackIn {
                         above_out_sink.send(NetHubBackMsgOut::NewPlayer(address)).unwrap();
                     },
                     // New tcp msgs.
-                    recv(inc_tcp_msgs_rec) -> new_msg_tuple => {
-                        let (new_tcp_msg, address) = new_msg_tuple.unwrap();
-                        above_out_sink.send(NetHubBackMsgOut::NewMsg(new_tcp_msg, address)).unwrap();
+                    recv(inc_tcp_msgs_rec) -> new_msg => {
+                        match new_msg.unwrap(){
+                            SocketIncEvent::Msg(msg, address) => {
+                                above_out_sink.send(NetHubBackMsgOut::NewMsg(msg, address)).unwrap();
+                            }
+                            SocketIncEvent::Diconnect(address) => {
+                                connections_map.remove(&address);
+                                above_out_sink.send(NetHubBackMsgOut::PlayerDiscon(address)).unwrap();
+                            }
+                        }
                     },
                     // New msgs from above.
                     recv(above_in_rec) -> msg_from_above => {
@@ -126,21 +134,29 @@ impl NetHubBackIn {
             let (new_msgs_sink, new_msgs_rec) = unbounded();
             socket.try_clone().unwrap().start_listening(new_msgs_sink);
             loop{
-                let (msg, address) = new_msgs_rec.recv().unwrap();
-                // If a ping test, just 420 blaze out a response.
-                if let ExternalMsg::PingTestQuery(client_time) = msg{
-                        // This section is like a fine wine in that it is a balance of trying to have equal calculation before and after the time measurement.
-                        let server_time = SystemTime::now();
-                        let response = ExternalMsg::PingTestResponse(
-                            NetMsgPingTestResponse{
-                                client_time,
-                                server_time
-                            }
-                        );
-                    socket.send_msg(&response, &address);
-                }else{
-                    out_msgs.send(NetHubBackMsgOut::NewMsg(msg, address)).unwrap();
+                let inc_event = new_msgs_rec.recv().unwrap();
+                match inc_event{
+                    SocketIncEvent::Msg(msg, address) => {
+                        // If a ping test, just 420 blaze out a response.
+                        if let ExternalMsg::PingTestQuery(client_time) = msg{
+                            // This section is like a fine wine in that it is a balance of trying to have equal calculation before and after the time measurement.
+                            let server_time = SystemTime::now();
+                            let response = ExternalMsg::PingTestResponse(
+                                NetMsgPingTestResponse{
+                                    client_time,
+                                    server_time
+                                }
+                            );
+                            socket.send_msg(&response, &address);
+                        }else{
+                            out_msgs.send(NetHubBackMsgOut::NewMsg(msg, address)).unwrap();
+                        }
+                    }
+                    _ => {
+                        log::warn!("UDP doesn't handle disconnect!")
+                    }
                 }
+
             }
         });
         // Send straight up past net layer to server (unless ping)
