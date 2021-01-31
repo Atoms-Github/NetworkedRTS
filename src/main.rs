@@ -24,6 +24,7 @@ pub mod common;
 pub const DEBUG_MSGS_ALL: bool = false;
 pub const DEBUG_MSGS_MAIN: bool = DEBUG_MSGS_ALL || false;
 pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || true;
+// pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || false;
 pub const WARN_MSGS: bool = DEBUG_MSGS_ALL || true; // TODO2 Could use warn/custom macros.
 pub const DEBUG_MSGS_TIMERS: bool = DEBUG_MSGS_ALL || false;
 pub const DEBUG_MSGS_PROCESS: bool = DEBUG_MSGS_ALL || true;
@@ -74,6 +75,22 @@ fn main() {
         "server" => {
             is_server = true;
         }
+        "test1" => {
+            test1();
+            return;
+        }
+        "test2" => {
+            test2();
+            return;
+        }
+        "test3" => {
+            test3();
+            return;
+        }
+        "test4" => {
+            test4();
+            return;
+        }
         _ => {
             log::debug!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
         }
@@ -86,4 +103,18 @@ fn main() {
         }).flatten().unwrap_or(0); // Conflict means auto-assign.
         ClientApp::go(String::from("A_toms"), ip, prefered_player_id);
     }
+}
+
+
+fn test1(){
+    crate::server::net_hub_back_not_seg::hub_back_test::print_listened();
+}
+fn test2(){
+    crate::client::connect_net_seg::connect_tests::wait_on_connect();
+}
+fn test3(){
+    crate::client::connect_net_seg::connect_tests::wait_on_connect();
+}
+fn test4(){
+    crate::client::connect_net_seg::connect_tests::crash_on_connect();
 }

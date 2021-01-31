@@ -138,6 +138,9 @@ impl ClientEx{
             }
         });
 
+        let crash: Option<i32> = None;
+        //let test = crash.unwrap();
+
         let inc_msgs = connected_client.seg_connect_net.net_rec.unwrap();
         loop{
             match inc_msgs.recv().unwrap(){
@@ -163,6 +166,7 @@ impl ClientEx{
                     panic!("Client shouldn't be getting a message of this type (or at this time)!")
                 }
             }
+
         }
     }
     fn gen_init_me_msgs(&self, frame_to_init_on: FrameIndex, my_player_id: PlayerID) -> OwnedSimData{

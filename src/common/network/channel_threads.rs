@@ -57,7 +57,7 @@ impl GameSocketTcp for TcpStream{
                         match result{
                             Ok(msg) => {
                                 if crate::DEBUG_MSGS_NET{
-                                    log::debug!("<- {:?}", msg);
+                                    log::debug!("<--u {:?}", msg);
                                 }
                                 msgs_sink.send(Msg(msg, peer_address.clone())).unwrap();
                             }
@@ -77,7 +77,7 @@ impl GameSocketTcp for TcpStream{
         self.flush().unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            log::debug!("->: {:?}", message);
+            log::debug!("-->t: {:?}", message);
         }
     }
 }
@@ -89,9 +89,7 @@ impl GameSocketUdp for UdpSocket{
                 let new_socket = self.try_clone().unwrap();
                 match new_socket.recv_from(&mut message_buffer){
                     Result::Err(error) => {
-                        log::warn!("                          ");
-                        log::warn!("Failed to receive udp message from someone {:?}", error);
-                        log::warn!("                          ");
+                        log::warn!("Did someone disconnect recently? Failed to receive udp message from someone {:?}", error);
                     }
                     Result::Ok((0, address)) => {
                         log::warn!("Udp read 0 bytes from {}", address.to_string());
@@ -101,7 +99,7 @@ impl GameSocketUdp for UdpSocket{
                         match result{
                             Ok(msg) => {
                                 if crate::DEBUG_MSGS_NET{
-                                    log::debug!("<-- {:?}", msg);
+                                    log::debug!("<--u {:?}", msg);
                                 }
                                 msgs_sink.send(Msg(msg, address)).unwrap();
                             }
@@ -119,7 +117,7 @@ impl GameSocketUdp for UdpSocket{
         self.send_to(&msg_buffer, address).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            log::debug!("->({}): {:?}", msg_buffer.len(), message);
+            log::debug!("-->u({}): {:?}", msg_buffer.len(), message);
         }
     }
     fn send_msg_to_connected(&self, message: &ExternalMsg) {
@@ -128,7 +126,7 @@ impl GameSocketUdp for UdpSocket{
         self.send(&msg_buffer).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            log::debug!("->({}): {:?}", msg_buffer.len(), message);
+            log::debug!("-->u({}): {:?}", msg_buffer.len(), message);
         }
     }
 }

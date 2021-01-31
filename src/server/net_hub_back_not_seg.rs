@@ -19,6 +19,7 @@ use crate::common::network::channel_threads::*;
 // Inputs messages with 'reliable' boolean.
 // Not a proper segment. Integrated into net hub front
 
+#[derive(Debug)]
 pub enum NetHubBackMsgOut{
     NewPlayer(SocketAddr),
     PlayerDiscon(SocketAddr),
@@ -45,6 +46,10 @@ pub fn net_hub_start_hosting(host_addr_str: String) -> NetHubBackEx{
 
 // This section is pretty single threaded, so main thread waits for new tcp streams, or new messages from above, or new messages from existing tcp stream.
 // New messages from udp streams are streamlined, so just ignore this area and go straight on up to level above.
+
+
+// This only cares about addresses and stream. It doesn't do any memory about disconnected players.
+// If they're disconnected, they're deleted.
 impl NetHubBackIn {
     pub fn new(host_addr_str: String) -> Self{
         Self{
@@ -91,6 +96,7 @@ impl NetHubBackIn {
                             SocketIncEvent::Diconnect(address) => {
                                 connections_map.remove(&address);
                                 above_out_sink.send(NetHubBackMsgOut::PlayerDiscon(address)).unwrap();
+                                log::debug!("Net back disconnecting {}", address);
                             }
                         }
                     },
@@ -99,7 +105,11 @@ impl NetHubBackIn {
                         match msg_from_above.unwrap(){
                             NetHubBackMsgIn::SendMsg(address, external_msg, is_reliable) => {
                                 if is_reliable{
-                                    connections_map.get_mut(&address).unwrap().send_msg(&external_msg);
+                                    if let Some(socket) = connections_map.get_mut(&address){
+                                        socket.send_msg(&external_msg);
+                                    }else{
+                                        log::debug!("Did a player disconnect recently? NetHubBack failed to find tcp connection to send to.")
+                                    }
                                 }else{ // Unreliable:
                                     udp_socket.send_msg(&external_msg, &address);
                                 }
@@ -173,3 +183,59 @@ impl NetHubBackIn {
         return (udp_socket, tcp_listener);
     }
 }
+
+
+
+
+
+// #[cfg(test)]
+pub mod hub_back_test {
+    use std::net::SocketAddr;
+    use crate::server::net_hub_back_not_seg::*;
+    use crate::common::data::hash_seg::FramedHash;
+
+    // #[test]
+    pub fn print_listened() {
+        println!("Starting test.");
+        let net_hub_backend = NetHubBackIn::new("127.0.0.1:1414".to_string()).start();
+        // thread::spawn(move ||{
+        //     loop{
+        //         thread::sleep(Duration::from_millis(100));
+        //     }
+        // });
+        loop{
+            let msg = net_hub_backend.msg_out.recv().unwrap();
+            println!("Test server listened: {:?}", msg);
+            match msg{
+                NetHubBackMsgOut::NewPlayer(address) => {
+                    let th_sink = net_hub_backend.msg_in.clone();
+                    thread::spawn(move ||{
+                        loop{
+                            th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), false)).unwrap();
+                            th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), true)).unwrap();
+                            thread::sleep(Duration::from_millis(100));
+                        }
+                    });
+                }
+                _ => {
+
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -26,7 +26,7 @@ struct FullPingSample{
     s_receive_time: SystemTime,
     c_receive_time: SystemTime
 }
-pub const TIME_SAMPLES_REQUIRED : usize = 10;
+pub const TIME_SAMPLES_REQUIRED : usize = 2;
 impl ConnectNetEx {
     fn start_ping_sender_thread(&self) -> Sender<ThreadCloser>{
         let my_sender = self.net_sink.clone();
@@ -184,4 +184,35 @@ impl ConnectNetIn {
         }
     }
 }
+
+
+
+//#[cfg(test)]
+pub mod connect_tests {
+    use std::net::SocketAddr;
+    use crate::client::connect_net_seg::*;
+    use crate::common::network::external_msg::NetMsgGreetingQuery;
+
+    fn init_connection() -> ConnectNetEx{
+        let mut seg_connect_net = ConnectNetEx::start("127.0.0.1:1414".to_string());
+        return seg_connect_net;
+    }
+    //#[test]
+    pub fn crash_on_connect() {
+        init_connection();
+        thread::sleep(Duration::from_millis(300));
+        panic!();
+    }
+    //#[test]
+    pub fn wait_on_connect() {
+        let connect = init_connection();
+
+        loop{
+            thread::sleep(Duration::from_millis(10000));
+        }
+    }
+}
+
+
+
 
