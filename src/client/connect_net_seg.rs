@@ -199,7 +199,7 @@ pub mod connect_tests {
     }
     //#[test]
     pub fn crash_on_connect() {
-        init_connection();
+        let connect = init_connection();
         thread::sleep(Duration::from_millis(300));
         panic!();
     }

@@ -94,7 +94,7 @@ impl NetHubBackIn {
                                 above_out_sink.send(NetHubBackMsgOut::NewMsg(msg, address)).unwrap();
                             }
                             SocketIncEvent::Diconnect(address) => {
-                                connections_map.remove(&address);
+                                assert!(connections_map.remove(&address).is_some(), "TCP disconnected player twice. May happen super rare on mad rapid connect spam.");
                                 above_out_sink.send(NetHubBackMsgOut::PlayerDiscon(address)).unwrap();
                                 log::debug!("Net back disconnecting {}", address);
                             }
@@ -205,6 +205,7 @@ pub mod hub_back_test {
         // });
         loop{
             let msg = net_hub_backend.msg_out.recv().unwrap();
+            
             println!("Test server listened: {:?}", msg);
             match msg{
                 NetHubBackMsgOut::NewPlayer(address) => {
@@ -212,8 +213,8 @@ pub mod hub_back_test {
                     thread::spawn(move ||{
                         loop{
                             th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), false)).unwrap();
-                            th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), true)).unwrap();
-                            thread::sleep(Duration::from_millis(100));
+                            //th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), true)).unwrap();
+                            thread::sleep(Duration::from_millis(500));
                         }
                     });
                 }

@@ -86,8 +86,7 @@ impl GameSocketUdp for UdpSocket{
         thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
             let mut message_buffer = [0; 65_535];
             loop{
-                let new_socket = self.try_clone().unwrap();
-                match new_socket.recv_from(&mut message_buffer){
+                match self.recv_from(&mut message_buffer){
                     Result::Err(error) => {
                         log::warn!("Did someone disconnect recently? Failed to receive udp message from someone {:?}", error);
                     }
@@ -126,7 +125,7 @@ impl GameSocketUdp for UdpSocket{
         self.send(&msg_buffer).unwrap();
 
         if crate::DEBUG_MSGS_NET{
-            log::debug!("-->u({}): {:?}", msg_buffer.len(), message);
+            log::debug!("-->uc({}): {:?}", msg_buffer.len(), message);
         }
     }
 }

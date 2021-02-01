@@ -110,7 +110,7 @@ fn test1(){
     crate::server::net_hub_back_not_seg::hub_back_test::print_listened();
 }
 fn test2(){
-    crate::client::connect_net_seg::connect_tests::wait_on_connect();
+    crate::client::connect_net_seg::connect_tests::crash_on_connect();
 }
 fn test3(){
     crate::client::connect_net_seg::connect_tests::wait_on_connect();
