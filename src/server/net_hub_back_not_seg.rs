@@ -104,15 +104,21 @@ impl NetHubBackIn {
                     recv(above_in_rec) -> msg_from_above => {
                         match msg_from_above.unwrap(){
                             NetHubBackMsgIn::SendMsg(address, external_msg, is_reliable) => {
-                                if is_reliable{
-                                    if let Some(socket) = connections_map.get_mut(&address){
-                                        socket.send_msg(&external_msg);
-                                    }else{
-                                        log::debug!("Did a player disconnect recently? NetHubBack failed to find tcp connection to send to.")
+                                match connections_map.get_mut(&address)  {
+                                    Some(tcp_socket) => {
+                                        if is_reliable{
+                                            tcp_socket.send_msg(&external_msg);
+
+                                        }else{ // Unreliable:
+                                            udp_socket.send_msg(&external_msg, &address);
+                                        }
                                     }
-                                }else{ // Unreliable:
-                                    udp_socket.send_msg(&external_msg, &address);
+                                    None => {
+                                        // Do nothing. Ignore msg requests that send to disconnected client.
+                                        // Pointless_optimum, could prevent msg from even being created if this is handled in layer above.
+                                    }
                                 }
+
                             }
                             NetHubBackMsgIn::DropPlayer(address) => {
                                 connections_map.get(&address).unwrap().shutdown(Shutdown::Both).unwrap();

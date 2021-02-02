@@ -46,7 +46,7 @@ fn main() {
                 return std::io::Result::Ok(());
             }
             writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args())
-        }).filter(None, LevelFilter::Debug).init();
+        }).filter(None, LevelFilter::Warn).init();
     log::info!("Starting!");
 
 

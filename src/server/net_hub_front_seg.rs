@@ -41,7 +41,7 @@ impl NetworkingHubEx{
         NetworkingHubIn{
             host_addr_str,
             next_player_id: 0,
-            player_id_map: Default::default()
+            player_id_map: Default::default(),
         }.start_hosting()
     }
 }
