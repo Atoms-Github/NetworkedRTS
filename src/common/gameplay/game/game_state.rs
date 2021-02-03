@@ -12,6 +12,7 @@ use crate::common::gameplay::systems::wasdmover::*;
 use crate::common::gameplay::systems::size::*;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use crate::common::gameplay::systems::player::PlayerComp;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InfoForSim {
@@ -62,23 +63,30 @@ impl GameState{
     pub fn init_new_player(&mut self, player_id: PlayerID){
         let mut pending = PendingEntities::new();
 
-        let mut pending_entity_online_player = PendingEntity::new();
-        pending_entity_online_player.add_component(PositionComp{ x: 0.0, y: 0.0 });
-        pending_entity_online_player.add_component(VelocityComp{ x: 1.0, y: 0.0 });
-        pending_entity_online_player.add_component(SizeComp{ x: 50.0, y: 50.0 });
-        pending_entity_online_player.add_component(ClickShooterComp { owner_id: player_id, cooldown: 0.0 });
-        pending_entity_online_player.add_component(WasdMoverComp { owner_id: player_id });
-        pending_entity_online_player.add_component(RenderComp{ hue: (255,150,150)});
-        pending.create_entity(pending_entity_online_player);
+        let mut pending_player = PendingEntity::new();
+        pending_player.add_component(PlayerComp{ player_id, connected: true } );
+        pending.create_entity(pending_player);
+
+        let mut pending_pawn = PendingEntity::new();
+        pending_pawn.add_component(PositionComp{ x: 0.0, y: 0.0 });
+        pending_pawn.add_component(VelocityComp{ x: 1.0, y: 0.0 });
+        pending_pawn.add_component(SizeComp{ x: 50.0, y: 50.0 });
+        pending_pawn.add_component(ClickShooterComp { owner_id: player_id, cooldown: 0.0 });
+        pending_pawn.add_component(WasdMoverComp { owner_id: player_id });
+        pending_pawn.add_component(RenderComp{ hue: (255, 150, 150)});
+        pending.create_entity(pending_pawn);
+
+
 
         self.world.update_entities(&mut self.storages, pending);
     }
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32){
         for (player_id, input) in &sim_info.inputs_map{
-            if input.new_player{
+            if input.conn_status_update == ConnStatusChangeType::Connecting{
                 log::trace!("StateInitingNewPlayer {}", *player_id);
                 self.init_new_player(*player_id);
             }
+            // TODO Disconnecting and player properties.
         }
         let mut pending = PendingEntities::new();
 

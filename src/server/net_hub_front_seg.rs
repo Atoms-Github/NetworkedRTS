@@ -95,7 +95,7 @@ impl NetworkingHubIn {
                     }
                     NetHubBackMsgOut::PlayerDiscon(address) => {
                         let player_id = players_map.get_by_left(&address).unwrap();
-                        above_out_sink.send(NetHubFrontMsgOut::NewPlayer(*player_id)).unwrap();
+                        above_out_sink.send(NetHubFrontMsgOut::PlayerDiscon(*player_id)).unwrap();
                     }
                 }
             }

@@ -34,6 +34,8 @@ pub struct SuperstoreEx<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync 
 }
 
 
+
+
 impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> SuperstoreEx<T>{
     pub fn start(frame_offset: usize)-> Self{
         let (writes_sink, writes_rec) = unbounded();
@@ -50,7 +52,6 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
             write_requests_sink: Mutex::new(writes_sink)
         }
     }
-
     pub fn get_first_frame_index(&self) -> FrameIndex{
         return self.frame_offset;
     }
@@ -67,6 +68,10 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
     pub fn get_last_clone(&self) -> Option<T>{
         let lukewarm = self.lukewarm.read().unwrap();
         return lukewarm.last().cloned();
+    }
+    pub fn get_next_dataless_frame_index(&self) -> FrameIndex{
+        let lukewarm = self.lukewarm.read().unwrap();
+        return self.frame_offset + lukewarm.len();
     }
     fn test_set_simple(&self, data: T, frame_index: FrameIndex){
         self.write_requests_sink.lock().unwrap().send(SuperstoreData{

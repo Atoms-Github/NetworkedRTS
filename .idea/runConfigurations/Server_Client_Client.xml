@@ -2,7 +2,7 @@
   <configuration default="false" name="Server+Client+Client" type="CompoundRunConfigurationType">
     <toRun name="Run LiteralPoggySourceClientC2" type="CargoCommandRunConfiguration" />
     <toRun name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" />
-    <toRun name="Run LiteralPoggySourceServer" type="CargoCommandRunConfiguration" />
+    <toRun name="Run Server" type="CargoCommandRunConfiguration" />
     <method v="2" />
   </configuration>
 </component>

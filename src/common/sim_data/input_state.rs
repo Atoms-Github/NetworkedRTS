@@ -11,12 +11,18 @@ use ggez::input::mouse::MouseButton;
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird.
-    pub new_player: bool,
+    pub conn_status_update: ConnStatusChangeType,
     pub mouse_btns_pressed: HashSet<MouseButton>
 }
 
 impl Eq for InputState{
 
+}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum ConnStatusChangeType {
+    Nothing,
+    Connecting,
+    Disconnecting,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -61,7 +67,7 @@ impl InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
             keys_pressed: HashSet::new(),
 //            keys_pressed: vec![false; 260]
-            new_player: false,
+            conn_status_update: ConnStatusChangeType::Nothing,
             mouse_btns_pressed: Default::default()
         }
     }

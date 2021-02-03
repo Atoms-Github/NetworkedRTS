@@ -97,6 +97,7 @@ impl NetHubBackIn {
                                 assert!(connections_map.remove(&address).is_some(), "TCP disconnected player twice. May happen super rare on mad rapid connect spam.");
                                 above_out_sink.send(NetHubBackMsgOut::PlayerDiscon(address)).unwrap();
                                 log::debug!("Net back disconnecting {}", address);
+
                             }
                         }
                     },
@@ -169,7 +170,7 @@ impl NetHubBackIn {
                         }
                     }
                     _ => {
-                        log::warn!("UDP doesn't handle disconnect!")
+                        panic!("UDP doesn't handle disconnect!")
                     }
                 }
 

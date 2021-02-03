@@ -77,15 +77,15 @@ impl SimDataStorageEx{
             // On new player, we do want to read, then write, then read again. This doesn't happen often.
             std::mem::drop(players); // So can write to.
             if data.data.len() > 0{
-                if !data.data.get(0).unwrap().new_player{
+                if data.data.get(0).unwrap().conn_status_update != ConnStatusChangeType::Connecting{
                     println!("DEBUG EXITING!");
                     std::process::exit(-2);
                 }
-                assert!(data.data.get(0).unwrap().new_player, "New data for unknown player {} which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.", player_id);
+                assert_eq!(data.data.get(0).unwrap().conn_status_update, ConnStatusChangeType::Connecting, "New data for unknown player {} which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.", player_id);
             }
             // Existing players should have been initialized in the 'ExistingPlayers' list in the welcome message - therefor all new players should have the new player flag.
             self.init_new_player(player_id, data.frame_offset);
-            self.read_data()
+            self.read_data() // No ;.
         };
         players_containing_target_player.get(&player_id).unwrap().write_requests_sink.lock().unwrap().send(data).unwrap();
     }
@@ -141,7 +141,6 @@ impl SimDataStorageEx{
         }else{
             return Err(problems);
         }
-
     }
     pub fn fulfill_query(&self, query: &QuerySimData) -> OwnedSimData {
         let players = self.read_data();
@@ -165,6 +164,20 @@ impl SimDataStorageEx{
         OwnedSimData {
             player_id: query.player_id,
             sim_data: SuperstoreData { data: query_response, frame_offset: slice_first_frame }
+        }
+    }
+    pub fn disconnect_player(&self, player_id: PlayerID){
+        if let Some(map) = self.read_data().get(&player_id){
+            let next_frame = map.get_next_dataless_frame_index();
+            let mut state = InputState::new();
+            state.conn_status_update = ConnStatusChangeType::Disconnecting;
+            let data = SuperstoreData{
+                data: vec![state],
+                frame_offset: next_frame
+            };
+            map.write_requests_sink.lock().unwrap().send(data).unwrap();
+        }else{
+            log::warn!("Can't write 'disconnect' frame to storage since can't find player {}", player_id);
         }
     }
 }

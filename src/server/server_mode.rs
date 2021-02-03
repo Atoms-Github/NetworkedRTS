@@ -67,7 +67,8 @@ impl ServerMainStateEx {
 
                 }
                 NetHubFrontMsgOut::PlayerDiscon(player_id) => {
-
+                    log::info!("Player disconnected! --------------------");
+                    self.data_store.disconnect_player(player_id);
                 }
                 NetHubFrontMsgOut::NewMsg(msg, player_id) => {
                     match msg{

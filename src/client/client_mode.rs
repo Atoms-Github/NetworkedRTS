@@ -171,7 +171,7 @@ impl ClientEx{
     }
     fn gen_init_me_msgs(&self, frame_to_init_on: FrameIndex, my_player_id: PlayerID) -> OwnedSimData{
         let mut first_input = InputState::new();
-        first_input.new_player = true;
+        first_input.conn_status_update = ConnStatusChangeType::Connecting;
         OwnedSimData{
             player_id: my_player_id,
             sim_data: SuperstoreData {
