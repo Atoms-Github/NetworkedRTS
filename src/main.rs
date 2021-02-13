@@ -17,9 +17,11 @@ use std::str::FromStr;
 
 
 
-pub mod client;
-pub mod server;
-pub mod common;
+pub mod netcode;
+pub mod gamedata;
+pub mod gamecode;
+pub mod pub_types;
+
 
 pub const DEBUG_MSGS_ALL: bool = false;
 pub const DEBUG_MSGS_MAIN: bool = DEBUG_MSGS_ALL || false;
@@ -39,7 +41,9 @@ use log::LevelFilter;
 use std::time::Duration;
 
 
+
 fn main() {
+
     Builder::new()
         .format(|buf, record| {
             if !record.target().contains("poggy"){

@@ -38,9 +38,6 @@ impl GameState{
         self.hash(&mut s);
         s.finish()
     }
-    pub fn get_simmed_frame_index(&self) -> FrameIndex{
-        self.simmed_frame_index
-    }
     pub fn new() -> GameState{
         GameState{
             world: World::new(),
