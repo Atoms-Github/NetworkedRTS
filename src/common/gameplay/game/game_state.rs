@@ -92,7 +92,6 @@ impl GameState{
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
-
         secret_clickshooter_system(&self.world, &mut pending, &mut self.storages.velocity_s,
                                            &mut self.storages.click_shooter_s, &mut self.storages.position_s, &sim_info.inputs_map, self.simmed_frame_index);
         secret_wasdmover_system(&self.world, &mut pending, &mut self.storages.velocity_s,

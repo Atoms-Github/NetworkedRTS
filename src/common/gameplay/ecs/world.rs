@@ -8,6 +8,7 @@ use crate::common::gameplay::systems::size::*;
 use crate::common::gameplay::systems::render::*;
 use crate::common::gameplay::systems::clickshooter::*;
 use crate::common::gameplay::systems::wasdmover::*;
+use crate::common::gameplay::systems::player::*;
 use crate::common::utils::unmoving_vec::*;
 use anymap::AnyMap;
 
@@ -16,11 +17,16 @@ use serde::{Serialize, Deserialize};
 
 pub type PogTypeId = u64;
 pub type CompositionID = usize;
-pub type EntityID = usize;
+pub type GlobalEntityID = usize;
 pub type VerticalStorage<T> = Vec<Vec<T>>;
 //pub type TypeSetSerializable = BTreeSet<u64>;
 //pub type TypeSetTypes = BTreeSet<TypeId>;
 pub type TypeSet = BTreeSet<PogTypeId>;
+// |||ilIL ! £$!"£*"()£()_!+"(_$"P~SA{}S~@AZ|Z>?|>>CZ|X<?Z>QWEYWWWWWWWWWWWWPETWE{REOQ}QWE{UIFJK
+// HFDKJASDJHKKJLDSAHAKJXBCNZC<MNBZM<N|BX>CZVNBWOIUEY
+// eupqoyrpwuqytuoir
+// hakjfkjf;hg;gahsjfksf
+// vnm.cxzvbcxzvnxnczbv.zx@~:@~@:_+
 
 use std::intrinsics;
 
@@ -47,12 +53,12 @@ impl Request {
 pub struct Composition {
 	id: CompositionID,
 	types: TypeSet,
-	pub global_entity_ids: Vec<EntityID>,
+	pub global_entity_ids: Vec<GlobalEntityID>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 struct InternalEntity {
-	global_id: EntityID,
+	global_id: GlobalEntityID,
 	composition_id: CompositionID,
 	internal_index: usize,
 }
@@ -92,7 +98,7 @@ impl PendingEntity {
 #[derive(Debug)]
 pub struct PendingEntities {
 	pending_additions: Vec<PendingEntity>,
-	pending_deletions: HashSet<EntityID>,
+	pending_deletions: HashSet<GlobalEntityID>,
 }
 
 impl Default for PendingEntities {
@@ -126,7 +132,7 @@ impl PendingEntities {
 		self.pending_additions.push(pending_entity);
 	}
 	
-	pub fn destroy_entity(&mut self, entity_id: EntityID) {
+	pub fn destroy_entity(&mut self, entity_id: GlobalEntityID) {
 		self.pending_deletions.insert(entity_id);
 	}
 }
@@ -182,7 +188,7 @@ macro_rules! create_system {
 	}
 }
 
-create_system!(position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, wasdmover_s: WasdMoverComp, click_shooter_s: ClickShooterComp);
+create_system!(player_s: PlayerComp, position_s: PositionComp, velocity_s: VelocityComp, render_s: RenderComp, size_s: SizeComp, wasdmover_s: WasdMoverComp, click_shooter_s: ClickShooterComp);
 
 #[derive(Debug, Serialize, Deserialize, Clone, Hash)]
 pub struct World {
@@ -199,11 +205,11 @@ impl Default for World {
 	}
 }
 impl World {
-	pub fn get_entity_composition_id(&self, id: EntityID) -> CompositionID {
+	pub fn get_entity_composition_id(&self, id: GlobalEntityID) -> CompositionID {
 		self.entity_storage.get(id).unwrap().composition_id
 	}
 	
-	pub fn get_entity_internal_index(&self, id: EntityID) -> usize {
+	pub fn get_entity_internal_index(&self, id: GlobalEntityID) -> usize {
 		self.entity_storage.get(id).unwrap().internal_index
 	}
 	
@@ -227,7 +233,7 @@ impl World {
 		
 		for mut pending_entity in pending.pending_additions {
 			
-			let entity_id: EntityID = self.entity_storage.push(InternalEntity {
+			let entity_id: GlobalEntityID = self.entity_storage.push(InternalEntity {
 				global_id: 0,
 				composition_id: 0,
 				internal_index: 0,
@@ -272,7 +278,7 @@ impl World {
 		}
 	}
 	
-	pub fn get_component<'a, T>(&self, storage: &'a mut VerticalStorage<T>, ent_id: EntityID) -> &'a mut T {
+	pub fn get_component<'a, T>(&self, storage: &'a mut VerticalStorage<T>, ent_id: GlobalEntityID) -> &'a mut T {
 		let internal_entity = self.entity_storage.get(ent_id).unwrap();
 		storage.get_mut(internal_entity.composition_id).unwrap().get_mut(internal_entity.internal_index).unwrap()
 	}
@@ -292,6 +298,25 @@ impl World {
 		}
 		to_return
 	}
+	// pub fn query(&self, request: Request) -> Vec<GlobalEntityID> {
+	// 	let composition_ids = Self::internal_make_request(&self.composition_list, request);
+	//
+	// 	let found_entities = vec![];
+	// 	for composition_id in composition_ids {
+	// 		let mut entity = Entity {
+	// 			composition_id,
+	// 			internal_index: 0,
+	// 		};
+	// 		self.internal_get_composition_list().get(composition_id).unwrap().global_entity_ids
+	// 		let length = world.internal_get_composition_list().get(composition_id).unwrap().global_entity_ids.len();
+	// 		for j in 0..length {
+	// 			entity.internal_index = j;
+	// 			$system(&mut data, entity.clone(), $($extra_arg_name, )*);
+	// 		}
+	// 	}
+	//
+	// 	return found_entities;
+	// }
 }
 
 

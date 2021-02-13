@@ -11,6 +11,9 @@ macro_rules! foo_test {
 #[macro_export]
 macro_rules! create_system {
 	($system:ident | $internal_system:ident | $($var_name:ident : $sty:ty),+ | $($var_name2:ident : $sty2:ty),* | $($extra_arg_name:ident : $extra_arg_ty:ty),*) => {
+	    pub fn test(){
+
+	    }
         pub fn $internal_system (
                 world: &World,
                 pending: &mut PendingEntities,
@@ -89,7 +92,7 @@ macro_rules! create_system {
         }
         
         impl <'a> Data<'a> {
-            fn get_entity(&self, id: EntityID) -> Entity {
+            fn get_entity(&self, id: GlobalEntityID) -> Entity {
                 Entity {
                     composition_id: self.world.get_entity_composition_id(id),
                     internal_index: self.world.get_entity_internal_index(id),
@@ -106,7 +109,7 @@ macro_rules! create_system {
             }
             
             #[inline]
-            fn get_id(&self, data: &Data) -> EntityID {
+            fn get_id(&self, data: &Data) -> GlobalEntityID {
                 data.world.internal_get_composition_list().get(self.composition_id).unwrap().global_entity_ids.get(self.internal_index).unwrap().clone()
             }
             
