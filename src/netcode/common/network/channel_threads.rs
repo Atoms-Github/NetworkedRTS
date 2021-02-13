@@ -6,18 +6,18 @@ use std::time::SystemTime;
 use byteorder::ByteOrder;
 use serde::{Deserialize, Serialize};
 
-use crate::common::gameplay::game::game_state::*;
-use crate::common::logic::logic_sim_tailer_seg::*;
-use crate::common::time::timekeeping::*;
-use crate::common::types::*;
-use crate::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::gameplay::game::game_state::*;
+use crate::netcode::common::logic::logic_sim_tailer_seg::*;
+use crate::netcode::common::time::timekeeping::*;
+use crate::netcode::common::types::*;
+use crate::netcode::common::sim_data::sim_data_storage::*;
 use std::intrinsics::add_with_overflow;
-use crate::common::data::hash_seg::FramedHash;
+use crate::netcode::common::logic::hash_seg::FramedHash;
 use crossbeam_channel::*;
-use crate::common::utils::util_functions::gen_fake_address;
-use crate::common::network::external_msg::ExternalMsg;
+use crate::netcode::common::utils::util_functions::gen_fake_address;
+use crate::netcode::common::network::external_msg::ExternalMsg;
 use std::sync::mpsc::TryRecvError::Disconnected;
-use crate::common::network::channel_threads::SocketIncEvent::{Diconnect, Msg};
+use crate::netcode::common::network::channel_threads::SocketIncEvent::{Diconnect, Msg};
 
 pub trait GameSocketTcp{
     fn start_listening(self, msgs_sink: Sender<SocketIncEvent>);

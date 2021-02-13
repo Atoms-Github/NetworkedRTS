@@ -4,14 +4,14 @@ use crossbeam_channel::*;
 use std::thread;
 use std::time::SystemTime;
 
-use crate::common::gameplay::game::game_state::*;
-use crate::common::logic::logic_sim_tailer_seg::*;
-use crate::common::network::external_msg::*;
-use crate::common::sim_data::sim_data_storage::*;
-use crate::common::sim_data::sim_data_storage_manager::*;
-use crate::common::time::timekeeping::*;
-use crate::common::types::*;
-use crate::server::net_hub_front_seg::*;
+use crate::netcode::common::gameplay::game::game_state::*;
+use crate::netcode::common::logic::logic_sim_tailer_seg::*;
+use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::sim_data::sim_data_storage_manager::*;
+use crate::netcode::common::time::timekeeping::*;
+use crate::netcode::common::types::*;
+use crate::netcode::server::net_hub_front_seg::*;
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,

@@ -1,9 +1,16 @@
-
+use std::collections::HashMap;
+use crate::pub_types::PlayerID;
+use crate::netcode::common::sim_data::input_state::InputState;
 
 mod server;
 mod client;
+mod common;
 mod netcode_types;
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct InfoForSim {
+    pub inputs_map: HashMap<PlayerID, InputState>
+}
 
 
 pub trait GameState{

@@ -2,23 +2,23 @@ use crossbeam_channel::*;
 use std::thread;
 use std::time::{Duration};
 
-use crate::client::connect_net_seg::*;
-use crate::client::graphical_seg::*;
-use crate::client::logic_sim_header_seg::*;
-use crate::client::net_dist_inputs_seg::*;
-use crate::common::logic::logic_sim_tailer_seg::LogicSimTailerEx;
-use crate::common::network::external_msg::*;
-use crate::common::sim_data::input_state::*;
-use crate::common::sim_data::sim_data_storage::*;
-use crate::common::data::hash_seg::*;
-use crate::common::time::scheduler_segment::*;
-use crate::common::time::timekeeping::*;
-use crate::common::types::*;
-use crate::common::sim_data::framed_vec::*;
-use crate::common::sim_data::superstore_seg::*;
-use crate::client::input_handler_seg::*;
+use crate::netcode::client::connect_net_seg::*;
+use crate::netcode::client::graphical_seg::*;
+use crate::netcode::client::logic_sim_header_seg::*;
+use crate::netcode::client::net_dist_inputs_seg::*;
+use crate::netcode::common::logic::logic_sim_tailer_seg::LogicSimTailerEx;
+use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::sim_data::input_state::*;
+use crate::netcode::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::logic::hash_seg::*;
+use crate::netcode::common::time::scheduler_segment::*;
+use crate::netcode::common::time::timekeeping::*;
+use crate::netcode::common::types::*;
+use crate::netcode::common::sim_data::framed_vec::*;
+use crate::netcode::common::sim_data::superstore_seg::*;
+use crate::netcode::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
-use crate::server::net_hub_front_seg::NetHubFrontMsgIn;
+use crate::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
 
 pub struct ClientApp{
     player_name: String,

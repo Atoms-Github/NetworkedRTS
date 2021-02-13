@@ -2,14 +2,14 @@
 use std::collections::{HashMap, HashSet, BTreeSet, BTreeMap};
 
 
-use crate::common::gameplay::systems::velocity::*;
-use crate::common::gameplay::systems::position::*;
-use crate::common::gameplay::systems::size::*;
-use crate::common::gameplay::systems::render::*;
-use crate::common::gameplay::systems::clickshooter::*;
-use crate::common::gameplay::systems::wasdmover::*;
-use crate::common::gameplay::systems::player::*;
-use crate::common::utils::unmoving_vec::*;
+use crate::gamecode::systems::velocity::*;
+use crate::gamecode::systems::position::*;
+use crate::gamecode::systems::size::*;
+use crate::gamecode::systems::render::*;
+use crate::gamecode::systems::clickshooter::*;
+use crate::gamecode::systems::wasdmover::*;
+use crate::gamecode::systems::player::*;
+use crate::netcode::common::utils::unmoving_vec::*;
 use anymap::AnyMap;
 
 use serde::{Serialize, Deserialize};

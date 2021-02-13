@@ -2,11 +2,11 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::common::gameplay::game::game_state::*;
-use crate::common::sim_data::input_state::*;
-use crate::common::sim_data::superstore_seg::*;
+use crate::netcode::common::gameplay::game::game_state::*;
+use crate::netcode::common::sim_data::input_state::*;
+use crate::netcode::common::sim_data::superstore_seg::*;
 
-use crate::common::types::*;
+use crate::netcode::common::types::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use crossbeam_channel::*;
 use std::thread;

@@ -1,10 +1,12 @@
-use crate::common::types::PlayerID;
+use crate::netcode::common::types::PlayerID;
 use std::time::SystemTime;
 use crossbeam_channel::{Receiver, Sender};
-use crate::common::sim_data::sim_data_storage::QuerySimData;
-use crate::server::net_hub_front_seg::NetHubFrontMsgIn;
+use crate::netcode::common::sim_data::sim_data_storage::QuerySimData;
+use crate::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
 use std::thread;
-use crate::common::network::external_msg::ExternalMsg;
+use crate::netcode::common::network::external_msg::ExternalMsg;
+use crate::netcode::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
+
 
 pub struct LogicReqHandlerIn {
     waiting_on: PlayerID,

@@ -57,7 +57,7 @@ impl<T: Clone> BcRx<T>{
 }
 #[cfg(test)]
 mod tests {
-    use crate::common::utils::broadcast_channel::{new_bc, new_bc_multi};
+    use crate::netcode::common::utils::broadcast_channel::{new_bc, new_bc_multi};
     use std::thread;
     use crossbeam_channel::TryRecvError;
     use std::time::Duration;

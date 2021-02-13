@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::{HashSet};
 use ggez::event::{KeyCode};
 
-use crate::common::types::*;
+use crate::netcode::common::types::*;
 //use ggez::input::mouse::MouseButton;
 use ggez::input::mouse::MouseButton;
 

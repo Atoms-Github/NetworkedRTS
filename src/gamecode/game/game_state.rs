@@ -1,23 +1,19 @@
 use std::collections::HashMap;
 use serde::*;
 
-use crate::common::gameplay::ecs::world::*;
-use crate::common::sim_data::input_state::*;
-use crate::common::types::*;
-use crate::common::gameplay::systems::render::*;
-use crate::common::gameplay::systems::position::*;
-use crate::common::gameplay::systems::velocity::*;
-use crate::common::gameplay::systems::clickshooter::*;
-use crate::common::gameplay::systems::wasdmover::*;
-use crate::common::gameplay::systems::size::*;
+use crate::gamecode::ecs::world::*;
+use crate::netcode::common::sim_data::input_state::*;
+use crate::netcode::common::types::*;
+use crate::gamecode::systems::render::*;
+use crate::gamecode::systems::position::*;
+use crate::gamecode::systems::velocity::*;
+use crate::gamecode::systems::clickshooter::*;
+use crate::gamecode::systems::wasdmover::*;
+use crate::gamecode::systems::size::*;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
-use crate::common::gameplay::systems::player::PlayerComp;
+use crate::gamecode::systems::player::PlayerComp;
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct InfoForSim {
-    pub inputs_map: HashMap<PlayerID, InputState>
-}
 
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]

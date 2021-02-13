@@ -1,9 +1,9 @@
 //use std::{thread};
 //
 //
-//use crate::common::logic::logic_sim_tailer_seg::*;
-//use crate::common::sim_data::sim_data_storage::*;
-//use crate::common::types::*;
+//use crate::netcode::common::logic::logic_sim_tailer_seg::*;
+//use crate::netcode::common::sim_data::sim_data_storage::*;
+//use crate::netcode::common::types::*;
 //
 //use std::sync::{Arc, RwLock};
 //use crossbeam_channel::*;

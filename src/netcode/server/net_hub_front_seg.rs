@@ -4,16 +4,16 @@ use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
 use std::thread;
 use std::time::{SystemTime, Duration};
 
-use crate::common::network::external_msg::*;
-use crate::common::types::*;
+use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::types::*;
 use bimap::BiHashMap;
 use std::borrow::Borrow;
 
 use crossbeam_channel::{unbounded, Select};
 use crossbeam_channel::Sender;
 use crossbeam_channel::Receiver;
-use crate::common::data::hash_seg::FramedHash;
-use crate::server::net_hub_back_not_seg::{NetHubBackIn, NetHubBackMsgOut, NetHubBackMsgIn};
+use crate::netcode::common::logic::hash_seg::FramedHash;
+use crate::netcode::server::net_hub_back_not_seg::{NetHubBackIn, NetHubBackMsgOut, NetHubBackMsgIn};
 
 pub struct NetworkingHubEx {
     pub down_sink: Sender<NetHubFrontMsgIn>,

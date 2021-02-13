@@ -4,7 +4,7 @@ use std::time::{SystemTime, Duration};
 
 use serde::*;
 
-use crate::common::types::*;
+use crate::netcode::common::types::*;
 //pub const FRAME_DURATION_MILLIS: f32 = 200.0;
 // pub const FRAME_DURATION_MILLIS: f32 = 100.0;
 // pub const FRAME_DURATION_MILLIS: f32 = 50.0;

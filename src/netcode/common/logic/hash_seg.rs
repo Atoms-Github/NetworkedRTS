@@ -2,17 +2,17 @@
 use crossbeam_channel::*;
 use std::thread;
 use serde::*;
-use crate::client::logic_sim_header_seg::*;
-use crate::common::logic::logic_sim_tailer_seg::*;
-use crate::common::sim_data::framed_vec::*;
-use crate::common::sim_data::input_state::*;
-use crate::common::time::timekeeping::*;
-use crate::common::sim_data::sim_data_storage::*;
-use crate::common::types::*;
+use crate::netcode::client::logic_sim_header_seg::*;
+use crate::netcode::common::logic::logic_sim_tailer_seg::*;
+use crate::netcode::common::sim_data::framed_vec::*;
+use crate::netcode::common::sim_data::input_state::*;
+use crate::netcode::common::time::timekeeping::*;
+use crate::netcode::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::types::*;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
 use std::collections::HashMap;
-use crate::common::gameplay::game::game_state::GameState;
+use crate::netcode::common::gameplay::game::game_state::GameState;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FramedHash{

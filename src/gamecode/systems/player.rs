@@ -3,10 +3,10 @@ use std::collections::{BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use std::hash::*;
-use crate::create_system;
-use crate::common::gameplay::ecs::world::*;
-use crate::common::gameplay::systems::velocity::VelocityComp;
-use crate::common::types::PlayerID;
+use crate::netcode::create_system;
+use crate::gamecode::ecs::world::*;
+use crate::gamecode::systems::velocity::VelocityComp;
+use crate::netcode::common::types::PlayerID;
 
 
 #[derive(Debug,Serialize, Deserialize, Clone)]

@@ -5,10 +5,10 @@ use ggez::graphics;
 use ggez::graphics::DrawParam;
 use serde::{Deserialize, Serialize};
 
-use crate::create_system;
-use crate::common::gameplay::ecs::world::*;
-use crate::common::gameplay::systems::position::PositionComp;
-use crate::common::gameplay::systems::size::*;
+use crate::netcode::create_system;
+use crate::gamecode::ecs::world::*;
+use crate::gamecode::systems::position::PositionComp;
+use crate::gamecode::systems::size::*;
 
 create_system!( render_system | secret_render_system
 	| my_position: PositionComp, my_render: RenderComp, my_size: SizeComp

@@ -6,12 +6,13 @@ use ggez::{ContextBuilder, event};
 use ggez::event::{EventHandler, KeyMods, MouseButton};
 use ggez::input::keyboard::KeyCode;
 
-use crate::common::gameplay::ecs::world::*;
-use crate::common::gameplay::game::game_state::*;
-use crate::common::sim_data::input_state::*;
-use crate::common::gameplay::systems::render::*;
+
+use crate::netcode::common::gameplay::ecs::world::*;
+use crate::netcode::common::gameplay::game::game_state::*;
+use crate::netcode::common::sim_data::input_state::*;
+use crate::netcode::common::gameplay::systems::render::*;
 use std::time::SystemTime;
-use crate::common::types::*;
+use crate::netcode::common::types::*;
 use ggez::graphics::Text;
 use std::collections::BTreeMap;
 use nalgebra::Point2;

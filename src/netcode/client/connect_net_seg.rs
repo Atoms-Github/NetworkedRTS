@@ -7,10 +7,10 @@ use std::ops::Div;
 use std::ops::Sub;
 use crossbeam_channel::*;
 
-use crate::common::network::external_msg::*;
-use crate::common::types::*;
-use crate::common::time::timekeeping::KnownFrameInfo;
-use crate::common::network::channel_threads::*;
+use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::types::*;
+use crate::netcode::common::time::timekeeping::KnownFrameInfo;
+use crate::netcode::common::network::channel_threads::*;
 
 pub struct ConnectNetIn {
     conn_address_str: String,
@@ -190,8 +190,8 @@ impl ConnectNetIn {
 //#[cfg(test)]
 pub mod connect_tests {
     use std::net::SocketAddr;
-    use crate::client::connect_net_seg::*;
-    use crate::common::network::external_msg::NetMsgGreetingQuery;
+    use crate::netcode::client::connect_net_seg::*;
+    use crate::netcode::common::network::external_msg::NetMsgGreetingQuery;
 
     fn init_connection() -> ConnectNetEx{
         let mut seg_connect_net = ConnectNetEx::start("127.0.0.1:1414".to_string());

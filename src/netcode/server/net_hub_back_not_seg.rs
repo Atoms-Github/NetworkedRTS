@@ -5,13 +5,13 @@ use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
 use std::thread;
 use std::time::{SystemTime, Duration};
 
-use crate::common::network::external_msg::*;
-use crate::common::types::*;
+use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::types::*;
 use bimap::BiHashMap;
 use std::borrow::Borrow;
 use crossbeam_channel::{Sender, Receiver, Select, unbounded};
 use crossbeam_channel::internal::{select, SelectHandle};
-use crate::common::network::channel_threads::*;
+use crate::netcode::common::network::channel_threads::*;
 
 
 // For down to the wire stuff about TCP and UDP.
@@ -198,8 +198,8 @@ impl NetHubBackIn {
 // #[cfg(test)]
 pub mod hub_back_test {
     use std::net::SocketAddr;
-    use crate::server::net_hub_back_not_seg::*;
-    use crate::common::data::hash_seg::FramedHash;
+    use crate::netcode::server::net_hub_back_not_seg::*;
+    use crate::netcode::common::logic::hash_seg::FramedHash;
 
     // #[test]
     pub fn print_listened() {

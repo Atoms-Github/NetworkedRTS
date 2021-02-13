@@ -10,9 +10,10 @@
 
 use std::{env, thread};
 
-use crate::client::client_mode::*;
-use crate::server::server_mode::*;
-use crate::common::types::*;
+
+use crate::netcode::client::client_mode::*;
+use crate::netcode::server::server_mode::*;
+use crate::netcode::common::types::*;
 use std::str::FromStr;
 
 
