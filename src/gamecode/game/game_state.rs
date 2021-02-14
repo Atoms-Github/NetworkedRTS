@@ -2,8 +2,6 @@ use std::collections::HashMap;
 use serde::*;
 
 use crate::gamecode::ecs::world::*;
-use crate::netcode::common::sim_data::input_state::*;
-use crate::netcode::common::types::*;
 use crate::gamecode::systems::render::*;
 use crate::gamecode::systems::position::*;
 use crate::gamecode::systems::velocity::*;
@@ -13,7 +11,9 @@ use crate::gamecode::systems::size::*;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use crate::gamecode::systems::player::PlayerComp;
-
+use crate::pub_types::{HashType, FrameIndex, PlayerID};
+use crate::netcode::{InfoForSim, ConnStatusChangeType};
+use ggez::Context;
 
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
@@ -33,6 +33,9 @@ impl GameState{
         let mut s = DefaultHasher::new();
         self.hash(&mut s);
         s.finish()
+    }
+    pub fn get_simmed_frame_index(&self) -> FrameIndex{
+        return self.simmed_frame_index;
     }
     pub fn new() -> GameState{
         GameState{
@@ -75,7 +78,7 @@ impl GameState{
     }
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32){
         for (player_id, input) in &sim_info.inputs_map{
-            if input.conn_status_update == ConnStatusChangeType::Connecting{
+            if input.conn_status_update == ConnStatusChangeType::Connecting{ // TODO: Temp. Will swap over for search for existing player object.
                 log::trace!("StateInitingNewPlayer {}", *player_id);
                 self.init_new_player(*player_id);
             }
@@ -93,5 +96,12 @@ impl GameState{
         self.world.update_entities(&mut self.storages, pending);
 
         self.simmed_frame_index += 1;
+    }
+    pub fn render(&mut self, ctx: &mut Context){
+        secret_render_system(&self.world, &mut PendingEntities::new(),
+                             &mut self.storages.position_s,
+                             &mut self.storages.render_s,
+                             &mut self.storages.size_s,
+                             ctx);
     }
 }

@@ -6,16 +6,15 @@ use ggez::{ContextBuilder, event};
 use ggez::event::{EventHandler, KeyMods, MouseButton};
 use ggez::input::keyboard::KeyCode;
 
-
-use crate::netcode::common::gameplay::ecs::world::*;
-use crate::netcode::common::gameplay::game::game_state::*;
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
+use crate::netcode::*;
 use crate::netcode::common::sim_data::input_state::*;
-use crate::netcode::common::gameplay::systems::render::*;
 use std::time::SystemTime;
-use crate::netcode::common::types::*;
 use ggez::graphics::Text;
 use std::collections::BTreeMap;
 use nalgebra::Point2;
+use crate::gamecode::GameState;
 
 pub struct GraphicalIn {
     render_head_rec: Receiver<GameState>,
@@ -65,13 +64,7 @@ impl GraphicalIn {
             event::run(ctx, events_loop, &mut meme).unwrap();
         });
     }
-    fn render_state(&self, state: &mut GameState, ctx: &mut Context){
-        secret_render_system(&state.world, &mut PendingEntities::new(),
-                             &mut state.storages.position_s,
-                             &mut state.storages.render_s,
-                             &mut state.storages.size_s,
-                             ctx);
-    }
+
     fn pull_newest_usable_state(&mut self) -> GameState{
         // Discards all states in the pipeline until empty, then uses the last one.
         let mut render_state = self.render_head_rec.recv().unwrap();
@@ -94,7 +87,7 @@ impl EventHandler for GraphicalIn {
         graphics::clear(ctx, graphics::BLACK);
 
         let mut render_state = self.pull_newest_usable_state();
-        self.render_state(&mut render_state, ctx);
+        render_state.render(ctx);
 
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {}", fps));

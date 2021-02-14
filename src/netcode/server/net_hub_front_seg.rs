@@ -3,11 +3,12 @@ use std::net::{SocketAddr, TcpListener, TcpStream, UdpSocket};
 use std::sync::{Arc, Mutex, RwLock, RwLockWriteGuard};
 use std::thread;
 use std::time::{SystemTime, Duration};
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 use crate::netcode::common::network::external_msg::*;
-use crate::netcode::common::types::*;
 use bimap::BiHashMap;
 use std::borrow::Borrow;
+
 
 use crossbeam_channel::{unbounded, Select};
 use crossbeam_channel::Sender;

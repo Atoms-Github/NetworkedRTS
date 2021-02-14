@@ -5,7 +5,7 @@ use ggez::graphics;
 use ggez::graphics::DrawParam;
 use serde::{Deserialize, Serialize};
 
-use crate::netcode::create_system;
+use crate::gamecode::ecs::system_macro;
 use crate::gamecode::ecs::world::*;
 use crate::gamecode::systems::position::PositionComp;
 use crate::gamecode::systems::size::*;

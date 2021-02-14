@@ -9,7 +9,7 @@ use crate::gamecode::systems::render::*;
 use crate::gamecode::systems::clickshooter::*;
 use crate::gamecode::systems::wasdmover::*;
 use crate::gamecode::systems::player::*;
-use crate::netcode::common::utils::unmoving_vec::*;
+use crate::gamecode::ecs::unmoving_vec::*;
 use anymap::AnyMap;
 
 use serde::{Serialize, Deserialize};

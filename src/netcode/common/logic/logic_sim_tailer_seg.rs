@@ -4,18 +4,19 @@ use crossbeam_channel::*;
 
 use serde::{Deserialize, Serialize};
 
-use crate::netcode::common::gameplay::game::game_state::*;
+use crate::netcode::*;
 use crate::netcode::common::sim_data::framed_vec::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::time::timekeeping::*;
-use crate::netcode::common::types::*;
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 use crate::netcode::common::sim_data::superstore_seg::*;
 use crate::netcode::common::sim_data::sim_data_storage::*;
 use std::time::{SystemTime, Duration};
 
 use crate::netcode::common::logic::hash_seg::*;
 use std::hash::Hash;
+use crate::gamecode::GameState;
 
 pub struct LogicSimTailerEx {
     pub from_logic_rec: Receiver<QuerySimData>,

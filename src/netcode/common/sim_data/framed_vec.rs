@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::netcode::common::types::*;
 use crate::netcode::common::utils::util_functions::*;
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FramedVecDataPack<T> {

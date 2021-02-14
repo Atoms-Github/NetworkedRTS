@@ -1,3 +1,4 @@
+#[macro_use]
 pub mod position;
 pub mod velocity;
 pub mod render;

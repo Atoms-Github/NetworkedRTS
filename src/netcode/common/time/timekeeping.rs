@@ -1,10 +1,10 @@
 use crossbeam_channel::*;
 use std::thread;
 use std::time::{SystemTime, Duration};
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 use serde::*;
 
-use crate::netcode::common::types::*;
 //pub const FRAME_DURATION_MILLIS: f32 = 200.0;
 // pub const FRAME_DURATION_MILLIS: f32 = 100.0;
 // pub const FRAME_DURATION_MILLIS: f32 = 50.0;

@@ -7,10 +7,10 @@ use crate::netcode::common::sim_data::framed_vec::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::common::sim_data::sim_data_storage::*;
-use crate::netcode::common::types::*;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 
 pub struct InputHandlerEx {
 //    inputs_stream_state: Receiver<InputChange>,

@@ -3,7 +3,7 @@ use std::collections::{BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use std::hash::*;
-use crate::netcode::create_system;
+use crate::gamecode::ecs::system_macro;
 use crate::gamecode::ecs::world::*;
 use crate::gamecode::systems::velocity::VelocityComp;
 

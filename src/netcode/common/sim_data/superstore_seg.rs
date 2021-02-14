@@ -8,11 +8,12 @@ use std::ops::Div;
 use std::ops::Sub;
 use serde::{Deserialize, Serialize};
 use crate::netcode::common::network::external_msg::*;
-use crate::netcode::common::types::*;
 use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 use std::collections::vec_deque::*;
 use std::io::Seek;
 use crate::netcode::client::input_handler_seg::*;
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

@@ -2,10 +2,10 @@ use serde::{Serialize, Deserialize};
 use std::collections::{HashSet};
 use ggez::event::{KeyCode};
 
-use crate::netcode::common::types::*;
 //use ggez::input::mouse::MouseButton;
 use ggez::input::mouse::MouseButton;
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct InputState {

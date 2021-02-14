@@ -2,7 +2,8 @@ use crossbeam_channel::*;
 use std::thread;
 
 use crate::netcode::common::time::timekeeping::*;
-use crate::netcode::common::types::*;
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 
 pub struct SchedulerSegEx {
     trigger_sink: Sender<ScheduledTrigger>

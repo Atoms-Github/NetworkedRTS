@@ -1,6 +1,7 @@
 use crossbeam_channel::{Sender, Receiver, Select, unbounded, SendError, RecvError, TryRecvError};
 use crossbeam_channel::internal::select;
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 pub fn new_bc_multi<T: Clone>(rec_count: u8) -> (BcTx<T>, BcRx<T>){
     let mut txes = vec![];
     let mut rxes = vec![];

@@ -8,12 +8,11 @@ use crate::netcode::common::sim_data::framed_vec::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::common::sim_data::sim_data_storage::*;
-use crate::netcode::common::types::*;
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
 use std::collections::HashMap;
-use crate::netcode::common::gameplay::game::game_state::GameState;
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FramedHash{
     pub frame: FrameIndex,

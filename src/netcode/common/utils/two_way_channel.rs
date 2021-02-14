@@ -1,5 +1,6 @@
 use crossbeam_channel::{Sender, Receiver, unbounded, RecvError, SendError};
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 pub fn new_two_way<A,B>() -> (TwoWay<A,B>, TwoWay<B,A>){
     let (a_snk, a_rec) = unbounded();
     let (b_snk, b_rec) = unbounded();

@@ -2,17 +2,18 @@ use std::collections::{BTreeSet, HashMap};
 
 use serde::{Deserialize, Serialize};
 
-use crate::netcode::create_system;
+
 use crate::gamecode::ecs::world::*;
 use crate::gamecode::systems::velocity::VelocityComp;
-use crate::netcode::common::types::*;
-use crate::netcode::common::sim_data::input_state::*;
 use crate::gamecode::systems::position::PositionComp;
 use crate::gamecode::systems::size::SizeComp;
 use crate::gamecode::systems::render::RenderComp;
 use std::ops::{Sub, Mul};
 use std::hash::Hasher;
 use std::hash::*;
+use crate::gamecode::ecs::*;
+use crate::pub_types::*;
+use crate::netcode::InputState;
 
 
 create_system!( clickshooter_system | secret_clickshooter_system

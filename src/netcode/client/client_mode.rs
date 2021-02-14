@@ -13,12 +13,12 @@ use crate::netcode::common::sim_data::sim_data_storage::*;
 use crate::netcode::common::logic::hash_seg::*;
 use crate::netcode::common::time::scheduler_segment::*;
 use crate::netcode::common::time::timekeeping::*;
-use crate::netcode::common::types::*;
 use crate::netcode::common::sim_data::framed_vec::*;
 use crate::netcode::common::sim_data::superstore_seg::*;
 use crate::netcode::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
 use crate::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
+use crate::pub_types::{FrameIndex, PlayerID};
 
 pub struct ClientApp{
     player_name: String,
@@ -55,7 +55,6 @@ impl ClientApp{
             preferred_id: 5,
             udp_port: seg_connect_net.udp_port,
         };
-
 
         let mut welcome_info = seg_connect_net.get_synced_greeting(my_details);
 

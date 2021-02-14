@@ -11,9 +11,7 @@
 use std::{env, thread};
 
 
-use crate::netcode::client::client_mode::*;
-use crate::netcode::server::server_mode::*;
-use crate::netcode::common::types::*;
+use crate::pub_types::*;
 use std::str::FromStr;
 
 
@@ -80,46 +78,46 @@ fn main() {
         "server" => {
             is_server = true;
         }
-        "test1" => {
-            test1();
-            return;
-        }
-        "test2" => {
-            test2();
-            return;
-        }
-        "test3" => {
-            test3();
-            return;
-        }
-        "test4" => {
-            test4();
-            return;
-        }
+        // "test1" => {
+        //     test1();
+        //     return;
+        // }
+        // "test2" => {
+        //     test2();
+        //     return;
+        // }
+        // "test3" => {
+        //     test3();
+        //     return;
+        // }
+        // "test4" => {
+        //     test4();
+        //     return;
+        // }
         _ => {
             log::debug!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
         }
     }
     if is_server{
-        server_main(ip);
+        crate::netcode::server_main(ip);
     }else{
         let prefered_player_id = args.pop().map(|as_str|{
             i32::from_str(as_str.as_str()).ok()
         }).flatten().unwrap_or(0); // Conflict means auto-assign.
-        ClientApp::go(String::from("A_toms"), ip, prefered_player_id);
+        crate::netcode::client_main(String::from("A_toms"), ip, prefered_player_id);
     }
 }
 
 
-fn test1(){
-    crate::server::net_hub_back_not_seg::hub_back_test::print_listened();
-}
-fn test2(){
-    crate::client::connect_net_seg::connect_tests::crash_on_connect();
-}
-fn test3(){
-    crate::client::connect_net_seg::connect_tests::wait_on_connect();
-}
-fn test4(){
-    crate::client::connect_net_seg::connect_tests::crash_on_connect();
-}
+// fn test1(){
+//     crate::server::net_hub_back_not_seg::hub_back_test::print_listened();
+// }
+// fn test2(){
+//     crate::client::connect_net_seg::connect_tests::crash_on_connect();
+// }
+// fn test3(){
+//     crate::client::connect_net_seg::connect_tests::wait_on_connect();
+// }
+// fn test4(){
+//     crate::client::connect_net_seg::connect_tests::crash_on_connect();
+// }

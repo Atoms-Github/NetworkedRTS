@@ -1,13 +1,12 @@
 use crossbeam_channel::*;
 use std::thread;
 
-use crate::netcode::common::types::*;
-
 use crate::netcode::client::logic_sim_header_seg::*;
 use crate::netcode::common::network::external_msg::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::common::sim_data::sim_data_storage::*;
-
+use crate::netcode::netcode_types::*;
+use crate::pub_types::*;
 use std::sync::{Arc, RwLock};
 
 
