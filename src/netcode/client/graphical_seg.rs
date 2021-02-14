@@ -14,10 +14,10 @@ use std::time::SystemTime;
 use ggez::graphics::Text;
 use std::collections::BTreeMap;
 use nalgebra::Point2;
-use crate::gamecode::GameState;
+use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 
 pub struct GraphicalIn {
-    render_head_rec: Receiver<GameState>,
+    render_head_rec: Receiver<NetGameState>,
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
     texts: BTreeMap<&'static str, Text>,
@@ -26,7 +26,7 @@ pub struct GraphicalEx {
     pub input_rec: Receiver<InputChange>,
 }
 impl GraphicalEx{
-    pub fn start(head_render_handle: Receiver<GameState>, my_player_id: PlayerID) -> GraphicalEx{
+    pub fn start(head_render_handle: Receiver<NetGameState>, my_player_id: PlayerID) -> GraphicalEx{
         let (input_sink, input_rec) = unbounded();
 
 
@@ -65,7 +65,7 @@ impl GraphicalIn {
         });
     }
 
-    fn pull_newest_usable_state(&mut self) -> GameState{
+    fn pull_newest_usable_state(&mut self) -> NetGameState {
         // Discards all states in the pipeline until empty, then uses the last one.
         let mut render_state = self.render_head_rec.recv().unwrap();
 

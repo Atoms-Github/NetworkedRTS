@@ -14,7 +14,7 @@ use crate::netcode::common::time::timekeeping::*;
 
 use crate::netcode::server::net_hub_front_seg::*;
 use crate::netcode::*;
-use crate::gamecode::GameState;
+use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
@@ -35,9 +35,8 @@ impl ServerMainStateIn {
             hosting_ip
         }
     }
-    fn init_state(&self) -> GameState{
-        let mut game_state = GameState::new();
-        game_state.init_rts();
+    fn init_state(&self) -> NetGameState {
+        let mut game_state = NetGameState::new();
         game_state
     }
     pub fn start_segments(self) -> ServerMainStateEx {

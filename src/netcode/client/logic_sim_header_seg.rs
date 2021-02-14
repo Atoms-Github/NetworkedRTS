@@ -7,21 +7,21 @@ use crate::netcode::common::sim_data::sim_data_storage::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
-use crate::gamecode::GameState;
+use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
 
 pub struct LogicSimHeaderIn {
     known_frame_info: KnownFrameInfo,
-    tail_rec: Receiver<GameState>,
+    tail_rec: Receiver<NetGameState>,
     data_store: SimDataStorageEx,
 }
 pub struct LogicSimHeaderEx {
-    pub head_rec: Option<Receiver<GameState>>,
+    pub head_rec: Option<Receiver<NetGameState>>,
 }
 impl LogicSimHeaderEx{
-    pub fn start(known_frame_info: KnownFrameInfo, tail_rec: Receiver<GameState>, data_store: SimDataStorageEx) -> Self {
+    pub fn start(known_frame_info: KnownFrameInfo, tail_rec: Receiver<NetGameState>, data_store: SimDataStorageEx) -> Self {
         LogicSimHeaderIn {
             known_frame_info,
             data_store,
@@ -31,7 +31,7 @@ impl LogicSimHeaderEx{
 }
 
 
-fn deep_clone_state_lock(state_tail: &ArcRw<GameState>) -> ArcRw<GameState>{
+fn deep_clone_state_lock(state_tail: &ArcRw<NetGameState>) -> ArcRw<NetGameState>{
     let guard = state_tail.read().unwrap();
     let head_state = (*guard).clone();
     Arc::new(RwLock::new(head_state))
@@ -58,7 +58,7 @@ impl LogicSimHeaderIn {
             head_rec: Some(head_rec)
         }
     }
-    fn calculate_new_head(&mut self, mut state_tail: GameState) -> GameState{
+    fn calculate_new_head(&mut self, mut state_tail: NetGameState) -> NetGameState {
         let first_head_to_sim = state_tail.get_simmed_frame_index() + 1;
         let frames_to_sim_range = first_head_to_sim..(first_head_to_sim + HEAD_AHEAD_FRAME_COUNT);
 

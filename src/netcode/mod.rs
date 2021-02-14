@@ -11,10 +11,13 @@ mod common;
 mod netcode_types;
 
 
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InfoForSim {
     pub inputs_map: HashMap<PlayerID, InputState>
 }
+
+
 
 pub fn server_main(hosting_ip: String){
     server::server_mode::server_main(hosting_ip);

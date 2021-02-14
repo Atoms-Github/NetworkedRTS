@@ -16,17 +16,17 @@ use std::time::{SystemTime, Duration};
 
 use crate::netcode::common::logic::hash_seg::*;
 use std::hash::Hash;
-use crate::gamecode::GameState;
+use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 
 pub struct LogicSimTailerEx {
     pub from_logic_rec: Receiver<QuerySimData>,
-    pub tail_lock: ArcRw<GameState>,
-    pub new_tail_states_rec: Option<Receiver<GameState>>,
+    pub tail_lock: ArcRw<NetGameState>,
+    pub new_tail_states_rec: Option<Receiver<NetGameState>>,
     pub new_tail_hashes: Option<Receiver<FramedHash>>,
 
 }
 impl LogicSimTailerEx {
-    pub fn start(known_frame_info: KnownFrameInfo, state_tail: GameState, data_store: SimDataStorageEx) -> Self {
+    pub fn start(known_frame_info: KnownFrameInfo, state_tail: NetGameState, data_store: SimDataStorageEx) -> Self {
         LogicSimTailerIn {
             known_frame_info,
             tail_lock: Arc::new(RwLock::new(state_tail)),
@@ -36,7 +36,7 @@ impl LogicSimTailerEx {
 }
 pub struct LogicSimTailerIn {
     known_frame_info: KnownFrameInfo,
-    tail_lock: ArcRw<GameState>,
+    tail_lock: ArcRw<NetGameState>,
     data_store: SimDataStorageEx
     // Logic layer shouldn't know it's player ID.
 }
@@ -59,7 +59,7 @@ impl LogicSimTailerIn {
     }
 
 
-    fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<GameState>, new_hashes: Sender<FramedHash>){
+    fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<NetGameState>, new_hashes: Sender<FramedHash>){
         thread::spawn(move ||
         {
             let mut first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;

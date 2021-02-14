@@ -14,7 +14,7 @@ use std::intrinsics::add_with_overflow;
 use crate::netcode::common::logic::hash_seg::FramedHash;
 use crossbeam_channel::*;
 use crate::netcode::common::utils::util_functions::gen_fake_address;
-use crate::gamecode::GameState;
+use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum ExternalMsg {
@@ -47,7 +47,7 @@ pub struct NetMsgGreetingQuery {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgGreetingResponse {
     pub assigned_player_id: PlayerID,
-    pub game_state: GameState,
+    pub game_state: NetGameState,
     pub players_in_state: Vec<PlayerID>,
     pub known_frame: KnownFrameInfo,
 }
