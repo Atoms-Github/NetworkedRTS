@@ -43,10 +43,17 @@ pub struct LogicSimTailerIn {
 
 impl LogicSimTailerIn {
     fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<QuerySimData>{
-        let sim_query_result = self.data_store.clone_info_for_tail(tail_frame_to_sim);
+
+        let mut state_handle = self.tail_lock.write().unwrap();
+
+        let who_we_wait_for = state_handle.get_who_we_wait_for();
+        // TODO1: note for next time: Just change this here? Is it ok that the data_store is a thing we're trying to keep in sync with no other interesting state,
+        // TODO1: and to keep state in NetGameState?. I think so. So you can pass NetGameState into clone for tail or something similar.
+        let sim_query_result = self.data_store.clone_info_for_tail(tail_frame_to_sim, who_we_wait_for);
         match sim_query_result{
             Ok(sim_info) => {
-                let mut state_handle = self.tail_lock.write().unwrap();
+
+
                 state_handle.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
                 self.data_store.set_tail_frame(tail_frame_to_sim as i32);
                 log::trace!("TailSim {}", state_handle.get_simmed_frame_index());

@@ -25,6 +25,15 @@ impl NetGameState {
         self.hash(&mut s);
         s.finish()
     }
+    pub fn get_who_we_wait_for(&self) -> Vec<PlayerID>{
+        let mut players = vec![];
+        for (player, properties) in self.players.iter(){
+            if properties.connected{
+                players.push(*player);
+            }
+        }
+        return players;
+    }
     pub fn get_simmed_frame_index(&self) -> FrameIndex{
         return self.simmed_frame_index;
     }

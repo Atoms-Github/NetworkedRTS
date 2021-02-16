@@ -57,14 +57,16 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         return self.frame_offset;
     }
     pub fn get_clone(&self, abs_index: FrameIndex) -> Option<T>{ // optimum Shouldn't need to clone so much. Should be possible never cloning.
-        assert!(abs_index >= self.frame_offset, format!("Tried to get data from before superstore start. TargetIndex: {}, FirstDataAt: {}", abs_index, self.frame_offset));
-        let relative_index = abs_index - self.frame_offset;
-        let lukewarm = self.lukewarm.read().unwrap();
-        if lukewarm.len() > relative_index{
-            return lukewarm.get(relative_index).cloned();
-        }else{
+        // Just return none. assert!(abs_index >= self.frame_offset, format!("Tried to get data from before superstore start. TargetIndex: {}, FirstDataAt: {}", abs_index, self.frame_offset));
+
+        if abs_index < self.frame_offset{
             return None;
         }
+
+        let relative_index =  abs_index - self.frame_offset;
+        let lukewarm = self.lukewarm.read().unwrap();
+
+        return lukewarm.get(relative_index).cloned();
     }
     pub fn get_last_clone(&self) -> Option<T>{
         let lukewarm = self.lukewarm.read().unwrap();

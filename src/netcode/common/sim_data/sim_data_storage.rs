@@ -116,32 +116,52 @@ impl SimDataStorageEx{
             inputs_map: player_inputs
         }
     }
-    pub fn clone_info_for_tail(&self, frame_index: FrameIndex) -> Result<InfoForSim, Vec<QuerySimData>>{
+    pub fn clone_info_for_tail(&self, frame_index: FrameIndex, who_we_wait_for: Vec<PlayerID>) -> Result<InfoForSim, Vec<QuerySimData>>{
+        // We need to make sure that everyone who we need to wait for is in, then we return with a list of everyone.
+        // This means newly joined players will be returned, so can be waited for next frame.
+
+        // This is how its designed - we're chucking a list of inputs into a list from all sources and threads. We don't have a notification for new join.
+        // We need to check every check to see if someone new joined.
+
+        let data = self.read_data();
+
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         let mut problems = vec![];
-        for (player_id, superstore) in self.read_data().iter(){
-            if frame_index >= superstore.get_first_frame_index(){ // If we're not talking about before the player joined.
-                match superstore.get_clone(frame_index){
-                    Some(state) => {
-                        player_inputs.insert(*player_id, state);
-                    }
-                    None => {
-                        problems.push(QuerySimData {
-                            frame_offset: frame_index,
-                            player_id: *player_id
-                        });
-                    }
+        // Make sure we've got the inputs we need.
+        for waiting_id in who_we_wait_for{
+            let superstore = data.get(&waiting_id).expect("Asked to wait on a player who didn't exist.");
+            match superstore.get_clone(frame_index){
+                Some(state) => {
+                    // Nothing. Gets added later.
+                }
+                None => {
+                    problems.push(QuerySimData {
+                        frame_offset: frame_index,
+                        player_id: waiting_id
+                    });
                 }
             }
+        }
+
+        if !problems.is_empty(){
+            return Err(problems);
 
         }
-        if problems.is_empty(){
-            return Ok(InfoForSim{
-                inputs_map: player_inputs
-            });
-        }else{
-            return Err(problems);
+
+        // Gather all the inputs we have.
+        for (player_id, superstore) in data.iter(){
+            match superstore.get_clone(frame_index){
+                Some(state) => {
+                    player_inputs.insert(*player_id, state);
+                }
+                None => {
+                    // Don't care if non-waiting required player doesn't have inputs.
+                }
+            }
         }
+        return Ok(InfoForSim{
+            inputs_map: player_inputs
+        });
     }
     pub fn fulfill_query(&self, query: &QuerySimData) -> OwnedSimData {
         let players = self.read_data();
