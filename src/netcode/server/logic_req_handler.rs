@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 use crossbeam_channel::{Receiver, Sender};
-use crate::netcode::common::sim_data::sim_data_storage::QuerySimData;
+use crate::netcode::common::sim_data::sim_data_storage::SimDataQuery;
 use crate::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
 use std::thread;
 use crate::netcode::common::network::external_msg::ExternalMsg;
@@ -11,7 +11,7 @@ pub struct LogicReqHandlerIn {
     waiting_on: PlayerID,
     waiting_since: SystemTime,
     is_waiting: bool,
-    server_logic_reqs_rc: Receiver<QuerySimData>,
+    server_logic_reqs_rc: Receiver<SimDataQuery>,
     net_manager_tx: Sender<NetHubFrontMsgIn>,
 }
 
@@ -31,7 +31,7 @@ pub struct LogicReqHandlerEx{
 
 }
 impl LogicReqHandlerEx{
-    pub fn start(server_logic_reqs_rc: Receiver<QuerySimData>, kick_msgs_tx: Sender<NetHubFrontMsgIn>) -> Self{
+    pub fn start(server_logic_reqs_rc: Receiver<SimDataQuery>, kick_msgs_tx: Sender<NetHubFrontMsgIn>) -> Self{
         LogicReqHandlerIn{
             waiting_on: 0,
             waiting_since: SystemTime::now(),

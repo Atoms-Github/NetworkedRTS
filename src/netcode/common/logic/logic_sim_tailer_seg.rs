@@ -5,7 +5,6 @@ use crossbeam_channel::*;
 use serde::{Deserialize, Serialize};
 
 use crate::netcode::*;
-use crate::netcode::common::sim_data::framed_vec::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::netcode_types::*;
@@ -19,14 +18,14 @@ use std::hash::Hash;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 
 pub struct LogicSimTailerEx {
-    pub from_logic_rec: Receiver<QuerySimData>,
+    pub from_logic_rec: Receiver<SimDataQuery>,
     pub tail_lock: ArcRw<NetGameState>,
     pub new_tail_states_rec: Option<Receiver<NetGameState>>,
     pub new_tail_hashes: Option<Receiver<FramedHash>>,
 
 }
 impl LogicSimTailerEx {
-    pub fn start(known_frame_info: KnownFrameInfo, state_tail: NetGameState, data_store: SimDataStorageEx) -> Self {
+    pub fn start(known_frame_info: KnownFrameInfo, state_tail: NetGameState, data_store: SimDataStorage) -> Self {
         LogicSimTailerIn {
             known_frame_info,
             tail_lock: Arc::new(RwLock::new(state_tail)),
@@ -37,12 +36,12 @@ impl LogicSimTailerEx {
 pub struct LogicSimTailerIn {
     known_frame_info: KnownFrameInfo,
     tail_lock: ArcRw<NetGameState>,
-    data_store: SimDataStorageEx
+    data_store: SimDataStorage
     // Logic layer shouldn't know it's player ID.
 }
 
 impl LogicSimTailerIn {
-    fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<QuerySimData>{
+    fn try_sim_tail_frame(&mut self, tail_frame_to_sim: FrameIndex) -> Vec<SimDataQuery>{
 
         let mut state_handle = self.tail_lock.write().unwrap();
 
@@ -66,7 +65,7 @@ impl LogicSimTailerIn {
     }
 
 
-    fn start_thread(mut self, outwards_messages: Sender<QuerySimData>, mut new_tails_sink: Sender<NetGameState>, new_hashes: Sender<FramedHash>){
+    fn start_thread(mut self, outwards_messages: Sender<SimDataQuery>, mut new_tails_sink: Sender<NetGameState>, new_hashes: Sender<FramedHash>){
         thread::spawn(move ||
         {
             let mut first_frame_to_sim = self.tail_lock.read().unwrap().get_simmed_frame_index() + 1;

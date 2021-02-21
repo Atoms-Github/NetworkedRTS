@@ -13,7 +13,6 @@ use crate::netcode::common::sim_data::sim_data_storage::*;
 use crate::netcode::common::logic::hash_seg::*;
 use crate::netcode::common::time::scheduler_segment::*;
 use crate::netcode::common::time::timekeeping::*;
-use crate::netcode::common::sim_data::framed_vec::*;
 use crate::netcode::common::sim_data::superstore_seg::*;
 use crate::netcode::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
@@ -82,8 +81,8 @@ impl ConnectedClient{
     fn init_segs(&mut self, my_init_frame: FrameIndex) -> ClientEx{
         let welcome_info = self.welcome_info.clone();
 
-        let seg_data_storage = SimDataStorageEx::new(welcome_info.players_in_state, welcome_info.game_state.get_simmed_frame_index() + 1);
-        let seg_hasher = HasherEx::start();
+        let seg_data_storage = SimDataStorage::new(welcome_info.players_in_state, welcome_info.game_state.get_simmed_frame_index() + 1);
+        let seg_hasher = HasherEx::new();
         let seg_scheduler = SchedulerSegEx::start(welcome_info.known_frame.clone());
         let mut seg_logic_tailer = LogicSimTailerEx::start(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone());
 
@@ -112,7 +111,7 @@ impl ConnectedClient{
 }
 struct ClientEx{
     seg_scheduler: SchedulerSegEx,
-    seg_data_storage: SimDataStorageEx,
+    seg_data_storage: SimDataStorage,
     seg_logic_tailer: LogicSimTailerEx,
     seg_logic_header: LogicSimHeaderEx,
     seg_hasher: HasherEx,
@@ -127,53 +126,57 @@ impl ClientEx{
         connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(init_me_msg.clone()),true)).unwrap();
         self.seg_data_storage.write_owned_data(init_me_msg);
 
-        // Upload logic requests.
-        let logic_req_tx = connected_client.seg_connect_net.net_sink.clone();
-        let inc_logic_msgs = self.seg_logic_tailer.from_logic_rec;
-        thread::spawn(move ||{
-            loop{
-                let next_request = inc_logic_msgs.recv().unwrap();
-                logic_req_tx.send((ExternalMsg::InputQuery(next_request), false)).unwrap();
-            }
-        });
 
-        let crash: Option<i32> = None;
-        //let test = crash.unwrap();
 
-        let inc_msgs = connected_client.seg_connect_net.net_rec.unwrap();
+        let frame_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_now();
         loop{
-            match inc_msgs.recv().unwrap(){
-                ExternalMsg::GameUpdate(update) => {
-                    if crate::DEBUG_MSGS_MAIN {
-                        log::debug!("Net rec message: {:?}", update);
+            let _ = frame_syncer.recv().unwrap();
+
+            while let Ok(item) = connected_client.seg_connect_net.net_rec.unwrap().recv(){
+                match item{
+                    ExternalMsg::GameUpdate(update) => {
+                        if crate::DEBUG_MSGS_MAIN {
+                            log::debug!("Net rec message: {:?}", update);
+                        }
+                        self.seg_data_storage.write_owned_data(update);
+                    },
+                    ExternalMsg::InputQuery(query) => {
+                        let owned_data = self.seg_data_storage.fulfill_query(&query);
+                        if owned_data.input_data.data.len() > 0{
+                            connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
+                        }
+                    },
+                    ExternalMsg::PingTestResponse(_) => {
+                        // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
                     }
-                    self.seg_data_storage.write_owned_data(update);
-                },
-                ExternalMsg::InputQuery(query) => {
-                    let owned_data = self.seg_data_storage.fulfill_query(&query);
-                    if owned_data.sim_data.data.len() > 0{
-                        connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
+                    ExternalMsg::NewHash(framed_hash) => {
+                        self.seg_hasher.add_hash(framed_hash);
+                    },
+                    _ => {
+                        panic!("Client shouldn't be getting a message of this type (or at this time)!")
                     }
-                },
-                ExternalMsg::PingTestResponse(_) => {
-                    // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
-                }
-                ExternalMsg::NewHash(framed_hash) => {
-                    self.seg_hasher.add_hash(framed_hash);
-                },
-                _ => {
-                    panic!("Client shouldn't be getting a message of this type (or at this time)!")
                 }
             }
+
+            // Upload logic requests.
+            let logic_req_tx = connected_client.seg_connect_net.net_sink.clone();
+            let inc_logic_msgs = self.seg_logic_tailer.from_logic_rec;
+            thread::spawn(move ||{
+                loop{
+                    let next_request = inc_logic_msgs.recv().unwrap();
+                    logic_req_tx.send((ExternalMsg::InputQuery(next_request), false)).unwrap();
+                }
+            });
 
         }
+
     }
-    fn gen_init_me_msgs(&self, frame_to_init_on: FrameIndex, my_player_id: PlayerID) -> OwnedSimData{
+    fn gen_init_me_msgs(&self, frame_to_init_on: FrameIndex, my_player_id: PlayerID) -> SimDataPackage {
         let mut first_input = InputState::new();
         first_input.conn_status_update = ConnStatusChangeType::Connecting;
-        OwnedSimData{
-            player_id: my_player_id,
-            sim_data: SuperstoreData {
+        SimDataPackage {
+            data_owner: my_player_id,
+            input_data: SuperstoreData {
                 data: vec![first_input],
                 frame_offset: frame_to_init_on,
             }

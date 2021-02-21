@@ -17,7 +17,7 @@ use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGam
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
-    data_store: SimDataStorageEx,
+    data_store: SimDataStorage,
     seg_logic_tail: LogicSimTailerEx,
     known_frame_zero: KnownFrameInfo
 }
@@ -40,7 +40,7 @@ impl ServerMainStateIn {
     }
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = NetworkingHubEx::start(self.hosting_ip.clone());
-        let seg_data_store = SimDataStorageEx::new(vec![], 0);
+        let seg_data_store = SimDataStorage::new(vec![], 0);
         let mut seg_logic_tail = LogicSimTailerEx::start(self.known_frame.clone(), self.init_state(), seg_data_store.clone());
         let hash_rec = seg_logic_tail.new_tail_hashes.take().unwrap(); // dans_game.
         let hash_net_tx = seg_net_hub.down_sink.clone();
@@ -79,13 +79,13 @@ impl ServerMainStateEx {
                             self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
                         },
                         ExternalMsg::GameUpdate(update_info) => {
-                            log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.player_id, update_info.sim_data.frame_offset, update_info.sim_data.frame_offset + update_info.sim_data.data.len() - 1);
+                            log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.data_owner, update_info.input_data.frame_offset, update_info.input_data.frame_offset + update_info.input_data.data.len() - 1);
                             self.data_store.write_owned_data(update_info.clone());
                             self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                         },
                         ExternalMsg::InputQuery(query) => {
                             let owned_data = self.data_store.fulfill_query(&query);
-                            if owned_data.sim_data.data.len() > 0{
+                            if owned_data.input_data.data.len() > 0{
                                 self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
                             }
                         },

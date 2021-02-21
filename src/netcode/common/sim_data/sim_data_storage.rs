@@ -1,4 +1,3 @@
-
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
@@ -13,95 +12,90 @@ use crossbeam_channel::*;
 use std::thread;
 
 
+#[derive(Serialize, Deserialize, Clone, Debug, Eq)]
+pub enum ServerEvent{
+    JoinPlayer(PlayerID),
+    DisconnectPlayer(PlayerID)
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct QuerySimData {
+pub enum SimDataOwner {
+    Server,
+    Player(PlayerID),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SimDataQuery {
+    pub query_type: SimDataOwner,
     pub frame_offset: FrameIndex,
-    pub player_id: PlayerID
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum SimDataPackage{
+    ServerEvents(SuperstoreData<Vec<ServerEvent>>),
+    PlayerInputs(SuperstoreData<InputState>, PlayerID)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct OwnedSimData {
-    pub player_id: PlayerID,
-    pub sim_data: SuperstoreData<InputState>
+pub struct SimDataStorage {
+    player_inputs: HashMap<PlayerID, Superstore<InputState>>,
+    server_events: Superstore<Vec<ServerEvent>>,
+    first_frame: FrameIndex,
 }
-
-
-#[derive(Clone)]
-pub struct SimDataStorageEx {
-    player_inputs: ArcRw<HashMap<PlayerID, SuperstoreEx<InputState>>>,
-    tail_simed_index: ArcRw<i32>
-}
-impl SimDataStorageEx{
-    pub fn new(existing_players: Vec<PlayerID>, first_frame_to_store: FrameIndex) -> SimDataStorageEx{
-
-        let mut storage = SimDataStorageEx {
+impl SimDataStorage {
+    pub fn new(first_frame_to_store: FrameIndex) -> Self {
+        let mut storage = Self {
             player_inputs: Default::default(),
-            tail_simed_index: Arc::new(RwLock::new(-1))
+            server_events: Superstore::new(first_frame_to_store),
+            first_frame: first_frame_to_store
         };
-        for existing_player in existing_players{
-            storage.init_new_player(existing_player, first_frame_to_store);
-        }
-        log::debug!("Done pre-init existing players.");
         storage
     }
-    pub fn set_tail_frame(&self, tail_frame: i32){
-        *self.tail_simed_index.write().unwrap() = tail_frame;
+    fn get_player_superstore(&mut self, player_id: PlayerID) -> &Superstore<InputState>{
+        if !self.player_inputs.contains_key(&player_id){
+            self.player_inputs.insert(player_id, Superstore::new(self.first_frame));
+        }
+        return self.player_inputs.get(&player_id).unwrap();
     }
-    pub fn get_player_list(&self, filter_must_have_inputs_on: FrameIndex) -> Vec<PlayerID>{
-        let mut players = vec![];
-
-        for (player_id, storage) in self.player_inputs.read().unwrap().iter(){
-            if filter_must_have_inputs_on >= storage.get_first_frame_index(){
-                players.push(*player_id);
+    pub fn write_data(&mut self, data: SimDataPackage){
+        match data{
+            SimDataPackage::PlayerInputs(data, player_id) => {
+                self.get_player_superstore(player_id).write_data(data);
+            }
+            SimDataPackage::ServerEvents(data) => {
+                self.server_events.write_data(data);
             }
         }
-        return players;
     }
-    fn read_data(&self) -> RwLockReadGuard<HashMap<PlayerID, SuperstoreEx<InputState>>>{
-        return self.player_inputs.read().unwrap();
-    }
-    pub fn init_new_player(&self, player_id: PlayerID, frame_offset: FrameIndex){
-        log::debug!("Creating new superstore for new player {}", player_id);
-        let mut players_writable = self.player_inputs.write().unwrap();
-
-        let new_superstore = SuperstoreEx::start(frame_offset);
-        players_writable.insert(player_id, new_superstore);
-    }
-
-    pub fn write_data(&self, player_id: PlayerID, data: SuperstoreData<InputState>){
-
-        let players = self.read_data();
-
-        let players_containing_target_player = if players.contains_key(&player_id){
-            players
-        }else{
-            // On new player, we do want to read, then write, then read again. This doesn't happen often.
-            std::mem::drop(players); // So can write to.
-            if data.data.len() > 0{
-                if data.data.get(0).unwrap().conn_status_update != ConnStatusChangeType::Connecting{
-                    println!("DEBUG EXITING!");
-                    std::process::exit(-2);
-                }
-                assert_eq!(data.data.get(0).unwrap().conn_status_update, ConnStatusChangeType::Connecting, "New data for unknown player {} which didn't have 'newplayer' flag set on first input. Drastic packet misordering might cause this, so we can remove this assert and just ignore instead.", player_id);
-            }
-            // Existing players should have been initialized in the 'ExistingPlayers' list in the welcome message - therefor all new players should have the new player flag.
-            self.init_new_player(player_id, data.frame_offset);
-            self.read_data() // No ;.
-        };
-        players_containing_target_player.get(&player_id).unwrap().write_requests_sink.lock().unwrap().send(data).unwrap();
-    }
-    pub fn write_data_single(&self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
-        let data = SuperstoreData{
+    pub fn write_input_data_single(&self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
+        let package = SimDataPackage::PlayerInputs(SuperstoreData{
             data: vec![state],
             frame_offset: frame_index
-        };
-        self.write_data(player_id, data);
+        }, player_id);
     }
-    pub fn write_owned_data(&self, response: OwnedSimData){
-        self.write_data(response.player_id, response.sim_data);
-    }
+    pub fn fulfill_query(&self, query: &SimDataQuery) -> SimDataPackage {
+        match query.query_type{
+            SimDataOwner::Server => {
+                SimDataPackage::ServerEvents(SuperstoreData{
+                    data: self.server_events.clone_block(query.frame_offset, 20),
+                    frame_offset: query.frame_offset
+                })
+            }
+            SimDataOwner::Player(player_id) => {
+                let superstore = self.player_inputs.get(&query.player_id).expect("DataStore was queried for a player it didn't know existed.");
+                SimDataPackage::PlayerInputs(SuperstoreData{
+                    data: superstore.clone_block(query.frame_offset, 20),
+                    frame_offset: query.frame_offset
+                }, player_id)
+            }
+        }
 
-    pub fn clone_info_for_head(&self, frame_index: FrameIndex) -> InfoForSim{
+    }
+}
+
+/*
+
+
+pub fn clone_info_for_head(&self, frame_index: FrameIndex) -> InfoForSim{
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         for (player_id, superstore) in self.read_data().iter(){
             if frame_index >= superstore.get_first_frame_index() { // If we're not talking about before the player joined.
@@ -110,13 +104,12 @@ impl SimDataStorageEx{
 
                 player_inputs.insert(*player_id, state);
             }
-
         }
         return InfoForSim{
             inputs_map: player_inputs
         }
     }
-    pub fn clone_info_for_tail(&self, frame_index: FrameIndex, who_we_wait_for: Vec<PlayerID>) -> Result<InfoForSim, Vec<QuerySimData>>{
+    pub fn clone_info_for_tail(&self, frame_index: FrameIndex, who_we_wait_for: Vec<PlayerID>) -> Result<InfoForSim, Vec<SimDataQuery>>{
         // We need to make sure that everyone who we need to wait for is in, then we return with a list of everyone.
         // This means newly joined players will be returned, so can be waited for next frame.
 
@@ -135,7 +128,7 @@ impl SimDataStorageEx{
                     // Nothing. Gets added later.
                 }
                 None => {
-                    problems.push(QuerySimData {
+                    problems.push(SimDataQuery {
                         frame_offset: frame_index,
                         player_id: waiting_id
                     });
@@ -163,43 +156,5 @@ impl SimDataStorageEx{
             inputs_map: player_inputs
         });
     }
-    pub fn fulfill_query(&self, query: &QuerySimData) -> OwnedSimData {
-        let players = self.read_data();
-        let superstore = players.get(&query.player_id).expect("Can't find data for player.");
 
-        let mut query_response = vec![];
-
-        let slice_first_frame = query.frame_offset.max(superstore.get_first_frame_index());
-        for target_index in slice_first_frame..(slice_first_frame + 20){ // modival Amount of data returned from an 'I'm missing data!' request, and how many of your last inputs get sent.
-            let input_maybe = superstore.get_clone(target_index); // pointless_optimum: Shouldn't need to clone, but this'll likely be a painful fix.
-            match input_maybe{
-                Some(input) => {
-                    query_response.push(input);
-                }
-                None => {
-                    break;
-                }
-            }
-        }
-
-        OwnedSimData {
-            player_id: query.player_id,
-            sim_data: SuperstoreData { data: query_response, frame_offset: slice_first_frame }
-        }
-    }
-    pub fn disconnect_player(&self, player_id: PlayerID){
-        if let Some(map) = self.read_data().get(&player_id){
-            let next_frame = map.get_next_dataless_frame_index();
-            let mut state = InputState::new();
-            state.conn_status_update = ConnStatusChangeType::Disconnecting;
-            let data = SuperstoreData{
-                data: vec![state],
-                frame_offset: next_frame
-            };
-            map.write_requests_sink.lock().unwrap().send(data).unwrap();
-        }else{
-            log::warn!("Can't write 'disconnect' frame to storage since can't find player {}", player_id);
-        }
-    }
-}
-
+ */

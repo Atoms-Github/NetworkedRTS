@@ -15,13 +15,13 @@ pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 pub struct LogicSimHeaderIn {
     known_frame_info: KnownFrameInfo,
     tail_rec: Receiver<NetGameState>,
-    data_store: SimDataStorageEx,
+    data_store: SimDataStorage,
 }
 pub struct LogicSimHeaderEx {
     pub head_rec: Option<Receiver<NetGameState>>,
 }
 impl LogicSimHeaderEx{
-    pub fn start(known_frame_info: KnownFrameInfo, tail_rec: Receiver<NetGameState>, data_store: SimDataStorageEx) -> Self {
+    pub fn start(known_frame_info: KnownFrameInfo, tail_rec: Receiver<NetGameState>, data_store: SimDataStorage) -> Self {
         LogicSimHeaderIn {
             known_frame_info,
             data_store,

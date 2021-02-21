@@ -3,7 +3,6 @@ use std::thread;
 
 use crate::netcode::client::logic_sim_header_seg::*;
 use crate::netcode::common::logic::logic_sim_tailer_seg::*;
-use crate::netcode::common::sim_data::framed_vec::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::common::sim_data::sim_data_storage::*;
@@ -20,7 +19,7 @@ pub struct InputHandlerEx {
 }
 impl InputHandlerEx {
     pub fn start(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
-               inputs_stream: Receiver<InputChange>, sim_data_storage: SimDataStorageEx,) -> InputHandlerEx {
+                 inputs_stream: Receiver<InputChange>, sim_data_storage: SimDataStorage,) -> InputHandlerEx {
         InputHandlerIn {
             known_frame,
             player_id,
@@ -36,7 +35,7 @@ impl InputHandlerEx {
 pub struct InputHandlerIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,
-    sim_data_storage: SimDataStorageEx,
+    sim_data_storage: SimDataStorage,
     inputs_stream: Receiver<InputChange>,
     curret_input: InputState,
     next_frame_to_send: FrameIndex,
@@ -70,7 +69,7 @@ impl InputHandlerIn {
                     self.apply_input_changes();
                     // 2. Send it off.
                     log::trace!("Sending local input for frame: {}", head_frame);
-                    self.sim_data_storage.write_data_single(self.player_id, self.curret_input.clone(), head_frame);
+                    self.sim_data_storage.write_input_data_single(self.player_id, self.curret_input.clone(), head_frame);
                     // 3. Increment next_frame_to_send.
                     self.next_frame_to_send += 1;
                 }

@@ -5,11 +5,13 @@
 use std::net::{SocketAddr, SocketAddrV4, Ipv4Addr};
 
 pub fn vec_replace_or_end<T>(vec: &mut Vec<T>, insertion_index: usize, item: T){
-    if vec.is_empty() || vec.len()-1 < insertion_index{
-        vec.push(item);
-    }else{
+    if insertion_index < vec.len(){
         vec.remove(insertion_index);
         vec.insert(insertion_index, item);
+    }else if insertion_index == vec.len(){
+        vec.push(item);
+    }else{
+        panic!("Adding items more than one past the end is disallowed!");
     }
 }
 

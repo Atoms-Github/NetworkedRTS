@@ -13,7 +13,7 @@ use std::sync::{Arc, RwLock};
 pub struct NetInputDistEx {
 }
 impl NetInputDistEx {
-    pub fn start(known_frame: KnownFrameInfo, player_id: PlayerID, to_net: Sender<(ExternalMsg,bool)>, sim_data_storage: SimDataStorageEx) -> NetInputDistEx {
+    pub fn start(known_frame: KnownFrameInfo, player_id: PlayerID, to_net: Sender<(ExternalMsg,bool)>, sim_data_storage: SimDataStorage) -> NetInputDistEx {
         NetInputDistIn {
             known_frame,
             player_id,
@@ -27,7 +27,7 @@ pub struct NetInputDistIn {
     known_frame: KnownFrameInfo,
     player_id: PlayerID,
     to_net: Sender<(ExternalMsg,bool)>,
-    sim_data_storage: SimDataStorageEx,
+    sim_data_storage: SimDataStorage,
 }
 impl NetInputDistIn {
     // This segment's job is to send the player's last 20 inputs to the network.
@@ -39,12 +39,12 @@ impl NetInputDistIn {
             loop{
                 let tail_frame = gen_timekeeper.recv().unwrap();
 
-                let query = QuerySimData{
+                let query = SimDataQuery {
                     frame_offset: tail_frame, // We don't care about any past data.
                     player_id: self.player_id
                 };
                 let my_inputs = self.sim_data_storage.fulfill_query(&query);
-                log::trace!("Sending to net my inputs for frames {} to {} inclusive", my_inputs.sim_data.frame_offset, my_inputs.sim_data.frame_offset + my_inputs.sim_data.data.len() - 1);
+                log::trace!("Sending to net my inputs for frames {} to {} inclusive", my_inputs.input_data.frame_offset, my_inputs.input_data.frame_offset + my_inputs.input_data.data.len() - 1);
                 self.to_net.send((ExternalMsg::GameUpdate(my_inputs),false)).unwrap();
             }
         });
