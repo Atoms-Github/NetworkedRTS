@@ -10,12 +10,13 @@ use crate::pub_types::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use crossbeam_channel::*;
 use std::thread;
+use nalgebra::sup;
 
 
-#[derive(Serialize, Deserialize, Clone, Debug, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ServerEvent{
     JoinPlayer(PlayerID),
-    DisconnectPlayer(PlayerID)
+    DisconnectPlayer(PlayerID),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -31,14 +32,14 @@ pub struct SimDataQuery {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum SimDataPackage{
-    ServerEvents(SuperstoreData<Vec<ServerEvent>>),
+    ServerEvents(SuperstoreData<ServerEvents>),
     PlayerInputs(SuperstoreData<InputState>, PlayerID)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SimDataStorage {
     player_inputs: HashMap<PlayerID, Superstore<InputState>>,
-    server_events: Superstore<Vec<ServerEvent>>,
+    server_events: Superstore<ServerEvents>,
     first_frame: FrameIndex,
 }
 impl SimDataStorage {
@@ -50,11 +51,27 @@ impl SimDataStorage {
         };
         storage
     }
+
     fn get_player_superstore(&mut self, player_id: PlayerID) -> &Superstore<InputState>{
         if !self.player_inputs.contains_key(&player_id){
             self.player_inputs.insert(player_id, Superstore::new(self.first_frame));
         }
         return self.player_inputs.get(&player_id).unwrap();
+    }
+    pub fn get_input(&self, frame_index: FrameIndex, player_id: PlayerID) -> Option<&InputState>{
+        if let Some(superstore) = self.player_inputs.get(&player_id){
+            return superstore.get(frame_index);
+        }
+        return None;
+    }
+    pub fn get_server_events(&self, frame_index: FrameIndex) -> Option<&ServerEvents>{
+        return self.server_events.get(frame_index);
+    }
+    pub fn get_server_events_or_empty(&self, frame_index: FrameIndex) -> ServerEvents{
+        return self.server_events.get(frame_index).cloned().unwrap_or_else(||{vec![]});
+    }
+    pub fn get_player_list(&self) -> Vec<PlayerID>{
+        return self.player_inputs.keys().cloned().collect();
     }
     pub fn write_data(&mut self, data: SimDataPackage){
         match data{
@@ -81,7 +98,7 @@ impl SimDataStorage {
                 })
             }
             SimDataOwner::Player(player_id) => {
-                let superstore = self.player_inputs.get(&query.player_id).expect("DataStore was queried for a player it didn't know existed.");
+                let superstore = self.player_inputs.get(&player_id).expect("DataStore was queried for a player it didn't know existed.");
                 SimDataPackage::PlayerInputs(SuperstoreData{
                     data: superstore.clone_block(query.frame_offset, 20),
                     frame_offset: query.frame_offset

@@ -23,13 +23,13 @@ pub struct SuperstoreData<T> {
     pub frame_offset: FrameIndex
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Superstore<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static>{
+pub struct Superstore<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static>{
     frame_offset: usize,
     data: Vec<T>,
 }
 
 
-impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Superstore<T>{
+impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>{
     pub fn new(first_frame_to_store: FrameIndex) -> Self{
         Self{
             frame_offset: first_frame_to_store,
@@ -51,7 +51,7 @@ impl<T:Clone + Default + Send +  Eq + std::fmt::Debug + Sync + 'static> Supersto
         for target_index in first_frame_index..(first_frame_index + block_size){
             match self.get(target_index){
                 Some(input) => {
-                    query_response.push(input);
+                    query_response.push(input.clone());
                 }
                 None => {
                     break;

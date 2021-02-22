@@ -111,7 +111,9 @@ impl NetHubBackIn {
                                             tcp_socket.send_msg(&external_msg);
 
                                         }else{ // Unreliable:
+                                            // Important - we want to disallow sending messages after the 'disconnect' message has been generated.
                                             udp_socket.send_msg(&external_msg, &address);
+
                                         }
                                     }
                                     None => {
@@ -194,44 +196,44 @@ impl NetHubBackIn {
 
 
 
-
-// #[cfg(test)]
-pub mod hub_back_test {
-    use std::net::SocketAddr;
-    use crate::netcode::server::net_hub_back_not_seg::*;
-    use crate::netcode::common::logic::hash_seg::FramedHash;
-
-    // #[test]
-    pub fn print_listened() {
-        println!("Starting test.");
-        let net_hub_backend = NetHubBackIn::new("127.0.0.1:1414".to_string()).start();
-        // thread::spawn(move ||{
-        //     loop{
-        //         thread::sleep(Duration::from_millis(100));
-        //     }
-        // });
-        loop{
-            let msg = net_hub_backend.msg_out.recv().unwrap();
-            
-            println!("Test server listened: {:?}", msg);
-            match msg{
-                NetHubBackMsgOut::NewPlayer(address) => {
-                    let th_sink = net_hub_backend.msg_in.clone();
-                    thread::spawn(move ||{
-                        loop{
-                            th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), false)).unwrap();
-                            //th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), true)).unwrap();
-                            thread::sleep(Duration::from_millis(500));
-                        }
-                    });
-                }
-                _ => {
-
-                }
-            }
-        }
-    }
-}
+//
+// // #[cfg(test)]
+// pub mod hub_back_test {
+//     use std::net::SocketAddr;
+//     use crate::netcode::server::net_hub_back_not_seg::*;
+//     use crate::netcode::common::logic::hash_seg::FramedHash;
+//
+//     // #[test]
+//     pub fn print_listened() {
+//         println!("Starting test.");
+//         let net_hub_backend = NetHubBackIn::new("127.0.0.1:1414".to_string()).start();
+//         // thread::spawn(move ||{
+//         //     loop{
+//         //         thread::sleep(Duration::from_millis(100));
+//         //     }
+//         // });
+//         loop{
+//             let msg = net_hub_backend.msg_out.recv().unwrap();
+//
+//             println!("Test server listened: {:?}", msg);
+//             match msg{
+//                 NetHubBackMsgOut::NewPlayer(address) => {
+//                     let th_sink = net_hub_backend.msg_in.clone();
+//                     thread::spawn(move ||{
+//                         loop{
+//                             th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), false)).unwrap();
+//                             //th_sink.send(NetHubBackMsgIn::SendMsg(address, ExternalMsg::NewHash(FramedHash::new(0, 0)), true)).unwrap();
+//                             thread::sleep(Duration::from_millis(500));
+//                         }
+//                     });
+//                 }
+//                 _ => {
+//
+//                 }
+//             }
+//         }
+//     }
+// }
 
 
 

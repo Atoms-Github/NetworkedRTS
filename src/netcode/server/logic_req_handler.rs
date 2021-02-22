@@ -7,6 +7,8 @@ use crate::netcode::common::network::external_msg::ExternalMsg;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 
+// breaking: Rename to 'servermissingdatahandler'.
+// breaking: Implement
 pub struct LogicReqHandlerIn {
     waiting_on: PlayerID,
     waiting_since: SystemTime,

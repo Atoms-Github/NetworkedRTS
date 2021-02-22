@@ -17,12 +17,58 @@ use crate::netcode::common::logic::hash_seg::*;
 use std::hash::Hash;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 
+
+pub struct LogicSimTailer {
+    pub game_state: NetGameState,
+    pub known_frame: KnownFrameInfo,
+}
+impl LogicSimTailer{
+    pub fn new(game_state: NetGameState, known_frame: KnownFrameInfo) -> Self{
+        Self{
+            game_state,
+            known_frame
+        }
+    }
+    // breaking: Need to be able to sim two in one call.
+    fn simulate_frame(&mut self, data_store: &SimDataStorage) -> Result<InfoForSim, Vec<SimDataQuery>>{
+        let frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
+
+        let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
+        let mut problems = vec![];
+
+        for (player_id, player_property) in self.game_state.players{
+            if let Some(input_state) = data_store.get_input(frame_to_sim, player_id){
+                    player_inputs.insert(*player_id, state);
+            }else{
+                problems.push(SimDataQuery {
+                    query_type: SimDataOwner::Player(),
+                    frame_offset: frame_index,
+                    player_id: waiting_id
+                });
+            }
+        }
+        // breaking get server events too.
+
+        if !problems.is_empty(){
+            return Err(problems);
+
+        }
+        return Ok(InfoForSim{
+            inputs_map: player_inputs
+        });
+    }
+    pub fn catchup_simulation(&mut self, data_store: &SimDataStorage, sim_frame_up_to_and_including: FrameIndex) -> Result<(), Vec<SimDataQuery>>{
+        let frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
+        // breaking catchup a bit using self.known_frame. Also implement limit of 3 sims.
+    }
+}
+
+
 pub struct LogicSimTailerEx {
     pub from_logic_rec: Receiver<SimDataQuery>,
     pub tail_lock: ArcRw<NetGameState>,
     pub new_tail_states_rec: Option<Receiver<NetGameState>>,
     pub new_tail_hashes: Option<Receiver<FramedHash>>,
-
 }
 impl LogicSimTailerEx {
     pub fn start(known_frame_info: KnownFrameInfo, state_tail: NetGameState, data_store: SimDataStorage) -> Self {

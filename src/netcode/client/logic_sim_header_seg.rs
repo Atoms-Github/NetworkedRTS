@@ -11,6 +11,10 @@ use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGam
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
+pub struct HeadSimPacket{
+    pub game_state: NetGameState,
+    pub sim_data: Vec<InfoForSim>,
+}
 
 pub struct LogicSimHeaderIn {
     known_frame_info: KnownFrameInfo,
@@ -19,6 +23,7 @@ pub struct LogicSimHeaderIn {
 }
 pub struct LogicSimHeaderEx {
     pub head_rec: Option<Receiver<NetGameState>>,
+    pub new_head_states: Sender<HeadSimPacket>, // breaking: Implement
 }
 impl LogicSimHeaderEx{
     pub fn start(known_frame_info: KnownFrameInfo, tail_rec: Receiver<NetGameState>, data_store: SimDataStorage) -> Self {
@@ -28,13 +33,34 @@ impl LogicSimHeaderEx{
             tail_rec
         }.start()
     }
-}
+    pub fn get_head_sim_data(&self, data_store: &SimDataStorage, first_frame_to_include : FrameIndex) -> Vec<InfoForSim>{
+        let mut sim_infos = vec![];
+        for frame_index in (first_frame_to_include)..(first_frame_to_include + HEAD_AHEAD_FRAME_COUNT){
+            let mut sim_info = InfoForSim{
+                inputs_map: Default::default(),
+                server_events: data_store.get_server_events_or_empty(frame_index);
+            };
+            for player_id in data_store.get_player_list(){
+                if let Some(input_state) = data_store.get_input(frame_index, player_id){
+                    sim_info.inputs_map.insert(player_id, input_state);
+                }
+            }
+
+            sim_infos.push(sim_info);
+        }
+        return sim_infos;
+    }
+    pub fn send_head_state(&mut self, gamestate: NetGameState, data_store: &SimDataStorage){
 
 
-fn deep_clone_state_lock(state_tail: &ArcRw<NetGameState>) -> ArcRw<NetGameState>{
-    let guard = state_tail.read().unwrap();
-    let head_state = (*guard).clone();
-    Arc::new(RwLock::new(head_state))
+
+
+        let head_packet = HeadSimPacket{
+            game_state: gamestate,
+            sim_data: self.get_head_sim_data(data_store, gamestate.get_simmed_frame_index() + 1)
+        };
+        self.new_head_states.send(head_packet).unwrap();
+    }
 }
 
 impl LogicSimHeaderIn {

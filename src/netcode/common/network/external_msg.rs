@@ -48,7 +48,6 @@ pub struct NetMsgGreetingQuery {
 pub struct NetMsgGreetingResponse {
     pub assigned_player_id: PlayerID,
     pub game_state: NetGameState,
-    pub players_in_state: Vec<PlayerID>,
     pub known_frame: KnownFrameInfo,
 }
 

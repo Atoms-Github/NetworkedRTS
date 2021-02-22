@@ -9,7 +9,7 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct NetPlayerProperty{
-    connected: bool,
+    waiting_on: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
@@ -28,7 +28,7 @@ impl NetGameState {
     pub fn get_who_we_wait_for(&self) -> Vec<PlayerID>{
         let mut players = vec![];
         for (player, properties) in self.players.iter(){
-            if properties.connected{
+            if properties.waiting_on {
                 players.push(*player);
             }
         }

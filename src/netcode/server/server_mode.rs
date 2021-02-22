@@ -14,11 +14,12 @@ use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::server::net_hub_front_seg::*;
 use crate::netcode::*;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
+use crate::netcode::common::sim_data::sim_data_storage::SimDataOwner::Player;
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
     data_store: SimDataStorage,
-    seg_logic_tail: LogicSimTailerEx,
+    seg_logic_tail: LogicSimTailer,
     known_frame_zero: KnownFrameInfo
 }
 
@@ -40,7 +41,7 @@ impl ServerMainStateIn {
     }
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = NetworkingHubEx::start(self.hosting_ip.clone());
-        let seg_data_store = SimDataStorage::new(vec![], 0);
+        let seg_data_store = SimDataStorage::new(0);
         let mut seg_logic_tail = LogicSimTailerEx::start(self.known_frame.clone(), self.init_state(), seg_data_store.clone());
         let hash_rec = seg_logic_tail.new_tail_hashes.take().unwrap(); // dans_game.
         let hash_net_tx = seg_net_hub.down_sink.clone();
@@ -61,33 +62,31 @@ impl ServerMainStateIn {
 
 }
 impl ServerMainStateEx {
-    pub fn main_loop(mut self){
-        loop{
-            match self.seg_net_hub.up_rec.recv().unwrap(){
-                NetHubFrontMsgOut::NewPlayer(player_id) => {
-
-                }
+    fn update_net_rec(&mut self){
+        while let Ok(net_event) = self.seg_net_hub.up_rec.try_recv(){
+            match net_event{
+                NetHubFrontMsgOut::NewPlayer(player_id) => {}
                 NetHubFrontMsgOut::PlayerDiscon(player_id) => {
                     log::info!("Player disconnected! --------------------");
-                    self.data_store.disconnect_player(player_id);
+                    // breaking Put in 'disconnect' server event, and insert blank inputs up to that point.
                 }
                 NetHubFrontMsgOut::NewMsg(msg, player_id) => {
                     match msg{
+                        // breaking - create and handle the 'I've downloaded' event.
                         ExternalMsg::ConnectionInitQuery(response) => {
                             log::info!("Received initialization request for player with ID: {}", player_id);
-                            let response = ExternalMsg::ConnectionInitResponse(self.gen_init_info(player_id));
-                            self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
+                            self.send_init_info(player_id);
                         },
                         ExternalMsg::GameUpdate(update_info) => {
-                            log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.data_owner, update_info.input_data.frame_offset, update_info.input_data.frame_offset + update_info.input_data.data.len() - 1);
-                            self.data_store.write_owned_data(update_info.clone());
-                            self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
+                            //log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.data_owner, update_info.input_data.frame_offset, update_info.input_data.frame_offset + update_info.input_data.data.len() - 1);
+                            self.data_store.write_data(update_info);
+                            // Distribution will happen in net layer for fasttrax.
+                            // breaking self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                         },
                         ExternalMsg::InputQuery(query) => {
                             let owned_data = self.data_store.fulfill_query(&query);
-                            if owned_data.input_data.data.len() > 0{
-                                self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
-                            }
+                            // optimum - don't send empty stuff.
+                            self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
                         },
                         _ => {
                             panic!("Unexpected message");
@@ -97,18 +96,42 @@ impl ServerMainStateEx {
             }
         }
     }
-    fn gen_init_info(&self, player_id: PlayerID) -> NetMsgGreetingResponse {
+    // breaking - write.
+    fn send_init_info(&self, player_id: PlayerID) -> NetMsgGreetingResponse {
         let game_state = self.seg_logic_tail.tail_lock.read().unwrap().clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
 
         let existing_players = self.data_store.get_player_list(game_state.get_simmed_frame_index());
 
-        NetMsgGreetingResponse {
+        let msg = NetMsgGreetingResponse {
             assigned_player_id: player_id,
             known_frame: self.known_frame_zero.clone(),
             game_state,
             players_in_state: existing_players
+        };
+        let response = ExternalMsg::ConnectionInitResponse(self.gen_init_info(player_id));
+        self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
+    }
+    pub fn main_loop(mut self){
+        let frame_timer = self.known_frame_zero.start_frame_stream_from_now();
+
+        loop{
+            let current_sim_frame = frame_timer.recv().unwrap();
+
+            self.update_net_rec();
+            if let Err(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data_store, current_sim_frame){
+                for missing_data in missing_datas{
+                    if let Player(player_id) = missing_data.query_type{
+                        // breaking: Pass to missing data handler.
+                    }else{
+                        panic!("Why did server be missing server events information?")
+                    }
+                }
+            }
+
+
         }
     }
+
 }
 
 
@@ -121,10 +144,3 @@ pub fn server_main(hosting_ip: String){
 
     log::info!("Server finished.");
 }
-
-
-
-
-
-
-

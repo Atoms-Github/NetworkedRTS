@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 
 pub use crate::netcode::common::sim_data::input_state::InputState;
 pub use crate::netcode::common::sim_data::input_state::ConnStatusChangeType;
+use crate::netcode::netcode_types::ServerEvents;
 
 mod server;
 mod client;
@@ -14,7 +15,8 @@ mod netcode_types;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InfoForSim {
-    pub inputs_map: HashMap<PlayerID, InputState>
+    pub inputs_map: HashMap<PlayerID, InputState>,
+    pub server_events: ServerEvents
 }
 
 
