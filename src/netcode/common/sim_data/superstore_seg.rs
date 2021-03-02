@@ -45,6 +45,9 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
     pub fn get_last(&self) -> Option<&T>{
         return self.data.last();
     }
+    pub fn get_next_empty_frame(&self) -> FrameIndex{
+        return self.data.len() + self.frame_offset;
+    }
     pub fn clone_block(&self, first_frame_index: FrameIndex, block_size: usize) -> Vec<T>{
         let mut query_response = vec![];
 
@@ -61,7 +64,6 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
         return query_response;
     }
     pub fn write_data(&mut self, new_data: SuperstoreData<T>){
-
         // If new's first frame is in existing data, or the next new frame.
         if new_data.frame_offset >= self.frame_offset && new_data.frame_offset <= 1 + self.frame_offset + self.data.len(){
             for (new_relative_index, new_item) in new_data.data.into_iter().enumerate(){

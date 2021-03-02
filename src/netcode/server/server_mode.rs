@@ -15,12 +15,15 @@ use crate::netcode::server::net_hub_front_seg::*;
 use crate::netcode::*;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 use crate::netcode::common::sim_data::sim_data_storage::SimDataOwner::Player;
+use crate::netcode::server::logic_req_handler::SeverMissingDataHandler;
+use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
     data_store: SimDataStorage,
     seg_logic_tail: LogicSimTailer,
-    known_frame_zero: KnownFrameInfo
+    known_frame_zero: KnownFrameInfo,
+    missing_data_handler: SeverMissingDataHandler,
 }
 
 
@@ -57,6 +60,7 @@ impl ServerMainStateIn {
             data_store: seg_data_store,
             seg_logic_tail,
             known_frame_zero: self.known_frame,
+            missing_data_handler: SeverMissingDataHandler::new(seg_net_hub.down_sink.clone()),
         }
     }
 
@@ -72,16 +76,18 @@ impl ServerMainStateEx {
                 }
                 NetHubFrontMsgOut::NewMsg(msg, player_id) => {
                     match msg{
-                        // breaking - create and handle the 'I've downloaded' event.
                         ExternalMsg::ConnectionInitQuery(response) => {
                             log::info!("Received initialization request for player with ID: {}", player_id);
                             self.send_init_info(player_id);
                         },
+                        ExternalMsg::WorldDownloaded() => {
+                            self.data_store.init_player_next_space_server(player_id);
+                        },
                         ExternalMsg::GameUpdate(update_info) => {
                             //log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.data_owner, update_info.input_data.frame_offset, update_info.input_data.frame_offset + update_info.input_data.data.len() - 1);
-                            self.data_store.write_data(update_info);
-                            // Distribution will happen in net layer for fasttrax.
-                            // breaking self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
+                            self.data_store.write_data(update_info.clone());
+                            // Optimum Distribution should happen in net layer for fasttrax.
+                            self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                         },
                         ExternalMsg::InputQuery(query) => {
                             let owned_data = self.data_store.fulfill_query(&query);
@@ -106,7 +112,6 @@ impl ServerMainStateEx {
             assigned_player_id: player_id,
             known_frame: self.known_frame_zero.clone(),
             game_state,
-            players_in_state: existing_players
         };
         let response = ExternalMsg::ConnectionInitResponse(self.gen_init_info(player_id));
         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
@@ -119,16 +124,8 @@ impl ServerMainStateEx {
 
             self.update_net_rec();
             if let Err(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data_store, current_sim_frame){
-                for missing_data in missing_datas{
-                    if let Player(player_id) = missing_data.query_type{
-                        // breaking: Pass to missing data handler.
-                    }else{
-                        panic!("Why did server be missing server events information?")
-                    }
-                }
+                self.missing_data_handler.handle_requests(missing_datas);
             }
-
-
         }
     }
 

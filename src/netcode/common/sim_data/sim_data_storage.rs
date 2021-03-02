@@ -89,6 +89,9 @@ impl SimDataStorage {
             frame_offset: frame_index
         }, player_id);
     }
+    pub fn get_next_empty_server_events_frame(&self) -> FrameIndex{
+        return self.server_events.get_next_empty_frame();
+    }
     pub fn fulfill_query(&self, query: &SimDataQuery) -> SimDataPackage {
         match query.query_type{
             SimDataOwner::Server => {
@@ -105,7 +108,16 @@ impl SimDataStorage {
                 }, player_id)
             }
         }
+    }
+    pub fn init_player_next_space_server(&mut self, player_id: PlayerID){
+        let player_init_frame = self.get_next_empty_server_events_frame();
+        log::info!("Player {} has downloaded world. Initing them on frame {}", player_id, player_init_frame);
 
+        let new_data = SimDataPackage::ServerEvents(SuperstoreData{
+            data: vec![vec![ServerEvent::JoinPlayer(player_id)]],
+            frame_offset: player_init_frame
+        });
+        self.write_data(new_data);
     }
 }
 

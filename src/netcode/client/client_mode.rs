@@ -118,8 +118,7 @@ struct ClientEx{
     seg_hasher: HasherEx,
 }
 impl ClientEx{
-
-    fn update_net_rec(&mut self){
+    fn update_net_rec(&mut self, connected_client : &mut ConnectedClient){
         while let Ok(item) = connected_client.seg_connect_net.net_rec.unwrap().try_recv(){
             match item{
                 ExternalMsg::GameUpdate(update) => {
@@ -147,13 +146,7 @@ impl ClientEx{
         }
     }
     fn post_interesting(mut self, connected_client: ConnectedClient, my_init_frame: FrameIndex){
-        // breaking: Send 'I'm me!' Message.
-        // breaking: Then send 'I've downloaded!' message. So server sends memes.
-        let init_me_msg = self.gen_init_me_msgs(my_init_frame, connected_client.welcome_info.assigned_player_id);
-        connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(init_me_msg.clone()),true)).unwrap();
-        self.seg_data_storage.write_owned_data(init_me_msg);
-
-
+        connected_client.seg_connect_net.net_sink.send((ExternalMsg::WorldDownloaded(), true)).unwrap();
 
         let frame_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_now();
         loop{

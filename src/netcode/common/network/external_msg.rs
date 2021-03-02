@@ -22,6 +22,7 @@ pub enum ExternalMsg {
     ConnectionInitResponse(NetMsgGreetingResponse),
     NewHash(FramedHash),
     GameUpdate(SimDataPackage),
+    WorldDownloaded(),
     InputQuery(SimDataQuery),
     PingTestQuery(SystemTime),
     PingTestResponse(NetMsgPingTestResponse),

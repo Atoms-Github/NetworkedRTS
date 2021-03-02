@@ -1,53 +1,39 @@
 use std::time::SystemTime;
 use crossbeam_channel::{Receiver, Sender};
-use crate::netcode::common::sim_data::sim_data_storage::SimDataQuery;
+use crate::netcode::common::sim_data::sim_data_storage::{SimDataQuery, SimDataOwner};
 use crate::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
 use std::thread;
 use crate::netcode::common::network::external_msg::ExternalMsg;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 
-// breaking: Rename to 'servermissingdatahandler'.
-// breaking: Implement
-pub struct LogicReqHandlerIn {
+// TODO1: Implement
+pub struct SeverMissingDataHandler {
     waiting_on: PlayerID,
     waiting_since: SystemTime,
     is_waiting: bool,
-    server_logic_reqs_rc: Receiver<SimDataQuery>,
     net_manager_tx: Sender<NetHubFrontMsgIn>,
 }
-
-
-impl LogicReqHandlerIn {
-    fn start_thread(self){
-        thread::spawn(move ||{
-            loop{
-                let request = self.server_logic_reqs_rc.recv().unwrap();
-                let target = request.player_id;
-                self.net_manager_tx.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::InputQuery(request), target, false)).unwrap();
+impl SeverMissingDataHandler {
+    pub fn handle_requests(&mut self, requests : Vec<SimDataQuery>){
+        for request in requests{
+            match request.query_type{
+                SimDataOwner::Server => {
+                    panic!("How can server be waiting for server events?");
+                }
+                SimDataOwner::Player(player_id) => {
+                    self.net_manager_tx.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::InputQuery(request), player_id, false)).unwrap();
+                }
             }
-        });
-    }
-}
-pub struct LogicReqHandlerEx{
-
-}
-impl LogicReqHandlerEx{
-    pub fn start(server_logic_reqs_rc: Receiver<SimDataQuery>, kick_msgs_tx: Sender<NetHubFrontMsgIn>) -> Self{
-        LogicReqHandlerIn{
-            waiting_on: 0,
-            waiting_since: SystemTime::now(),
-            is_waiting: false,
-            server_logic_reqs_rc,
-            net_manager_tx: kick_msgs_tx
-        }.start_thread();
-        LogicReqHandlerEx{
 
         }
     }
+    pub fn new(kick_msgs_tx: Sender<NetHubFrontMsgIn>) -> Self{
+        SeverMissingDataHandler {
+            waiting_on: 0,
+            waiting_since: SystemTime::now(),
+            is_waiting: false,
+            net_manager_tx: kick_msgs_tx
+        }
+    }
 }
-
-
-
-
-
