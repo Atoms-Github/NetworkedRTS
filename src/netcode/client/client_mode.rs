@@ -10,7 +10,6 @@ use crate::netcode::common::logic::logic_sim_tailer_seg::*;
 use crate::netcode::common::network::external_msg::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::sim_data::sim_data_storage::*;
-use crate::netcode::common::logic::hash_seg::*;
 use crate::netcode::common::time::scheduler_segment::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::common::sim_data::superstore_seg::*;
@@ -85,10 +84,10 @@ impl ConnectedClient{
         let seg_data_storage = SimDataStorage::new(welcome_info.game_state.get_simmed_frame_index() + 1);
         let seg_hasher = HasherEx::new();
         let seg_scheduler = SchedulerSegEx::start(welcome_info.known_frame.clone());
-        let mut seg_logic_tailer = LogicSimTailerEx::start(welcome_info.known_frame.clone(), welcome_info.game_state, seg_data_storage.clone());
+        let mut seg_logic_tailer = LogicSimTailer::new(welcome_info.game_state, welcome_info.known_frame.clone());
 
         // Send local logic hashes. TODO2: move to interesting?
-        seg_hasher.link_hash_stream(seg_logic_tailer.new_tail_hashes.take().unwrap());
+        // breaking implement hashes        seg_hasher.link_hash_stream(seg_logic_tailer.new_tail_hashes.take().unwrap());
         let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone(), seg_logic_tailer.new_tail_states_rec.take().unwrap(), seg_data_storage.clone());
         let seg_graphical = GraphicalEx::start(seg_logic_header.head_rec.take().unwrap(), welcome_info.assigned_player_id);
         let seg_input_dist = InputHandlerEx::start(
@@ -137,7 +136,7 @@ impl ClientEx{
                     // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
                 }
                 ExternalMsg::NewHash(framed_hash) => {
-                    self.seg_hasher.add_hash(framed_hash);
+                    self.seg_logic_tailer.check_hash(framed_hash);
                 },
                 _ => {
                     panic!("Client shouldn't be getting a message of this type (or at this time)!")
@@ -145,26 +144,22 @@ impl ClientEx{
             }
         }
     }
-    fn post_interesting(mut self, connected_client: ConnectedClient, my_init_frame: FrameIndex){
+    fn post_interesting(mut self, mut connected_client: ConnectedClient, my_init_frame: FrameIndex){
         connected_client.seg_connect_net.net_sink.send((ExternalMsg::WorldDownloaded(), true)).unwrap();
 
         let frame_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_now();
         loop{
             let current_frame = frame_syncer.recv().unwrap();
 
-            self.update_net_rec();
+            self.update_net_rec(&mut connected_client);
 
 
             if let Err(missing_datas) = self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, current_frame){
                 for missing_data in missing_datas{
+                    // TODO1 - save up a bit, jees.
                     connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
                 }
             }
-
-            let head_sim_info = HeadSimPacket {
-                game_state: self.seg_logic_tailer.game_state.clone(),
-                sim_data: vec![]
-            };
 
             self.seg_logic_header.send_head_state(self.seg_logic_tailer.game_state.clone(), &self.seg_data_storage);
         }

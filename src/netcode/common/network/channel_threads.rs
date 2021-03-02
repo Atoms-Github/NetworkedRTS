@@ -11,7 +11,7 @@ use crate::netcode::common::logic::logic_sim_tailer_seg::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::common::sim_data::sim_data_storage::*;
 use std::intrinsics::add_with_overflow;
-use crate::netcode::common::logic::hash_seg::FramedHash;
+use crate::netcode::common::logic::logic_sim_tailer_seg::FramedHash;
 use crossbeam_channel::*;
 use crate::netcode::common::utils::util_functions::gen_fake_address;
 use crate::netcode::common::network::external_msg::ExternalMsg;

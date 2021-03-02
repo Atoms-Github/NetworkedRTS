@@ -109,13 +109,14 @@ impl SimDataStorage {
             }
         }
     }
-    pub fn init_player_next_space_server(&mut self, player_id: PlayerID){
-        let player_init_frame = self.get_next_empty_server_events_frame();
-        log::info!("Player {} has downloaded world. Initing them on frame {}", player_id, player_init_frame);
+    pub fn schedule_server_event(&mut self, server_event: ServerEvent){
+        let event_frame = self.get_next_empty_server_events_frame();
+
+        log::info!("Server scheduled a new server event on frame {}! {:?}", event_frame, server_event);
 
         let new_data = SimDataPackage::ServerEvents(SuperstoreData{
-            data: vec![vec![ServerEvent::JoinPlayer(player_id)]],
-            frame_offset: player_init_frame
+            data: vec![vec![server_event]],
+            frame_offset: event_frame
         });
         self.write_data(new_data);
     }

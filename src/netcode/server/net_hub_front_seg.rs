@@ -13,7 +13,7 @@ use std::borrow::Borrow;
 use crossbeam_channel::{unbounded, Select};
 use crossbeam_channel::Sender;
 use crossbeam_channel::Receiver;
-use crate::netcode::common::logic::hash_seg::FramedHash;
+use crate::netcode::common::logic::logic_sim_tailer_seg::FramedHash;
 use crate::netcode::server::net_hub_back_not_seg::{NetHubBackIn, NetHubBackMsgOut, NetHubBackMsgIn};
 
 pub struct NetworkingHubEx {
