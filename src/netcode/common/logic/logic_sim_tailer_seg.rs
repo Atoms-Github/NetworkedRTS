@@ -25,31 +25,39 @@ impl LogicSimTailer{
     pub fn new(game_state: NetGameState, known_frame: KnownFrameInfo) -> Self{
         Self{
             game_state,
-            known_frame
+            known_frame,
+            hashes: Default::default()
         }
     }
     fn get_info_for_sim(&mut self, data_store: &SimDataStorage, frame_to_sim: FrameIndex) -> Result<InfoForSim, Vec<SimDataQuery>>{
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         let mut problems = vec![];
 
-        for (player_id, player_property) in self.game_state.players{
-            if let Some(input_state) = data_store.get_input(frame_to_sim, player_id){
-                player_inputs.insert(*player_id, state);
+        for (player_id, player_property) in &self.game_state.players{
+            if let Some(input_state) = data_store.get_input(frame_to_sim, *player_id){
+                player_inputs.insert(*player_id, input_state.clone());
             }else{
                 problems.push(SimDataQuery {
-                    query_type: SimDataOwner::Player(),
-                    frame_offset: frame_index,
-                    player_id: waiting_id
+                    query_type: SimDataOwner::Player(*player_id),
+                    frame_offset: frame_to_sim,
                 });
             }
         }
-        // breaking get server events too.
+
+        let server_events = data_store.get_server_events(frame_to_sim);
+        if server_events.is_none(){
+            problems.push(SimDataQuery{
+                query_type : SimDataOwner::Server,
+                frame_offset : frame_to_sim,
+            })
+        }
 
         if !problems.is_empty(){
             return Err(problems);
         }
         return Ok(InfoForSim{
-            inputs_map: player_inputs
+            inputs_map: player_inputs,
+            server_events: server_events.unwrap().clone()
         });
     }
     fn update_hash(&mut self){

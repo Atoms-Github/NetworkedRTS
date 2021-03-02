@@ -40,23 +40,27 @@ pub enum SimDataPackage{
 pub struct SimDataStorage {
     player_inputs: HashMap<PlayerID, Superstore<InputState>>,
     server_events: Superstore<ServerEvents>,
-    first_frame: FrameIndex,
 }
 impl SimDataStorage {
     pub fn new(first_frame_to_store: FrameIndex) -> Self {
         let mut storage = Self {
             player_inputs: Default::default(),
             server_events: Superstore::new(first_frame_to_store),
-            first_frame: first_frame_to_store
         };
         storage
     }
 
-    fn get_player_superstore(&mut self, player_id: PlayerID) -> &Superstore<InputState>{
+    fn get_player_superstore(&mut self, player_id: PlayerID, first_frame_if_no_exist: FrameIndex) -> &Superstore<InputState>{
         if !self.player_inputs.contains_key(&player_id){
-            self.player_inputs.insert(player_id, Superstore::new(self.first_frame));
+            self.player_inputs.insert(player_id, Superstore::new(first_frame_if_no_exist));
         }
         return self.player_inputs.get(&player_id).unwrap();
+    }
+    fn get_player_superstore_mut(&mut self, player_id: PlayerID, first_frame_if_no_exist: FrameIndex) -> &mut Superstore<InputState>{
+        if !self.player_inputs.contains_key(&player_id){
+            self.player_inputs.insert(player_id, Superstore::new(first_frame_if_no_exist));
+        }
+        return self.player_inputs.get_mut(&player_id).unwrap();
     }
     pub fn get_input(&self, frame_index: FrameIndex, player_id: PlayerID) -> Option<&InputState>{
         if let Some(superstore) = self.player_inputs.get(&player_id){
@@ -76,18 +80,22 @@ impl SimDataStorage {
     pub fn write_data(&mut self, data: SimDataPackage){
         match data{
             SimDataPackage::PlayerInputs(data, player_id) => {
-                self.get_player_superstore(player_id).write_data(data);
+                self.get_player_superstore_mut(player_id, data.frame_offset).write_data(data);
             }
             SimDataPackage::ServerEvents(data) => {
                 self.server_events.write_data(data);
             }
         }
     }
-    pub fn write_input_data_single(&self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
+    pub fn server_blanks_up_to(&mut self, last_to_include: FrameIndex){
+        
+    }
+    pub fn write_input_data_single(&mut self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
         let package = SimDataPackage::PlayerInputs(SuperstoreData{
             data: vec![state],
             frame_offset: frame_index
         }, player_id);
+        self.write_data(package);
     }
     pub fn get_next_empty_server_events_frame(&self) -> FrameIndex{
         return self.server_events.get_next_empty_frame();
@@ -109,16 +117,28 @@ impl SimDataStorage {
             }
         }
     }
-    pub fn schedule_server_event(&mut self, server_event: ServerEvent){
+    pub fn schedule_server_event(&mut self, server_event: ServerEvent) -> FrameIndex{
         let event_frame = self.get_next_empty_server_events_frame();
 
         log::info!("Server scheduled a new server event on frame {}! {:?}", event_frame, server_event);
 
-        let new_data = SimDataPackage::ServerEvents(SuperstoreData{
-            data: vec![vec![server_event]],
+        let events_on_frame = vec![server_event];
+        let data = SuperstoreData{
+            data: vec![events_on_frame],
             frame_offset: event_frame
-        });
-        self.write_data(new_data);
+        };
+        let package = SimDataPackage::ServerEvents(data);
+        self.write_data(package);
+        return event_frame;
+    }
+    pub fn server_boot_player(&mut self, player_id: PlayerID, tail_last_simmed: FrameIndex){
+        let frame_booted = self.schedule_server_event(ServerEvent::DisconnectPlayer(player_id));
+        let frame_to_fill_from= self.get_player_superstore(player_id, tail_last_simmed).get_next_empty_frame();
+
+        // Now to fill up that player's inputs with garbo.
+        for frame_index in frame_to_fill_from..(frame_booted + 1){
+            self.write_input_data_single(player_id, InputState::new(), frame_index)
+        }
     }
 }
 

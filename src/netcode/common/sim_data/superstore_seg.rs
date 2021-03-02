@@ -82,7 +82,7 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
             self.data.drain(0..overlap_count);
 
         }else{
-            log::info!("Received data would make a gap. Ignoring."); // Can change the 'info' to 'trace'.
+            panic!("Known issue #1. Somehow recieved late player data, then early player data with at least a 20 gap in-between. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
         }
     }
 

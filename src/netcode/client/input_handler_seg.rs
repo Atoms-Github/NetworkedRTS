@@ -10,40 +10,24 @@ use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
+use crate::netcode::common::network::external_msg::ExternalMsg;
+use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
 
-pub struct InputHandlerEx {
-//    inputs_stream_state: Receiver<InputChange>,
-//    to_logic: Sender<LogicInwardsMessage>,
-//    known_frame: KnownFrameInfo,
-//    player_id: PlayerID
-}
-impl InputHandlerEx {
-    pub fn start(known_frame: KnownFrameInfo, player_id: PlayerID, first_frame_to_send: FrameIndex,
-                 inputs_stream: Receiver<InputChange>, sim_data_storage: SimDataStorage,) -> InputHandlerEx {
-        InputHandlerIn {
-            known_frame,
-            player_id,
-            sim_data_storage,
-            inputs_stream,
-            curret_input: InputState::new(),
-            next_frame_to_send: first_frame_to_send,
-            inputs_arriving_for_frame: std::usize::MAX
-        }.start()
-    }
-}
-#[derive()]
-pub struct InputHandlerIn {
-    known_frame: KnownFrameInfo,
+pub struct InputHandler {
     player_id: PlayerID,
-    sim_data_storage: SimDataStorage,
     inputs_stream: Receiver<InputChange>,
     curret_input: InputState,
-    next_frame_to_send: FrameIndex,
-    inputs_arriving_for_frame: FrameIndex,
+    to_net: Sender<(ExternalMsg,bool)>
 }
-impl InputHandlerIn {
-    // This segment's job is to get the user's inputs and just send them on to the data storage.
-
+impl InputHandler {
+    pub fn new(player_id: PlayerID, inputs_stream: Receiver<InputChange>, to_net: Sender<(ExternalMsg,bool)>) -> Self{
+        Self{
+            player_id,
+            inputs_stream,
+            curret_input: InputState::new(),
+            to_net
+        }
+    }
     fn apply_input_changes(&mut self){
         loop{
             let mut next_input = self.inputs_stream.try_recv();
@@ -57,27 +41,15 @@ impl InputHandlerIn {
             }
         }
     }
-    // dcwct Also no need for delaying initialization of this system - it needs to accurately know itself which frames to send anyway.
-    pub fn start(mut self) -> InputHandlerEx{
-        thread::spawn(move ||{
-            let frame_gen = self.known_frame.start_frame_stream_from_now();
-            loop{
-                let tail_frame = frame_gen.recv().unwrap();
-                let head_frame = tail_frame + HEAD_AHEAD_FRAME_COUNT;
-                if head_frame == self.next_frame_to_send{
-                    // 1. Apply any inputs.
-                    self.apply_input_changes();
-                    // 2. Send it off.
-                    log::trace!("Sending local input for frame: {}", head_frame);
-                    self.sim_data_storage.write_input_data_single(self.player_id, self.curret_input.clone(), head_frame);
-                    // 3. Increment next_frame_to_send.
-                    self.next_frame_to_send += 1;
-                }
-            }
+    pub fn update(&mut self, data_store: &mut SimDataStorage, inputs_arriving_for_frame: FrameIndex){
+        self.apply_input_changes();
+        data_store.write_input_data_single(self.player_id, self.curret_input.clone(), inputs_arriving_for_frame);
 
-        });
-        InputHandlerEx{}
+        let data = SuperstoreData{
+            data: vec![self.curret_input.clone()],
+            frame_offset: inputs_arriving_for_frame
+        };
+        self.to_net.send((ExternalMsg::GameUpdate(SimDataPackage::PlayerInputs(data, self.player_id)), false)).unwrap();
     }
 }
-
 

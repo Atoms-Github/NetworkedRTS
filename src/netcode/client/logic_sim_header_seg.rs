@@ -8,6 +8,7 @@ use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
+use std::sync::mpsc::channel;
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
@@ -19,18 +20,18 @@ pub struct HeadSimPacket{
 pub struct LogicSimHeaderIn {
     known_frame_info: KnownFrameInfo,
     head_sim_packets_rec: Receiver<HeadSimPacket>,
-    data_store: SimDataStorage,
 }
 pub struct LogicSimHeaderEx {
-    pub new_head_states: Sender<HeadSimPacket>,
+    pub uncalculated_heads: Sender<HeadSimPacket>,
+    pub calculated_heads: Option<Receiver<NetGameState>>
 }
 impl LogicSimHeaderEx{
-    pub fn start(known_frame_info: KnownFrameInfo, head_sim_packets_rec: Receiver<HeadSimPacket>, data_store: SimDataStorage) -> Self {
+    pub fn start(known_frame_info: KnownFrameInfo) -> Self {
+        let (head_sim_packets_tx, head_sim_packets_rec) = unbounded();
         LogicSimHeaderIn {
             known_frame_info,
-            data_store,
-            head_sim_packets_rec
-        }.start()
+            head_sim_packets_rec,
+        }.start(head_sim_packets_tx)
     }
     pub fn get_head_sim_data(&self, data_store: &SimDataStorage, first_frame_to_include : FrameIndex) -> Vec<InfoForSim>{
         let mut sim_infos = vec![];
@@ -41,7 +42,7 @@ impl LogicSimHeaderEx{
             };
             for player_id in data_store.get_player_list(){
                 if let Some(input_state) = data_store.get_input(frame_index, player_id){
-                    sim_info.inputs_map.insert(player_id, input_state);
+                    sim_info.inputs_map.insert(player_id, input_state.clone());
                 }
             }
 
@@ -50,16 +51,17 @@ impl LogicSimHeaderEx{
         return sim_infos;
     }
     pub fn send_head_state(&mut self, gamestate: NetGameState, data_store: &SimDataStorage){
+        let sim_data = self.get_head_sim_data(data_store, gamestate.get_simmed_frame_index() + 1);
         let head_packet = HeadSimPacket{
             game_state: gamestate,
-            sim_data: self.get_head_sim_data(data_store, gamestate.get_simmed_frame_index() + 1)
+            sim_data
         };
-        self.new_head_states.send(head_packet).unwrap();
+        self.uncalculated_heads.send(head_packet).unwrap();
     }
 }
 
 impl LogicSimHeaderIn {
-    pub fn start(mut self) -> LogicSimHeaderEx{
+    pub fn start(mut self, new_head_states: Sender<HeadSimPacket>) -> LogicSimHeaderEx{
         let (mut head_sink, mut head_rec) = unbounded();
         thread::spawn(move ||{
             loop{
@@ -73,7 +75,8 @@ impl LogicSimHeaderIn {
         });
 
         LogicSimHeaderEx{
-            new_head_states: head_rec
+            uncalculated_heads: new_head_states,
+            calculated_heads : Some(head_rec)
         }
     }
     fn calculate_new_head(&mut self, mut sim_packet: HeadSimPacket) -> NetGameState {

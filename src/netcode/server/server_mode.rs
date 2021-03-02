@@ -17,6 +17,8 @@ use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGam
 use crate::netcode::common::sim_data::sim_data_storage::SimDataOwner::Player;
 use crate::netcode::server::logic_req_handler::SeverMissingDataHandler;
 use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
+use crate::gamecode::GameState;
+use crate::netcode::client::logic_sim_header_seg::HEAD_AHEAD_FRAME_COUNT;
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
@@ -45,22 +47,15 @@ impl ServerMainStateIn {
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = NetworkingHubEx::start(self.hosting_ip.clone());
         let seg_data_store = SimDataStorage::new(0);
-        let mut seg_logic_tail = LogicSimTailer::start(self.known_frame.clone(), self.init_state(), seg_data_store.clone());
-        let hash_rec = seg_logic_tail.new_tail_hashes.take().unwrap(); // dans_game.
-        let hash_net_tx = seg_net_hub.down_sink.clone();
-        thread::spawn(move ||{
-            loop{
-                let framed_hash = hash_rec.recv().unwrap();
-                //hash_net_tx.send(NetHubFrontMsgIn::MsgToAll(ExternalMsg::NewHash(framed_hash), false)).unwrap();
-            }
-        });
+        let mut seg_logic_tail = LogicSimTailer::new(self.init_state(), self.known_frame.clone());
+        let missing_data_kick_msg_tx = seg_net_hub.down_sink.clone();
 
         ServerMainStateEx {
             seg_net_hub,
             data_store: seg_data_store,
             seg_logic_tail,
             known_frame_zero: self.known_frame,
-            missing_data_handler: SeverMissingDataHandler::new(seg_net_hub.down_sink.clone()),
+            missing_data_handler: SeverMissingDataHandler::new(missing_data_kick_msg_tx),
         }
     }
 
@@ -71,8 +66,7 @@ impl ServerMainStateEx {
             NetHubFrontMsgOut::NewPlayer(player_id) => {}
             NetHubFrontMsgOut::PlayerDiscon(player_id) => {
                 log::info!("Player disconnected! --------------------");
-                // breaking Put in 'disconnect' server event, and insert blank inputs up to that point.
-                self.data_store.schedule_server_event(ServerEvent::DisconnectPlayer(player_id));
+                self.data_store.server_boot_player(player_id, self.seg_logic_tail.game_state.get_simmed_frame_index());
 
             }
             NetHubFrontMsgOut::NewMsg(msg, player_id) => {
@@ -111,21 +105,29 @@ impl ServerMainStateEx {
             }
         }
     }
+    fn distrubute_state_hash(&mut self){
+        let game_state = &self.seg_logic_tail.game_state;
+        self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAll(ExternalMsg::NewHash(FramedHash{
+            frame: game_state.get_simmed_frame_index(),
+            hash: game_state.get_hash()
+        }), false)).unwrap();
+    }
     pub fn main_loop(mut self){
         let frame_timer = self.known_frame_zero.start_frame_stream_from_now();
-
         loop{
             let current_sim_frame = frame_timer.recv().unwrap();
 
             while let Ok(net_event) = self.seg_net_hub.up_rec.try_recv(){
                 self.handle_net_msg(net_event);
             }
+            
             if let Err(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data_store, current_sim_frame){
                 self.missing_data_handler.handle_requests(missing_datas);
             }
+            self.distrubute_state_hash();
+
         }
     }
-
 }
 
 

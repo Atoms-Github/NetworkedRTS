@@ -121,3 +121,11 @@ fn main() {
 // fn test4(){
 //     crate::client::connect_net_seg::connect_tests::crash_on_connect();
 // }
+
+
+// knownissue client can get in 'requesting things' stuck phase.
+// If it requests things far behind the input list's range, when it learns of this data, it won't save it.
+// Fixable by:
+// a. Make the input list a large hashmap (slow).
+// b. Making the list all option<T>, (slow + whack).
+// c. Something super whack (whack + whack).
