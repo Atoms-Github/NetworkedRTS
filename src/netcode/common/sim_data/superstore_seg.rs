@@ -73,7 +73,7 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
             }
         }
         // If new data is behind existing data, but no gap.
-        else if new_data.frame_offset + new_data.data.len() >= self.data.len(){
+        else if new_data.frame_offset + new_data.data.len() >= self.frame_offset{
             let number_behind_count = self.frame_offset - new_data.frame_offset;
             let overlap_count = new_data.frame_offset + new_data.data.len() - self.frame_offset;
 

@@ -19,6 +19,7 @@ use crate::netcode::server::logic_req_handler::SeverMissingDataHandler;
 use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
 use crate::gamecode::GameState;
 use crate::netcode::client::logic_sim_header_seg::HEAD_AHEAD_FRAME_COUNT;
+use crate::netcode::server::server_event_distributor::ServerEventDistributor;
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
@@ -26,6 +27,7 @@ pub struct ServerMainStateEx {
     seg_logic_tail: LogicSimTailer,
     known_frame_zero: KnownFrameInfo,
     missing_data_handler: SeverMissingDataHandler,
+    event_distributor: ServerEventDistributor
 }
 
 
@@ -50,12 +52,15 @@ impl ServerMainStateIn {
         let mut seg_logic_tail = LogicSimTailer::new(self.init_state(), self.known_frame.clone());
         let missing_data_kick_msg_tx = seg_net_hub.down_sink.clone();
 
+        let event_distributor = ServerEventDistributor::new(seg_net_hub.down_sink.clone());
+
         ServerMainStateEx {
             seg_net_hub,
             data_store: seg_data_store,
             seg_logic_tail,
             known_frame_zero: self.known_frame,
             missing_data_handler: SeverMissingDataHandler::new(missing_data_kick_msg_tx),
+            event_distributor
         }
     }
 
@@ -120,7 +125,8 @@ impl ServerMainStateEx {
             while let Ok(net_event) = self.seg_net_hub.up_rec.try_recv(){
                 self.handle_net_msg(net_event);
             }
-            
+
+            self.event_distributor.update(&mut self.data_store, self.seg_logic_tail.game_state.get_simmed_frame_index());
             if let Err(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data_store, current_sim_frame){
                 self.missing_data_handler.handle_requests(missing_datas);
             }
