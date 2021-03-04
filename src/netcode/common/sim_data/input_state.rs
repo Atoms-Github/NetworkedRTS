@@ -11,7 +11,6 @@ use crate::pub_types::*;
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
     pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird.
-    pub conn_status_update: ConnStatusChangeType,
     pub mouse_btns_pressed: HashSet<MouseButton>
 }
 
@@ -67,7 +66,6 @@ impl InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
             keys_pressed: HashSet::new(),
 //            keys_pressed: vec![false; 260]
-            conn_status_update: ConnStatusChangeType::Nothing,
             mouse_btns_pressed: Default::default()
         }
     }

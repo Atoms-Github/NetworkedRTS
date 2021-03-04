@@ -52,7 +52,7 @@ impl GameState {
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn init_new_player(&mut self, player_id: PlayerID){
+    pub fn player_connects(&mut self, player_id: PlayerID){
         let mut pending = PendingEntities::new();
 
         let mut pending_player = PendingEntity::new();
@@ -68,9 +68,10 @@ impl GameState {
         pending_pawn.add_component(RenderComp{ hue: (255, 150, 150)});
         pending.create_entity(pending_pawn);
 
-
-
         self.world.update_entities(&mut self.storages, pending);
+    }
+    pub fn player_disconnects(&mut self, player_id: PlayerID){
+
     }
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32, frame_index: FrameIndex){
         let mut pending = PendingEntities::new();

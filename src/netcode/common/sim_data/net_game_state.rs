@@ -6,6 +6,7 @@ use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
 use crate::netcode::{InfoForSim, ConnStatusChangeType};
 use std::hash::{Hash, Hasher};
+use crate::netcode::common::sim_data::sim_data_storage::ServerEvent;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct NetPlayerProperty{
@@ -47,14 +48,18 @@ impl NetGameState {
         return net_state;
     }
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32){
-        for (player_id, input) in &sim_info.inputs_map{
-            if input.conn_status_update == ConnStatusChangeType::Connecting{ // TODO: Temp. Will swap over for search for existing player object.
-                log::trace!("StateInitingNewPlayer {}", *player_id);
-                self.game_state.init_new_player(*player_id);
+        for server_event in &sim_info.server_events{
+            match server_event{
+                ServerEvent::JoinPlayer(player_id) => {
+                    self.game_state.player_connects(*player_id);
+                }
+                ServerEvent::DisconnectPlayer(player_id) => {
+                    self.game_state.player_disconnects(*player_id);
+                }
             }
         }
-        self.game_state.simulate_tick(sim_info, delta, self.simmed_frame_index);
 
+        self.game_state.simulate_tick(sim_info, delta, self.simmed_frame_index);
         self.simmed_frame_index += 1;
     }
     pub fn render(&mut self, ctx: &mut Context){

@@ -11,11 +11,11 @@ mod client;
 mod common;
 mod netcode_types;
 
-
+pub type PlayerInputs = HashMap<PlayerID, InputState>;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct InfoForSim {
-    pub inputs_map: HashMap<PlayerID, InputState>,
+    pub inputs_map: PlayerInputs,
     pub server_events: ServerEvents
 }
 
