@@ -29,6 +29,8 @@ pub struct Superstore<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'stat
 }
 
 
+
+
 impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>{
     pub fn new(first_frame_to_store: FrameIndex) -> Self{
         Self{
@@ -64,14 +66,20 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
         return query_response;
     }
     pub fn write_data(&mut self, new_data: SuperstoreData<T>){
+
+        if new_data.frame_offset > self.get_next_empty_frame() {
+            //panic!("Received player data for the future, so distant we can't handle it. Incoming data first frame: {}. We're waiting on frame {}", new_data.frame_offset, self.get_next_empty_frame());
+        }
         // If new's first frame is in existing data, or the next new frame.
-        if new_data.frame_offset >= self.frame_offset && new_data.frame_offset <= 1 + self.frame_offset + self.data.len(){
+        else if new_data.frame_offset >= self.frame_offset && new_data.frame_offset <= self.get_next_empty_frame(){
             for (new_relative_index, new_item) in new_data.data.into_iter().enumerate(){
                 let existing_relative_index = new_data.frame_offset + new_relative_index - self.frame_offset;
 
                 vec_replace_or_end(&mut self.data, existing_relative_index, new_item);
             }
         }
+
+        // Need if statement here!
         // If new data is behind existing data, but no gap.
         else if new_data.frame_offset + new_data.data.len() >= self.frame_offset{
             let number_behind_count = self.frame_offset - new_data.frame_offset;
