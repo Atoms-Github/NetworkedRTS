@@ -138,23 +138,46 @@ impl ClientEx{
     fn post_interesting(mut self, mut connected_client: ConnectedClient, my_init_frame: FrameIndex){
         connected_client.seg_connect_net.net_sink.send((ExternalMsg::WorldDownloaded(), true)).unwrap();
 
-        let frame_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_now();
+
+        let time_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_now();
+        // Since we're skipping time when player lags, this is the be all-end all generator.
+        // Our only aim in life is to keep pulling out of this, and simulate one per thing.
+        let frame_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_any(1 + self.seg_logic_tailer.game_state.get_simmed_frame_index());
         loop{
-            let current_frame = frame_syncer.recv().unwrap();
+            let _ = time_syncer.recv().unwrap();
+
+            let mut tail_progress_made = false;
 
             self.update_net_rec(&mut connected_client);
-            self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
+            for tail_attempt in 0..3{ // TODO2: A number depending on processing time.
+                let tail_to_sim = match frame_syncer.try_recv(){
+                    Ok(frame) => {frame}
+                    Err(error) => {
+                        break; // No more frames to try.
+                    }
+                };
+                self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
 
-            if let Some(missing_datas) = self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, current_frame){
-                for missing_data in missing_datas{
-                    // TODO1 - save up a bit, jees.
-                    log::info!("Client missing data: {:?}", missing_data);
-                    connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
+                match self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, tail_to_sim){
+                    Some(missing_datas) => {
+                        for missing_data in missing_datas{
+                            // TODO1 - save up a bit, jees.
+                            log::info!("Client missing data: {:?}", missing_data);
+                            connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
+                        }
+                    }
+                    None => {
+                        // Tail sim successful.
+                        tail_progress_made = true;
+                    }
                 }
             }
-
-            self.seg_logic_header.send_head_state(self.seg_logic_tailer.game_state.clone(), &self.seg_data_storage);
+            if tail_progress_made{
+                self.seg_logic_header.send_head_state(self.seg_logic_tailer.game_state.clone(), &self.seg_data_storage);
+            }
         }
+
+
     }
 }
 

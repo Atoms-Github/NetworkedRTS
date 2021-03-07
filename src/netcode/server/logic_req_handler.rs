@@ -18,7 +18,7 @@ pub struct SeverMissingDataHandler {
 impl SeverMissingDataHandler {
     pub fn handle_requests(&mut self, requests : Vec<SimDataQuery>){
         for request in requests{
-            log::info!("Server missing  {:?}", request);
+            log::info!("Server missing {:?}", request);
             match request.query_type{
                 SimDataOwner::Server => {
                     panic!("How can server be waiting for server events?");

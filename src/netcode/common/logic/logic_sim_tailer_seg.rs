@@ -90,13 +90,17 @@ impl LogicSimTailer{
             inputs_map: player_inputs,
             server_events
         };
+        if sim_data.server_events.len() > 0{
+            log::info!("Tail simming with server events: {:?}", sim_data.server_events);
+        }
         self.game_state.simulate_tick(sim_data, FRAME_DURATION_MILLIS);
+
         self.update_hash();
         return None;
     }
 
     pub fn catchup_simulation(&mut self, data_store: &SimDataStorage, sim_frame_up_to_and_including: FrameIndex) -> Option<Vec<SimDataQuery>>{
-        const MAX_FRAMES_CATCHUP : usize = 3; // modival
+        const MAX_FRAMES_CATCHUP : usize = 1; // modival. TODO1: Not really needed since where its called in client, and how it should be called in server.
         let first_frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
         let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP - 1);
 
