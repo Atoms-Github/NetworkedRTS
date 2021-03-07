@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use serde::*;
 
 use crate::gamecode::ecs::world::*;
@@ -20,6 +20,7 @@ use ggez::Context;
 pub struct GameState {
     pub world: World,
     pub storages: Storages,
+    pub player_names: BTreeMap<PlayerID, String>,
 
 }
 
@@ -38,6 +39,7 @@ impl GameState {
         GameState {
             world: World::new(),
             storages: Storages::new(),
+            player_names: Default::default()
         }
     }
     pub fn init(&mut self){
@@ -52,7 +54,7 @@ impl GameState {
 
         self.world.update_entities(&mut self.storages, pending);
     }
-    pub fn player_connects(&mut self, player_id: PlayerID){
+    pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let mut pending = PendingEntities::new();
 
         let mut pending_player = PendingEntity::new();
@@ -67,6 +69,8 @@ impl GameState {
         pending_pawn.add_component(WasdMoverComp { owner_id: player_id });
         pending_pawn.add_component(RenderComp{ hue: (255, 150, 150)});
         pending.create_entity(pending_pawn);
+
+        self.player_names.insert(player_id, username);
 
         self.world.update_entities(&mut self.storages, pending);
     }
@@ -90,6 +94,8 @@ impl GameState {
                              &mut self.storages.position_s,
                              &mut self.storages.render_s,
                              &mut self.storages.size_s,
+                             &mut self.storages.wasdmover_s,
+                             &self.player_names,
                              ctx);
     }
 }

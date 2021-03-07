@@ -15,7 +15,7 @@ use nalgebra::sup;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ServerEvent{
-    JoinPlayer(PlayerID),
+    JoinPlayer(PlayerID, String),
     DisconnectPlayer(PlayerID),
 }
 

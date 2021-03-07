@@ -22,11 +22,12 @@ pub enum ExternalMsg {
     ConnectionInitResponse(NetMsgGreetingResponse),
     NewHash(FramedHash),
     GameUpdate(SimDataPackage),
-    WorldDownloaded(),
+    WorldDownloaded(WorldDownloadedInfo),
     InputQuery(SimDataQuery),
     PingTestQuery(SystemTime),
     PingTestResponse(NetMsgPingTestResponse),
 }
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgPingTestResponse{
     pub client_time: SystemTime,
@@ -38,12 +39,14 @@ pub struct NetMsgPingTestResponse{
 pub struct LocalCommandInfo{
     pub command: String
 }
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WorldDownloadedInfo{
+    pub player_name: String
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgGreetingQuery {
-    pub my_player_name: String,
-    pub preferred_id: i32,
-    pub udp_port: u16,
+
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NetMsgGreetingResponse {

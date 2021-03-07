@@ -63,7 +63,6 @@ impl ServerMainStateIn {
             event_distributor
         }
     }
-
 }
 impl ServerMainStateEx {
     fn handle_net_msg(&mut self, net_event: NetHubFrontMsgOut){
@@ -89,8 +88,8 @@ impl ServerMainStateEx {
                         let response = ExternalMsg::ConnectionInitResponse(msg);
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
                     },
-                    ExternalMsg::WorldDownloaded() => {
-                        self.data_store.schedule_server_event(ServerEvent::JoinPlayer(player_id));
+                    ExternalMsg::WorldDownloaded(downloaded_info) => {
+                        self.data_store.schedule_server_event(ServerEvent::JoinPlayer(player_id, downloaded_info.player_name));
                     },
                     ExternalMsg::GameUpdate(update_info) => {
                         //log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.data_owner, update_info.input_data.frame_offset, update_info.input_data.frame_offset + update_info.input_data.data.len() - 1);

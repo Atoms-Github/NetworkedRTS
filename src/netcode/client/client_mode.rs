@@ -48,24 +48,22 @@ impl ClientApp{
 
         let mut seg_connect_net = ConnectNetEx::start(self.connection_ip.clone());
 
-        let my_details = NetMsgGreetingQuery {
-            my_player_name: self.player_name.to_string(),
-            preferred_id: 5,
-            udp_port: seg_connect_net.udp_port,
-        };
+        let greeting = NetMsgGreetingQuery {};
 
-        let mut welcome_info = seg_connect_net.get_synced_greeting(my_details);
+        let mut welcome_info = seg_connect_net.get_synced_greeting(greeting);
         log::info!("Downloaded game state which has simmed {}", welcome_info.game_state.get_simmed_frame_index());
 
         return ConnectedClient{
             welcome_info,
             seg_connect_net,
+            player_name: self.player_name.to_string()
         }
     }
 }
 struct ConnectedClient{
     welcome_info: NetMsgGreetingResponse,
     seg_connect_net: ConnectNetEx,
+    player_name: String,
 }
 impl ConnectedClient{
     pub fn start(mut self){
@@ -137,7 +135,10 @@ impl ClientEx{
         }
     }
     fn post_interesting(mut self, mut connected_client: ConnectedClient, my_init_frame: FrameIndex){
-        connected_client.seg_connect_net.net_sink.send((ExternalMsg::WorldDownloaded(), true)).unwrap();
+        let downloaded_msg = ExternalMsg::WorldDownloaded(WorldDownloadedInfo{
+            player_name: connected_client.player_name.clone()
+        });
+        connected_client.seg_connect_net.net_sink.send((downloaded_msg, true)).unwrap();
 
         let known_frame = connected_client.welcome_info.known_frame.clone();
 

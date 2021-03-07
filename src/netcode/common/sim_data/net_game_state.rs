@@ -24,7 +24,7 @@ impl NetGameState {
     fn get_net_property_mut(&mut self, player_id: &PlayerID) -> &mut NetPlayerProperty{
         if !self.players.contains_key(player_id){
             self.players.insert(*player_id, NetPlayerProperty{
-                waiting_on: false
+                waiting_on: false,
             });
         }
         return self.players.get_mut(&player_id).unwrap();
@@ -36,7 +36,7 @@ impl NetGameState {
                     let property = self.get_net_property_mut(player_id);
                     property.waiting_on = false;
                 }
-                ServerEvent::JoinPlayer(player_id) => {
+                ServerEvent::JoinPlayer(player_id, name) => {
                     let property = self.get_net_property_mut(player_id);
                     property.waiting_on = true;
 
@@ -83,9 +83,9 @@ impl NetGameState {
 
         for server_event in &sim_info.server_events{
             match server_event{
-                ServerEvent::JoinPlayer(player_id) => {
+                ServerEvent::JoinPlayer(player_id, name) => {
                     assert!(sim_info.inputs_map.contains_key(player_id), "Player connected, but didn't have input state for that frame. Frame {}", self.get_simmed_frame_index() + 1);
-                    self.game_state.player_connects(*player_id);
+                    self.game_state.player_connects(*player_id, (*name).clone());
                 }
                 ServerEvent::DisconnectPlayer(player_id) => {
                     self.game_state.player_disconnects(*player_id);
