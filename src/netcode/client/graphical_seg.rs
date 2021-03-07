@@ -62,6 +62,12 @@ impl GraphicalIn {
 
             let mut meme = self;
             event::run(ctx, events_loop, &mut meme).unwrap();
+
+            log::info!("Shutting down.");
+            println!("------------- ------------- -------------     ------------- ------------- -------------");
+            println!("------------- ------------- Graphics closed. Shutting down. ------------- -------------");
+            println!("------------- ------------- -------------     ------------- ------------- -------------");
+            std::process::exit(0);
         });
     }
 
