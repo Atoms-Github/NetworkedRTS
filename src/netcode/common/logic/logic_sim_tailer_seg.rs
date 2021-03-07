@@ -50,8 +50,7 @@ impl LogicSimTailer{
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         let mut problems = vec![];
 
-        let connected_players = self.game_state.get_connected_players();
-        for connected_player in connected_players {
+        for connected_player in self.game_state.get_connected_players() {
             if let Some(input_state) = data_store.get_input(frame_to_sim, connected_player){
                 player_inputs.insert(connected_player, input_state.clone());
             }else{
@@ -60,6 +59,9 @@ impl LogicSimTailer{
                     frame_offset: frame_to_sim,
                 });
             }
+        }
+        for disconnected_player in self.game_state.get_disconnected_players() {
+            player_inputs.insert(disconnected_player, InputState::new());
         }
         if !problems.is_empty(){
             return Err(problems);

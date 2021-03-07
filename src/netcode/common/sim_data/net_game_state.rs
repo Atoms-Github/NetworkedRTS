@@ -53,6 +53,15 @@ impl NetGameState {
         }
         return players;
     }
+    pub fn get_disconnected_players(&self) -> Vec<PlayerID>{
+        let mut players = vec![];
+        for (player_id, player_property) in self.players.iter(){
+            if !player_property.waiting_on{
+                players.push(*player_id);
+            }
+        }
+        return players;
+    }
     pub fn get_hash(&self) -> HashType{
         let mut s = DefaultHasher::new();
         self.hash(&mut s);
