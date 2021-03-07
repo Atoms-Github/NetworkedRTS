@@ -127,7 +127,7 @@ impl LogicSimTailer{
 
             }
             Some(existing_hash) => {
-                // dcwct TODO1. Renemaed assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
+                assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
             }
         }
     }
