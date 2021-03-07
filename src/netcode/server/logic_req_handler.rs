@@ -6,6 +6,7 @@ use std::thread;
 use crate::netcode::common::network::external_msg::ExternalMsg;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
+use std::ptr::read_unaligned;
 
 // TODO1: Implement
 pub struct SeverMissingDataHandler {
@@ -17,11 +18,13 @@ pub struct SeverMissingDataHandler {
 impl SeverMissingDataHandler {
     pub fn handle_requests(&mut self, requests : Vec<SimDataQuery>){
         for request in requests{
+            log::info!("Server missing  {:?}", request);
             match request.query_type{
                 SimDataOwner::Server => {
                     panic!("How can server be waiting for server events?");
                 }
                 SimDataOwner::Player(player_id) => {
+
                     self.net_manager_tx.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::InputQuery(request), player_id, false)).unwrap();
                 }
             }

@@ -148,6 +148,7 @@ impl ClientEx{
             if let Some(missing_datas) = self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, current_frame){
                 for missing_data in missing_datas{
                     // TODO1 - save up a bit, jees.
+                    log::info!("Client missing data: {:?}", missing_data);
                     connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
                 }
             }

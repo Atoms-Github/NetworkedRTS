@@ -68,9 +68,23 @@ impl LogicSimTailer{
         }
     }
     fn simulate_tick(&mut self, data_store: &SimDataStorage) -> Option<Vec<SimDataQuery>>{
-        let server_events = self.get_server_events(data_store).ok()?;
+        let server_events = match self.get_server_events(data_store){
+            Ok(events) => {
+                events
+            }
+            Err(problems) => {
+                return Some(problems);
+            }
+        };
         self.game_state.update_connected_players(&server_events);
-        let player_inputs = self.get_player_inputs(data_store).ok()?;
+        let player_inputs = match self.get_player_inputs(data_store){
+            Ok(inputs) => {
+                inputs
+            }
+            Err(problems) => {
+                return Some(problems);
+            }
+        };
 
         let sim_data = InfoForSim{
             inputs_map: player_inputs,
@@ -84,9 +98,17 @@ impl LogicSimTailer{
     pub fn catchup_simulation(&mut self, data_store: &SimDataStorage, sim_frame_up_to_and_including: FrameIndex) -> Option<Vec<SimDataQuery>>{
         const MAX_FRAMES_CATCHUP : usize = 3; // modival
         let first_frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
-        let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP);
+        let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP - 1);
+
         for frame_to_sim in first_frame_to_sim..(last_frame_to_sim + 1){
-            self.simulate_tick(data_store)?;
+            match self.simulate_tick(data_store){
+                Some(problems) => {
+                    return Some(problems);
+                }
+                None => {
+                    // Nohting.
+                }
+            }
         }
         return None;
     }

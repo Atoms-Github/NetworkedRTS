@@ -71,6 +71,9 @@ impl NetGameState {
         return net_state;
     }
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32){
+        if sim_info.server_events.len() > 0{
+            log::info!("Tail is simming server events: {:?}", sim_info.server_events);
+        }
         for server_event in &sim_info.server_events{
             match server_event{
                 ServerEvent::JoinPlayer(player_id) => {
