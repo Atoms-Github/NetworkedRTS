@@ -12,7 +12,7 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use crate::gamecode::systems::player::PlayerComp;
 use crate::pub_types::{HashType, FrameIndex, PlayerID};
-use crate::netcode::{InfoForSim, ConnStatusChangeType};
+use crate::netcode::{InfoForSim, ConnStatusChangeType, PlayerInputs};
 use ggez::Context;
 
 
@@ -73,15 +73,15 @@ impl GameState {
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
     }
-    pub fn simulate_tick(&mut self, sim_info: InfoForSim, delta: f32, frame_index: FrameIndex){
+    pub fn simulate_tick(&mut self, inputs: PlayerInputs, delta: f32, frame_index: FrameIndex){
         let mut pending = PendingEntities::new();
 
         secret_position_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_velocity_system(&self.world, &mut pending, &mut self.storages.position_s, &mut self.storages.velocity_s);
         secret_clickshooter_system(&self.world, &mut pending, &mut self.storages.velocity_s,
-                                           &mut self.storages.click_shooter_s, &mut self.storages.position_s, &sim_info.inputs_map, frame_index);
+                                           &mut self.storages.click_shooter_s, &mut self.storages.position_s, &inputs, frame_index);
         secret_wasdmover_system(&self.world, &mut pending, &mut self.storages.velocity_s,
-                                   &mut self.storages.wasdmover_s, &sim_info.inputs_map, frame_index);
+                                   &mut self.storages.wasdmover_s, &inputs, frame_index);
 
         self.world.update_entities(&mut self.storages, pending);
     }

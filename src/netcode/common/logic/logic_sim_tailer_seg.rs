@@ -29,35 +29,53 @@ impl LogicSimTailer{
             hashes: Default::default()
         }
     }
-    fn get_info_for_sim(&mut self, data_store: &SimDataStorage, frame_to_sim: FrameIndex) -> Result<InfoForSim, Vec<SimDataQuery>>{
+    fn get_info_for_sim(&mut self, data_store: &SimDataStorage) -> Result<InfoForSim, Vec<SimDataQuery>>{
+        let frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
+
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         let mut problems = vec![];
+
+        let server_events = match data_store.get_server_events(frame_to_sim) {
+            Some(events) => {
+                self.game_state.handle_server_events(events);
+                events
+            }
+            None => {
+                problems.push(SimDataQuery{
+                    query_type : SimDataOwner::Server,
+                    frame_offset : frame_to_sim,
+                });
+                return Err(problems);
+            }
+        };
+
+
+
 
         for (player_id, player_property) in &self.game_state.players{
             if let Some(input_state) = data_store.get_input(frame_to_sim, *player_id){
                 player_inputs.insert(*player_id, input_state.clone());
             }else{
-                problems.push(SimDataQuery {
-                    query_type: SimDataOwner::Player(*player_id),
-                    frame_offset: frame_to_sim,
-                });
+                if player_property.waiting_on{
+                    problems.push(SimDataQuery {
+                        query_type: SimDataOwner::Player(*player_id),
+                        frame_offset: frame_to_sim,
+                    });
+                }else{
+                    player_inputs.insert(*player_id, InputState::new()); // Insert blank. Player has disconnected.
+                }
+
             }
         }
 
-        let server_events = data_store.get_server_events(frame_to_sim);
-        if server_events.is_none(){
-            problems.push(SimDataQuery{
-                query_type : SimDataOwner::Server,
-                frame_offset : frame_to_sim,
-            })
-        }
+
 
         if !problems.is_empty(){
             return Err(problems);
         }
         return Ok(InfoForSim{
             inputs_map: player_inputs,
-            server_events: server_events.unwrap().clone()
+            server_events: server_events.clone()
         });
     }
     fn update_hash(&mut self){
@@ -78,7 +96,7 @@ impl LogicSimTailer{
         let first_frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
         let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP);
         for frame_to_sim in first_frame_to_sim..(last_frame_to_sim + 1){
-            let sim_info_result = self.get_info_for_sim(data_store, frame_to_sim);
+            let sim_info_result = self.get_info_for_sim(data_store);
 
             match sim_info_result{
                 Ok(sim_info) => {

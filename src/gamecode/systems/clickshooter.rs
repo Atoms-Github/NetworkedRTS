@@ -13,7 +13,7 @@ use std::hash::Hasher;
 use std::hash::*;
 use crate::gamecode::ecs::*;
 use crate::pub_types::*;
-use crate::netcode::InputState;
+use crate::netcode::{InputState, PlayerInputs};
 
 
 create_system!( clickshooter_system | secret_clickshooter_system
@@ -34,7 +34,7 @@ impl Hash for ClickShooterComp{
     }
 }
 
-fn clickshooter_system(d: &mut Data, e: Entity, player_inputs: &HashMap<PlayerID, InputState>, frame_index: FrameIndex){
+fn clickshooter_system(d: &mut Data, e: Entity, player_inputs: &PlayerInputs, frame_index: FrameIndex){
     let owner_id = e.my_clickshooter_comp(d).owner_id;
     let my_inputs = player_inputs.get(&owner_id).unwrap_or_else(||{panic!("Can't find unit owner: {} Simmed: {}", owner_id, frame_index)});
     if my_inputs.mouse_btns_pressed.len() > 0{
