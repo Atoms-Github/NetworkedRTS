@@ -55,6 +55,7 @@ impl ClientApp{
         };
 
         let mut welcome_info = seg_connect_net.get_synced_greeting(my_details);
+        log::info!("Downloaded game state which has simmed {}", welcome_info.game_state.get_simmed_frame_index());
 
         return ConnectedClient{
             welcome_info,

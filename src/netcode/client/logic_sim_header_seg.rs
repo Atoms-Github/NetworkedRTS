@@ -41,9 +41,16 @@ impl LogicSimHeaderEx{
                 server_events: data_store.get_server_events_or_empty(frame_index)
             };
             for player_id in data_store.get_player_list(){
-                if let Some(input_state) = data_store.get_input(frame_index, player_id){
-                    sim_info.inputs_map.insert(player_id, input_state.clone());
-                }
+                let this_players_input = match data_store.get_input(frame_index, player_id){
+                    Some(input_state) => {
+                        input_state.clone()
+                    }
+                    None => {
+                        InputState::new() // TODO1: Use last instead.
+                    }
+                };
+                sim_info.inputs_map.insert(player_id, this_players_input);
+
             }
 
             sim_infos.push(sim_info);

@@ -49,9 +49,6 @@ impl LogicSimTailer{
             }
         };
 
-
-
-
         for (player_id, player_property) in &self.game_state.players{
             if let Some(input_state) = data_store.get_input(frame_to_sim, *player_id){
                 player_inputs.insert(*player_id, input_state.clone());
@@ -67,8 +64,6 @@ impl LogicSimTailer{
 
             }
         }
-
-
 
         if !problems.is_empty(){
             return Err(problems);
@@ -87,7 +82,7 @@ impl LogicSimTailer{
 
             }
             Some(existing_hash) => {
-                assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
+                // dcwct TODO1. Renemaed assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
             }
         }
     }
