@@ -29,32 +29,34 @@ impl LogicSimTailer{
             hashes: Default::default()
         }
     }
-    fn get_info_for_sim(&mut self, data_store: &SimDataStorage) -> Result<InfoForSim, Vec<SimDataQuery>>{
+    fn get_server_events(&self, data_store: &SimDataStorage) -> Result<ServerEvents, Vec<SimDataQuery>>{
+        let frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
+        let server_events = match data_store.get_server_events(frame_to_sim) {
+            Some(events) => {
+                return Ok(
+                    events.clone());
+            }
+            None => {
+                return Err(vec![SimDataQuery{
+                    query_type : SimDataOwner::Server,
+                    frame_offset : frame_to_sim,
+                }]);
+            }
+        };
+    }
+    fn get_player_inputs(&self, data_store: &SimDataStorage) -> Result<HashMap<PlayerID, InputState>, Vec<SimDataQuery>>{
         let frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
 
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
         let mut problems = vec![];
 
-        let server_events = match data_store.get_server_events(frame_to_sim) {
-            Some(events) => {
-                events
-            }
-            None => {
-                problems.push(SimDataQuery{
-                    query_type : SimDataOwner::Server,
-                    frame_offset : frame_to_sim,
-                });
-                return Err(problems);
-            }
-        };
-
-        let waiting_on_players = self.game_state.update_connected_players(server_events);
-        for waiting_player in waiting_on_players{
-            if let Some(input_state) = data_store.get_input(frame_to_sim, waiting_player){
-                player_inputs.insert(waiting_player, input_state.clone());
+        let connected_players = self.game_state.get_connected_players();
+        for connected_player in connected_players {
+            if let Some(input_state) = data_store.get_input(frame_to_sim, connected_player){
+                player_inputs.insert(connected_player, input_state.clone());
             }else{
                 problems.push(SimDataQuery {
-                    query_type: SimDataOwner::Player(waiting_player),
+                    query_type: SimDataOwner::Player(connected_player),
                     frame_offset: frame_to_sim,
                 });
             }
@@ -62,12 +64,31 @@ impl LogicSimTailer{
         if !problems.is_empty(){
             return Err(problems);
         }else{
-            return Ok(InfoForSim{
-                inputs_map: player_inputs,
-                server_events: server_events.clone()
-            });
+            return Ok(player_inputs);
         }
+    }
+    fn simulate_tick(&mut self, data_store: &SimDataStorage) -> Option<Vec<SimDataQuery>>{
+        let server_events = self.get_server_events(data_store).ok()?;
+        self.game_state.update_connected_players(&server_events);
+        let player_inputs = self.get_player_inputs(data_store).ok()?;
 
+        let sim_data = InfoForSim{
+            inputs_map: player_inputs,
+            server_events
+        };
+        self.game_state.simulate_tick(sim_data, FRAME_DURATION_MILLIS);
+        self.update_hash();
+        return None;
+    }
+
+    pub fn catchup_simulation(&mut self, data_store: &SimDataStorage, sim_frame_up_to_and_including: FrameIndex) -> Option<Vec<SimDataQuery>>{
+        const MAX_FRAMES_CATCHUP : usize = 3; // modival
+        let first_frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
+        let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP);
+        for frame_to_sim in first_frame_to_sim..(last_frame_to_sim + 1){
+            self.simulate_tick(data_store)?;
+        }
+        return None;
     }
     fn update_hash(&mut self){
         self.hashes.insert(self.game_state.get_simmed_frame_index(), self.game_state.get_hash());
@@ -81,25 +102,6 @@ impl LogicSimTailer{
                 // dcwct TODO1. Renemaed assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
             }
         }
-    }
-    pub fn catchup_simulation(&mut self, data_store: &SimDataStorage, sim_frame_up_to_and_including: FrameIndex) -> Result<(), Vec<SimDataQuery>>{
-        const MAX_FRAMES_CATCHUP : usize = 3; // modival
-        let first_frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
-        let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP);
-        for frame_to_sim in first_frame_to_sim..(last_frame_to_sim + 1){
-            let sim_info_result = self.get_info_for_sim(data_store);
-
-            match sim_info_result{
-                Ok(sim_info) => {
-                    self.game_state.simulate_tick(sim_info, FRAME_DURATION_MILLIS);
-                    self.update_hash();
-                }
-                Err(missing_info) => {
-                    return Err(missing_info);
-                }
-            }
-        }
-        return Ok(());
     }
 }
 

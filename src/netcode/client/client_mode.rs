@@ -145,7 +145,7 @@ impl ClientEx{
             self.update_net_rec(&mut connected_client);
             self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
 
-            if let Err(missing_datas) = self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, current_frame){
+            if let Some(missing_datas) = self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, current_frame){
                 for missing_data in missing_datas{
                     // TODO1 - save up a bit, jees.
                     connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();

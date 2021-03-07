@@ -29,7 +29,7 @@ impl NetGameState {
         }
         return self.players.get_mut(&player_id).unwrap();
     }
-    pub fn update_connected_players(&mut self, events: &Vec<ServerEvent>) -> Vec<PlayerID>{
+    pub fn update_connected_players(&mut self, events: &Vec<ServerEvent>){
         for event in events{
             match event{
                 ServerEvent::DisconnectPlayer(player_id) => {
@@ -43,6 +43,8 @@ impl NetGameState {
                 }
             }
         }
+    }
+    pub fn get_connected_players(&self) -> Vec<PlayerID>{
         let mut players = vec![];
         for (player_id, player_property) in self.players.iter(){
             if player_property.waiting_on{
