@@ -117,6 +117,7 @@ impl ClientEx{
                     if crate::DEBUG_MSGS_MAIN {
                         log::debug!("Net rec message: {:?}", update);
                     }
+                    log::info!("Client Leart: {:?}", update);
                     self.seg_data_storage.write_data(update);
                 },
                 ExternalMsg::InputQuery(query) => {
@@ -138,37 +139,35 @@ impl ClientEx{
     fn post_interesting(mut self, mut connected_client: ConnectedClient, my_init_frame: FrameIndex){
         connected_client.seg_connect_net.net_sink.send((ExternalMsg::WorldDownloaded(), true)).unwrap();
 
+        let known_frame = connected_client.welcome_info.known_frame.clone();
 
-        let time_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_now();
-        // Since we're skipping time when player lags, this is the be all-end all generator.
-        // Our only aim in life is to keep pulling out of this, and simulate one per thing.
-        let frame_syncer = connected_client.welcome_info.known_frame.start_frame_stream_from_any(1 + self.seg_logic_tailer.game_state.get_simmed_frame_index());
+        let time_syncer = known_frame.start_frame_stream_from_now();
         loop{
+            // Shouldn't need to use this.
             let _ = time_syncer.recv().unwrap();
 
             let mut tail_progress_made = false;
 
             self.update_net_rec(&mut connected_client);
-            for tail_attempt in 0..3{ // TODO2: A number depending on processing time.
-                let tail_to_sim = match frame_syncer.try_recv(){
-                    Ok(frame) => {frame}
-                    Err(error) => {
-                        break; // No more frames to try.
-                    }
-                };
-                self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
 
-                match self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, tail_to_sim){
+            let tail_attempt_start = self.seg_logic_tailer.game_state.get_simmed_frame_index() + 1;
+            let tail_attempt_end = (known_frame.get_intended_current_frame()).min(tail_attempt_start + 5);
+            for tail_frame_attempt in tail_attempt_start..tail_attempt_end{ // TODO2: A number depending on processing time.
+                self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
+                log::info!("Client to sim {}.", tail_frame_attempt);
+                match self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, tail_frame_attempt){
                     Some(missing_datas) => {
                         for missing_data in missing_datas{
                             // TODO1 - save up a bit, jees.
                             log::info!("Client missing data: {:?}", missing_data);
                             connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
                         }
+                        break; // No more chance of stuff.
                     }
                     None => {
                         // Tail sim successful.
                         tail_progress_made = true;
+
                     }
                 }
             }

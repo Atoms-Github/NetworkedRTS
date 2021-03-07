@@ -22,6 +22,7 @@ impl ServerEventDistributor{
             new_events.push(vec![]);
         }
 
+        println!("Server send server events from {} to {} inclusive both ends.", next_non_existing_events, new_events.len());
         let package = SimDataPackage::ServerEvents(SuperstoreData{
             data: new_events,
             frame_offset: next_non_existing_events

@@ -26,6 +26,7 @@ pub struct SuperstoreData<T> {
 pub struct Superstore<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static>{
     frame_offset: usize,
     data: Vec<T>,
+    waiting_data: Vec<SuperstoreData<T>>, // All the future data which would make a hole. This is held until the hole is filled.
 }
 
 
@@ -35,7 +36,8 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
     pub fn new(first_frame_to_store: FrameIndex) -> Self{
         Self{
             frame_offset: first_frame_to_store,
-            data: vec![]
+            data: vec![],
+            waiting_data: vec![]
         }
     }
     pub fn get(&self, abs_index: FrameIndex) -> Option<&T>{
@@ -66,16 +68,24 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
         return query_response;
     }
     pub fn write_data(&mut self, new_data: SuperstoreData<T>){
-
+        // If future data. (So far ahead it would leave a gap.
         if new_data.frame_offset > self.get_next_empty_frame() {
+            // Save future data for later.
+            self.waiting_data.push(new_data);
             //panic!("Received player data for the future, so distant we can't handle it. Incoming data first frame: {}. We're waiting on frame {}", new_data.frame_offset, self.get_next_empty_frame());
         }
         // If new's first frame is in existing data, or the next new frame.
         else if new_data.frame_offset >= self.frame_offset && new_data.frame_offset <= self.get_next_empty_frame(){
             for (new_relative_index, new_item) in new_data.data.into_iter().enumerate(){
                 let existing_relative_index = new_data.frame_offset + new_relative_index - self.frame_offset;
-
                 vec_replace_or_end(&mut self.data, existing_relative_index, new_item);
+            }
+            // pointless_optimum don't need to move out.
+            // TODO3: Find a nicer way of writing this.
+            let mut items = vec![];
+            let waiting_items = self.waiting_data.drain(..).for_each(|item|{items.push(item)});
+            for waiting_item in items{
+                self.write_data(waiting_item);
             }
         }
 
@@ -90,7 +100,7 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
             self.data.drain(0..overlap_count);
 
         }else{
-            panic!("Known issue #1. Somehow recieved late player data, then early player data with at least a 20 gap in-between. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
+            panic!("Known issue #1. Somehow recieved late player data, then early player data which would leave a hole. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
         }
     }
 
