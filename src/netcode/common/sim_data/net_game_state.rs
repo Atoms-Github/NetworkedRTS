@@ -16,7 +16,7 @@ pub struct NetPlayerProperty{
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct NetGameState {
     pub game_state: GameState,
-    pub players: BTreeMap<PlayerID, NetPlayerProperty>,
+    players: BTreeMap<PlayerID, NetPlayerProperty>,
     simmed_frame_index: FrameIndex,
 }
 
@@ -29,7 +29,7 @@ impl NetGameState {
         }
         return self.players.get_mut(&player_id).unwrap();
     }
-    pub fn handle_server_events(&mut self, events: &Vec<ServerEvent>){
+    pub fn update_connected_players(&mut self, events: &Vec<ServerEvent>) -> Vec<PlayerID>{
         for event in events{
             match event{
                 ServerEvent::DisconnectPlayer(player_id) => {
@@ -43,6 +43,13 @@ impl NetGameState {
                 }
             }
         }
+        let mut players = vec![];
+        for (player_id, player_property) in self.players.iter(){
+            if player_property.waiting_on{
+                players.push(*player_id);
+            }
+        }
+        return players;
     }
     pub fn get_hash(&self) -> HashType{
         let mut s = DefaultHasher::new();

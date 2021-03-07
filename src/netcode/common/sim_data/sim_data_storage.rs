@@ -87,9 +87,6 @@ impl SimDataStorage {
             }
         }
     }
-    pub fn server_blanks_up_to(&mut self, last_to_include: FrameIndex){
-        
-    }
     pub fn write_input_data_single(&mut self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
         let package = SimDataPackage::PlayerInputs(SuperstoreData{
             data: vec![state],

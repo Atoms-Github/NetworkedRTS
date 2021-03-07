@@ -37,7 +37,6 @@ impl LogicSimTailer{
 
         let server_events = match data_store.get_server_events(frame_to_sim) {
             Some(events) => {
-                self.game_state.handle_server_events(events);
                 events
             }
             None => {
@@ -49,29 +48,26 @@ impl LogicSimTailer{
             }
         };
 
-        for (player_id, player_property) in &self.game_state.players{
-            if let Some(input_state) = data_store.get_input(frame_to_sim, *player_id){
-                player_inputs.insert(*player_id, input_state.clone());
+        let waiting_on_players = self.game_state.update_connected_players(server_events);
+        for waiting_player in waiting_on_players{
+            if let Some(input_state) = data_store.get_input(frame_to_sim, waiting_player){
+                player_inputs.insert(waiting_player, input_state.clone());
             }else{
-                if player_property.waiting_on{
-                    problems.push(SimDataQuery {
-                        query_type: SimDataOwner::Player(*player_id),
-                        frame_offset: frame_to_sim,
-                    });
-                }else{
-                    player_inputs.insert(*player_id, InputState::new()); // Insert blank. Player has disconnected.
-                }
-
+                problems.push(SimDataQuery {
+                    query_type: SimDataOwner::Player(waiting_player),
+                    frame_offset: frame_to_sim,
+                });
             }
         }
-
         if !problems.is_empty(){
             return Err(problems);
+        }else{
+            return Ok(InfoForSim{
+                inputs_map: player_inputs,
+                server_events: server_events.clone()
+            });
         }
-        return Ok(InfoForSim{
-            inputs_map: player_inputs,
-            server_events: server_events.clone()
-        });
+
     }
     fn update_hash(&mut self){
         self.hashes.insert(self.game_state.get_simmed_frame_index(), self.game_state.get_hash());
