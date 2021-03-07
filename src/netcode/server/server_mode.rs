@@ -127,7 +127,7 @@ impl ServerMainStateEx {
             }
 
             self.event_distributor.update(&mut self.data_store, self.seg_logic_tail.game_state.get_simmed_frame_index());
-            println!("Server to sim {}", self.seg_logic_tail.game_state.get_simmed_frame_index() + 1);
+            // println!("Server to sim {}", self.seg_logic_tail.game_state.get_simmed_frame_index() + 1);
             if let Some(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data_store, current_sim_frame){
                 self.missing_data_handler.handle_requests(missing_datas);
             }

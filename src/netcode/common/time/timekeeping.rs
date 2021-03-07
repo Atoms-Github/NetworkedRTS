@@ -93,7 +93,14 @@ impl DT{
     }
     pub fn stop(self){
         if crate::DEBUG_MSGS_TIMERS{
-            log::debug!("TIMER {} -> {:?}", self.name, SystemTime::now().duration_since(self.time).unwrap());
+            log::info!("TIMER {} -> {:?}", self.name, SystemTime::now().duration_since(self.time).unwrap());
+        }
+    }
+    pub fn stop_warn(self, micro_seconds_limit: u128){
+
+        let duration = SystemTime::now().duration_since(self.time).unwrap();
+        if crate::DEBUG_MSGS_TIMERS && duration.as_micros() >= micro_seconds_limit{
+            log::warn!("SLOWTIMER {} -> {:?}", self.name, duration);
         }
     }
 }

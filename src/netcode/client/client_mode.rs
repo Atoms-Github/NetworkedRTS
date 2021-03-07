@@ -117,7 +117,7 @@ impl ClientEx{
                     if crate::DEBUG_MSGS_MAIN {
                         log::debug!("Net rec message: {:?}", update);
                     }
-                    log::info!("Client Leart: {:?}", update);
+                    // log::info!("Client Leart: {:?}", update);
                     self.seg_data_storage.write_data(update);
                 },
                 ExternalMsg::InputQuery(query) => {
@@ -154,7 +154,7 @@ impl ClientEx{
             let tail_attempt_end = (known_frame.get_intended_current_frame()).min(tail_attempt_start + 5);
             for tail_frame_attempt in tail_attempt_start..tail_attempt_end{ // TODO2: A number depending on processing time.
                 self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
-                log::info!("Client to sim {}.", tail_frame_attempt);
+                // log::info!("Client to sim {}.", tail_frame_attempt);
                 match self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, tail_frame_attempt){
                     Some(missing_datas) => {
                         for missing_data in missing_datas{

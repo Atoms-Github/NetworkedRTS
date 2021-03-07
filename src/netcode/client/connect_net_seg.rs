@@ -63,7 +63,7 @@ impl ConnectNetEx {
         });
 
         let time_offset = total_difference_in_clocks / ping_data.len() as i64;
-        log::info!("Clock difference: {}", time_offset);
+        log::info!("Clock difference: {}ms", time_offset / 1_000_000);
         server_time.apply_offset(-time_offset);
         return server_time;
             // Things work out that this is negative.

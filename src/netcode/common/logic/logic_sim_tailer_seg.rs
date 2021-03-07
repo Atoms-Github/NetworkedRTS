@@ -95,8 +95,9 @@ impl LogicSimTailer{
         if sim_data.server_events.len() > 0{
             log::info!("Tail simming with server events: {:?}", sim_data.server_events);
         }
+        let timer = DT::start("Tail sim time");
         self.game_state.simulate_tick(sim_data, FRAME_DURATION_MILLIS);
-
+        timer.stop_warn(2000);
         self.update_hash();
         return None;
     }
@@ -107,6 +108,7 @@ impl LogicSimTailer{
         let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP - 1);
 
         for frame_to_sim in first_frame_to_sim..(last_frame_to_sim + 1){
+
             match self.simulate_tick(data_store){
                 Some(problems) => {
                     return Some(problems);
