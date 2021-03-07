@@ -58,6 +58,7 @@ fn main() {
     args.reverse();
     let _exe_name = args.pop();
     let launch_type = args.pop().expect("'client'/'server' argument not specified!");
+    let player_name = args.pop().unwrap_or_default();
     let ip = match args.pop() {
         Some(ip_str) => {
             ip_str
@@ -104,7 +105,7 @@ fn main() {
         let prefered_player_id = args.pop().map(|as_str|{
             i32::from_str(as_str.as_str()).ok()
         }).flatten().unwrap_or(0); // Conflict means auto-assign.
-        crate::netcode::client_main(String::from("A_toms"), ip, prefered_player_id);
+        crate::netcode::client_main(player_name, ip, prefered_player_id);
     }
 }
 
