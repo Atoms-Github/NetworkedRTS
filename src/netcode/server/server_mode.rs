@@ -99,7 +99,7 @@ impl ServerMainStateEx {
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                     },
                     ExternalMsg::InputQuery(query) => {
-                        let owned_data = self.data_store.fulfill_query(&query);
+                        let owned_data = self.data_store.fulfill_query(&query, 20);
                         // optimum - don't send empty stuff.
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
                     },

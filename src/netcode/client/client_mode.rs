@@ -121,7 +121,7 @@ impl ClientEx{
                     self.seg_data_storage.write_data(update);
                 },
                 ExternalMsg::InputQuery(query) => {
-                    let owned_data = self.seg_data_storage.fulfill_query(&query);
+                    let owned_data = self.seg_data_storage.fulfill_query(&query, 20);
                     connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
                 },
                 ExternalMsg::PingTestResponse(_) => {

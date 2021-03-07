@@ -97,18 +97,18 @@ impl SimDataStorage {
     pub fn get_next_empty_server_events_frame(&self) -> FrameIndex{
         return self.server_events.get_next_empty_frame();
     }
-    pub fn fulfill_query(&self, query: &SimDataQuery) -> SimDataPackage {
+    pub fn fulfill_query(&self, query: &SimDataQuery, number_of_items: usize) -> SimDataPackage {
         match query.query_type{
             SimDataOwner::Server => {
                 SimDataPackage::ServerEvents(SuperstoreData{
-                    data: self.server_events.clone_block(query.frame_offset, 20),
+                    data: self.server_events.clone_block(query.frame_offset, number_of_items),
                     frame_offset: query.frame_offset
                 })
             }
             SimDataOwner::Player(player_id) => {
                 let superstore = self.player_inputs.get(&player_id).expect("DataStore was queried for a player it didn't know existed.");
                 SimDataPackage::PlayerInputs(SuperstoreData{
-                    data: superstore.clone_block(query.frame_offset, 20),
+                    data: superstore.clone_block(query.frame_offset, number_of_items),
                     frame_offset: query.frame_offset
                 }, player_id)
             }
