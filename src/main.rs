@@ -45,10 +45,10 @@ fn main() {
 
     Builder::new()
         .format(|buf, record| {
-            if !record.target().contains("poggy"){
-                return std::io::Result::Ok(());
+            if record.target().contains("poggy"){
+                return writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args());
             }
-            writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args())
+            return std::io::Result::Ok(());
         }).filter(None, LevelFilter::Info).init();
     log::info!("Starting!");
 
