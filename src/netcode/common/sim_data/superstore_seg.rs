@@ -52,11 +52,12 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
     pub fn get_next_empty_frame(&self) -> FrameIndex{
         return self.data.len() + self.frame_offset;
     }
-    pub fn clone_block(&self, first_frame_index: FrameIndex, block_size: usize) -> Vec<T>{
+    pub fn clone_block(&self, first_frame_index_abs: FrameIndex, block_size: usize) -> Vec<T>{
         let mut query_response = vec![];
 
-        for target_index in first_frame_index..(first_frame_index + block_size){
-            match self.get(target_index){
+        let first_frame_index_rel = first_frame_index_abs - self.frame_offset;
+        for target_index_relative in first_frame_index_rel..(first_frame_index_rel + block_size){
+            match self.get(target_index_relative){
                 Some(input) => {
                     query_response.push(input.clone());
                 }
@@ -100,6 +101,7 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
             self.data.drain(0..overlap_count);
 
         }else{
+            log::info!("Data is: {:?}", new_data);
             panic!("Known issue #1. Somehow recieved late player data, then early player data which would leave a hole. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
         }
     }

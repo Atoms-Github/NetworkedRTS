@@ -53,6 +53,7 @@ impl SimDataStorage {
     fn get_player_superstore(&mut self, player_id: PlayerID, first_frame_if_no_exist: FrameIndex) -> &Superstore<InputState>{
         if !self.player_inputs.contains_key(&player_id){
             self.player_inputs.insert(player_id, Superstore::new(first_frame_if_no_exist));
+            log::info!("Created new superstore for player {} starting at frame {}", player_id, first_frame_if_no_exist);
         }
         return self.player_inputs.get(&player_id).unwrap();
     }
