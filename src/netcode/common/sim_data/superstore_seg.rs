@@ -99,9 +99,9 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
             self.frame_offset = new_data.frame_offset;
 
             self.data.drain(0..overlap_count);
-
         }else{
             log::info!("Data is: {:?}", new_data);
+            log::info!("We start {}, we have {} items", self.frame_offset, self.data.len());
             panic!("Known issue #1. Somehow recieved late player data, then early player data which would leave a hole. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
         }
     }
