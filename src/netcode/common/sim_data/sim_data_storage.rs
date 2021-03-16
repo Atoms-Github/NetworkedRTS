@@ -49,26 +49,14 @@ impl SimDataStorage {
         };
         storage
     }
-
-    fn get_player_superstore(&mut self, player_id: PlayerID, first_frame_if_no_exist: FrameIndex) -> &Superstore<InputState>{
-        if !self.player_inputs.contains_key(&player_id){
-            self.player_inputs.insert(player_id, Superstore::new(first_frame_if_no_exist));
-            log::info!("Created new superstore for player {} starting at frame {}", player_id, first_frame_if_no_exist);
-        }
-        return self.player_inputs.get(&player_id).unwrap();
-    }
-    fn get_player_superstore_mut(&mut self, player_id: PlayerID, first_frame_if_no_exist: FrameIndex) -> &mut Superstore<InputState>{
-        if !self.player_inputs.contains_key(&player_id){
-            self.player_inputs.insert(player_id, Superstore::new(first_frame_if_no_exist));
-            log::info!("Created new superstore mut for player {} starting at frame {}", player_id, first_frame_if_no_exist);
-        }
-        return self.player_inputs.get_mut(&player_id).unwrap();
-    }
     pub fn get_input(&self, frame_index: FrameIndex, player_id: PlayerID) -> Option<&InputState>{
         if let Some(superstore) = self.player_inputs.get(&player_id){
             return superstore.get(frame_index);
         }
         return None;
+    }
+    pub fn get_next_empty(&self, player_id: PlayerID) -> Option<FrameIndex>{
+        return Some(self.player_inputs.get(&player_id)?.get_next_empty_frame());
     }
     pub fn get_server_events(&self, frame_index: FrameIndex) -> Option<&ServerEvents>{
         return self.server_events.get(frame_index);
@@ -82,11 +70,35 @@ impl SimDataStorage {
     pub fn write_data(&mut self, data: SimDataPackage){
         match data{
             SimDataPackage::PlayerInputs(data, player_id) => {
-                self.get_player_superstore_mut(player_id, data.frame_offset).write_data(data);
+                if let Some(superstore) = self.player_inputs.get_mut(&player_id){
+                    superstore.write_data(data);
+                }else{
+                    println!("Ignoring some data since we don't have a player {}", player_id);
+                }
             }
             SimDataPackage::ServerEvents(data) => {
+                // Try to init new player input database using what we know so far about server inputs.
+                for (relative_index, event_frame) in data.data.iter().enumerate(){
+                    for server_event in event_frame{
+                        match server_event{
+                            ServerEvent::JoinPlayer(new_player_id, player_name) => {
+                                let abs_index = relative_index + data.frame_offset;
+                                self.add_new_player(*new_player_id, abs_index);
+                            }
+                            _ => {
+
+                            }
+                        }
+                    }
+                }
                 self.server_events.write_data(data);
             }
+        }
+    }
+    pub fn add_new_player(&mut self, player_id: PlayerID, first_frame_to_store: FrameIndex){
+        if !self.player_inputs.contains_key(&player_id){
+            self.player_inputs.insert(player_id, Superstore::new(first_frame_to_store));
+            log::info!("Created new superstore for player {} starting at frame {}", player_id, first_frame_to_store);
         }
     }
     pub fn write_input_data_single(&mut self, player_id: PlayerID, state: InputState, frame_index: FrameIndex){
@@ -132,11 +144,13 @@ impl SimDataStorage {
     }
     pub fn server_boot_player(&mut self, player_id: PlayerID, tail_last_simmed: FrameIndex){
         let frame_booted = self.schedule_server_event(ServerEvent::DisconnectPlayer(player_id));
-        let frame_to_fill_from= self.get_player_superstore(player_id, tail_last_simmed).get_next_empty_frame();
+        if let Some(superstore) = self.player_inputs.get_mut(&player_id){
+            let frame_to_fill_from = superstore.get_next_empty_frame();
 
-        // Now to fill up that player's inputs with garbo.
-        for frame_index in frame_to_fill_from..(frame_booted + 1){
-            self.write_input_data_single(player_id, InputState::new(), frame_index)
+            // Now to fill up that player's inputs with garbo.
+            for frame_index in frame_to_fill_from..(frame_booted + 1){
+                self.write_input_data_single(player_id, InputState::new(), frame_index)
+            }
         }
     }
 }

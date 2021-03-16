@@ -69,10 +69,12 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
         return query_response;
     }
     pub fn write_data(&mut self, new_data: SuperstoreData<T>){
+        println!("Writing data size {} at pos {}. We've already got size {}", new_data.data.len(), new_data.frame_offset, self.data.len());
         // If future data. (So far ahead it would leave a gap.
         if new_data.frame_offset > self.get_next_empty_frame() {
             // Save future data for later.
             self.waiting_data.push(new_data);
+            println!("Waiting mcdata! Starts at {}", self.frame_offset);
             //panic!("Received player data for the future, so distant we can't handle it. Incoming data first frame: {}. We're waiting on frame {}", new_data.frame_offset, self.get_next_empty_frame());
         }
         // If new's first frame is in existing data, or the next new frame.
@@ -92,18 +94,21 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
 
         // Need if statement here!
         // If new data is behind existing data, but no gap.
-        else if new_data.frame_offset + new_data.data.len() >= self.frame_offset{
-            let number_behind_count = self.frame_offset - new_data.frame_offset;
-            let overlap_count = new_data.frame_offset + new_data.data.len() - self.frame_offset;
-
-            self.frame_offset = new_data.frame_offset;
-
-            self.data.drain(0..overlap_count);
-        }else{
+        // else if new_data.frame_offset + new_data.data.len() >= self.frame_offset{
+        //     let number_behind_count = self.frame_offset - new_data.frame_offset;
+        //     let overlap_count = new_data.frame_offset + new_data.data.len() - self.frame_offset;
+        //
+        //     println!("Shifting backwards! -- {}, {}, {}", new_data.frame_offset, new_data.data.len(), self.frame_offset);
+        //     self.frame_offset = new_data.frame_offset;
+        //
+        //     self.data.drain(0..overlap_count);
+        /*}*/else{
             log::info!("Data is: {:?}", new_data);
             log::info!("We start {}, we have {} items", self.frame_offset, self.data.len());
-            panic!("Known issue #1. Somehow recieved late player data, then early player data which would leave a hole. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
+            log::info!("Got some early data. We couldn't care less about this data.");
+            // panic!("Known issue #1. Somehow recieved late player data, then early player data which would leave a hole. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
         }
+        println!("Resulting size: {}", self.data.len());
     }
 
 }

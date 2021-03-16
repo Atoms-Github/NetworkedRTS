@@ -83,7 +83,7 @@ impl ServerMainStateEx {
                         let msg = NetMsgGreetingResponse {
                             assigned_player_id: player_id,
                             known_frame: self.known_frame_zero.clone(),
-                            game_state,
+                            game_state
                         };
                         let response = ExternalMsg::ConnectionInitResponse(msg);
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
@@ -92,9 +92,8 @@ impl ServerMainStateEx {
                         self.data_store.schedule_server_event(ServerEvent::JoinPlayer(player_id, downloaded_info.player_name));
                     },
                     ExternalMsg::GameUpdate(update_info) => {
-                        //log::trace!("Recieved player {} inputs for frames {} to {} inclusive.", update_info.data_owner, update_info.input_data.frame_offset, update_info.input_data.frame_offset + update_info.input_data.data.len() - 1);
+                        log::info!("Server learned: {:?}", update_info);
                         self.data_store.write_data(update_info.clone());
-                        // Optimum Distribution should happen in net layer for fasttrax.
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                     },
                     ExternalMsg::InputQuery(query) => {

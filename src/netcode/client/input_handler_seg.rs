@@ -43,13 +43,24 @@ impl InputHandler {
     }
     pub fn update(&mut self, data_store: &mut SimDataStorage, inputs_arriving_for_frame: FrameIndex){
         self.apply_input_changes();
-        data_store.write_input_data_single(self.player_id, self.curret_input.clone(), inputs_arriving_for_frame);
 
-        let data = SuperstoreData{
-            data: vec![self.curret_input.clone()],
-            frame_offset: inputs_arriving_for_frame
-        };
-        self.to_net.send((ExternalMsg::GameUpdate(SimDataPackage::PlayerInputs(data, self.player_id)), false)).unwrap();
+
+        if let Some(my_next_empty) = data_store.get_next_empty(self.player_id){
+            let mut my_inputs_vec = vec![];
+            for abs_frame_index in my_next_empty..(inputs_arriving_for_frame + 1){
+                my_inputs_vec.push(self.curret_input.clone());
+            }
+            data_store.write_input_data_single(self.player_id, self.curret_input.clone(), inputs_arriving_for_frame);
+
+            let data_package = SimDataPackage::PlayerInputs(SuperstoreData{
+                data: my_inputs_vec,
+                frame_offset: my_next_empty
+            }, self.player_id);
+            //println!("Self input for frame: {} till {} excl second", my_next_empty, inputs_arriving_for_frame);
+            data_store.write_data(data_package.clone());
+            self.to_net.send((ExternalMsg::GameUpdate(data_package), false)).unwrap();
+        }
+
     }
 }
 

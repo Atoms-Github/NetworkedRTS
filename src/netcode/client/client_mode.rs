@@ -73,13 +73,15 @@ impl ConnectedClient{
     }
     fn pre_interesting(&self) -> FrameIndex{
         let my_init_frame = self.welcome_info.known_frame.get_intended_current_frame() + 50; // modival How far in the future to plonk yourself.
-        log::debug!("I'm gonna init me on {}", my_init_frame);
+        // log::debug!("I'm gonna init me on {}", my_init_frame);
         return my_init_frame;
     }
     fn init_segs(&mut self, my_init_frame: FrameIndex) -> ClientEx{
         let welcome_info = self.welcome_info.clone();
 
-        let seg_data_storage = SimDataStorage::new(welcome_info.game_state.get_simmed_frame_index() + 1);
+        let first_frame_to_store = welcome_info.game_state.get_simmed_frame_index() + 1;
+        let mut seg_data_storage = SimDataStorage::new(first_frame_to_store);
+        seg_data_storage.add_new_player(self.welcome_info.assigned_player_id, first_frame_to_store); // Bit of a hack. Optimal would be when I'm scheduled to start.
         let seg_scheduler = SchedulerSegEx::start(welcome_info.known_frame.clone());
         let mut seg_logic_tailer = LogicSimTailer::new(welcome_info.game_state, welcome_info.known_frame.clone());
 
@@ -120,6 +122,7 @@ impl ClientEx{
                 },
                 ExternalMsg::InputQuery(query) => {
                     let owned_data = self.seg_data_storage.fulfill_query(&query, 20);
+                    println!("Fulfilling {:?} with {:?}", query, owned_data);
                     connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
                 },
                 ExternalMsg::PingTestResponse(_) => {
