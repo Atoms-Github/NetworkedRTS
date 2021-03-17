@@ -57,7 +57,7 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
 
         let first_frame_index_rel = first_frame_index_abs - self.frame_offset;
         for target_index_relative in first_frame_index_rel..(first_frame_index_rel + block_size){
-            match self.get(target_index_relative){
+            match self.data.get(target_index_relative){
                 Some(input) => {
                     query_response.push(input.clone());
                 }
