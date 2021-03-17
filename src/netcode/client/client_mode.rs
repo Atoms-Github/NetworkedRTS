@@ -81,6 +81,11 @@ impl ConnectedClient{
 
         let first_frame_to_store = welcome_info.game_state.get_simmed_frame_index() + 1;
         let mut seg_data_storage = SimDataStorage::new(first_frame_to_store);
+
+        // Init storage for all existing players. (they won't get inited by a ServerEvent.)
+        for connected_player in self.welcome_info.game_state.get_connected_players(){
+            seg_data_storage.add_new_player(connected_player, self.welcome_info.game_state.get_simmed_frame_index() + 1);
+        }
         let seg_scheduler = SchedulerSegEx::start(welcome_info.known_frame.clone());
         let mut seg_logic_tailer = LogicSimTailer::new(welcome_info.game_state, welcome_info.known_frame.clone());
 
@@ -122,7 +127,7 @@ impl ClientEx{
                 ExternalMsg::InputQuery(query) => {
                     let owned_data = self.seg_data_storage.fulfill_query(&query, 20);
                     if owned_data.get_size() == 0{
-                        log::info!("Failed to fulfil query {:?}", owned_data);
+                        log::info!("Failed to fulfil query {:?}", query);
                     }else{
                         log::info!("Responded to server req for {:?} with {:?} items", query, owned_data);
                         connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();

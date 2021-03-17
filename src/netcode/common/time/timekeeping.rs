@@ -8,9 +8,9 @@ use serde::*;
 //pub const FRAME_DURATION_MILLIS: f32 = 200.0;
 // pub const FRAME_DURATION_MILLIS: f32 = 100.0;
 // pub const FRAME_DURATION_MILLIS: f32 = 50.0;
-pub const FRAME_DURATION_MILLIS: f32 = 30.0;
+// pub const FRAME_DURATION_MILLIS: f32 = 30.0;
 //pub const FRAME_DURATION_MILLIS: f32 = 18.0;
-// pub const FRAME_DURATION_MILLIS: f32 = 16.667;
+pub const FRAME_DURATION_MILLIS: f32 = 16.667;
 //pub const FRAME_DURATION_MILLIS: f32 = 10.0;
 //pub const FRAME_DURATION_MILLIS: f32 = 5.0;
 //pub const FRAME_DURATION_MILLIS: f32 = 3.0; // Smaller than this things are allowed to break.
