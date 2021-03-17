@@ -35,6 +35,15 @@ pub enum SimDataPackage{
     ServerEvents(SuperstoreData<ServerEvents>),
     PlayerInputs(SuperstoreData<InputState>, PlayerID)
 }
+impl SimDataPackage{
+    pub fn get_size(&self) -> usize{
+        match self{
+            SimDataPackage::ServerEvents(events) => {events.data.len()}
+            SimDataPackage::PlayerInputs(inputs, _) => {inputs.data.len()}
+        }
+    }
+}
+
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SimDataStorage {

@@ -95,6 +95,7 @@ impl NetGameState {
         self.game_state.simulate_tick(sim_info.inputs_map, delta, self.simmed_frame_index);
         self.simmed_frame_index += 1;
 
+
     }
     pub fn render(&mut self, ctx: &mut Context){
         self.game_state.render(ctx)

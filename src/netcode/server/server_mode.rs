@@ -98,9 +98,12 @@ impl ServerMainStateEx {
                     },
                     ExternalMsg::InputQuery(query) => {
                         let owned_data = self.data_store.fulfill_query(&query, 20);
-                        // optimum - don't send empty stuff.
-                        log::info!("Responded to {}'s req for {:?} with {:?} items", player_id, query, owned_data);
-                        self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
+                        if owned_data.get_size() == 0{
+                            log::info!("Failed to fulfil query {:?}", owned_data);
+                        }else{
+                            log::debug!("Responded to {}'s req for {:?} with {:?} items", player_id, query, owned_data);
+                            self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
+                        }
                     },
                     _ => {
                         panic!("Unexpected message");

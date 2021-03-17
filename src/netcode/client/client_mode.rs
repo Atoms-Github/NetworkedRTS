@@ -122,8 +122,13 @@ impl ClientEx{
                 },
                 ExternalMsg::InputQuery(query) => {
                     let owned_data = self.seg_data_storage.fulfill_query(&query, 20);
-                    println!("Fulfilling {:?} with {:?}", query, owned_data);
-                    connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
+                    if owned_data.get_size() == 0{
+                        log::info!("Failed to fulfil query {:?}", owned_data);
+                    }else{
+                        log::debug!("Responded to server req for {:?} with {:?} items", query, owned_data);
+                        connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
+
+                    }
                 },
                 ExternalMsg::PingTestResponse(_) => {
                     // Do nothing. Doesn't matter that intro stuff is still floating when we move on.

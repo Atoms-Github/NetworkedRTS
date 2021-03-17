@@ -97,6 +97,7 @@ impl LogicSimTailer{
         }
         let timer = DT::start("Tail sim time");
         self.game_state.simulate_tick(sim_data, FRAME_DURATION_MILLIS);
+        log::info!("TSimSuc: {}", self.game_state.get_simmed_frame_index());
         timer.stop_warn(2000);
         self.update_hash();
         return None;
