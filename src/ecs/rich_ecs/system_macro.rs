@@ -27,7 +27,7 @@ macro_rules! create_system {
                     $extra_arg_name: $extra_arg_ty,
                 )*
                 ) {
-                
+
             let mut types = BTreeSet::new();
             $(
                 types.insert(unsafe { std::intrinsics::type_id::<$sty>() }); // The only difference between var_name and var_name2
@@ -38,7 +38,7 @@ macro_rules! create_system {
             let composition_ids : Vec<usize> = World::internal_make_request(world.internal_get_composition_list(), request);
 
             let mut pending_for_entities = PendingEntities::new();
-            
+
 			let mut data = Data {
                     world,
                     pending: &mut pending_for_entities,
@@ -51,7 +51,7 @@ macro_rules! create_system {
 			            )*
                     }
                 };
-                
+
             for composition_id in composition_ids {
                 let mut entity = Entity {
                     composition_id,
@@ -78,7 +78,7 @@ macro_rules! create_system {
             )*
         }
         }
-        
+
         #[derive(Debug, Clone)]
         struct Entity {
 			composition_id: CompositionID,
@@ -90,7 +90,7 @@ macro_rules! create_system {
             pending: &'a mut PendingEntities,
             internals: InternalsData<'a>,
         }
-        
+
         impl <'a> Data<'a> {
             fn get_entity(&self, id: GlobalEntityID) -> Entity {
                 Entity {
@@ -99,7 +99,7 @@ macro_rules! create_system {
                 }
             }
         }
-        
+
         impl Entity {
             /// Literally just calls pending.destroy_entity(getId(data))
             #[inline]
@@ -107,12 +107,12 @@ macro_rules! create_system {
                 let id = self.get_id(data);
                 data.pending.destroy_entity(id);
             }
-            
+
             #[inline]
             fn get_id(&self, data: &Data) -> GlobalEntityID {
                 data.world.internal_get_composition_list().get(self.composition_id).unwrap().global_entity_ids.get(self.internal_index).unwrap().clone()
             }
-            
+
             $(
                 #[inline]
                 fn $var_name<'a, 'b>(&self, data: &'b mut Data<'a>) -> &'b mut $sty {

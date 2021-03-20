@@ -83,13 +83,13 @@ impl PendingEntity {
 			components_to_add: AnyMap::new(),
 		}
 	}
-	
+
 	pub fn add_component<T: 'static>(&mut self, component: T) {
 //		self.types.insert(TypeId::of::<T>());
 		self.types.insert(unsafe { intrinsics::type_id::<T>()});
 		self.components_to_add.insert(component);
 	}
-	
+
 	pub fn remove_component<T: 'static>(&mut self, component: T) {
 		self.types.remove(&unsafe { intrinsics::type_id::<T>()});
 		self.components_to_add.remove::<T>();
@@ -118,7 +118,7 @@ impl PendingEntities {
 //    fn add_comp_to_entity<T>(&mut self, entity_id: EntityID, component: T) { //TODO_richard 3 (Richard's :))
 //
 //    }
-	
+
 	pub fn merge(&mut self, pending_entities: PendingEntities) {
 		for entity_id in pending_entities.pending_deletions {
 			self.pending_deletions.insert(entity_id);
@@ -127,11 +127,11 @@ impl PendingEntities {
 			self.pending_additions.push(addition);
 		}
 	}
-	
+
 	pub fn create_entity(&mut self, pending_entity: PendingEntity) {
 		self.pending_additions.push(pending_entity);
 	}
-	
+
 	pub fn destroy_entity(&mut self, entity_id: GlobalEntityID) {
 		self.pending_deletions.insert(entity_id);
 	}
@@ -150,7 +150,7 @@ macro_rules! create_system {
 				Self::new()
 			}
 		}
-		
+
 		impl Storages {
 			pub fn new() -> Storages {
 				Storages {
@@ -159,13 +159,13 @@ macro_rules! create_system {
 					)*
 				}
 			}
-			
+
 			fn internal_add_composition(&mut self) {
 				$(
 					self.$var_name.push(vec![]);
 				)*
 			}
-			
+
 			fn internal_add_entity(&mut self, composition_id: CompositionID, pending_entity: &mut PendingEntity) {
 				$(
 					if let Some(temp_val) = pending_entity.components_to_add.remove::<$sty>() {
@@ -173,7 +173,7 @@ macro_rules! create_system {
 					}
 				)*
 			}
-			
+
 			fn internal_remove_entity(&mut self, composition_id: CompositionID, entity: &InternalEntity) { // Feels quite clunky.
 				$(
 					{
@@ -208,68 +208,68 @@ impl World {
 	pub fn get_entity_composition_id(&self, id: GlobalEntityID) -> CompositionID {
 		self.entity_storage.get(id).unwrap().composition_id
 	}
-	
+
 	pub fn get_entity_internal_index(&self, id: GlobalEntityID) -> usize {
 		self.entity_storage.get(id).unwrap().internal_index
 	}
-	
+
 	pub fn update_entities(&mut self, storages: &mut Storages, pending: PendingEntities) {
 		for i in pending.pending_deletions {
 			let entity = (*self.entity_storage.remove(i)).clone(); // Remove this entity from the data that sits alongside the components.
 			storages.internal_remove_entity(entity.composition_id, &entity); // Remove the entity from each of the storages.
-			
+
 			let entity_internal_index = entity.internal_index;
-			
+
 			// This composition might now be empty. In which case, we're done
 			if self.composition_list[entity.composition_id].global_entity_ids.is_empty() {
 				continue;
 			}
-			
+
 			let misplaced_entity_id = self.composition_list[entity.composition_id].global_entity_ids[entity_internal_index]; // Figure out the entity who was moved's global id.
-			
+
 			let misplaced_entity = self.entity_storage.get_mut(misplaced_entity_id).unwrap(); // Get the entity who was moved
 			misplaced_entity.internal_index = entity_internal_index; // Update the entity who was moved's internal index to the new location.
 		}
-		
+
 		for mut pending_entity in pending.pending_additions {
-			
+
 			let entity_id: GlobalEntityID = self.entity_storage.push(InternalEntity {
 				global_id: 0,
 				composition_id: 0,
 				internal_index: 0,
 			});
-			
+
 			if !self.composition_types_to_id_map.contains_key(&pending_entity.types) {
 				self.create_new_composition(&pending_entity.types);
 				storages.internal_add_composition();
 			}
-			
+
 			let composition_id = self.composition_types_to_id_map.get(&pending_entity.types).unwrap();
 			let composition_to_add_to = self.composition_list.get_mut(*composition_id).unwrap();
-			
+
 			let entity = self.entity_storage.get_mut(entity_id).unwrap();
 			entity.global_id = entity_id;
 			entity.composition_id = *composition_id;
 			entity.internal_index = composition_to_add_to.global_entity_ids.len();
-			
+
 			composition_to_add_to.global_entity_ids.push(entity_id);
-			
+
 			storages.internal_add_entity(*composition_id, &mut pending_entity);
 		}
 	}
-	
+
 	fn create_new_composition(&mut self, type_set: &TypeSet) {
 		let id = self.composition_list.len();
-		
+
 		self.composition_list.push(Composition {
 			id,
 			types: (*type_set).clone(),
 			global_entity_ids: vec![],
 		});
-		
+
 		self.composition_types_to_id_map.insert((*type_set).clone(), id);
 	}
-	
+
 	pub fn new() -> World {
 		World {
 			entity_storage: UnmovingVec::new(),
@@ -277,17 +277,17 @@ impl World {
 			composition_types_to_id_map: Default::default(),
 		}
 	}
-	
+
 	pub fn get_component<'a, T>(&self, storage: &'a mut VerticalStorage<T>, ent_id: GlobalEntityID) -> &'a mut T {
 		let internal_entity = self.entity_storage.get(ent_id).unwrap();
 		storage.get_mut(internal_entity.composition_id).unwrap().get_mut(internal_entity.internal_index).unwrap()
 	}
-	
+
 	#[inline]
 	pub fn internal_get_composition_list(&self) -> &Vec<Composition>{
 		&self.composition_list
 	}
-	
+
 	/// Returns every composition this request needs to touch.
 	pub fn internal_make_request(composition_list: &[Composition], request: Request) -> Vec<CompositionID> {
 		let mut to_return: Vec<CompositionID> = Vec::new();
