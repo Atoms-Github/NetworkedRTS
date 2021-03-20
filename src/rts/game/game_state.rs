@@ -1,16 +1,16 @@
 use std::collections::{HashMap, BTreeMap};
 use serde::*;
 
-use crate::gamecode::ecs::world::*;
-use crate::gamecode::systems::render::*;
-use crate::gamecode::systems::position::*;
-use crate::gamecode::systems::velocity::*;
-use crate::gamecode::systems::clickshooter::*;
-use crate::gamecode::systems::wasdmover::*;
-use crate::gamecode::systems::size::*;
+use crate::ecs::rich_ecs::world::*;
+use crate::rts::systems::render::*;
+use crate::rts::systems::position::*;
+use crate::rts::systems::velocity::*;
+use crate::rts::systems::clickshooter::*;
+use crate::rts::systems::wasdmover::*;
+use crate::rts::systems::size::*;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
-use crate::gamecode::systems::player::PlayerComp;
+use crate::rts::systems::player::PlayerComp;
 use crate::pub_types::{HashType, FrameIndex, PlayerID};
 use crate::netcode::{InfoForSim, ConnStatusChangeType, PlayerInputs};
 use ggez::Context;

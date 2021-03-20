@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use crate::gamecode::GameState;
+use crate::rts::GameState;
 use crate::pub_types::{PlayerID, FrameIndex, HashType};
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;

@@ -5,12 +5,12 @@ use ggez::graphics;
 use ggez::graphics::{DrawParam, Text};
 use serde::{Deserialize, Serialize};
 
-use crate::gamecode::ecs::system_macro;
-use crate::gamecode::ecs::world::*;
-use crate::gamecode::systems::position::PositionComp;
-use crate::gamecode::systems::player::PlayerComp;
-use crate::gamecode::systems::size::*;
-use crate::gamecode::systems::wasdmover::*;
+use crate::ecs::rich_ecs::system_macro;
+use crate::ecs::rich_ecs::world::*;
+use crate::rts::systems::position::PositionComp;
+use crate::rts::systems::player::PlayerComp;
+use crate::rts::systems::size::*;
+use crate::rts::systems::wasdmover::*;
 use crate::pub_types::PlayerID;
 use nalgebra::Point2;
 

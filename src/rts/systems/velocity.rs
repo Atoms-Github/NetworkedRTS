@@ -1,7 +1,7 @@
 use std::collections::{BTreeSet};
-use crate::gamecode::systems::position::PositionComp;
-use crate::gamecode::ecs::world::*;
-use crate::gamecode::ecs::system_macro;
+use crate::rts::systems::position::PositionComp;
+use crate::ecs::rich_ecs::world::*;
+use crate::ecs::rich_ecs::system_macro;
 use serde::{Serialize, Deserialize};
 use std::hash::*;
 

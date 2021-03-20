@@ -3,9 +3,9 @@ use std::collections::{BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use std::hash::*;
-use crate::gamecode::ecs::system_macro;
-use crate::gamecode::ecs::world::*;
-use crate::gamecode::systems::velocity::VelocityComp;
+use crate::ecs::rich_ecs::system_macro;
+use crate::ecs::rich_ecs::world::*;
+use crate::rts::systems::velocity::VelocityComp;
 
 create_system!( position_system | secret_position_system
 	| my_position: PositionComp, my_velocity: VelocityComp

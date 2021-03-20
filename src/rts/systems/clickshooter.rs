@@ -3,15 +3,15 @@ use std::collections::{BTreeSet, HashMap};
 use serde::{Deserialize, Serialize};
 
 
-use crate::gamecode::ecs::world::*;
-use crate::gamecode::systems::velocity::VelocityComp;
-use crate::gamecode::systems::position::PositionComp;
-use crate::gamecode::systems::size::SizeComp;
-use crate::gamecode::systems::render::RenderComp;
+use crate::ecs::rich_ecs::world::*;
+use crate::rts::systems::velocity::VelocityComp;
+use crate::rts::systems::position::PositionComp;
+use crate::rts::systems::size::SizeComp;
+use crate::rts::systems::render::RenderComp;
 use std::ops::{Sub, Mul};
 use std::hash::Hasher;
 use std::hash::*;
-use crate::gamecode::ecs::*;
+use crate::ecs::rich_ecs::*;
 use crate::pub_types::*;
 use crate::netcode::{InputState, PlayerInputs};
 
