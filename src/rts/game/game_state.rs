@@ -8,7 +8,6 @@ use ggez::Context;
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct GameState {
     pub world: EcsMan,
-
 }
 
 impl Default for GameState {
@@ -23,7 +22,7 @@ impl Default for GameState {
 impl GameState {
     pub fn new() -> Self {
         Self{
-            world: EcsMan {}
+            world: EcsMan::new(),
         }
     }
     pub fn init(&mut self){
