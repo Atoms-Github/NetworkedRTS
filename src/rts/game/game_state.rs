@@ -1,5 +1,4 @@
 use serde::*;
-use crate::rts::systems::velocity_system::VelocitySystem;
 use crate::ecs::ecs_store::*;
 use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr};
 use crate::netcode::{InfoForSim, PlayerInputs};
