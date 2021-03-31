@@ -43,9 +43,10 @@ impl GameState {
     pub fn render(&mut self, ctx: &mut Context){
     }
     pub fn gen_resources() -> ResourcesPtr{
-        return Arc::new(Resources{
+        let mut resources = Resources{
 
-        });
+        };
+        return Arc::new(resources);
     }
 }
 
