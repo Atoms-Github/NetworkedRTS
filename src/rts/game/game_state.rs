@@ -1,9 +1,10 @@
 use serde::*;
 use crate::rts::systems::velocity_system::VelocitySystem;
 use crate::ecs::ecs_store::*;
-use crate::pub_types::{HashType, FrameIndex, PlayerID};
+use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr};
 use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::Context;
+use std::sync::Arc;
 
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
@@ -12,7 +13,7 @@ pub struct GameState {
 }
 // No clone or serde.
 pub struct Resources{
-    
+
 }
 
 impl Default for GameState {
@@ -37,14 +38,14 @@ impl GameState {
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
     }
-    pub fn simulate_tick(&mut self, inputs: PlayerInputs, delta: f32, frame_index: FrameIndex){
+    pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
     }
     pub fn render(&mut self, ctx: &mut Context){
     }
-    pub fn gen_resources() -> Resources{
-        return Resources{
+    pub fn gen_resources() -> ResourcesPtr{
+        return Arc::new(Resources{
 
-        };
+        });
     }
 }
 
