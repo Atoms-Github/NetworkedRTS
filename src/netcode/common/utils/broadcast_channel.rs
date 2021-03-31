@@ -30,7 +30,7 @@ pub struct BcRx<T: Clone>{
 impl<T: Clone> BcTx<T>{
     pub fn send(&mut self, value: T) -> Result<(), SendError<T>>{
         for sink in &self.txes {
-            let result = sink.send(value.clone()); //optimum: 1 unnec clone.
+            let result = sink.send(value.clone()); //optimisable: 1 unnec clone.
             if result.is_err(){
                 return result;
             }

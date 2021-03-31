@@ -1,20 +1,21 @@
-use crate::ecs::ecs_man::System;
+use crate::ecs::ecs_store::*;
+use crate::ecs::ecs_manager::{System, EcsStore};
+use serde::{Deserialize, Serialize};
 
-struct VelocitySystem;
+#[derive(Clone, Serialize, Deserialize, Hash)]
+pub struct VelocitySystem;
 
-impl System for VelocitySystem {
-    // These are the resources required for execution.
-    // You can also define a struct and `#[derive(SystemData)]`,
-    // see the `full` example.
-    type SystemData = (WriteStorage<'a, Pos>, ReadStorage<'a, Vel>);
+impl<'a> System for VelocitySystem {
+    fn run(&mut self, data: &mut EcsStore) {
+        println!("Running!");
+    }
+}
 
-    fn run(&mut self, (mut pos, vel): Self::SystemData) {
-        // The `.join()` combines multiple components,
-        // so we only access those entities which have
-        // both of them.
-        // You could also use `par_join()` to get a rayon `ParallelIterator`.
-        for (pos, vel) in (&mut pos, &vel).join() {
-            pos.0 += vel.0;
-        }
+#[derive(Clone, Serialize, Deserialize, Hash)]
+pub struct VelocitySystemTwo;
+
+impl System for VelocitySystemTwo {
+    fn run(&mut self, data: &mut EcsStore) {
+        println!("Running!Two");
     }
 }

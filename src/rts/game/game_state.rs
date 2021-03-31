@@ -1,5 +1,6 @@
 use serde::*;
-use crate::ecs::ecs_man::*;
+use crate::rts::systems::velocity_system::VelocitySystem;
+use crate::ecs::ecs_store::*;
 use crate::pub_types::{HashType, FrameIndex, PlayerID};
 use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::Context;
@@ -7,7 +8,11 @@ use ggez::Context;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct GameState {
-    pub world: EcsMan,
+    // pub world: EcsStore,
+}
+// No clone or serde.
+pub struct Resources{
+    
 }
 
 impl Default for GameState {
@@ -22,7 +27,7 @@ impl Default for GameState {
 impl GameState {
     pub fn new() -> Self {
         Self{
-            world: EcsMan::new(),
+            // world: EcsStore::new(),
         }
     }
     pub fn init(&mut self){
@@ -35,6 +40,11 @@ impl GameState {
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, delta: f32, frame_index: FrameIndex){
     }
     pub fn render(&mut self, ctx: &mut Context){
+    }
+    pub fn gen_resources() -> Resources{
+        return Resources{
+
+        };
     }
 }
 
