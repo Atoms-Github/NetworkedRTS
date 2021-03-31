@@ -5,6 +5,7 @@
 mod tests {
     use crate::ecs::ecs_manager::*;
     use crate::rts::systems::velocity_system::VelSystem;
+    use crate::ecs::systems_lookup::SystemsLookup;
 
     #[test]
     fn it_works() {

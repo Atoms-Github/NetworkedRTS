@@ -5,31 +5,13 @@ use std::hash::Hash;
 use anymap::any::CloneAny;
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
+use crate::ecs::systems_lookup::SystemsLookup;
 
 
 pub trait System{
     fn run(&self, data: &mut EcsStore);
 }
-struct SystemInfo {
-    my_system: Box<dyn System>,
-    name: String,
-}
-pub struct SystemsLookup {
-    items: Vec<SystemInfo>
-}
-impl SystemsLookup{
-    pub fn new() -> Self{
-        SystemsLookup{
-            items: vec![]
-        }
-    }
-    pub fn add_sys<T : 'static + System>(&mut self, system: T){
-        self.items.push(SystemInfo{
-            my_system: Box::new(system),
-            name: "".to_string()
-        });
-    }
-}
+
 
 
 
