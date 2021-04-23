@@ -1,5 +1,5 @@
 use crate::ecs::ecs_manager::System;
-
+// TODO3: Use legion style queries to get performance on iteration. https://github.com/amethyst/legion
 pub struct SystemInfo {
     pub my_system: Box<dyn System>,
     pub name: String,

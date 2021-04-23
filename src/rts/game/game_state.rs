@@ -4,6 +4,7 @@ use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr};
 use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::Context;
 use std::sync::Arc;
+use crate::rts::systems::render_system::RenderSystem;
 
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
@@ -40,6 +41,7 @@ impl GameState {
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
     }
     pub fn render(&mut self, ctx: &mut Context){
+        // RenderSystem::run_render(ecs_manager.data_store, ctx);
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = Resources{

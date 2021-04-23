@@ -7,6 +7,9 @@
 #![feature(drain_filter)]
 #![allow(unused_attributes)]
 
+#[macro_use]
+extern crate mopa;
+
 
 use std::{env, thread};
 
@@ -21,6 +24,7 @@ pub mod bibble;
 pub mod rts;
 pub mod pub_types;
 pub mod ecs;
+pub mod utils;
 
 
 pub const DEBUG_MSGS_ALL: bool = false;

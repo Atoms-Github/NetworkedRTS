@@ -17,6 +17,8 @@ bincode = "1.1.4"
 log = { version = "0.4.13", features = ["max_level_debug", "release_max_level_warn"] }
 env_logger = "0.8.2"
 chrono = "0.4.19"
+typetag = "0.1"
+mopa = "0.2.2"
 
 #futures = "0.1.29"
 #bytes = "0.4.12"
