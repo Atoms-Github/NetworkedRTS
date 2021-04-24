@@ -29,9 +29,7 @@ impl EcsManager {
         }
     }
     pub fn sim(&mut self, systems_lookup: &SystemsLookup){
-        for system in &systems_lookup.items{
-            system.my_system.run(&mut self.root_storage);
-        }
+
     }
 }
 
