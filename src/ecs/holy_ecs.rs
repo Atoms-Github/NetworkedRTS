@@ -16,6 +16,7 @@ use std::hash::Hash;
 use crate::utils::TypeIdNum;
 use anymap::AnyMap;
 use crate::ecs::{Ecs, Component, System};
+use crate::ecs::systems_man::SystemsMan;
 
 
 struct SlicePointer{
@@ -53,23 +54,25 @@ impl HolyEcs {
     }
 }
 impl Ecs for HolyEcs {
-    fn query(&self, entity_id: usize) -> Vec<usize> {
-        unimplemented!();
-    }
-
     fn add_entity(&mut self, new_components: AnyMap) -> usize {
         unimplemented!()
     }
 
-    fn get_component<T: Component>(&self, entity_id: usize) -> &T {
+    fn query(&self, types: Vec<TypeId>) -> Vec<usize> {
+        unimplemented!();
+    }
+
+    fn get<T: Component>(&self, entity_id: usize) -> &T {
+        unimplemented!()
+    }
+    fn get_mut<T: Component>(&mut self, entity_id: usize) -> &mut T {
         unimplemented!()
     }
 
-    fn run_systems(&self, systems: &Vec<Box<dyn System>>) {
-        // for system in systems{
-        //     system.run(&mut self.root_storage);
-        // }
-        println!("RunSys!");
+    fn run_systems(&mut self, systems: &SystemsMan) {
+        for system in &systems.systems{
+            system.run(self);
+        }
     }
 }
 

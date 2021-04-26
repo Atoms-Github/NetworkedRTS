@@ -6,21 +6,16 @@ use std::sync::Arc;
 use crate::rts::systems::render_system::RenderSystem;
 use crate::ecs::{ActiveEcs, Ecs};
 use crate::ecs::System;
+use crate::ecs::systems_man::SystemsMan;
+use crate::rts::systems::velocity_system::VeocitylSys;
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
     ecs_sys: ActiveEcs,
-    systems: Vec<Box<dyn System>>,
+    systems_man: SystemsMan
 }
-impl Clone for GameState{
-    fn clone(&self) -> Self {
-        Self{
-            ecs_sys: self.ecs_sys.clone(),
-            systems: self.systems.iter().map(|item|{item.my_clone()}).collect()
-        }
-    }
-}
+
 // No clone or serde.
 pub struct Resources{
 }
@@ -36,11 +31,12 @@ impl Default for GameState {
 
 impl GameState {
     pub fn new() -> Self {
-        let mut systems = vec![];
+        let mut systems = SystemsMan::new();
+        systems.add_system(VeocitylSys {});
         Self{
             // world: EcsStore::new(),
             ecs_sys: ActiveEcs::new(),
-            systems
+            systems_man: systems
         }
     }
     pub fn init(&mut self){
@@ -51,7 +47,7 @@ impl GameState {
 
     }
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
-        self.ecs_sys.run_systems(&self.systems);
+        self.ecs_sys.run_systems(&self.systems_man);
     }
     pub fn render(&mut self, ctx: &mut Context){
         // RenderSystem::run_render(ecs_manager.data_store, ctx);
