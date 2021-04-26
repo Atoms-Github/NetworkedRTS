@@ -9,17 +9,26 @@ use std::hash::{Hash, Hasher};
 use crate::netcode::common::sim_data::sim_data_storage::ServerEvent;
 use crate::rts::game::game_state::Resources;
 use std::sync::Arc;
+use std::fmt::Debug;
+use serde::__private::Formatter;
+use std::fmt;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct NetPlayerProperty{
     pub waiting_on: bool,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct NetGameState {
     pub game_state: GameState,
     players: BTreeMap<PlayerID, NetPlayerProperty>,
     simmed_frame_index: FrameIndex,
+}
+impl Debug for NetGameState{
+        fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+            f.debug_tuple("ItsAGameState")
+             .finish()
+        }
 }
 
 impl NetGameState {
@@ -66,7 +75,7 @@ impl NetGameState {
     }
     pub fn get_hash(&self) -> HashType{
         let mut s = DefaultHasher::new();
-        self.hash(&mut s);
+        // TODO1: self.hash(&mut s);
         s.finish()
     }
     pub fn get_simmed_frame_index(&self) -> FrameIndex{

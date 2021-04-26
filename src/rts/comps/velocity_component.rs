@@ -1,11 +1,13 @@
-use crate::ecs::ecs_store::Component;
 use serde::{Deserialize, Serialize};
+use crate::ecs::ecs_shared::Component;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct VelocityComponent{
 
 }
 #[typetag::serde]
 impl Component for VelocityComponent{
-
+    fn my_clone(&self) -> Box<dyn Component> {
+        Box::new(self.clone())
+    }
 }

@@ -19,6 +19,7 @@ env_logger = "0.8.2"
 chrono = "0.4.19"
 typetag = "0.1"
 mopa = "0.2.2"
+serde_closure = "0.3.2"
 
 #futures = "0.1.29"
 #bytes = "0.4.12"

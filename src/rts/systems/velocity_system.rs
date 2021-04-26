@@ -1,14 +1,22 @@
-use crate::ecs::ecs_store::*;
 use serde::{Deserialize, Serialize};
-use crate::ecs::ecs_manager::System;
+use crate::ecs::System;
+use crate::ecs::{Ecs, ActiveEcs};
 
-#[derive(Serialize, Deserialize)]
+
+pub fn sys_vel(){
+
+}
+#[derive(Clone, Serialize, Deserialize)]
 pub struct VelSystem{
 }
 
 #[typetag::serde]
 impl System for VelSystem {
-    fn run(&self, data: &mut EcsStore) {
+    fn run(&self, ecs: &ActiveEcs) {
+        unimplemented!()
+    }
 
+    fn my_clone(&self) -> Box<dyn System> {
+        Box::new(self.clone())
     }
 }

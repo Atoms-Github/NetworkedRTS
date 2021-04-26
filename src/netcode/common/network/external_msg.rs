@@ -60,4 +60,3 @@ pub struct NetMsgGreetingResponse {
 
 
 
-
