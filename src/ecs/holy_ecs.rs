@@ -1,13 +1,4 @@
-use serde::*;
-pub type CompositionID = usize;
-
-pub type VerticalStorage<T> = Vec<Vec<T>>;
-//pub type TypeSetSerializable = BTreeSet<u64>;
-pub type TypeSet = BTreeSet<TypeIdNum>;
-
-
-
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use std::collections::{HashMap, BTreeSet, BTreeMap};
 use std::any::{Any, TypeId};
 use anymap::any::CloneAny;
@@ -15,8 +6,14 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use crate::utils::TypeIdNum;
 use anymap::AnyMap;
-use crate::ecs::{Ecs, Component, System};
+use crate::ecs::{Ecs, PlainData, System};
 use crate::ecs::systems_man::SystemsMan;
+
+pub type CompositionID = usize;
+
+pub type VerticalStorage<T> = Vec<Vec<T>>;
+//pub type TypeSetSerializable = BTreeSet<u64>;
+pub type TypeSet = BTreeSet<TypeIdNum>;
 
 
 struct SlicePointer{
@@ -28,12 +25,13 @@ struct SlicePointer{
 // #[derive(Clone, Serialize, Deserialize, Debug)]
 #[derive(Serialize, Deserialize)]
 pub struct HolyEcs {
-    vertical_storages: BTreeMap<TypeIdNum, VerticalStorage<Box<dyn Component>>>
+    vertical_storages: BTreeMap<TypeIdNum, VerticalStorage<Box<dyn PlainData>>>,
+    // test: AnyMap,
 }
 impl Clone for HolyEcs{
     fn clone(&self) -> Self {
-        let mut cloned : BTreeMap<TypeIdNum, VerticalStorage<Box<dyn Component>>> = BTreeMap::default();
-        // Optimum. Optimise. Optimisable.
+        let mut cloned : BTreeMap<TypeIdNum, VerticalStorage<Box<dyn PlainData>>> = BTreeMap::default();
+        // Optimisable.
         for (key, value) in self.vertical_storages.iter(){
             for list in value{
                 // breaking.
@@ -49,7 +47,8 @@ impl Clone for HolyEcs{
 impl HolyEcs {
     pub fn new() -> Self{
         return HolyEcs{
-            vertical_storages: Default::default()
+            vertical_storages: Default::default(),
+            // test: AnyMap::new(),
         };
     }
 }
@@ -62,10 +61,10 @@ impl Ecs for HolyEcs {
         unimplemented!();
     }
 
-    fn get<T: Component>(&self, entity_id: usize) -> &T {
+    fn get<T: PlainData>(&self, entity_id: usize) -> &T {
         unimplemented!()
     }
-    fn get_mut<T: Component>(&mut self, entity_id: usize) -> &mut T {
+    fn get_mut<T: PlainData>(&mut self, entity_id: usize) -> &mut T {
         unimplemented!()
     }
 

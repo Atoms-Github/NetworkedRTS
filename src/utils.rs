@@ -12,3 +12,6 @@ pub fn crack_type_id(type_id: TypeId) -> TypeIdNum{
     };
     return emp_exposed.t;
 }
+pub fn get_type_id<T : 'static>() -> TypeIdNum{
+    crack_type_id(TypeId::of::<T>())
+}

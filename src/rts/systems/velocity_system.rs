@@ -17,10 +17,9 @@ pub struct VeocitylSys {
 impl System for VeocitylSys {
     fn run(&self, ecs: &mut ActiveEcs) {
         for entity_id in ecs.query(vec![TypeId::of::<VelocityComp>(), TypeId::of::<PositionComp>()]){
-            // let position : &mut PositionComp = ecs.get_mut(entity_id);
-            // let velocity : &VelocityComp = ecs.get(entity_id);
-            // position.pos.x += velocity.vel.x;
-            // position.pos.y += velocity.vel.y;
+            // ***noice*** /s
+            ecs.get_mut::<PositionComp>(entity_id).pos.x += ecs.get::<VelocityComp>(entity_id).vel.x;
+            ecs.get_mut::<PositionComp>(entity_id).pos.y += ecs.get::<VelocityComp>(entity_id).vel.x;
         }
     }
     fn my_clone(&self) -> Box<dyn System> {
