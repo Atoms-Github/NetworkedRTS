@@ -1,19 +1,17 @@
 use std::any::*;
-use serde::{Deserialize, Serialize, Serializer};
 use std::collections::BTreeMap;
+
+use serde::{Deserialize, Serialize, Serializer};
+
+use crate::ecs::{ActiveEcs, Ecs};
+use crate::ecs::ecs_shared::{SerdeObject, TOH};
 use crate::utils::TypeIdNum;
-use crate::ecs::{Ecs, ActiveEcs};
 
 
-#[typetag::serde(tag = "type")]
-pub trait PlainData : mopa::Any + Send{
-    fn my_clone(&self) -> Box<dyn PlainData>;
-}
-mopa::mopafy!(PlainData);
 
 #[derive(Serialize, Deserialize)]
 pub struct MyAnyMap {
-    data: BTreeMap<TypeIdNum, Box<dyn PlainData>>,
+    data: BTreeMap<TypeIdNum, TOH>,
 }
 
 impl MyAnyMap {
@@ -36,9 +34,9 @@ impl MyAnyMap {
     // }
 
     /// Retrieve a mutable reference to the value stored in the map for the type `T`, if it exists.
-    pub fn get_mut<T: PlainData + 'static>(&mut self) -> Option<&mut T> {
+    pub fn get_mut<T: SerdeObject + 'static>(&mut self) -> Option<&mut T> {
         if let Some(any) = self.data.get_mut(&crate::utils::get_type_id::<T>()) {
-            let found : &mut T = any.downcast_mut::<T>().expect("Stored wrong type in typemap somehow.");
+            let found : &mut T = any.data.downcast_mut::<T>().expect("Stored wrong type in typemap somehow.");
             return Some(found);
         }
         return None;
@@ -46,12 +44,12 @@ impl MyAnyMap {
 
     /// Set the value contained in the map for the type `T`.
     /// This will override any previous value stored.
-    pub fn insert<T: PlainData + 'static>(&mut self, value: T) {
-        self.data.insert(crate::utils::get_type_id::<T>(), Box::new(value));
+    pub fn insert<T: SerdeObject + 'static>(&mut self, value: T) {
+        self.data.insert(crate::utils::get_type_id::<T>(), TOH::new(value));
     }
 
     /// Remove the value for the type `T` if it existed.
-    pub fn remove<T: PlainData + 'static>(&mut self) {
+    pub fn remove<T: SerdeObject + 'static>(&mut self) {
         self.data.remove(&crate::utils::get_type_id::<T>());
     }
 }
