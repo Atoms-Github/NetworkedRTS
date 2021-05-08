@@ -7,12 +7,14 @@ use std::any::TypeId;
 use ecs_shared::SerdeObject;
 use crate::ecs::ecs_shared::Component;
 
+
 #[macro_use]
 mod holy_ecs;
 mod ecs_tests;
 pub mod my_anymap;
 pub mod ecs_shared;
 pub mod systems_man;
+pub mod liquid_garbage;
 
 
 pub type GlobalEntityID = usize;

@@ -25,52 +25,31 @@ struct SlicePointer{
     index_within_composition: usize
 }
 
-// #[derive(Serialize, Deserialize, Clone)]
-// struct Column<T>{
-//
-// }
-// #[typetag::serde]
-// impl<T> PlainData for Column<T>{
-//     fn my_clone(&self) -> Box<dyn PlainData> {
+#[derive(Serialize, Deserialize, Clone)]
+struct Column{
+    data: Vec<i32>
+}
+
+// impl SerdeObject for Column{
+//     fn my_clone(&self) -> Box<dyn SerdeObject> {
 //         Box::new(self.clone())
 //     }
 // }
 
-// #[derive(Clone, Serialize, Deserialize, Debug)]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct HolyEcs {
-    // vertical_storages: BTreeMap<TypeIdNum, VerticalStorage<Box<dyn SerdeObject>>>,
-    test: MyAnyMap,
-    // test: AnyMap,
-}
-impl Clone for HolyEcs{
-    fn clone(&self) -> Self {
-        let mut cloned : BTreeMap<TypeIdNum, VerticalStorage<Box<dyn SerdeObject>>> = BTreeMap::default();
-        // Optimisable.
-        // for (key, value) in self.vertical_storages.iter(){
-        //     for list in value{
-        //         // breaking.
-        //     }
-        //
-        //     //cloned.insert(*key, value.iter().map(|item|{item.iter().map(|item| {item.my_clone()})}).collect());
-        // }
-        unimplemented!();
-        // Self{
-        //     vertical_storages: cloned,
-        //     test: self.test.clone(),
-        // }
-    }
+    storages: MyAnyMap,
 }
 impl HolyEcs {
     pub fn new() -> Self{
-        unimplemented!();
-        // return HolyEcs{
-        //     vertical_storages: Default::default(),
-        //     // test: AnyMap::new(),
-        // };
+        HolyEcs{
+            storages: MyAnyMap::new(),
+        }
     }
 }
 impl Ecs for HolyEcs {
+
+
     fn add_entity(&mut self, new_components: AnyMap) -> usize {
         unimplemented!()
     }

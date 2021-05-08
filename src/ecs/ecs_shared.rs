@@ -1,5 +1,6 @@
 use crate::ecs::{ActiveEcs, Ecs};
 use serde::{Deserialize, Serialize, Serializer};
+use crate::utils::TypeIdNum;
 
 #[typetag::serde(tag = "type")]
 pub trait System : Send{
@@ -12,21 +13,22 @@ pub trait Component : Send{
 }
 
 
-#[derive(Serialize, Deserialize)]
-pub struct TOH { // (Trait Object Holder). TODO: Try with just single member. So maybe can do TOH.0.
-    #[serde(with = "serde_traitobject")]
-    pub data: Box<dyn SerdeObject>,
-}
-impl TOH {
-    pub fn new<T : SerdeObject>(object: T) -> Self{
-        Self{
-            data: Box::new(object),
-        }
-    }
-}
 
-pub trait SerdeObject: mopa::Any + Send + serde_traitobject::Serialize + serde_traitobject::Deserialize{
+pub trait SerdeObject: mopa::Any + Send{
     fn my_clone(&self) -> Box<dyn SerdeObject>;
+    fn my_ser(&self) -> Vec<u8>;
 }
 
 mopa::mopafy!(SerdeObject);
+
+
+
+// #[derive(Serialize)]
+// pub struct World{
+//     pub positions: Vec<PositionComponent>,
+//     pub velocities: Vec<VelocityComponent>,
+//     pub accelerations: Vec<AccelerationComponent>,
+//
+// }
+
+
