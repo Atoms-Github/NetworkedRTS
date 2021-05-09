@@ -3,21 +3,26 @@ use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr, PointFloat}
 use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::{*};
 use std::sync::Arc;
-use crate::rts::systems::render_system::RenderSystem;
-use crate::ecs::{ActiveEcs};
+use crate::ecs::{ActiveEcs, GlobalEntityID};
 use crate::ecs::System;
 use crate::ecs::systems_man::SystemsMan;
-use crate::rts::systems::velocity_system::VeocitylSys;
+use crate::rts::systems::velocity_sys::VeocitylSys;
 use crate::ecs::my_anymap::SerdeAnyMap;
 use crate::rts::comps::render_comp::RenderComp;
 use crate::rts::comps::position_comp::PositionComp;
 use ggez::graphics::DrawParam;
+use crate::rts::comps::player_comp::PlayerComp;
+use crate::rts::comps::owner_comp::OwnerComp;
+
+
+const MAX_PLAYERS : usize = 4;
 
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
     ecs: ActiveEcs,
-    systems_man: SystemsMan
+    systems_man: SystemsMan,
+    player_count: usize
 }
 
 // No clone or serde.
@@ -38,23 +43,42 @@ impl GameState {
         let mut systems = SystemsMan::new();
         systems.add_system(VeocitylSys {});
         Self{
-            // world: EcsStore::new(),
             ecs: ActiveEcs::new(),
-            systems_man: systems
+            systems_man: systems,
+            player_count: 0
         }
     }
     pub fn init(&mut self){
+        // Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
+        for player_index in 0..MAX_PLAYERS{
+            assert_eq!(player_index, self.ecs.new_entity(SerdeAnyMap::new()))
+        }
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let mut components = SerdeAnyMap::new();
         components.insert(RenderComp{ colour: (255,255,255) });
         components.insert(PositionComp{ pos: PointFloat::new(1.0, 1.0) });
+        components.insert( OwnerComp{ owner: player_id as GlobalEntityID });
         self.ecs.new_entity(components);
+
+
+        if self.player_count < MAX_PLAYERS{
+            let player_entity_id = player_id as GlobalEntityID;
+            self.ecs.add_component(player_entity_id, PlayerComp{ inputs: Default::default()});
+
+            self.player_count += 1;
+        }
+
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
     }
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
+        for (player_id, input_state) in inputs{
+            if let Some(existing_player) = self.ecs.get_mut::<PlayerComp>(player_id as GlobalEntityID){
+                existing_player.inputs = input_state;
+            }
+        }
         self.ecs.run_systems(&self.systems_man);
     }
     pub fn render(&mut self, ctx: &mut Context){

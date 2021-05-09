@@ -25,6 +25,8 @@ pub type GenerationNum = usize;
 
 
 
+
+
 #[derive(Serialize, Deserialize, Clone)]
 struct InternalEntityHandle {
     index: InternalIndex,
@@ -90,6 +92,20 @@ impl HolyEcs {
         }
         return external_id;
     }
+    pub fn add_component<T : Component + 'static>(&mut self, external_id: GlobalEntityID, component: T) {
+        // If its a real entity.
+        if let Some(internal_entity_original) = self.external_entity_lookup.get(&external_id).clone(){
+            let internal_entity_cloned = internal_entity_original.clone();
+            // If not dead.
+            if *self.generations.get(internal_entity_cloned.index).unwrap() == internal_entity_cloned.generation{
+                let my_type = crate::utils::crack_type_id::<T>();
+
+                let found = self.get_storage(my_type).get_mut(internal_entity_cloned.index).unwrap();
+                self.get_storage(my_type)[internal_entity_cloned.index] = Some(TOH::new(component));
+            }
+        }
+    }
+
     pub fn query(&mut self, types: Vec<TypeIdNum>) -> Vec<GlobalEntityID> {
         let mut internal_entities = vec![];
         for internal_index in 0..self.generations.len(){
@@ -128,7 +144,6 @@ impl HolyEcs {
             None =>{
                 None
             }
-
         }
     }
     pub fn get_mut<T: Component + DeserializeOwned>(&mut self, external_id: GlobalEntityID) -> Option<&mut T> {
