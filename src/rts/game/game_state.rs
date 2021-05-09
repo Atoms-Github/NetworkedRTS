@@ -1,18 +1,22 @@
 use serde::*;
-use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr};
+use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr, PointFloat};
 use crate::netcode::{InfoForSim, PlayerInputs};
-use ggez::Context;
+use ggez::{*};
 use std::sync::Arc;
 use crate::rts::systems::render_system::RenderSystem;
 use crate::ecs::{ActiveEcs};
 use crate::ecs::System;
 use crate::ecs::systems_man::SystemsMan;
 use crate::rts::systems::velocity_system::VeocitylSys;
+use crate::ecs::my_anymap::SerdeAnyMap;
+use crate::rts::comps::render_comp::RenderComp;
+use crate::rts::comps::position_comp::PositionComp;
+use ggez::graphics::DrawParam;
 
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
-    ecs_sys: ActiveEcs,
+    ecs: ActiveEcs,
     systems_man: SystemsMan
 }
 
@@ -35,22 +39,62 @@ impl GameState {
         systems.add_system(VeocitylSys {});
         Self{
             // world: EcsStore::new(),
-            ecs_sys: ActiveEcs::new(),
+            ecs: ActiveEcs::new(),
             systems_man: systems
         }
     }
     pub fn init(&mut self){
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
+        let mut components = SerdeAnyMap::new();
+        components.insert(RenderComp{ colour: (255,255,255) });
+        components.insert(PositionComp{ pos: PointFloat::new(1.0, 1.0) });
+        self.ecs.new_entity(components);
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
     }
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
-        self.ecs_sys.run_systems(&self.systems_man);
+        self.ecs.run_systems(&self.systems_man);
     }
     pub fn render(&mut self, ctx: &mut Context){
-        // RenderSystem::run_render(ecs_manager.data_store, ctx);
+        for entity in self.ecs.query(vec![crate::utils::crack_type_id::<RenderComp>(), crate::utils::crack_type_id::<PositionComp>()]){
+            let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
+            let render = self.ecs.get::<RenderComp>(entity).unwrap().clone();
+
+            let params = DrawParam::new();
+
+            let mode = graphics::DrawMode::fill();
+            let bounds = graphics::Rect::new(position.pos.x, position.pos.y,50.0, 50.0);
+            let color = graphics::Color::from(render.colour);
+
+            let arena_background : graphics::Mesh = graphics::Mesh::new_rectangle(
+                ctx,
+                mode,
+                bounds,
+                color,
+            ).unwrap();
+
+
+            graphics::draw(ctx, &arena_background, params).unwrap();
+
+
+            // let owner_id = e.my_wasdmover_comp(d).owner_id;
+            //
+            // let player_name = player_names.get(&owner_id).unwrap().clone();
+            //
+            // let fps = timer::fps(ctx);
+            // let player_name_display = Text::new(player_name);
+            //
+            //
+            // // When drawing through these calls, `DrawParam` will work as they are documented.
+            // graphics::draw(
+            //     ctx,
+            //     &player_name_display,
+            //     (Point2::new(e.my_position(d).x, e.my_position(d).y), graphics::WHITE),
+            // ).unwrap();
+
+        }
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = Resources{

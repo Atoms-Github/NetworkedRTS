@@ -81,7 +81,7 @@ impl HolyEcs {
 
         external_id
     }
-    pub fn add_entity(&mut self, new_components: SerdeAnyMap) -> GlobalEntityID {
+    pub fn new_entity(&mut self, new_components: SerdeAnyMap) -> GlobalEntityID {
         let external_id = self.generate_new_empty_entity();
         let internal_entity_index = self.external_entity_lookup.get(&external_id).unwrap().index;
 
@@ -97,20 +97,17 @@ impl HolyEcs {
             if self.spare_slots.get(internal_index).is_some(){
                 let mut good = true;
                 for required_type in &types{
-                    if self.get_storage(*required_type).get(internal_index).is_none(){
-                        println!("False. NoMatch.");
+                    if self.get_storage(*required_type).get(internal_index).unwrap().is_none(){
                         good = false;
                         break;
                     }
                 }
-                if good && self.spare_slots.get(internal_index).is_some() /*can't be dead*/{
+                if good{
                     internal_entities.push(internal_index);
                 }
             }
         }
-
         let mut external_entities = vec![];
-        println!("internal_entities: {:?}", internal_entities);
         for internal_entity in &internal_entities{
             for (external_id, internal_handle) in &self.external_entity_lookup{
                 if internal_handle.index == *internal_entity{
@@ -216,7 +213,7 @@ mod ecs_tests {
         new_entity_comps.insert(TestComp3{value : TEST_COMP_3_VALUE});
         new_entity_comps.insert(TestComp2{value : 3.2});
 
-        let new_entity_id = ecs.add_entity(new_entity_comps);
+        let new_entity_id = ecs.new_entity(new_entity_comps);
         assert_eq!(new_entity_id, 0);
         return (ecs, new_entity_id);
     }
@@ -225,11 +222,17 @@ mod ecs_tests {
         new_entity();
     }
     #[test]
-    fn ecs_query() {
+    fn ecs_query_positive() {
         let (mut ecs, entity_id) = new_entity();
         let query_results = ecs.query(vec![crate::utils::crack_type_id::<TestComp2>()]);
         assert_eq!(1, query_results.len());
         assert_eq!(entity_id, *query_results.get(0).unwrap());
+    }
+    #[test]
+    fn ecs_query_negative() {
+        let (mut ecs, entity_id) = new_entity();
+        let query_results = ecs.query(vec![crate::utils::crack_type_id::<TestComp1>(), crate::utils::crack_type_id::<TestComp3>()]);
+        assert_eq!(0, query_results.len());
     }
     #[test]
     fn ecs_get_comp() {
