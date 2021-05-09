@@ -16,16 +16,17 @@ pub mod my_anymap;
 pub mod ecs_shared;
 pub mod systems_man;
 pub mod liquid_garbage;
+pub mod unmoving_vec;
 
 
 pub type GlobalEntityID = usize;
 pub type ActiveEcs = HolyEcs;
 
-pub trait Ecs{
-    fn add_entity(&mut self, new_components: SerdeAnyMap) -> GlobalEntityID;
-    fn query(&self, types: Vec<TypeId>) -> Vec<GlobalEntityID>;
-    fn get<T : SerdeObject>(&self, entity_id: GlobalEntityID) -> &T;
-    fn get_mut<T: SerdeObject>(&mut self, entity_id: usize) -> &mut T;
-    fn run_systems(&mut self, systems: &SystemsMan);
-}
-
+// pub trait Ecs{
+//     fn add_entity(&mut self, new_components: SerdeAnyMap) -> GlobalEntityID;
+//     fn query(&self, types: Vec<TypeId>) -> Vec<GlobalEntityID>;
+//     fn get<T : SerdeObject>(&self, entity_id: GlobalEntityID) -> &T;
+//     fn get_mut<T: SerdeObject>(&mut self, entity_id: usize) -> &mut T;
+//     fn run_systems(&mut self, systems: &SystemsMan);
+// }
+//

@@ -43,6 +43,9 @@ impl<T> UnmovingVec<T>{
         self.free_stack.push(index);
         &self.list[index]
     }
+    pub fn capacity(&self) -> usize{
+        return self.list.len();
+    }
 
     pub fn push(&mut self, item: T) -> usize {
         match self.free_stack.pop(){

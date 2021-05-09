@@ -1,4 +1,4 @@
-use crate::ecs::{ActiveEcs, Ecs};
+use crate::ecs::{ActiveEcs};
 use serde::{Deserialize, Serialize, Serializer, Deserializer, de};
 use crate::utils::TypeIdNum;
 use crate::ecs::ecs_shared::SerdeObject;
@@ -173,13 +173,4 @@ mod toh_tests {
         assert_eq!(casted.value_one, 6);
         assert_eq!(casted.value_two, 10.0);
     }
-    // #[test]
-    // fn test_serde_vec() {
-    //     let original_toh = vec![2];
-    //
-    //     let serialized = bincode::serialize(&original_toh).unwrap();
-    //
-    //     println!("TOH TypeID:deser {:?}", serialized);
-    //     assert_eq!(casted.value_two, 2);
-    // }
 }

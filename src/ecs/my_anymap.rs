@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::ecs::{ActiveEcs, Ecs};
+use crate::ecs::{ActiveEcs};
 use crate::ecs::ecs_shared::{SerdeObject};
 use crate::utils::TypeIdNum;
 use crate::ecs::liquid_garbage::TOH;
@@ -11,7 +11,7 @@ use serde::de::DeserializeOwned;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct SerdeAnyMap {
-    data: BTreeMap<TypeIdNum, TOH>,
+    pub data: BTreeMap<TypeIdNum, TOH>,
 }
 impl SerdeAnyMap {
     pub fn new() -> Self {

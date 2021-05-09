@@ -6,6 +6,9 @@ use crate::ecs::ecs_shared::{SerdeObject, Component};
 pub struct VelocityComp {
     pub vel: PointFloat,
 }
+impl Component for VelocityComp{
+
+}
 
 impl SerdeObject for VelocityComp{
     fn my_clone(&self) -> Box<dyn SerdeObject> {

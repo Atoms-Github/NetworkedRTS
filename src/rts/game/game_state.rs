@@ -4,7 +4,7 @@ use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::Context;
 use std::sync::Arc;
 use crate::rts::systems::render_system::RenderSystem;
-use crate::ecs::{ActiveEcs, Ecs};
+use crate::ecs::{ActiveEcs};
 use crate::ecs::System;
 use crate::ecs::systems_man::SystemsMan;
 use crate::rts::systems::velocity_system::VeocitylSys;
