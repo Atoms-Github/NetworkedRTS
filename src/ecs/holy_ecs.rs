@@ -92,7 +92,7 @@ impl HolyEcs {
     }
     pub fn query(&mut self, types: Vec<TypeIdNum>) -> Vec<GlobalEntityID> {
         let mut internal_entities = vec![];
-        for internal_index in self.generations.clone(){
+        for internal_index in 0..self.generations.len(){
             // If alive.
             if self.spare_slots.get(internal_index).is_some(){
                 let mut good = true;

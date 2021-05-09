@@ -114,7 +114,7 @@ impl EventHandler for GraphicalIn {
     fn key_down_event(&mut self, ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods, repeat: bool) {
         if !repeat{
             let send_result = self.input_sink.send(InputChange::KeyDownUp(keycode, true));
-            assert!(send_result.is_ok(), format!("Failed to take input: {:?}", send_result));
+            assert!(send_result.is_ok(), "Failed to take input: {:?}", send_result);
         }
     }
     fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
