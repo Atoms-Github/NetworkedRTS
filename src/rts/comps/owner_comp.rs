@@ -4,14 +4,14 @@ use crate::ecs::ecs_shared::{SerdeObject, Component};
 use crate::ecs::GlobalEntityID;
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct OwnerComp {
+pub struct OwnedComp {
     pub owner: GlobalEntityID,
 }
-impl Component for OwnerComp{
+impl Component for OwnedComp {
 
 }
 
-impl SerdeObject for OwnerComp{
+impl SerdeObject for OwnedComp {
     fn my_clone(&self) -> Box<dyn SerdeObject> {
         Box::new(self.clone())
     }

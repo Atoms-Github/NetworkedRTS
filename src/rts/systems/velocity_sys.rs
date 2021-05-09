@@ -19,7 +19,7 @@ impl System for VeocitylSys {
         for entity_id in ecs.query(vec![crate::utils::crack_type_id::<VelocityComp>(), crate::utils::crack_type_id::<PositionComp>()]){
             // ***noice*** /s
             ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.x += ecs.get::<VelocityComp>(entity_id).unwrap().vel.x;
-            ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.y += ecs.get::<VelocityComp>(entity_id).unwrap().vel.x;
+            ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.y += ecs.get::<VelocityComp>(entity_id).unwrap().vel.y;
         }
     }
     fn my_clone(&self) -> Box<dyn System> {

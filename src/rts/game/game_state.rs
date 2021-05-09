@@ -12,7 +12,10 @@ use crate::rts::comps::render_comp::RenderComp;
 use crate::rts::comps::position_comp::PositionComp;
 use ggez::graphics::DrawParam;
 use crate::rts::comps::player_comp::PlayerComp;
-use crate::rts::comps::owner_comp::OwnerComp;
+use crate::rts::comps::owner_comp::OwnedComp;
+use crate::rts::systems::velocity_with_inputs_sys::VelocityWithInputsSys;
+use crate::rts::comps::velocity_with_inputs_comp::VelocityWithInputsComp;
+use crate::rts::comps::velocity_component::VelocityComp;
 
 
 const MAX_PLAYERS : usize = 4;
@@ -42,6 +45,7 @@ impl GameState {
     pub fn new() -> Self {
         let mut systems = SystemsMan::new();
         systems.add_system(VeocitylSys {});
+        systems.add_system(VelocityWithInputsSys {});
         Self{
             ecs: ActiveEcs::new(),
             systems_man: systems,
@@ -58,7 +62,9 @@ impl GameState {
         let mut components = SerdeAnyMap::new();
         components.insert(RenderComp{ colour: (255,255,255) });
         components.insert(PositionComp{ pos: PointFloat::new(1.0, 1.0) });
-        components.insert( OwnerComp{ owner: player_id as GlobalEntityID });
+        components.insert(VelocityComp{ vel: PointFloat::new(0.0, 0.0) });
+        components.insert( OwnedComp { owner: player_id as GlobalEntityID });
+        components.insert( VelocityWithInputsComp{ speed: 2.0 });
         self.ecs.new_entity(components);
 
 
