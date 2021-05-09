@@ -10,7 +10,7 @@ use crate::pub_types::*;
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct InputState {
     pub mouse_loc: nalgebra::Point2<f32>,
-    pub keys_pressed: HashSet<usize>, // Size = 260ish. Would use array but serialization is a bit weird.
+    pub keys_pressed: HashSet<usize>,
     pub mouse_btns_pressed: HashSet<MouseButton>
 }
 

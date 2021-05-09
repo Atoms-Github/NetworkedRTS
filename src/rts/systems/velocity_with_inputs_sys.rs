@@ -26,8 +26,8 @@ impl System for VelocityWithInputsSys {
 
             let mut my_speed = ecs.get::<VelocityWithInputsComp>(entity_id).unwrap().speed;
 
-            if my_inputs.mouse_btns_pressed.len() > 0{
-                my_speed *= 2.0;
+            if my_inputs.is_keycode_pressed(ggez::input::keyboard::KeyCode::Space){
+                my_speed *= 3.0;
             }
             let velocity = ecs.get_mut::<VelocityComp>(entity_id).unwrap();
             velocity.vel.x = my_speed * directional_x;

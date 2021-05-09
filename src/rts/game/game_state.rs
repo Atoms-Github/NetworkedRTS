@@ -10,12 +10,13 @@ use crate::rts::systems::velocity_sys::VeocitylSys;
 use crate::ecs::my_anymap::SerdeAnyMap;
 use crate::rts::comps::render_comp::RenderComp;
 use crate::rts::comps::position_comp::PositionComp;
-use ggez::graphics::DrawParam;
+use ggez::graphics::{DrawParam, Text};
 use crate::rts::comps::player_comp::PlayerComp;
 use crate::rts::comps::owner_comp::OwnedComp;
 use crate::rts::systems::velocity_with_inputs_sys::VelocityWithInputsSys;
 use crate::rts::comps::velocity_with_inputs_comp::VelocityWithInputsComp;
 use crate::rts::comps::velocity_component::VelocityComp;
+use nalgebra::Point2;
 
 
 const MAX_PLAYERS : usize = 4;
@@ -70,7 +71,7 @@ impl GameState {
 
         if self.player_count < MAX_PLAYERS{
             let player_entity_id = player_id as GlobalEntityID;
-            self.ecs.add_component(player_entity_id, PlayerComp{ inputs: Default::default()});
+            self.ecs.add_component(player_entity_id, PlayerComp{ inputs: Default::default(), name: username });
 
             self.player_count += 1;
         }
@@ -92,8 +93,6 @@ impl GameState {
             let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
             let render = self.ecs.get::<RenderComp>(entity).unwrap().clone();
 
-            let params = DrawParam::new();
-
             let mode = graphics::DrawMode::fill();
             let bounds = graphics::Rect::new(position.pos.x, position.pos.y,50.0, 50.0);
             let color = graphics::Color::from(render.colour);
@@ -106,23 +105,24 @@ impl GameState {
             ).unwrap();
 
 
-            graphics::draw(ctx, &arena_background, params).unwrap();
+            graphics::draw(
+                ctx,
+                &arena_background,
+                DrawParam::new(),
+            ).unwrap();
+        }
+        for entity in self.ecs.query(vec![crate::utils::crack_type_id::<OwnedComp>(), crate::utils::crack_type_id::<PositionComp>()]){
+            let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
+            let owner = self.ecs.get::<OwnedComp>(entity).unwrap().owner;
+            let player_name = self.ecs.get::<PlayerComp>(owner).unwrap().name.clone();
 
+            let player_name_display = Text::new(player_name);
 
-            // let owner_id = e.my_wasdmover_comp(d).owner_id;
-            //
-            // let player_name = player_names.get(&owner_id).unwrap().clone();
-            //
-            // let fps = timer::fps(ctx);
-            // let player_name_display = Text::new(player_name);
-            //
-            //
-            // // When drawing through these calls, `DrawParam` will work as they are documented.
-            // graphics::draw(
-            //     ctx,
-            //     &player_name_display,
-            //     (Point2::new(e.my_position(d).x, e.my_position(d).y), graphics::WHITE),
-            // ).unwrap();
+            graphics::draw(
+                ctx,
+                &player_name_display,
+                (Point2::new(position.pos.x, position.pos.y), graphics::Color::from((0,153,255))),
+            ).unwrap();
 
         }
     }

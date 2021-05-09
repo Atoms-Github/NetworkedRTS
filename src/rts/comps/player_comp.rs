@@ -6,6 +6,7 @@ use crate::netcode::InputState;
 #[derive(Clone, Serialize, Deserialize)]
 pub struct PlayerComp {
     pub inputs: InputState,
+    pub name: String,
 }
 impl Component for PlayerComp{
 
