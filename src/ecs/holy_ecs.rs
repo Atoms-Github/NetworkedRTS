@@ -11,7 +11,7 @@ use crate::ecs::{System, GlobalEntityID};
 use crate::ecs::ecs_shared::{SerdeObject, Component};
 use crate::ecs::my_anymap::SerdeAnyMap;
 use crate::ecs::systems_man::SystemsMan;
-use crate::utils::{TypeIdNum, MyReplaceTrait};
+use crate::utils::{TypeIdNum};
 use serde::de::DeserializeOwned;
 use crate::ecs::liquid_garbage::TOH;
 use crate::ecs::unmoving_vec::UnmovingVec;
@@ -69,7 +69,7 @@ impl HolyEcs {
             }
         }
         let new_generation = self.generations.get(internal_index).unwrap() + 1;
-        std::mem::replace(&mut self.generations[internal_index], new_generation);
+        self.generations[internal_index] = new_generation;
 
         let internal = InternalEntityHandle {
             index: internal_index,
@@ -77,7 +77,7 @@ impl HolyEcs {
         };
         let external_id = self.next_external_id;
         self.next_external_id += 1;
-        self.external_entity_lookup.insert(self.next_external_id, internal);
+        self.external_entity_lookup.insert(external_id, internal);
 
         external_id
     }
@@ -86,29 +86,34 @@ impl HolyEcs {
         let internal_entity_index = self.external_entity_lookup.get(&external_id).unwrap().index;
 
         for (type_id, component) in new_components.data{
-            self.storages.get_mut(&type_id).unwrap().my_replace(internal_entity_index, Some(component));
+            self.get_storage(type_id)[internal_entity_index] = Some(component);
         }
         return external_id;
     }
     pub fn query(&mut self, types: Vec<TypeIdNum>) -> Vec<GlobalEntityID> {
         let mut internal_entities = vec![];
-        for internal_index in self.generations{
-            let mut good = true;
-            for required_type in types{
-                if self.get_storage(required_type).get(internal_index).is_none(){
-                    good = false;
-                    break;
+        for internal_index in self.generations.clone(){
+            // If alive.
+            if self.spare_slots.get(internal_index).is_some(){
+                let mut good = true;
+                for required_type in &types{
+                    if self.get_storage(*required_type).get(internal_index).is_none(){
+                        println!("False. NoMatch.");
+                        good = false;
+                        break;
+                    }
                 }
-            }
-            if good && self.spare_slots.get(internal_index).is_some() /*can't be dead*/{
-                internal_entities.push(internal_index);
+                if good && self.spare_slots.get(internal_index).is_some() /*can't be dead*/{
+                    internal_entities.push(internal_index);
+                }
             }
         }
 
         let mut external_entities = vec![];
-        for internal_entity in internal_entities{
-            for (external_id, internal_handle) in self.external_entity_lookup{
-                if internal_handle.index == internal_entity{
+        println!("internal_entities: {:?}", internal_entities);
+        for internal_entity in &internal_entities{
+            for (external_id, internal_handle) in &self.external_entity_lookup{
+                if internal_handle.index == *internal_entity{
                     external_entities.push(external_id);
                     break;
                 }
@@ -131,12 +136,13 @@ impl HolyEcs {
     }
     pub fn get_mut<T: Component + DeserializeOwned>(&mut self, external_id: GlobalEntityID) -> Option<&mut T> {
         // If its a real entity.
-        if let Some(internal_entity) = self.external_entity_lookup.get(&external_id){
+        if let Some(internal_entity_original) = self.external_entity_lookup.get(&external_id).clone(){
+            let internal_entity_cloned = internal_entity_original.clone();
             // If not dead.
-            if *self.generations.get(internal_entity.index).unwrap() == internal_entity.generation{
+            if *self.generations.get(internal_entity_cloned.index).unwrap() == internal_entity_cloned.generation{
                 let my_type = crate::utils::crack_type_id::<T>();
 
-                let found = self.get_storage(my_type).get_mut(internal_entity.index).unwrap();
+                let found = self.get_storage(my_type).get_mut(internal_entity_cloned.index).unwrap();
                 // If the entity does have that component.
                 if let Some(toh) = found{
                     return Some(toh.get::<T>())
@@ -221,7 +227,7 @@ mod ecs_tests {
     #[test]
     fn ecs_query() {
         let (mut ecs, entity_id) = new_entity();
-        let query_results = ecs.query(vec![crate::utils::crack_type_id::<TestComp1>()]);
+        let query_results = ecs.query(vec![crate::utils::crack_type_id::<TestComp2>()]);
         assert_eq!(1, query_results.len());
         assert_eq!(entity_id, *query_results.get(0).unwrap());
     }

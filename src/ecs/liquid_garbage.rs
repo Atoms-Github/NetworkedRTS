@@ -59,7 +59,7 @@ impl Clone for TOH{
     fn clone(&self) -> Self {
         let mut my_option = None;
 
-        if let Some(existing) = self.serable{
+        if let Some(existing) = &self.serable{
             my_option = Some(existing.my_clone());
         }
         return Self{
