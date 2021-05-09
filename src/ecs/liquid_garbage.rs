@@ -55,6 +55,20 @@ pub struct TOH { // (Trait Object Holder).
     serable: Option<Box<dyn SerdeObject>>,
     blobbity: Vec<u8>,
 }
+impl Clone for TOH{
+    fn clone(&self) -> Self {
+        let mut my_option = None;
+
+        if let Some(existing) = self.serable{
+            my_option = Some(existing.my_clone());
+        }
+        return Self{
+            my_type: self.my_type,
+            serable: my_option,
+            blobbity: self.blobbity.clone()
+        }
+    }
+}
 impl Serialize for TOH{
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
         S: Serializer {
@@ -73,15 +87,16 @@ impl TOH {
             my_type: crate::utils::crack_type_id::<T>(),
         }
     }
-    pub fn get<'a, T : DeserializeOwned + SerdeObject + 'static>(&mut self) -> &T{
+    pub fn get<'a, T : DeserializeOwned + SerdeObject + 'static>(&mut self) -> &mut T{
         assert_eq!(crate::utils::crack_type_id::<T>(), self.my_type);
         if self.serable.is_none(){
             assert!(self.blobbity.len() > 0, "Object had neither serialized version, nor deserialzed version!");
             let result = bincode::deserialize::<T>(&self.blobbity[..]).unwrap().my_clone();
             self.serable = Some(result);
         }
-
-        return &self.serable.as_ref().unwrap().downcast_ref::<T>().unwrap();
+        let value = self.serable.as_mut().unwrap();
+        let casted = value.downcast_mut::<T>();
+        return casted.unwrap();
     }
 }
 

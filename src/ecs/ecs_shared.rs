@@ -1,6 +1,7 @@
 use crate::ecs::{ActiveEcs, Ecs};
 use serde::{Deserialize, Serialize, Serializer};
 use crate::utils::TypeIdNum;
+use serde::de::DeserializeOwned;
 
 #[typetag::serde(tag = "type")]
 pub trait System : Send{
@@ -8,7 +9,7 @@ pub trait System : Send{
     fn my_clone(&self) -> Box<dyn System>;
 }
 
-pub trait Component : Send{
+pub trait Component : Send + Serialize + Clone{
 
 }
 

@@ -7,6 +7,11 @@ pub struct PositionComp{
     pub pos: PointFloat,
 }
 
-impl Component for PositionComp{
-
+impl SerdeObject for PositionComp{
+    fn my_clone(&self) -> Box<dyn SerdeObject> {
+        Box::new(self.clone())
+    }
+    fn my_ser(&self) -> Vec<u8> {
+        return bincode::serialize(self).unwrap();
+    }
 }

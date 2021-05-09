@@ -6,6 +6,7 @@ use crate::ecs::systems_man::SystemsMan;
 use std::any::TypeId;
 use ecs_shared::SerdeObject;
 use crate::ecs::ecs_shared::Component;
+use crate::ecs::my_anymap::SerdeAnyMap;
 
 
 #[macro_use]
@@ -21,10 +22,10 @@ pub type GlobalEntityID = usize;
 pub type ActiveEcs = HolyEcs;
 
 pub trait Ecs{
-    fn add_entity(&mut self, new_components: AnyMap) -> GlobalEntityID;
+    fn add_entity(&mut self, new_components: SerdeAnyMap) -> GlobalEntityID;
     fn query(&self, types: Vec<TypeId>) -> Vec<GlobalEntityID>;
-    fn get<T : Component>(&self, entity_id: GlobalEntityID) -> &T;
-    fn get_mut<T: Component>(&mut self, entity_id: usize) -> &mut T;
+    fn get<T : SerdeObject>(&self, entity_id: GlobalEntityID) -> &T;
+    fn get_mut<T: SerdeObject>(&mut self, entity_id: usize) -> &mut T;
     fn run_systems(&mut self, systems: &SystemsMan);
 }
 

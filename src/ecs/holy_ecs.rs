@@ -7,61 +7,77 @@ use anymap::any::CloneAny;
 use anymap::AnyMap;
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::ecs::{Ecs, System};
+use crate::ecs::{Ecs, System, GlobalEntityID};
 use crate::ecs::ecs_shared::{SerdeObject, Component};
-use crate::ecs::my_anymap::MyAnyMap;
+use crate::ecs::my_anymap::SerdeAnyMap;
 use crate::ecs::systems_man::SystemsMan;
 use crate::utils::TypeIdNum;
+use serde::de::DeserializeOwned;
+use crate::ecs::liquid_garbage::TOH;
 
-pub type CompositionID = usize;
 
-pub type VerticalStorage<T> = Vec<Vec<T>>;
-//pub type TypeSetSerializable = BTreeSet<u64>;
 pub type TypeSet = BTreeSet<TypeIdNum>;
+pub type InternalIndex = u16;
+pub type GenerationNum = u16;
 
 
-struct SlicePointer{
-    composition_id: CompositionID,
-    index_within_composition: usize
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Column{
-    data: Vec<i32>
-}
-
-// impl SerdeObject for Column{
+// #[derive(Serialize, Deserialize, Clone)]
+// struct Column<T : Component + 'static>{
+//     vec: Vec<Option<T>>,
+// }
+// impl<T : Component + 'static> SerdeObject for Column<T>{
 //     fn my_clone(&self) -> Box<dyn SerdeObject> {
 //         Box::new(self.clone())
+//     }
+//     fn my_ser(&self) -> Vec<u8> {
+//         return bincode::serialize(self).unwrap();
 //     }
 // }
 
 #[derive(Serialize, Deserialize, Clone)]
+struct InternalEntity{
+    index: InternalIndex,
+    generation: GenerationNum,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct HolyEcs {
-    storages: MyAnyMap,
+    storages: BTreeMap<TypeIdNum, Vec<TOH>>,
+    generations: Vec<GenerationNum>,
+    external_entity_lookup: BTreeMap<GlobalEntityID, InternalEntity>,
 }
 impl HolyEcs {
     pub fn new() -> Self{
         HolyEcs{
-            storages: MyAnyMap::new(),
+            storages: Default::default(),
+            generations: vec![],
+            external_entity_lookup: Default::default()
         }
     }
+    // fn get_storage_mut<T : 'static + Component + DeserializeOwned>(&mut self) -> &mut Column<T>{
+    //     if !self.storages.contains_key::<Column<T>>(){
+    //         let new_column : Column<T> = Column{ vec: vec![] };
+    //         self.storages.insert(new_column);
+    //     }
+    //     return self.storages.get_mut::<Column<T>>().unwrap();
+    // }
 }
+
 impl Ecs for HolyEcs {
+    fn add_entity(&mut self, new_components: SerdeAnyMap) -> GlobalEntityID {
+        let new_entity_index = self.generations.len();
 
-
-    fn add_entity(&mut self, new_components: AnyMap) -> usize {
-        unimplemented!()
+        return new_entity_index;
     }
 
-    fn query(&self, types: Vec<TypeId>) -> Vec<usize> {
+    fn query(&self, types: Vec<TypeId>) -> Vec<GlobalEntityID> {
         unimplemented!();
     }
 
-    fn get<T: Component>(&self, entity_id: usize) -> &T {
+    fn get<T: SerdeObject>(&self, entity_id: GlobalEntityID) -> &T {
         unimplemented!()
     }
-    fn get_mut<T: Component>(&mut self, entity_id: usize) -> &mut T {
+    fn get_mut<T: SerdeObject>(&mut self, entity_id: GlobalEntityID) -> &mut T {
         unimplemented!()
     }
 

@@ -7,6 +7,11 @@ pub struct VelocityComp {
     pub vel: PointFloat,
 }
 
-impl Component for VelocityComp{
-
+impl SerdeObject for VelocityComp{
+    fn my_clone(&self) -> Box<dyn SerdeObject> {
+        Box::new(self.clone())
+    }
+    fn my_ser(&self) -> Vec<u8> {
+        return bincode::serialize(self).unwrap();
+    }
 }
