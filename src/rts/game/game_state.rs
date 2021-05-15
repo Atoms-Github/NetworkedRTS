@@ -19,7 +19,7 @@ use crate::rts::comps::velocity_component::VelocityComp;
 use nalgebra::Point2;
 
 
-const MAX_PLAYERS : usize = 4;
+const MAX_PLAYERS : usize = 8;
 
 
 #[derive(Clone, Serialize, Deserialize)]
