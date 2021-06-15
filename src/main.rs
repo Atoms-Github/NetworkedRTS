@@ -48,6 +48,7 @@ use std::time::Duration;
 
 fn main() {
 
+    println!("El' Bibblio!");
     Builder::new()
         .format(|buf, record| {
             if record.target().contains("poggy"){
@@ -56,6 +57,7 @@ fn main() {
             return std::io::Result::Ok(());
         }).filter(None, LevelFilter::Info).init();
     log::info!("Starting!");
+    
 
 
     let mut args: Vec<String> = env::args().collect();

@@ -138,6 +138,7 @@ impl ConnectNetIn {
 
         loop{
             let tcp_stream;
+            log::info!("Attempting to connect to {}", target_tcp_address.to_string());
             match TcpStream::connect(target_tcp_address){
                 Err(error) => {
                     log::warn!("Failed to connect to server. Retrying ... ({})", error.to_string());
