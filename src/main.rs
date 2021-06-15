@@ -15,6 +15,7 @@ use std::{env, thread};
 
 
 use crate::pub_types::*;
+use crate::args::*;
 use std::str::FromStr;
 
 
@@ -25,6 +26,7 @@ pub mod rts;
 pub mod pub_types;
 pub mod ecs;
 pub mod utils;
+pub mod args;
 
 
 pub const DEBUG_MSGS_ALL: bool = false;
@@ -47,8 +49,6 @@ use std::time::Duration;
 
 
 fn main() {
-
-    //println!("El' Bibblio! {}", );
     Builder::new()
         .format(|buf, record| {
             if record.target().contains("poggy"){
@@ -58,46 +58,17 @@ fn main() {
         }).filter(None, LevelFilter::Info).init();
     log::info!("Starting!");
 
+    let args = crate::args::Args::gather();
+    let address = args.ip + ":1414";
 
 
-    let mut args: Vec<String> = env::args().collect();
-
-    args.reverse();
-    let _exe_name = args.pop();
-    let launch_type = args.pop().expect("'client'/'server' argument not specified!");
-    let player_name = args.pop().unwrap_or_default();
-    let ip = match args.pop() {
-        Some(ip_str) => {
-            ip_str
+    match args.launch_type{
+        LaunchType::CLIENT => {
+            crate::netcode::client_main(args.player_name.unwrap(), address, 0);
         }
-        _ => {
-            let default = crate::utils::get_line_input("Connection / hosting IP not specified! Enter IP:");
-            //log::info!("Connection/hosting IP not specified! Using {}", default);
-            default
+        LaunchType::SERVER => {
+            crate::netcode::server_main(address);
         }
-    };
-    let address = ip + ":1414";
-
-
-    let mut is_server = false;
-    match launch_type.to_lowercase().as_ref() {
-        "client" => {
-            // Nothing.
-        }
-        "server" => {
-            is_server = true;
-        }
-        _ => {
-            log::debug!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
-        }
-    }
-    if is_server{
-        crate::netcode::server_main(address);
-    }else{
-        let prefered_player_id = args.pop().map(|as_str|{
-            i32::from_str(as_str.as_str()).ok()
-        }).flatten().unwrap_or(0); // Conflict means auto-assign.
-        crate::netcode::client_main(player_name, address, prefered_player_id);
     }
 }
 
