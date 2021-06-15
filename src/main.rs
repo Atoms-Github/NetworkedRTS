@@ -48,7 +48,7 @@ use std::time::Duration;
 
 fn main() {
 
-    println!("El' Bibblio!");
+    //println!("El' Bibblio! {}", );
     Builder::new()
         .format(|buf, record| {
             if record.target().contains("poggy"){
@@ -57,7 +57,7 @@ fn main() {
             return std::io::Result::Ok(());
         }).filter(None, LevelFilter::Info).init();
     log::info!("Starting!");
-    
+
 
 
     let mut args: Vec<String> = env::args().collect();
@@ -71,11 +71,12 @@ fn main() {
             ip_str
         }
         _ => {
-            let default = "127.0.0.1:1414".to_string();
-            log::info!("Connection/hosting IP not specified! Using {}", default);
+            let default = crate::utils::get_line_input("Connection / hosting IP not specified! Enter IP:");
+            //log::info!("Connection/hosting IP not specified! Using {}", default);
             default
         }
     };
+    let address = ip + ":1414";
 
 
     let mut is_server = false;
@@ -86,33 +87,17 @@ fn main() {
         "server" => {
             is_server = true;
         }
-        // "test1" => {
-        //     test1();
-        //     return;
-        // }
-        // "test2" => {
-        //     test2();
-        //     return;
-        // }
-        // "test3" => {
-        //     test3();
-        //     return;
-        // }
-        // "test4" => {
-        //     test4();
-        //     return;
-        // }
         _ => {
             log::debug!("Argument 1 wasn't 'server' or 'client'. Starting as client.");
         }
     }
     if is_server{
-        crate::netcode::server_main(ip);
+        crate::netcode::server_main(address);
     }else{
         let prefered_player_id = args.pop().map(|as_str|{
             i32::from_str(as_str.as_str()).ok()
         }).flatten().unwrap_or(0); // Conflict means auto-assign.
-        crate::netcode::client_main(player_name, ip, prefered_player_id);
+        crate::netcode::client_main(player_name, address, prefered_player_id);
     }
 }
 
