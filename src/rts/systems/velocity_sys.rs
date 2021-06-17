@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use crate::ecs::System;
 use crate::ecs::{ActiveEcs};
 use std::any::{Any, TypeId};
-use crate::rts::comps::velocity_component::VelocityComp;
+use crate::rts::comps::velocity_component::{VelocityComp, LifeRegenComp, LifeComp};
 use crate::rts::comps::position_comp::PositionComp;
 use crate::pub_types::PointFloat;
 use std::ops::Add;

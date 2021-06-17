@@ -17,7 +17,7 @@ pub mod ecs_shared;
 pub mod systems_man;
 pub mod liquid_garbage;
 pub mod unmoving_vec;
-pub mod macro_ecs;
+pub mod macro_version;
 
 
 pub type GlobalEntityID = usize;

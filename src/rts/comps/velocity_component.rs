@@ -6,6 +6,17 @@ use crate::ecs::ecs_shared::{SerdeObject, Component};
 pub struct VelocityComp {
     pub vel: PointFloat,
 }
+
+pub struct LifeComp {
+    pub life: i32,
+}
+
+pub struct LifeRegenComp {
+    pub regen_rate: f32
+}
+
+
+
 impl Component for VelocityComp{
 
 }
