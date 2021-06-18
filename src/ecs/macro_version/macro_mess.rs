@@ -1,6 +1,12 @@
 use serde::*;
 use anymap::AnyMap;
 use crate::ecs::macro_version::macro_ecs::*;
+use crate::ecs::macro_version::entity_manager::EStorage;
+
+#[derive(Serialize, Deserialize, PartialEq, Hash, Default)]
+pub struct LifeC {
+
+}
 
 pub struct MacroMess {
     anymap: AnyMap,

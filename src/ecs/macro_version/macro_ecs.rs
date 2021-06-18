@@ -1,22 +1,20 @@
 use serde::*;
 use anymap::AnyMap;
 use crate::ecs::macro_version::macro_mess::MacroMess;
+use crate::ecs::macro_version::entity_manager::EntityManager;
 
-#[derive(Serialize, Deserialize, PartialEq, Hash, Default)]
-pub struct LifeC {
 
-}
 
 // TODO: Implement ser and de manually.
 pub struct MacroEcs<R :Clone>{
     systems: Vec<System<R>>,
-    macromess: MacroMess
+    eman: EntityManager,
 }
 impl<R : Clone> MacroEcs<R>{
     pub fn new(systems: Vec<System<R>>) -> Self{
         Self{
             systems: vec![],
-            macromess: MacroMess::new(),
+            eman: EntityManager::new(),
         }
     }
     pub fn set_systems(&mut self, systems: Vec<System<R>>){
@@ -24,24 +22,13 @@ impl<R : Clone> MacroEcs<R>{
     }
     pub fn sim_systems(&mut self, resources: R){
         for system in &self.systems{
-            (system.run)(&resources, &mut self.macromess);
+            (system.run)(&resources, &mut self.eman);
         }
     }
 }
 
 #[derive(Clone)]
 pub struct System<R : Clone>{
-    run: fn(&R, &mut MacroMess /* Could add read only macromess here. */),
+    run: fn(&R, &mut EntityManager /* Could add read only version here. */),
 }
 
-#[derive(Serialize, Deserialize, Hash, Default)]
-pub struct EStorage<T>{
-    items: Vec<Vec<T>>
-}
-impl<T> EStorage<T>{
-    pub fn new() -> Self{
-        Self{
-            items: Vec::new()
-        }
-    }
-}
