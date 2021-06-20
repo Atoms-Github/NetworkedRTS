@@ -26,6 +26,7 @@ pub mod rts;
 pub mod pub_types;
 pub mod ecs;
 pub mod utils;
+pub mod ecs_new_dawn;
 pub mod args;
 
 
