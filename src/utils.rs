@@ -12,7 +12,7 @@ pub fn break_open_type_id(type_id: TypeId) -> TypeIdNum{
     };
     return emp_exposed.t;
 }
-pub fn crack_type_id<T : 'static>() -> TypeIdNum{
+pub fn get_type_id<T : 'static>() -> TypeIdNum{
     break_open_type_id(TypeId::of::<T>())
 }
 

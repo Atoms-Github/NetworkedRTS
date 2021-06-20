@@ -1,7 +1,7 @@
 use serde::*;
 use anymap::AnyMap;
 use crate::ecs::macro_version::macro_ecs::*;
-use crate::ecs::macro_version::entity_manager::EStorage;
+use crate::ecs::macro_version::generic_version::EStorage;
 
 #[derive(Serialize, Deserialize, PartialEq, Hash, Default)]
 pub struct LifeC {

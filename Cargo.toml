@@ -22,6 +22,7 @@ mopa = "0.2.2"
 serde_closure = "0.3.2"
 serde_traitobject = "0.2.7"
 local_ipaddress = "0.1.3"
+struct_deser = "0.1.1"
 
 
 #futures = "0.1.29"

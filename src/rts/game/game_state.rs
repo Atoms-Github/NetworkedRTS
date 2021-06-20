@@ -89,7 +89,7 @@ impl GameState {
         self.ecs.run_systems(&self.systems_man);
     }
     pub fn render(&mut self, ctx: &mut Context){
-        for entity in self.ecs.query(vec![crate::utils::crack_type_id::<RenderComp>(), crate::utils::crack_type_id::<PositionComp>()]){
+        for entity in self.ecs.query(vec![crate::utils::get_type_id::<RenderComp>(), crate::utils::get_type_id::<PositionComp>()]){
             let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
             let render = self.ecs.get::<RenderComp>(entity).unwrap().clone();
 
@@ -111,7 +111,7 @@ impl GameState {
                 DrawParam::new(),
             ).unwrap();
         }
-        for entity in self.ecs.query(vec![crate::utils::crack_type_id::<OwnedComp>(), crate::utils::crack_type_id::<PositionComp>()]){
+        for entity in self.ecs.query(vec![crate::utils::get_type_id::<OwnedComp>(), crate::utils::get_type_id::<PositionComp>()]){
             let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
             let owner = self.ecs.get::<OwnedComp>(entity).unwrap().owner;
             let player_name = self.ecs.get::<PlayerComp>(owner).unwrap().name.clone();

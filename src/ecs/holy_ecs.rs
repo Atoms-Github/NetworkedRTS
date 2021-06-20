@@ -98,7 +98,7 @@ impl HolyEcs {
             let internal_entity_cloned = internal_entity_original.clone();
             // If not dead.
             if *self.generations.get(internal_entity_cloned.index).unwrap() == internal_entity_cloned.generation{
-                let my_type = crate::utils::crack_type_id::<T>();
+                let my_type = crate::utils::get_type_id::<T>();
 
                 let found = self.get_storage(my_type).get_mut(internal_entity_cloned.index).unwrap();
                 self.get_storage(my_type)[internal_entity_cloned.index] = Some(TOH::new(component));
@@ -152,7 +152,7 @@ impl HolyEcs {
             let internal_entity_cloned = internal_entity_original.clone();
             // If not dead.
             if *self.generations.get(internal_entity_cloned.index).unwrap() == internal_entity_cloned.generation{
-                let my_type = crate::utils::crack_type_id::<T>();
+                let my_type = crate::utils::get_type_id::<T>();
 
                 let found = self.get_storage(my_type).get_mut(internal_entity_cloned.index).unwrap();
                 // If the entity does have that component.
@@ -239,14 +239,14 @@ mod ecs_tests {
     #[test]
     fn ecs_query_positive() {
         let (mut ecs, entity_id) = new_entity();
-        let query_results = ecs.query(vec![crate::utils::crack_type_id::<TestComp2>()]);
+        let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp2>()]);
         assert_eq!(1, query_results.len());
         assert_eq!(entity_id, *query_results.get(0).unwrap());
     }
     #[test]
     fn ecs_query_negative() {
         let (mut ecs, entity_id) = new_entity();
-        let query_results = ecs.query(vec![crate::utils::crack_type_id::<TestComp1>(), crate::utils::crack_type_id::<TestComp3>()]);
+        let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp1>(), crate::utils::get_type_id::<TestComp3>()]);
         assert_eq!(0, query_results.len());
     }
     #[test]

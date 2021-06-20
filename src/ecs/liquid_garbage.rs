@@ -84,11 +84,11 @@ impl TOH {
         Self{
             serable: Some(Box::new(object)),
             blobbity: vec![],
-            my_type: crate::utils::crack_type_id::<T>(),
+            my_type: crate::utils::get_type_id::<T>(),
         }
     }
     pub fn get<'a, T : DeserializeOwned + SerdeObject + 'static>(&mut self) -> &mut T{
-        assert_eq!(crate::utils::crack_type_id::<T>(), self.my_type);
+        assert_eq!(crate::utils::get_type_id::<T>(), self.my_type);
         if self.serable.is_none(){
             assert!(self.blobbity.len() > 0, "Object had neither serialized version, nor deserialzed version!");
             let result = bincode::deserialize::<T>(&self.blobbity[..]).unwrap().my_clone();
@@ -146,7 +146,7 @@ mod toh_tests {
 
         let serialized = bincode::serialize(&original_toh).unwrap();
 
-        println!("TOH TypeID: {}, deser {:?}", crate::utils::crack_type_id::<TestStruct>(), serialized);
+        println!("TOH TypeID: {}, deser {:?}", crate::utils::get_type_id::<TestStruct>(), serialized);
 
         let mut deserialized = bincode::deserialize::<TOH>(&serialized).unwrap();
         let casted = deserialized.get::<TestStruct>();

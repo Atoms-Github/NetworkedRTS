@@ -18,7 +18,7 @@ pub struct VelocityWithInputsSys {
 #[typetag::serde]
 impl System for VelocityWithInputsSys {
     fn run(&self, ecs: &mut ActiveEcs) {
-        for entity_id in ecs.query(vec![crate::utils::crack_type_id::<VelocityComp>(), crate::utils::crack_type_id::<VelocityWithInputsComp>(), crate::utils::crack_type_id::<OwnedComp>()]){
+        for entity_id in ecs.query(vec![crate::utils::get_type_id::<VelocityComp>(), crate::utils::get_type_id::<VelocityWithInputsComp>(), crate::utils::get_type_id::<OwnedComp>()]){
             let owner_id = ecs.get::<OwnedComp>(entity_id).unwrap().owner;
             let my_inputs = ecs.get::<PlayerComp>(owner_id).unwrap().inputs.clone();
 

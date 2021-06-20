@@ -30,20 +30,20 @@ impl SerdeAnyMap {
     // }
 
     pub fn contains_key<T: DeserializeOwned + SerdeObject + 'static>(&self) -> bool{
-        return self.data.contains_key(&crate::utils::crack_type_id::<T>());
+        return self.data.contains_key(&crate::utils::get_type_id::<T>());
     }
 
     pub fn get_mut<T: DeserializeOwned + SerdeObject + 'static>(&mut self) -> Option<&mut T> {
-        if let Some(toh) = self.data.get_mut(&crate::utils::crack_type_id::<T>()) {
+        if let Some(toh) = self.data.get_mut(&crate::utils::get_type_id::<T>()) {
             let found : &mut T = toh.get::<T>();
             return Some(found);
         }
         return None;
     }
     pub fn insert<T: DeserializeOwned + SerdeObject + 'static>(&mut self, value: T) {
-        self.data.insert(crate::utils::crack_type_id::<T>(), TOH::new(value));
+        self.data.insert(crate::utils::get_type_id::<T>(), TOH::new(value));
     }
     pub fn remove<T: DeserializeOwned + SerdeObject + 'static>(&mut self) {
-        self.data.remove(&crate::utils::crack_type_id::<T>());
+        self.data.remove(&crate::utils::get_type_id::<T>());
     }
 }

@@ -10,14 +10,14 @@ use crate::ecs::my_anymap::SerdeAnyMap;
 
 
 #[macro_use]
-mod holy_ecs;
 mod ecs_tests;
 pub mod my_anymap;
+pub mod unmoving_vec;
+pub mod macro_version;
+pub mod holy_ecs;
 pub mod ecs_shared;
 pub mod systems_man;
 pub mod liquid_garbage;
-pub mod unmoving_vec;
-pub mod macro_version;
 
 
 pub type GlobalEntityID = usize;

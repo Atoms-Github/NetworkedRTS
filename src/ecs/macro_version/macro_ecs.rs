@@ -1,7 +1,7 @@
 use serde::*;
 use anymap::AnyMap;
 use crate::ecs::macro_version::macro_mess::MacroMess;
-use crate::ecs::macro_version::entity_manager::EntityManager;
+use crate::ecs::macro_version::generic_version::EntityManager;
 
 
 
