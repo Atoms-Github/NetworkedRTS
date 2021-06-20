@@ -1,28 +1,19 @@
-use serde::{Deserialize, Serialize};
-use crate::ecs::System;
-use crate::ecs::{ActiveEcs};
-use std::any::{Any, TypeId};
-use crate::rts::comps::velocity_component::{VelocityComp, LifeRegenComp, LifeComp};
-use crate::rts::comps::position_comp::PositionComp;
+use crate::ecs::superb_ecs::*;
+use crate::rts::game::game_state::*;
+use crate::ecs::comp_store::CompStorage;
 use crate::pub_types::PointFloat;
-use std::ops::Add;
 
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct VeocitylSys {
-
+pub struct VelocityComp {
+    pub vel: PointFloat,
 }
 
-#[typetag::serde]
-impl System for VeocitylSys {
-    fn run(&self, ecs: &mut ActiveEcs) {
-        for entity_id in ecs.query(vec![crate::utils::get_type_id::<VelocityComp>(), crate::utils::get_type_id::<PositionComp>()]){
-            // ***noice*** /s
-            ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.x += ecs.get::<VelocityComp>(entity_id).unwrap().vel.x;
-            ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.y += ecs.get::<VelocityComp>(entity_id).unwrap().vel.y;
-        }
-    }
-    fn my_clone(&self) -> Box<dyn System> {
-        Box::new(self.clone())
-    }
+pub static VELOCITY_SYSTEM : System<GameResources> = System{
+    run
+};
+fn run(res: &GameResources, ecs: &mut CompStorage){
+    // for entity_id in ecs.query(vec![crate::utils::get_type_id::<VelocityComp>(), crate::utils::get_type_id::<PositionComp>()]){
+    //     // ***noice*** /s
+    //     ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.x += ecs.get::<VelocityComp>(entity_id).unwrap().vel.x;
+    //     ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.y += ecs.get::<VelocityComp>(entity_id).unwrap().vel.y;
+    // }
 }

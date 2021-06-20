@@ -1,9 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use crate::utils::TypeIdNum;
 use serde::*;
-use crate::ecs_new_dawn::eid_manager::{GlorifiedHashMap, GlobalEntityID};
+use crate::ecs::eid_manager::{GlorifiedHashMap, GlobalEntityID};
 use anymap::AnyMap;
-use crate::ecs_new_dawn::pending_entity::PendingEntity;
+use crate::ecs::pending_entity::PendingEntity;
 
 type ByteBlock = Vec<u8>;
 type Column = Vec<Vec<ByteBlock>>;
@@ -107,14 +107,6 @@ unsafe fn u8_slice_to_ref<T>(bytes: &[u8]) -> &T {
     let value = unsafe {test.as_ref()}.unwrap();
     return value;
 }
-
-
-// unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
-//     ::std::slice::from_raw_parts(
-//         (p as *const T) as *const u8,
-//         ::std::mem::size_of::<T>(),
-//     )
-// }
 
 
 #[cfg(test)]

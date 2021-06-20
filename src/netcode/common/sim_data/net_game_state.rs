@@ -7,7 +7,7 @@ use ggez::Context;
 use crate::netcode::{InfoForSim, ConnStatusChangeType};
 use std::hash::{Hash, Hasher};
 use crate::netcode::common::sim_data::sim_data_storage::ServerEvent;
-use crate::rts::game::game_state::Resources;
+use crate::rts::game::game_state::GameResources;
 use std::sync::Arc;
 use std::fmt::Debug;
 use serde::__private::Formatter;

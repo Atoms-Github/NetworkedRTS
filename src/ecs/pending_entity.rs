@@ -3,7 +3,7 @@ use crate::utils::TypeIdNum;
 use serde::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use crate::ecs_new_dawn::comp_store::TypesHash;
+use crate::ecs::comp_store::TypesHash;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PendingEntity{

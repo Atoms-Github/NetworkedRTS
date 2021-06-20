@@ -1,22 +1,6 @@
-use serde::{Deserialize, Serialize};
-use crate::pub_types::PointFloat;
-use crate::ecs::ecs_shared::{SerdeObject, Component};
-use crate::netcode::InputState;
 
-#[derive(Clone, Serialize, Deserialize)]
+use crate::netcode::InputState;
 pub struct PlayerComp {
     pub inputs: InputState,
-    pub name: String,
-}
-impl Component for PlayerComp{
-
-}
-
-impl SerdeObject for PlayerComp{
-    fn my_clone(&self) -> Box<dyn SerdeObject> {
-        Box::new(self.clone())
-    }
-    fn my_ser(&self) -> Vec<u8> {
-        return bincode::serialize(self).unwrap();
-    }
+    // pub name: String,
 }

@@ -2,7 +2,7 @@
 
 use serde::*;
 use anymap::AnyMap;
-use crate::ecs_new_dawn::comp_store::*;
+use crate::ecs::comp_store::*;
 
 
 // TODO: Implement ser and de manually.
