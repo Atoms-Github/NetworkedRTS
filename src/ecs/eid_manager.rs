@@ -78,7 +78,7 @@ impl GlorifiedHashMap {
 
 #[cfg(test)]
 mod tests {
-    use crate::ecs_new_dawn::eid_manager::*;
+    use crate::ecs::eid_manager::*;
 
     #[test]
     fn basic() {
