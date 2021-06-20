@@ -4,10 +4,10 @@ use crate::ecs::unmoving_vec::UnmovingVec;
 use anymap::AnyMap;
 use serde::*;
 use std::convert::TryInto;
-use crate::ecs_new_dawn::comp_store::InternalEntity;
+use crate::ecs_new_dawn::comp_store::{InternalEntity};
 
 
-
+pub type GlobalEntityID = usize;
 pub const MAX_ENTITIES :usize = 2;
 
 
