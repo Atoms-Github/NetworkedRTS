@@ -1,9 +1,9 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use crate::utils::TypeIdNum;
 use serde::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use crate::ecs::comp_store::TypesHash;
+use crate::ecs::comp_store::TypesSet;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PendingEntity{
@@ -11,11 +11,12 @@ pub struct PendingEntity{
 }
 
 impl PendingEntity {
-    pub fn hash_types(&self) -> TypesHash{
-        let test = self.data.keys().collect::<Vec<&TypeIdNum>>();
-        let mut s = DefaultHasher::new();
-        test.hash(&mut s);
-        s.finish()
+    pub fn hash_types(&self) -> TypesSet {
+        let mut types = BTreeSet::new();
+        for new_type in self.data.keys(){
+            types.insert(*new_type);
+        }
+        return types;
     }
     pub fn iter(&self) -> std::collections::btree_map::Iter<TypeIdNum, Vec<u8>>{ // Optimum make it return move instead of reference (then clone).
         return self.data.iter();

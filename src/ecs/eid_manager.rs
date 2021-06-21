@@ -38,14 +38,15 @@ impl GlorifiedHashMap {
             internal_details: internal_details.as_slice().try_into().unwrap(),
         }
     }
-    pub fn create_entity(&mut self, internal_entity: InternalEntity) -> GlobalEntityID{
+    pub fn create_entity(&mut self, mut internal_entity: InternalEntity) -> GlobalEntityID{
         for index in 0..MAX_ENTITIES{
             if !self.alive[index]{
                 self.alive[index] = true;
-                let new_id = self.entity_ids[index] + MAX_ENTITIES;
-                self.entity_ids[index] = new_id;
+                let new_global_id = self.entity_ids[index] + MAX_ENTITIES;
+                self.entity_ids[index] = new_global_id;
+                internal_entity.global_id = new_global_id;
                 self.internal_details[index] = internal_entity;
-                return new_id;
+                return new_global_id;
             }
         }
         panic!("Exceeded entity storage capacity! Increase MAX_ENTITIES.");

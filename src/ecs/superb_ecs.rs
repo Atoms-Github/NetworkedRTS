@@ -10,7 +10,7 @@ use serde::de::Visitor;
 // TODO: Implement ser and de manually.
 pub struct SuperbEcs<R>{
     systems: Vec<System<R>>,
-    comp_storage: CompStorage,
+    pub comp_storage: CompStorage,
 }
 impl<R> SuperbEcs<R>{
     pub fn new(systems: Vec<System<R>>) -> Self{
@@ -27,6 +27,7 @@ impl<R> SuperbEcs<R>{
             (system.run)(&resources, &mut self.comp_storage);
         }
     }
+
 }
 impl<R> Clone for SuperbEcs<R>{
     fn clone(&self) -> Self {
