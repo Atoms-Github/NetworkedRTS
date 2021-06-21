@@ -11,6 +11,9 @@ pub struct PendingEntity{
 }
 
 impl PendingEntity {
+    pub fn new() -> Self{
+        Self::default()
+    }
     pub fn hash_types(&self) -> TypesSet {
         let mut types = BTreeSet::new();
         for new_type in self.data.keys(){
@@ -21,15 +24,15 @@ impl PendingEntity {
     pub fn iter(&self) -> std::collections::btree_map::Iter<TypeIdNum, Vec<u8>>{ // Optimum make it return move instead of reference (then clone).
         return self.data.iter();
     }
-    pub fn insert<T: 'static>(&mut self, value: T) {
+    pub fn add_comp<T: 'static>(&mut self, value: T) {
         let bytes = unsafe {any_as_u8_slice(&value)}.to_vec();
-        let result = self.data.insert(crate::utils::get_type_id::<T>(), bytes);
+        let result = self.data.insert(crate::utils::gett::<T>(), bytes);
         if result.is_some(){
             panic!("Pending entity already contained that component type!");
         }
     }
     pub fn remove<T: 'static>(&mut self) {
-        self.data.remove(&crate::utils::get_type_id::<T>());
+        self.data.remove(&crate::utils::gett::<T>());
     }
 }
 

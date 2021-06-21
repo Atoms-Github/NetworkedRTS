@@ -10,13 +10,13 @@ use serde::de::Visitor;
 // TODO: Implement ser and de manually.
 pub struct SuperbEcs<R>{
     systems: Vec<System<R>>,
-    pub comp_storage: CompStorage,
+    pub c: CompStorage,
 }
 impl<R> SuperbEcs<R>{
     pub fn new(systems: Vec<System<R>>) -> Self{
         Self{
             systems: vec![],
-            comp_storage: Default::default(),
+            c: Default::default(),
         }
     }
     pub fn set_systems(&mut self, systems: Vec<System<R>>){
@@ -24,7 +24,7 @@ impl<R> SuperbEcs<R>{
     }
     pub fn sim_systems(&mut self, resources: R){
         for system in &self.systems{
-            (system.run)(&resources, &mut self.comp_storage);
+            (system.run)(&resources, &mut self.c);
         }
     }
 
@@ -33,7 +33,7 @@ impl<R> Clone for SuperbEcs<R>{
     fn clone(&self) -> Self {
         Self{
             systems: self.systems.clone(),
-            comp_storage: self.comp_storage.clone(),
+            c: self.c.clone(),
         }
     }
 }
@@ -55,7 +55,7 @@ impl<R> Serialize for SuperbEcs<R>{
         where
             S: Serializer,
     {
-        let bytes = bincode::serialize(&self.comp_storage).unwrap();
+        let bytes = bincode::serialize(&self.c).unwrap();
         serializer.serialize_bytes(bytes.as_slice())
         // let mut state = serializer.serialize_struct("Ecs", 1)?;
         // state.serialize_field("storage", &self.comp_storage)?;
@@ -95,7 +95,7 @@ impl<'de> Visitor<'de> for ECSVisitor
 
         return Ok(SuperbEcs{
             systems: vec![],
-            comp_storage: comp_store
+            c: comp_store
         });
     }
 }

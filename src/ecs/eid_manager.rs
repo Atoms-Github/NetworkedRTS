@@ -5,17 +5,22 @@ use serde::*;
 use std::convert::TryInto;
 use crate::ecs::comp_store::{InternalEntity};
 
+use serde_big_array::*;
 
 pub type GlobalEntityID = usize;
-pub const MAX_ENTITIES :usize = 2;
+pub const MAX_ENTITIES :usize = 50;
 
 
+big_array! { BigArray; }
 
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct GlorifiedHashMap {
+    #[serde(with = "BigArray")]
     alive: [bool; MAX_ENTITIES],
+    #[serde(with = "BigArray")]
     entity_ids: [GlobalEntityID; MAX_ENTITIES],
+    #[serde(with = "BigArray")]
     internal_details: [InternalEntity; MAX_ENTITIES],
 }
 impl Default for GlorifiedHashMap{
@@ -42,7 +47,7 @@ impl GlorifiedHashMap {
         for index in 0..MAX_ENTITIES{
             if !self.alive[index]{
                 self.alive[index] = true;
-                let new_global_id = self.entity_ids[index] + MAX_ENTITIES;
+                let new_global_id = self.entity_ids[index];
                 self.entity_ids[index] = new_global_id;
                 internal_entity.global_id = new_global_id;
                 self.internal_details[index] = internal_entity;
@@ -58,6 +63,7 @@ impl GlorifiedHashMap {
             // If the correct generation.
             if self.entity_ids[index] == query_id{
                 self.alive[index] = false;
+                self.entity_ids[index] += MAX_ENTITIES;
             }
         }
         return None;

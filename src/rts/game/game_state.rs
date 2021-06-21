@@ -11,11 +11,16 @@ use crate::rts::comps::player_comp::PlayerComp;
 use crate::rts::comps::owner_comp::OwnedComp;
 use nalgebra::Point2;
 use crate::rts::systems::velocity_sys::VelocityComp;
+use crate::ecs::pending_entity::PendingEntity;
+use crate::rts::systems::velocity_with_inputs_sys::VelocityWithInputsComp;
+use serde_closure::internal::std::future::Pending;
 
 
 const MAX_PLAYERS : usize = 8;
 
 pub type UsingResources = GameResources;
+
+pub use crate::utils::gett;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
@@ -47,62 +52,56 @@ impl GameState {
         }
     }
     pub fn init(&mut self){
-        // Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
-        // for player_index in 0..MAX_PLAYERS{
-        //     assert_eq!(player_index, self.ecs.new_entity(SerdeAnyMap::new()))
-        // }
+        //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
+        for player_index in 0..MAX_PLAYERS{
+            let mut pending = PendingEntity::new();
+            pending.add_comp(PlayerComp{ inputs: Default::default()});
+            assert_eq!(player_index, self.ecs.c.create_entity(pending))
+        }
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
-        // let mut components = SerdeAnyMap::new();
-        // components.insert(RenderComp{ colour: (255,255,255) });
-        // components.insert(PositionComp{ pos: PointFloat::new(1.0, 1.0) });
-        // components.insert(VelocityComp{ vel: PointFloat::new(0.0, 0.0) });
-        // components.insert( OwnedComp { owner: player_id as GlobalEntityID });
-        // components.insert( VelocityWithInputsComp{ speed: 2.0 });
-        // self.ecs.new_entity(components);
-        //
-        //
-        // if self.player_count < MAX_PLAYERS{
-        //     let player_entity_id = player_id as GlobalEntityID;
-        //     self.ecs.add_component(player_entity_id, PlayerComp{ inputs: Default::default(), name: username });
-        //
-        //     self.player_count += 1;
-        // }
+        let mut new_entity = PendingEntity::new();
+        new_entity.add_comp(RenderComp{ colour: (255,255,255) });
+        new_entity.add_comp(PositionComp{ pos: PointFloat::new(1.0, 1.0) });
+        new_entity.add_comp(VelocityComp{ vel: PointFloat::new(0.0, 0.0) });
+        new_entity.add_comp( OwnedComp { owner: player_id as GlobalEntityID });
+        new_entity.add_comp( VelocityWithInputsComp{ speed: 2.0 });
+        self.ecs.c.create_entity(new_entity);
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
     }
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
-        // for (player_id, input_state) in inputs{
-        //     if let Some(existing_player) = self.ecs.get_mut::<PlayerComp>(player_id as GlobalEntityID){
-        //         existing_player.inputs = input_state;
-        //     }
-        // }
-        // self.ecs.run_systems(&self.systems_man);
+        for (player_id, input_state) in inputs{
+            if let Some(existing_player) = self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID){
+                existing_player.inputs = input_state;
+            }
+        }
+        self.ecs.sim_systems(UsingResources{});
     }
     pub fn render(&mut self, ctx: &mut Context){
-        // for entity in self.ecs.query(vec![crate::utils::get_type_id::<RenderComp>(), crate::utils::get_type_id::<PositionComp>()]){
-        //     let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
-        //     let render = self.ecs.get::<RenderComp>(entity).unwrap().clone();
-        //
-        //     let mode = graphics::DrawMode::fill();
-        //     let bounds = graphics::Rect::new(position.pos.x, position.pos.y,50.0, 50.0);
-        //     let color = graphics::Color::from(render.colour);
-        //
-        //     let arena_background : graphics::Mesh = graphics::Mesh::new_rectangle(
-        //         ctx,
-        //         mode,
-        //         bounds,
-        //         color,
-        //     ).unwrap();
-        //
-        //
-        //     graphics::draw(
-        //         ctx,
-        //         &arena_background,
-        //         DrawParam::new(),
-        //     ).unwrap();
-        // }
+        for entity in self.ecs.c.query(vec![crate::utils::gett::<RenderComp>(), crate::utils::gett::<PositionComp>()]){
+            let position = self.ecs.c.get::<PositionComp>(entity).unwrap().clone();
+            let render = self.ecs.c.get::<RenderComp>(entity).unwrap().clone();
+
+            let mode = graphics::DrawMode::fill();
+            let bounds = graphics::Rect::new(position.pos.x, position.pos.y,50.0, 50.0);
+            let color = graphics::Color::from(render.colour);
+
+            let arena_background : graphics::Mesh = graphics::Mesh::new_rectangle(
+                ctx,
+                mode,
+                bounds,
+                color,
+            ).unwrap();
+
+
+            graphics::draw(
+                ctx,
+                &arena_background,
+                DrawParam::new(),
+            ).unwrap();
+        }
         // for entity in self.ecs.query(vec![crate::utils::get_type_id::<OwnedComp>(), crate::utils::get_type_id::<PositionComp>()]){
         //     let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
         //     let owner = self.ecs.get::<OwnedComp>(entity).unwrap().owner;

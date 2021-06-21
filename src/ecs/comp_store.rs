@@ -32,12 +32,20 @@ pub struct DeleteResult{
 
 }
 impl CompStorage{
-    pub fn get_comp<T : 'static>(&self, entity_id: GlobalEntityID) -> Option<&T>{
+    pub fn get<T : 'static>(&self, entity_id: GlobalEntityID) -> Option<&T>{
         let internal = self.entities.get(entity_id)?;
         let column = self.get_column::<T>()?;
         let bytes = column.get(internal.composition_id)?.get(internal.internal_index)?;
 
         let casted : &T = unsafe{u8_slice_to_ref(bytes.as_slice())};
+        return Some(casted);
+    }
+    pub fn get_mut<T : 'static>(&mut self, entity_id: GlobalEntityID) -> Option<&mut T>{
+        let internal = self.entities.get(entity_id)?;
+        let column = self.columns.get_mut(&crate::utils::gett::<T>())?;
+        let bytes = column.get_mut(internal.composition_id)?.get_mut(internal.internal_index)?;
+
+        let casted : &mut T = unsafe{u8_slice_to_ref_mut(bytes.as_mut_slice())};
         return Some(casted);
     }
     pub fn delete_entity(&mut self, entity_id: GlobalEntityID) -> Option<DeleteResult>{
@@ -119,10 +127,10 @@ impl CompStorage{
         return column.get_mut(composition_id).unwrap();
     }
     fn get_column<T : 'static>(&self) -> Option<&Column>{
-        self.columns.get(&crate::utils::get_type_id::<T>())
+        self.columns.get(&crate::utils::gett::<T>())
     }
     fn get_column_mut_or_make<T : 'static>(&mut self) -> &mut Column{
-        let key = crate::utils::get_type_id::<T>();
+        let key = crate::utils::gett::<T>();
         return self.get_column_mut_or_make_key(key);
     }
     fn get_column_mut_or_make_key(&mut self, type_id: TypeIdNum) -> &mut Column{
@@ -137,6 +145,12 @@ unsafe fn u8_slice_to_ref<T>(bytes: &[u8]) -> &T {
     let bytes_ptr = bytes.as_ptr();
     let test : *const T = unsafe{ std::mem::transmute(bytes_ptr) };
     let value = unsafe {test.as_ref()}.unwrap();
+    return value;
+}
+unsafe fn u8_slice_to_ref_mut<T>(bytes: &mut [u8]) -> &mut T {
+    let bytes_ptr = bytes.as_ptr();
+    let test : *mut T = unsafe{ std::mem::transmute(bytes_ptr) };
+    let value : &mut T = unsafe {test.as_mut()}.unwrap();
     return value;
 }
 
