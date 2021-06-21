@@ -21,9 +21,8 @@ fn run(res: &GameResources, c: &mut CompStorage){
                 let position_ship = c.get::<PositionComp>(entity_id_ship).unwrap().pos.clone();
 
                 let difference = PointFloat::new(position_rock.coords.x - position_ship.coords.x, position_rock.coords.y - position_ship.coords.y);
-                if (difference.x * difference.x + difference.y * difference.y) < 300.0{
+                if (difference.x * difference.x + difference.y * difference.y) < (70.0 * 70.0){
                     c.get_mut::<LifeComp>(entity_id_ship).unwrap().life -= 0.5;
-                    println!("Hit!");
                 }
             }
         }
