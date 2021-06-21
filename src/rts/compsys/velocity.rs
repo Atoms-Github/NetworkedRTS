@@ -1,8 +1,10 @@
-use crate::ecs::superb_ecs::*;
 use crate::rts::game::game_state::*;
-use crate::ecs::comp_store::CompStorage;
+use crate::rts::compsys::owner::OwnedComp;
+use crate::rts::compsys::player::PlayerComp;
 use crate::pub_types::PointFloat;
-use crate::rts::comps::position_comp::PositionComp;
+use crate::ecs::superb_ecs::System;
+use crate::ecs::comp_store::CompStorage;
+use crate::rts::compsys::position::PositionComp;
 
 pub struct VelocityComp {
     pub vel: PointFloat,

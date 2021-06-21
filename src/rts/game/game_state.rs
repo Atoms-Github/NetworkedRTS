@@ -4,18 +4,14 @@ use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::{*};
 use std::sync::Arc;
 use crate::ecs::{ActiveEcs, GlobalEntityID};
-use crate::rts::comps::render_comp::RenderComp;
-use crate::rts::comps::position_comp::PositionComp;
 use ggez::graphics::{DrawParam, Text};
-use crate::rts::comps::player_comp::{PlayerComp, PLAYER_NAME_SIZE_MAX};
-use crate::rts::comps::owner_comp::OwnedComp;
 use nalgebra::Point2;
-use crate::rts::systems::velocity_sys::VelocityComp;
 use crate::ecs::pending_entity::PendingEntity;
-use crate::rts::systems::velocity_with_inputs_sys::VelocityWithInputsComp;
 use serde_closure::internal::std::future::Pending;
 pub use crate::utils::gett;
 use crate::ecs::superb_ecs::System;
+use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
+use crate::rts::compsys::*;
 
 
 const MAX_PLAYERS : usize = 8;
@@ -24,8 +20,8 @@ pub type UsingResources = GameResources;
 pub type UsingSystemsList = GameResources;
 
 pub fn global_get_systems() -> Vec<System<UsingResources>>{
-    vec![crate::rts::systems::velocity_sys::VELOCITY_SYS.clone(),
-         crate::rts::systems::velocity_with_inputs_sys::VELOCITY_WITH_INPUTS_SYS.clone()]
+    vec![crate::rts::compsys::velocity::VELOCITY_SYS.clone(),
+         crate::rts::compsys::velocity_with_inputs::VELOCITY_WITH_INPUTS_SYS.clone()]
 }
 
 
@@ -83,43 +79,7 @@ impl GameState {
         self.ecs.sim_systems(UsingResources{});
     }
     pub fn render(&mut self, ctx: &mut Context){
-        for entity in self.ecs.c.query(vec![crate::utils::gett::<RenderComp>(), crate::utils::gett::<PositionComp>()]){
-            let position = self.ecs.c.get::<PositionComp>(entity).unwrap().clone();
-            let render = self.ecs.c.get::<RenderComp>(entity).unwrap().clone();
-
-            let mode = graphics::DrawMode::fill();
-            let bounds = graphics::Rect::new(position.pos.x, position.pos.y,50.0, 50.0);
-            let color = graphics::Color::from(render.colour);
-
-            let arena_background : graphics::Mesh = graphics::Mesh::new_rectangle(
-                ctx,
-                mode,
-                bounds,
-                color,
-            ).unwrap();
-
-
-            graphics::draw(
-                ctx,
-                &arena_background,
-                DrawParam::new(),
-            ).unwrap();
-        }
-        for entity in self.ecs.c.query(vec![gett::<OwnedComp>(), gett::<PositionComp>()]){
-            let position = self.ecs.c.get::<PositionComp>(entity).unwrap().clone();
-            let owner = self.ecs.c.get::<OwnedComp>(entity).unwrap().owner;
-            let player_name = self.ecs.c.get::<PlayerComp>(owner).unwrap().name.clone();
-
-            let player_name = String::from_utf8(player_name.to_vec()).unwrap();
-
-            let player_name_display = Text::new(player_name);
-
-            graphics::draw(
-                ctx,
-                &player_name_display,
-                (Point2::new(position.pos.x, position.pos.y), graphics::Color::from((0,153,255))),
-            ).unwrap();
-        }
+        crate::rts::compsys::render::render(&mut self.ecs, ctx);
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = GameResources {

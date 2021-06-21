@@ -1,5 +1,5 @@
 use std::any::TypeId;
-use crate::rts::comps::player_comp::PLAYER_NAME_SIZE_MAX;
+use crate::rts::compsys::player::PLAYER_NAME_SIZE_MAX;
 
 pub type TypeIdNum = u64;
 

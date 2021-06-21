@@ -1,11 +1,9 @@
-use crate::ecs::superb_ecs::*;
 use crate::rts::game::game_state::*;
+use crate::rts::compsys::owner::OwnedComp;
+use crate::rts::compsys::player::PlayerComp;
+use crate::rts::compsys::velocity::VelocityComp;
 use crate::ecs::comp_store::CompStorage;
-use crate::pub_types::PointFloat;
-use crate::rts::systems::velocity_sys::VelocityComp;
-use crate::rts::comps::owner_comp::OwnedComp;
-use crate::rts::comps::player_comp::PlayerComp;
-
+use crate::ecs::superb_ecs::System;
 
 pub struct VelocityWithInputsComp {
     pub speed: f32,
