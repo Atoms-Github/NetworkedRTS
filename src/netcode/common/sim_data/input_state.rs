@@ -6,12 +6,19 @@ use ggez::event::{KeyCode};
 use ggez::input::mouse::MouseButton;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
+use serde_big_array::*;
+
+big_array! { BigArray; }
+
+const MOUSE_BUTTONS_COUNT: usize = 24;
+const KEY_COUNT : usize = 192;
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct InputState {
-    pub mouse_loc: nalgebra::Point2<f32>,
-    pub keys_pressed: HashSet<usize>,
-    pub mouse_btns_pressed: HashSet<MouseButton>
+    mouse_loc: nalgebra::Point2<f32>,
+    #[serde(with = "BigArray")]
+    keys_pressed: [bool; KEY_COUNT],
+    mouse_btns_pressed: [bool; MOUSE_BUTTONS_COUNT] // NOT SUPPORTING NON-DEFAULT MOUSE BUTTONS.
 }
 
 impl Eq for InputState{
@@ -45,11 +52,7 @@ impl InputChange{ // TODO2: Swap round. Should be state.apply_change(InputChange
                 state.mouse_loc = PointFloat::new(*x,*y);
             }
             InputChange::MouseUpDown(button, is_down) => {
-                if *is_down{
-                    state.mouse_btns_pressed.insert(*button);
-                }else{
-                    state.mouse_btns_pressed.remove(button);
-                }
+                state.set_mouse_pressed(*button, *is_down);
             }
         }
     }
@@ -64,23 +67,33 @@ impl InputState{
     pub fn new() -> InputState{
         InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
-            keys_pressed: HashSet::new(),
-//            keys_pressed: vec![false; 260]
-            mouse_btns_pressed: Default::default()
+            keys_pressed: [false; KEY_COUNT],
+            mouse_btns_pressed: [false; MOUSE_BUTTONS_COUNT],
         }
     }
+    fn get_button_index(&self, button: MouseButton) -> usize{
+        match button{
+            MouseButton::Left => {0}
+            MouseButton::Right => {1}
+            MouseButton::Middle => {2}
+            MouseButton::Other(bonus) => {
+                assert!(bonus <= 20, "Invalid mouse bonus button! Only up to 20 are supported. {}", bonus);
+                (3 + bonus).into()
+            }
+        }
+    }
+    pub fn set_mouse_pressed(&mut self, button: MouseButton, is_down: bool){
+        let index = self.get_button_index(button);
+        self.mouse_btns_pressed[index] = is_down;
+    }
     pub fn is_keyid_pressed(&self, key_id: usize) -> bool{
-        self.keys_pressed.contains(&key_id)
+        self.keys_pressed[key_id]
     }
     pub fn is_keycode_pressed(&self, code: KeyCode) -> bool{
         self.is_keyid_pressed(code as usize)
     }
     pub fn set_keyid_pressed(&mut self, key_id: usize, pressed: bool){
-        if pressed{
-            self.keys_pressed.insert(key_id);
-        }else{
-            self.keys_pressed.remove(&key_id);
-        }
+        self.keys_pressed[key_id] = pressed;
     }
     pub fn set_keycode_pressed(&mut self, code: KeyCode, pressed: bool){
         self.set_keyid_pressed(code as usize, pressed)

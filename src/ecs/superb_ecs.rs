@@ -94,7 +94,7 @@ impl<'de> Visitor<'de> for ECSVisitor
         let comp_store = bincode::deserialize::<CompStorage>(bytes).unwrap();
 
         return Ok(SuperbEcs{
-            systems: vec![],
+            systems: crate::rts::game::game_state::global_get_systems(),
             c: comp_store
         });
     }

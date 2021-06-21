@@ -8,7 +8,7 @@ pub struct VelocityComp {
     pub vel: PointFloat,
 }
 
-pub static VELOCITY_SYSTEM : System<GameResources> = System{
+pub static VELOCITY_SYS: System<GameResources> = System{
     run
 };
 fn run(res: &GameResources, ecs: &mut CompStorage){

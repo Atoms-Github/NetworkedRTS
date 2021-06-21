@@ -11,7 +11,7 @@ pub struct VelocityWithInputsComp {
     pub speed: f32,
 }
 
-pub static VELOCITY_SYSTEM : System<GameResources> = System{
+pub static VELOCITY_WITH_INPUTS_SYS: System<GameResources> = System{
     run
 };
 fn run(res: &GameResources, ecs: &mut CompStorage){

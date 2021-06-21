@@ -14,13 +14,20 @@ use crate::rts::systems::velocity_sys::VelocityComp;
 use crate::ecs::pending_entity::PendingEntity;
 use crate::rts::systems::velocity_with_inputs_sys::VelocityWithInputsComp;
 use serde_closure::internal::std::future::Pending;
+pub use crate::utils::gett;
+use crate::ecs::superb_ecs::System;
 
 
 const MAX_PLAYERS : usize = 8;
 
 pub type UsingResources = GameResources;
+pub type UsingSystemsList = GameResources;
 
-pub use crate::utils::gett;
+pub fn global_get_systems() -> Vec<System<UsingResources>>{
+    vec![crate::rts::systems::velocity_sys::VELOCITY_SYS.clone(),
+         crate::rts::systems::velocity_with_inputs_sys::VELOCITY_WITH_INPUTS_SYS.clone()]
+}
+
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
@@ -43,11 +50,8 @@ impl Default for GameState {
 
 impl GameState {
     pub fn new() -> Self {
-        let mut systems = vec![];
-        systems.push(crate::rts::systems::velocity_sys::VELOCITY_SYSTEM.clone());
-        systems.push(crate::rts::systems::velocity_with_inputs_sys::VELOCITY_SYSTEM.clone());
         Self{
-            ecs: ActiveEcs::new(systems),
+            ecs: ActiveEcs::new(global_get_systems()),
             player_count: 0,
         }
     }
