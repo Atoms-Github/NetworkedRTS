@@ -20,7 +20,7 @@ pub struct InternalEntity {
     internal_index: InternalIndex,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct CompStorage {
     columns: BTreeMap<TypeIdNum, Column>,
     entities: GlorifiedHashMap,
@@ -43,7 +43,6 @@ impl CompStorage{
         let deleting_internal = self.entities.get(entity_id)?;
 
         unimplemented!();
-        None
     }
     pub fn get_composition_id(&mut self, types_hash: TypesHash) -> CompositionID{
         if let Some(composition_id) = self.composition_ids.get(&types_hash){

@@ -15,10 +15,11 @@ use crate::rts::systems::velocity_sys::VelocityComp;
 
 const MAX_PLAYERS : usize = 8;
 
+pub type UsingResources = GameResources;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
-    ecs: ActiveEcs<GameResources>,
+    ecs: ActiveEcs<UsingResources>,
     player_count: usize
 }
 
@@ -80,28 +81,28 @@ impl GameState {
         // self.ecs.run_systems(&self.systems_man);
     }
     pub fn render(&mut self, ctx: &mut Context){
-        for entity in self.ecs.query(vec![crate::utils::get_type_id::<RenderComp>(), crate::utils::get_type_id::<PositionComp>()]){
-            let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
-            let render = self.ecs.get::<RenderComp>(entity).unwrap().clone();
-
-            let mode = graphics::DrawMode::fill();
-            let bounds = graphics::Rect::new(position.pos.x, position.pos.y,50.0, 50.0);
-            let color = graphics::Color::from(render.colour);
-
-            let arena_background : graphics::Mesh = graphics::Mesh::new_rectangle(
-                ctx,
-                mode,
-                bounds,
-                color,
-            ).unwrap();
-
-
-            graphics::draw(
-                ctx,
-                &arena_background,
-                DrawParam::new(),
-            ).unwrap();
-        }
+        // for entity in self.ecs.query(vec![crate::utils::get_type_id::<RenderComp>(), crate::utils::get_type_id::<PositionComp>()]){
+        //     let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
+        //     let render = self.ecs.get::<RenderComp>(entity).unwrap().clone();
+        //
+        //     let mode = graphics::DrawMode::fill();
+        //     let bounds = graphics::Rect::new(position.pos.x, position.pos.y,50.0, 50.0);
+        //     let color = graphics::Color::from(render.colour);
+        //
+        //     let arena_background : graphics::Mesh = graphics::Mesh::new_rectangle(
+        //         ctx,
+        //         mode,
+        //         bounds,
+        //         color,
+        //     ).unwrap();
+        //
+        //
+        //     graphics::draw(
+        //         ctx,
+        //         &arena_background,
+        //         DrawParam::new(),
+        //     ).unwrap();
+        // }
         // for entity in self.ecs.query(vec![crate::utils::get_type_id::<OwnedComp>(), crate::utils::get_type_id::<PositionComp>()]){
         //     let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
         //     let owner = self.ecs.get::<OwnedComp>(entity).unwrap().owner;
