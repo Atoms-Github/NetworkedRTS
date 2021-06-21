@@ -8,7 +8,7 @@ use crate::ecs::comp_store::{InternalEntity};
 use serde_big_array::*;
 
 pub type GlobalEntityID = usize;
-pub const MAX_ENTITIES :usize = 50;
+pub const MAX_ENTITIES :usize = 128;
 
 
 big_array! { BigArray; }

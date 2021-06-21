@@ -71,6 +71,9 @@ impl InputState{
             mouse_btns_pressed: [false; MOUSE_BUTTONS_COUNT],
         }
     }
+    pub fn get_mouse_loc(&self) -> &PointFloat{
+        return &self.mouse_loc;
+    }
     fn get_button_index(&self, button: MouseButton) -> usize{
         match button{
             MouseButton::Left => {0}
@@ -85,6 +88,10 @@ impl InputState{
     pub fn set_mouse_pressed(&mut self, button: MouseButton, is_down: bool){
         let index = self.get_button_index(button);
         self.mouse_btns_pressed[index] = is_down;
+    }
+    pub fn get_mouse_pressed(&self, button: MouseButton) -> bool{
+        let index = self.get_button_index(button);
+        self.mouse_btns_pressed[index]
     }
     pub fn is_keyid_pressed(&self, key_id: usize) -> bool{
         self.keys_pressed[key_id]
