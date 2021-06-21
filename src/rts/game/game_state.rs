@@ -7,7 +7,7 @@ use crate::ecs::{ActiveEcs, GlobalEntityID};
 use crate::rts::comps::render_comp::RenderComp;
 use crate::rts::comps::position_comp::PositionComp;
 use ggez::graphics::{DrawParam, Text};
-use crate::rts::comps::player_comp::PlayerComp;
+use crate::rts::comps::player_comp::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::comps::owner_comp::OwnedComp;
 use nalgebra::Point2;
 use crate::rts::systems::velocity_sys::VelocityComp;
@@ -45,9 +45,6 @@ impl Default for GameState {
     }
 }
 
-
-
-
 impl GameState {
     pub fn new() -> Self {
         Self{
@@ -59,7 +56,7 @@ impl GameState {
         //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
         for player_index in 0..MAX_PLAYERS{
             let mut pending = PendingEntity::new();
-            pending.add_comp(PlayerComp{ inputs: Default::default()});
+            pending.add_comp(PlayerComp{ inputs: Default::default(), name: [0; PLAYER_NAME_SIZE_MAX] });
             assert_eq!(player_index, self.ecs.c.create_entity(pending))
         }
     }
@@ -71,6 +68,8 @@ impl GameState {
         new_entity.add_comp( OwnedComp { owner: player_id as GlobalEntityID });
         new_entity.add_comp( VelocityWithInputsComp{ speed: 2.0 });
         self.ecs.c.create_entity(new_entity);
+
+        self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().name = crate::utils::pad_name(username);
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
@@ -106,19 +105,21 @@ impl GameState {
                 DrawParam::new(),
             ).unwrap();
         }
-        // for entity in self.ecs.query(vec![crate::utils::get_type_id::<OwnedComp>(), crate::utils::get_type_id::<PositionComp>()]){
-        //     let position = self.ecs.get::<PositionComp>(entity).unwrap().clone();
-        //     let owner = self.ecs.get::<OwnedComp>(entity).unwrap().owner;
-        //     let player_name = self.ecs.get::<PlayerComp>(owner).unwrap().name.clone();
-        //
-        //     let player_name_display = Text::new(player_name);
-        //
-        //     graphics::draw(
-        //         ctx,
-        //         &player_name_display,
-        //         (Point2::new(position.pos.x, position.pos.y), graphics::Color::from((0,153,255))),
-        //     ).unwrap();
-        // }
+        for entity in self.ecs.c.query(vec![gett::<OwnedComp>(), gett::<PositionComp>()]){
+            let position = self.ecs.c.get::<PositionComp>(entity).unwrap().clone();
+            let owner = self.ecs.c.get::<OwnedComp>(entity).unwrap().owner;
+            let player_name = self.ecs.c.get::<PlayerComp>(owner).unwrap().name.clone();
+
+            let player_name = String::from_utf8(player_name.to_vec()).unwrap();
+
+            let player_name_display = Text::new(player_name);
+
+            graphics::draw(
+                ctx,
+                &player_name_display,
+                (Point2::new(position.pos.x, position.pos.y), graphics::Color::from((0,153,255))),
+            ).unwrap();
+        }
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = GameResources {
