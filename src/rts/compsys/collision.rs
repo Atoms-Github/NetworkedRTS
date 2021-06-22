@@ -14,8 +14,8 @@ pub static COLLISION_SYS: System<GameResources> = System{
     run
 };
 fn run(res: &GameResources, c: &mut CompStorage){
-    for entity_id_rock in c.query(vec![gett::<CollisionComp>(), gett::<PositionComp>()]){
-        for entity_id_ship in c.query(vec![gett::<CollisionComp>(), gett::<LifeComp>()]){
+    for entity_id_ship in c.query(vec![gett::<CollisionComp>(), gett::<LifeComp>()]){
+        for entity_id_rock in c.query(vec![gett::<CollisionComp>(), gett::<PositionComp>()]){
             if entity_id_ship != entity_id_rock{
                 let position_rock = c.get::<PositionComp>(entity_id_rock).unwrap().pos.clone();
                 let position_ship = c.get::<PositionComp>(entity_id_ship).unwrap().pos.clone();
@@ -26,5 +26,8 @@ fn run(res: &GameResources, c: &mut CompStorage){
                 }
             }
         }
+        c.get_mut::<LifeComp>(entity_id_ship).unwrap().life += 0.001;
+
     }
+
 }
