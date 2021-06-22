@@ -26,7 +26,7 @@ fn run(res: &GameResources, c: &mut CompStorage){
                 }
             }
         }
-        c.get_mut::<LifeComp>(entity_id_ship).unwrap().life += 0.001;
+        c.get_mut::<LifeComp>(entity_id_ship).unwrap().life += 0.01;
 
     }
 

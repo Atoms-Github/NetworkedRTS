@@ -15,7 +15,7 @@ pub struct SuperbEcs<R>{
 impl<R> SuperbEcs<R>{
     pub fn new(systems: Vec<System<R>>) -> Self{
         Self{
-            systems: vec![],
+            systems: systems,
             c: Default::default(),
         }
     }
