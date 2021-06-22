@@ -28,6 +28,7 @@ fn run(res: &GameResources, c: &mut CompStorage){
                 let mut new_entity = PendingEntity::new();
                 new_entity.add_comp(RenderComp{ colour: (100,50,50) });
                 new_entity.add_comp(PositionComp{ pos: position });
+                new_entity.add_comp(CollisionComp{  });
                 new_entity.add_comp(VelocityComp{ vel: PointFloat::from(velocity_vec) });
                 new_entity.add_comp( OwnedComp { owner: player_id });
                 c.create_entity(new_entity);
