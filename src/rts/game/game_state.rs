@@ -62,7 +62,7 @@ impl GameState {
         let mut new_entity = PendingEntity::new();
         new_entity.add_comp(RenderComp{ colour: (255,255,255) });
         new_entity.add_comp(ShootMouseComp{ time_since_shot: 0.0 });
-        new_entity.add_comp(PositionComp{ pos: PointFloat::new(1.0, 1.0) });
+        new_entity.add_comp(PositionComp{ pos: PointFloat::new(300.0, 1.0) });
         new_entity.add_comp(VelocityComp{ vel: PointFloat::new(0.0, 0.0) });
         new_entity.add_comp( OwnedComp { owner: player_id as GlobalEntityID });
         new_entity.add_comp( VelocityWithInputsComp{ speed: 2.0 });

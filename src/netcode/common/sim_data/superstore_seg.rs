@@ -101,7 +101,7 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
         //
         //     self.data.drain(0..overlap_count);
         /*}*/else{
-            log::info!("Got some early data. We couldn't care less about this data. We start {}, we have {} items Data is {:?}", self.frame_offset, self.data.len(), new_data);
+            // log::info!("Got some early data. We couldn't care less about this data. We start {}, we have {} items Data is {:?}", self.frame_offset, self.data.len(), new_data);
             // panic!("Known issue #1. Somehow recieved late player data, then early player data which would leave a hole. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
         }
     }

@@ -23,12 +23,12 @@ fn run(res: &GameResources, c: &mut CompStorage){
 
         if c.get::<ShootMouseComp>(entity_id).unwrap().time_since_shot >= 1.0{
             if input_state.get_mouse_pressed(MouseButton::Left){
-                let velocity_vec = PointFloat::new(target.x - position.x, target.y - position.y).coords.normalize();
-                let velocity_vec = PointFloat::new(velocity_vec.x * 6.0, velocity_vec.y * 6.0);
+
+                let velocity_vec = (target.coords - position.clone().coords).normalize().mul(6.0);
                 let mut new_entity = PendingEntity::new();
                 new_entity.add_comp(RenderComp{ colour: (100,50,50) });
                 new_entity.add_comp(PositionComp{ pos: position });
-                new_entity.add_comp(VelocityComp{ vel: velocity_vec });
+                new_entity.add_comp(VelocityComp{ vel: PointFloat::from(velocity_vec) });
                 new_entity.add_comp( OwnedComp { owner: player_id });
                 c.create_entity(new_entity);
 
@@ -37,6 +37,5 @@ fn run(res: &GameResources, c: &mut CompStorage){
         }else{
             c.get_mut::<ShootMouseComp>(entity_id).unwrap().time_since_shot += 0.016;
         }
-
     }
 }
