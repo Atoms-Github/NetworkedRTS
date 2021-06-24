@@ -33,6 +33,7 @@ pub struct DeleteResult{
 }
 impl CompStorage{
     pub fn get<T : 'static>(&self, entity_id: GlobalEntityID) -> Option<&T>{
+        // Pog. Can be pure 0 processing time function if we use get_unsafe().
         let internal = self.entities.get(entity_id)?;
         let column = self.get_column::<T>()?;
         let bytes = column.get(internal.composition_id)?.get(internal.internal_index)?;

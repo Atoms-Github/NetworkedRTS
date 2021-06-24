@@ -43,27 +43,27 @@ pub struct System<R>{
 }
 
 
-struct CompIterer3<'a, A : 'static, B : 'static, C : 'static> {
+pub struct CompIter3<'a, A : 'static, B : 'static, C : 'static> {
     a: PhantomData<A>,
     b: PhantomData<B>,
     c: PhantomData<C>,
     ecs: &'a CompStorage,
     vec: Vec<GlobalEntityID>
 }// C:/Users/tomul/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust/library/core/src/slice/iter.rs:66
-impl<'a, A : 'static, B : 'static, C : 'static> CompIterer3<'a, A, B, C>{
-    pub fn new(my_ref: &'a CompStorage, entity_id: GlobalEntityID) -> Self{
-        let mut my_vec = my_ref.query(vec![gett::<A>(), gett::<B>(), gett::<C>()]).iter().as_slice().to_vec();
+impl<'a, A : 'static, B : 'static, C : 'static> CompIter3<'a, A, B, C>{
+    pub fn new(ecs: &'a CompStorage) -> Self{
+        let mut my_vec = ecs.query(vec![gett::<A>(), gett::<B>(), gett::<C>()]).iter().as_slice().to_vec();
         my_vec.reverse();
         Self{
             a: Default::default(),
             b: Default::default(),
             c: Default::default(),
-            ecs: my_ref,
+            ecs,
             vec: my_vec,
         }
     }
 }
-impl<'a, A, B, C> Iterator for CompIterer3<'a, A, B, C>{
+impl<'a, A, B, C> Iterator for CompIter3<'a, A, B, C>{
     type Item = (&'a mut A, &'a mut B, &'a mut C);
     fn next(&mut self) -> Option<Self::Item> {
         let entity_id = self.vec.pop()?;
