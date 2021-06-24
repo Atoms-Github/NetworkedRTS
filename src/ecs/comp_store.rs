@@ -40,13 +40,8 @@ impl CompStorage{
         let casted : &T = unsafe{u8_slice_to_ref(bytes.as_slice())};
         return Some(casted);
     }
-    pub fn get_mut<T : 'static>(&mut self, entity_id: GlobalEntityID) -> Option<&mut T>{
-        let internal = self.entities.get(entity_id)?;
-        let column = self.columns.get_mut(&crate::utils::gett::<T>())?;
-        let bytes = column.get_mut(internal.composition_id)?.get_mut(internal.internal_index)?;
-
-        let casted : &mut T = unsafe{u8_slice_to_ref_mut(bytes.as_mut_slice())};
-        return Some(casted);
+    pub fn get_mut<T : 'static>(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID) -> Option<&mut T>{
+        return self.get::<T>(entity_id).map(|unmut|{unsafe{very_bad_function(unmut)}});
     }
     pub fn delete_entity(&mut self, entity_id: GlobalEntityID) -> Option<DeleteResult>{
         let deleting_internal = self.entities.get(entity_id)?;
@@ -140,6 +135,11 @@ impl CompStorage{
         return self.columns.get_mut(&type_id).unwrap();
     }
 
+}
+unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
+    let const_ptr = reference as *const T;
+    let mut_ptr = const_ptr as *mut T;
+    &mut *mut_ptr
 }
 unsafe fn u8_slice_to_ref<T>(bytes: &[u8]) -> &T {
     let bytes_ptr = bytes.as_ptr();
