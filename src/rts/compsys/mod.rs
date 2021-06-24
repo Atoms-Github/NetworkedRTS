@@ -17,3 +17,6 @@ pub use render::*;
 pub use life::*;
 pub use shoot_mouse::*;
 pub use collision::*;
+
+pub use crate::ecs::pending_entity::*;
+pub use crate::ecs::ecs_macros::*;

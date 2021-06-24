@@ -1,9 +1,8 @@
 use crate::rts::game::game_state::*;
-use crate::rts::compsys::owner::OwnedComp;
-use crate::rts::compsys::player::PlayerComp;
-use crate::rts::compsys::velocity::VelocityComp;
+use crate::rts::compsys::*;
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
+use std::ops::Mul;
 
 pub struct VelocityWithInputsComp {
     pub speed: f32,
@@ -12,20 +11,17 @@ pub struct VelocityWithInputsComp {
 pub static VELOCITY_WITH_INPUTS_SYS: System<GameResources> = System{
     run
 };
-fn run(res: &GameResources, ecs: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    for entity_id in ecs.query(vec![gett::<VelocityComp>(), gett::<VelocityWithInputsComp>(), gett::<OwnedComp>()]){
-        let owner_id = ecs.get::<OwnedComp>(entity_id).unwrap().owner;
-        let my_inputs = ecs.get::<PlayerComp>(owner_id).unwrap().inputs.clone();
+fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+    for (ent, velocity, velocity_with_inputs, owned) in
+    CompIter3::<VelocityComp, VelocityWithInputsComp, OwnedComp>::new(c){
+        let my_inputs = &c.get::<PlayerComp>(owned.owner).unwrap().inputs;
 
-        let (directional_x, directional_y) = my_inputs.get_directional();
-
-        let mut my_speed = ecs.get::<VelocityWithInputsComp>(entity_id).unwrap().speed;
-
+        let mut speed = velocity_with_inputs.speed;
         if my_inputs.is_keycode_pressed(ggez::input::keyboard::KeyCode::Space){
-            my_speed *= 3.0;
+            speed *= 3.0;
         }
-        let velocity = ecs.get_mut::<VelocityComp>(entity_id).unwrap();
-        velocity.vel.x = my_speed * directional_x;
-        velocity.vel.y = my_speed * -directional_y;
+        let mut vector = my_inputs.get_directional() * speed;
+        vector.y *= -1.0;
+        velocity.vel = nalgebra::Point2::from(vector);
     }
 }
