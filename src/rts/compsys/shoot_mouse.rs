@@ -1,12 +1,13 @@
 use crate::rts::game::game_state::*;
 use crate::rts::compsys::*;
 use crate::pub_types::PointFloat;
-use crate::ecs::superb_ecs::{System, CompIter3};
+use crate::ecs::superb_ecs::{System};
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::pending_entity::PendingEntity;
 use winit::MouseButton;
 use std::ops::Mul;
 use serde_closure::internal::std::borrow::Cow::Owned;
+use crate::ecs::ecs_macros::CompIter3;
 
 pub struct ShootMouseComp {
     pub time_since_shot: f32
@@ -20,9 +21,9 @@ pub static SHOOT_MOUSE_SYS: System<GameResources> = System{
 // query!();
 fn run(res: &GameResources, c: &mut CompStorage) {
     let mut entities = vec![];
-    for (shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
+    for (id, shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
         let input_state = &c.get::<PlayerComp>(owned.owner).unwrap().inputs;
-        
+
         if shoot.time_since_shot >= 1.0{
             if input_state.get_mouse_pressed(MouseButton::Left){
                 let velocity_vec = (input_state.get_mouse_loc().clone().coords - position.pos.clone().coords).normalize().mul(6.0);
