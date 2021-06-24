@@ -14,6 +14,9 @@ pub struct ShootMouseComp {
 pub static SHOOT_MOUSE_SYS: System<GameResources> = System{
     run
 };
+// Macros: eget!(); to get variable nubmer of compoentns.
+// query_id!();
+// query!();
 fn run(res: &GameResources, c: &mut CompStorage){
     for entity_id in c.query(vec![gett::<ShootMouseComp>(), gett::<OwnedComp>(), gett::<PositionComp>()]){
         let player_id = c.get::<OwnedComp>(entity_id).unwrap().owner;

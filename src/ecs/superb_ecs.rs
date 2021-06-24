@@ -42,6 +42,82 @@ pub struct System<R>{
     pub run: fn(&R, &mut CompStorage /* Could add read only version here. */),
 }
 
+
+struct CompIterer2<'a, A : 'static, B : 'static, C : 'static> {
+    a: PhantomData<A>,
+    b: PhantomData<B>,
+    c: PhantomData<C>,
+    ecs: &'a CompStorage,
+    vec: Vec<GlobalEntityID>
+}// C:/Users/tomul/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust/library/core/src/slice/iter.rs:66
+impl<'a, A : 'static, B : 'static, C : 'static> CompIterer2<'a, A, B, C>{
+    pub fn new(my_ref: &'a CompStorage, entity_id: GlobalEntityID) -> Self{
+        let mut my_vec = my_ref.query(vec![gett::<A>(), gett::<B>(), gett::<C>()]).iter().as_slice().to_vec();
+        my_vec.reverse();
+        Self{
+            a: Default::default(),
+            b: Default::default(),
+            c: Default::default(),
+            ecs: my_ref,
+            vec: my_vec,
+        }
+    }
+}
+impl<'a, A, B, C> Iterator for CompIterer2<'a, A, B, C>{
+    type Item = (&'a A, &'a B, &'a C);
+    fn next(&mut self) -> Option<Self::Item> {
+        let entity_id = self.vec.pop()?;
+
+        return Some((self.ecs.get::<A>(entity_id).unwrap(),
+                    self.ecs.get::<B>(entity_id).unwrap(),
+                    self.ecs.get::<C>(entity_id).unwrap()
+        )
+        );
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ------------------------------
+//  GARBAGE BELOW HERE.
+// ------------------------------
+
 impl<R> Clone for System<R> {
     fn clone(&self) -> Self {
         Self{
@@ -70,8 +146,11 @@ struct ECSVisitor {
 
 use std::fmt::Write;
 use std::fmt;
-use crate::utils::TypeIdNum;
+use crate::utils::{TypeIdNum, gett};
 use crate::rts::game::game_state::UsingResources;
+use std::marker::PhantomData;
+use crate::ecs::GlobalEntityID;
+use std::slice::Iter;
 
 impl ECSVisitor {
     fn new() -> Self {
