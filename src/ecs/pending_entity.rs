@@ -25,11 +25,11 @@ impl PendingEntity {
         return self.data.iter();
     }
     pub fn add_comp<T: 'static>(&mut self, value: T) {
+        assert!(self.set_comp(value).is_none(), "Pending entity already contained that component type!");
+    }
+    pub fn set_comp<T: 'static>(&mut self, value: T) -> Option<Vec<u8>> {
         let bytes = unsafe {any_as_u8_slice(&value)}.to_vec();
-        let result = self.data.insert(crate::utils::gett::<T>(), bytes);
-        if result.is_some(){
-            panic!("Pending entity already contained that component type!");
-        }
+        return self.data.insert(crate::utils::gett::<T>(), bytes);
     }
     pub fn remove<T: 'static>(&mut self) {
         self.data.remove(&crate::utils::gett::<T>());

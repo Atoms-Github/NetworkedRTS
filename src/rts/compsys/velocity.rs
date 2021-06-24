@@ -1,7 +1,7 @@
 use crate::rts::game::game_state::*;
 use crate::rts::compsys::*;
 use crate::pub_types::PointFloat;
-use crate::ecs::superb_ecs::System;
+use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use crate::ecs::comp_store::CompStorage;
 
 pub struct VelocityComp {
@@ -11,7 +11,7 @@ pub struct VelocityComp {
 pub static VELOCITY_SYS: System<GameResources> = System{
     run
 };
-fn run(res: &GameResources, ecs: &mut CompStorage){
+fn run(res: &GameResources, ecs: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for entity_id in ecs.query(vec![gett::<VelocityComp>(), gett::<PositionComp>()]){
         // ***noice*** /s
         ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.x += ecs.get::<VelocityComp>(entity_id).unwrap().vel.x;

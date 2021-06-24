@@ -5,6 +5,80 @@ use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
 use crate::ecs::superb_ecs::SuperbEcs;
+use crate::ecs::pending_entity::PendingEntity;
+
+
+
+
+#[macro_export] // Can remove.
+macro_rules! comp_iter_def {
+	($query_name:ident, $get_name:ident, $get_name_unwrap:ident, $new_name:ident, $($type_name:ident),+) => {
+        #[allow(non_snake_case)]
+        pub struct $query_name<'a, $($type_name: 'static,)+> {
+            $($type_name: PhantomData<$type_name>,)+
+            ecs: &'a CompStorage,
+            vec: Vec<GlobalEntityID>
+        }// C:/Users/tomul/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust/library/core/src/slice/iter.rs:66
+        impl<'a, $($type_name: 'static,)+> $query_name<'a, $($type_name,)+>{
+            pub fn new(ecs: &'a CompStorage) -> Self{
+                let mut my_vec = ecs.query(vec![$(gett::<$type_name>()),+]).iter().as_slice().to_vec();
+                my_vec.reverse();
+                Self{
+                    $($type_name: Default::default(),)+
+                    ecs,
+                    vec: my_vec,
+                }
+            }
+        }
+        impl<'a, $($type_name: 'static,)+> Iterator for $query_name<'a, $($type_name,)+>{
+            type Item = (GlobalEntityID, $(&'a mut $type_name),+);
+            fn next(&mut self) -> Option<Self::Item> {
+                let entity_id = self.vec.pop()?;
+
+                return Some((entity_id,
+                            $(self.ecs.get_mut::<$type_name>(entity_id).unwrap()),+
+                )
+                );
+            }
+        }
+        #[allow(unused_parens)]
+        impl CompStorage{
+            pub fn $get_name<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
+                return ($(self.get_mut::<$type_name>(entity_id)),+ );
+            }
+            pub fn $get_name_unwrap<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(&mut $type_name),+){
+                return ($(self.get_mut::<$type_name>(entity_id).unwrap()),+ );
+            }
+        }
+        #[allow(unused_parens, non_snake_case)]
+        impl PendingEntity{
+            pub fn $new_name<$($type_name : 'static),+>($($type_name: $type_name),+) -> Self{
+                let mut pending = Self::new();
+                $(pending.add_comp($type_name);)+
+                return pending;
+            }
+        }
+    };
+}
+
+comp_iter_def!(CompIter1, get1, get1_unwrap, new1, A);
+comp_iter_def!(CompIter2, get2, get2_unwrap, new2, A, B);
+comp_iter_def!(CompIter3, get3, get3_unwrap, new3, A, B, C);
+comp_iter_def!(CompIter4, get4, get4_unwrap, new4, A, B, C, D);
+comp_iter_def!(CompIter5, get5, get5_unwrap, new5, A, B, C, D, E);
+comp_iter_def!(CompIter6, get6, get6_unwrap, new6, A, B, C, D, E, F);
+comp_iter_def!(CompIter7, get7, get7_unwrap, new7, A, B, C, D, E, F, G);
+comp_iter_def!(CompIter8, get8, get8_unwrap, new8, A, B, C, D, E, F, G, H);
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -48,65 +122,3 @@ use crate::ecs::superb_ecs::SuperbEcs;
 // 	|
 // 	| player_names: &BTreeMap<PlayerID, String>, ctx:&mut Context
 // );
-
-
-#[macro_export] // Can remove.
-macro_rules! comp_iter_def {
-	($query_name:ident, $get_name:ident, $get_name_unwrap:ident, $($type_name:ident),+) => {
-        #[allow(non_snake_case)]
-        pub struct $query_name<'a, $($type_name: 'static,)+> {
-            $($type_name: PhantomData<$type_name>,)+
-            ecs: &'a CompStorage,
-            vec: Vec<GlobalEntityID>
-        }// C:/Users/tomul/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust/library/core/src/slice/iter.rs:66
-        impl<'a, $($type_name: 'static,)+> $query_name<'a, $($type_name,)+>{
-            pub fn new(ecs: &'a CompStorage) -> Self{
-                let mut my_vec = ecs.query(vec![$(gett::<$type_name>()),+]).iter().as_slice().to_vec();
-                my_vec.reverse();
-                Self{
-                    $($type_name: Default::default(),)+
-                    ecs,
-                    vec: my_vec,
-                }
-            }
-        }
-        impl<'a, $($type_name: 'static,)+> Iterator for $query_name<'a, $($type_name,)+>{
-            type Item = (GlobalEntityID, $(&'a mut $type_name),+);
-            fn next(&mut self) -> Option<Self::Item> {
-                let entity_id = self.vec.pop()?;
-
-                return Some((entity_id,
-                            $(self.ecs.get_mut::<$type_name>(entity_id).unwrap()),+
-                )
-                );
-            }
-        }
-        #[allow(unused_parens)]
-        impl CompStorage{
-            pub fn $get_name<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
-                return ($(self.get_mut::<$type_name>(entity_id)),+ );
-            }
-            pub fn $get_name_unwrap<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(&mut $type_name),+){
-                return ($(self.get_mut::<$type_name>(entity_id).unwrap()),+ );
-            }
-        }
-        // #[allow(unused_parens)]
-        // impl PendingEntity{
-        //     pub fn $get_name<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
-        //         return ($(self.get_mut::<$type_name>(entity_id)),+ );
-        //     }
-        //     pub fn $get_name_unwrap<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(&mut $type_name),+){
-        //         return ($(self.get_mut::<$type_name>(entity_id).unwrap()),+ );
-        //     }
-        // }
-    };
-}
-
-comp_iter_def!(CompIter1, get1, get1_unwrap, A);
-comp_iter_def!(CompIter2, get2, get2_unwrap, A, B);
-comp_iter_def!(CompIter3, get3, get3_unwrap, A, B, C);
-comp_iter_def!(CompIter4, get4, get4_unwrap, A, B, C, D);
-comp_iter_def!(CompIter5, get5, get5_unwrap, A, B, C, D, E);
-comp_iter_def!(CompIter6, get6, get6_unwrap, A, B, C, D, E, F);
-comp_iter_def!(CompIter7, get7, get7_unwrap, A, B, C, D, E, F, G);
-comp_iter_def!(CompIter8, get8, get8_unwrap, A, B, C, D, E, F, G, H);

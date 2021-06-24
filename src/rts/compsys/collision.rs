@@ -2,7 +2,7 @@
 use crate::rts::game::game_state::*;
 use crate::rts::compsys::*;
 use crate::pub_types::PointFloat;
-use crate::ecs::superb_ecs::System;
+use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::pending_entity::PendingEntity;
 use winit::MouseButton;
@@ -13,7 +13,7 @@ pub struct CollisionComp {
 pub static COLLISION_SYS: System<GameResources> = System{
     run
 };
-fn run(res: &GameResources, c: &mut CompStorage){
+fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for entity_id_ship in c.query(vec![gett::<CollisionComp>(), gett::<LifeComp>(), gett::<OwnedComp>()]){
         for entity_id_rock in c.query(vec![gett::<CollisionComp>(), gett::<PositionComp>(), gett::<OwnedComp>()]){
             let owner1 = c.get::<OwnedComp>(entity_id_ship).unwrap().owner.clone();

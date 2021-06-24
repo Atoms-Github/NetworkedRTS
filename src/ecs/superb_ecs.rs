@@ -15,7 +15,7 @@ pub struct SuperbEcs<R>{
 impl<R> SuperbEcs<R>{
     pub fn new(systems: Vec<System<R>>) -> Self{
         Self{
-            systems: systems,
+            systems,
             c: Default::default(),
         }
     }
@@ -23,9 +23,14 @@ impl<R> SuperbEcs<R>{
         self.systems = systems;
     }
     pub fn sim_systems(&mut self, resources: R){
+        let mut pending_changes = EntStructureChanges{
+            new_entities: vec![],
+            deleted_entities: vec![]
+        };
         for system in &self.systems{
-            (system.run)(&resources, &mut self.c);
+            (system.run)(&resources, &mut self.c, &mut pending_changes);
         }
+        pending_changes.apply(&mut self.c);
     }
 
 }
@@ -39,8 +44,20 @@ impl<R> Clone for SuperbEcs<R>{
 }
 
 pub struct System<R>{
-    pub run: fn(&R, &mut CompStorage /* Could add read only version here. */),
+    pub run: fn(&R, &mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges),
 }
+pub struct EntStructureChanges{
+    pub new_entities: Vec<PendingEntity>,
+    pub deleted_entities: Vec<GlobalEntityID>,
+}
+impl EntStructureChanges{
+    pub fn apply(self, storage: &mut CompStorage){
+        for new_entity in self.new_entities{
+            storage.create_entity(new_entity);
+        }
+    }
+}
+
 
 
 
@@ -116,6 +133,7 @@ use crate::rts::game::game_state::UsingResources;
 use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
+use crate::ecs::pending_entity::PendingEntity;
 
 impl ECSVisitor {
     fn new() -> Self {

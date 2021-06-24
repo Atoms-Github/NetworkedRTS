@@ -3,7 +3,7 @@ use crate::rts::compsys::owner::OwnedComp;
 use crate::rts::compsys::player::PlayerComp;
 use crate::rts::compsys::velocity::VelocityComp;
 use crate::ecs::comp_store::CompStorage;
-use crate::ecs::superb_ecs::System;
+use crate::ecs::superb_ecs::{System, EntStructureChanges};
 
 pub struct VelocityWithInputsComp {
     pub speed: f32,
@@ -12,7 +12,7 @@ pub struct VelocityWithInputsComp {
 pub static VELOCITY_WITH_INPUTS_SYS: System<GameResources> = System{
     run
 };
-fn run(res: &GameResources, ecs: &mut CompStorage){
+fn run(res: &GameResources, ecs: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for entity_id in ecs.query(vec![gett::<VelocityComp>(), gett::<VelocityWithInputsComp>(), gett::<OwnedComp>()]){
         let owner_id = ecs.get::<OwnedComp>(entity_id).unwrap().owner;
         let my_inputs = ecs.get::<PlayerComp>(owner_id).unwrap().inputs.clone();
