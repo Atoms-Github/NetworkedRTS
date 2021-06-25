@@ -22,6 +22,6 @@ fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureC
         }
         let mut vector = my_inputs.get_directional() * speed;
         vector.y *= -1.0;
-        velocity.vel = nalgebra::Point2::from(vector);
+        velocity.vel = vector;
     }
 }

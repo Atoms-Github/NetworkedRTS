@@ -16,7 +16,7 @@ const KEY_COUNT : usize = 192;
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct InputState {
-    mouse_loc: nalgebra::Point2<f32>,
+    mouse_loc: PointFloat,
     #[serde(with = "BigArray")]
     keys_pressed: [bool; KEY_COUNT],
     mouse_btns_pressed: [bool; MOUSE_BUTTONS_COUNT] // NOT SUPPORTING NON-DEFAULT MOUSE BUTTONS.
@@ -123,7 +123,7 @@ impl InputState{
         if self.is_keycode_pressed(KeyCode::A) || self.is_keycode_pressed(KeyCode::Left) {
             x -= 1.0;
         }
-        PointFloat::new(x,y).coords
+        PointFloat::new(x,y)
     }
 }
 

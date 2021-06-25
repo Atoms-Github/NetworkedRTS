@@ -26,7 +26,7 @@ fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureC
 
         if shoot.time_since_shot >= 1.0{
             if input_state.get_mouse_pressed(MouseButton::Left){
-                let velocity_vec = (input_state.get_mouse_loc().clone().coords - position.pos.clone().coords).normalize().mul(6.0);
+                let velocity_vec = (input_state.get_mouse_loc() - &position.pos).normalize().mul(6.0);
                 let mut new_entity = PendingEntity::new_bullet(owned.owner, position.pos.clone());
                 new_entity.set_comp(VelocityComp{ vel: PointFloat::from(velocity_vec) });
                 ent_changes.new_entities.push(new_entity);

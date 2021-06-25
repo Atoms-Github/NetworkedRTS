@@ -21,7 +21,7 @@ fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureC
         CompIter3::<CollisionComp, PositionComp, OwnedComp>::new(c){
 
             if ship_id != rock_id && ship_owned.owner != rock_owned.owner{
-                let distance = nalgebra::distance(&rock_position.pos, &ship_position.pos);
+                let distance = (&rock_position.pos - &ship_position.pos).norm();
                 if distance < 70.0{
                     ship_life.life -= 0.5;
                 }

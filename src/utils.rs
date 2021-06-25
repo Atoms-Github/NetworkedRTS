@@ -41,3 +41,4 @@ pub fn pad_name(name: String) -> [u8; PLAYER_NAME_SIZE_MAX]{
     buffer[..name_bytes.len()].clone_from_slice(&name_bytes);
     return buffer;
 }
+
