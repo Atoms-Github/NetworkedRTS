@@ -9,7 +9,7 @@ use crate::pub_types::*;
 use serde_big_array::*;
 use nalgebra::{VectorN, U2};
 
-big_array! { BigArray; }
+// big_array! { BigArray; }
 
 const MOUSE_BUTTONS_COUNT: usize = 24;
 const KEY_COUNT : usize = 192;

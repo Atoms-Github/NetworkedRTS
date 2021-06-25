@@ -55,6 +55,7 @@ impl GameState {
         for player_index in 0..MAX_PLAYERS{
             let mut pending = PendingEntity::new();
             pending.add_comp(PlayerComp{ inputs: Default::default(), name: [0; PLAYER_NAME_SIZE_MAX] });
+            pending.add_comp(CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 });
             assert_eq!(player_index, self.ecs.c.create_entity(pending))
         }
     }
@@ -62,11 +63,12 @@ impl GameState {
         let mut new_entity = PendingEntity::new();
         new_entity.add_comp(RenderComp{ colour: (255,255,255) });
         new_entity.add_comp(ShootMouseComp{ time_since_shot: 0.0 });
+        new_entity.add_comp( SizeComp{ size: PointFloat::new(50.0, 50.0) });
         new_entity.add_comp(PositionComp{ pos: PointFloat::new(300.0, 1.0) });
         new_entity.add_comp(VelocityComp{ vel: PointFloat::new(0.0, 0.0) });
         new_entity.add_comp( OwnedComp { owner: player_id as GlobalEntityID });
         new_entity.add_comp( VelocityWithInputsComp{ speed: 2.0 });
-        new_entity.add_comp( LifeComp{ life: 100.0, max_life: 100.0 });
+        new_entity.add_comp( LifeComp{ life: 50.0, max_life: 50.0 });
         new_entity.add_comp( CollisionComp{  });
         self.ecs.c.create_entity(new_entity);
 
@@ -83,8 +85,8 @@ impl GameState {
         }
         self.ecs.sim_systems(UsingResources{});
     }
-    pub fn render(&mut self, ctx: &mut Context){
-        crate::rts::compsys::render::render(&mut self.ecs, ctx);
+    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID){
+        crate::rts::compsys::render::render(&mut self.ecs, ctx, player_id as GlobalEntityID);
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = GameResources {

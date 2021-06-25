@@ -93,7 +93,7 @@ impl EventHandler for GraphicalIn {
         graphics::clear(ctx, graphics::BLACK);
 
         let mut render_state = self.pull_newest_usable_state();
-        render_state.render(ctx);
+        render_state.render(ctx, self.my_player_id);
 
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {}", fps));

@@ -7,6 +7,8 @@ pub mod render;
 pub mod life;
 pub mod shoot_mouse;
 pub mod collision;
+pub mod camera;
+pub mod size;
 
 pub use position::*;
 pub use owner::*;
@@ -17,6 +19,8 @@ pub use render::*;
 pub use life::*;
 pub use shoot_mouse::*;
 pub use collision::*;
+pub use camera::*;
+pub use size::*;
 
 pub use crate::ecs::pending_entity::*;
 pub use crate::ecs::ecs_macros::*;
