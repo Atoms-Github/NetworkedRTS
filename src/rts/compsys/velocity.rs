@@ -11,10 +11,8 @@ pub struct VelocityComp {
 pub static VELOCITY_SYS: System<GameResources> = System{
     run
 };
-fn run(res: &GameResources, ecs: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    for entity_id in ecs.query(vec![gett::<VelocityComp>(), gett::<PositionComp>()]){
-        // ***noice*** /s
-        ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.x += ecs.get::<VelocityComp>(entity_id).unwrap().vel.x;
-        ecs.get_mut::<PositionComp>(entity_id).unwrap().pos.y += ecs.get::<VelocityComp>(entity_id).unwrap().vel.y;
+fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+    for (entity_id, velocity, position) in CompIter2::<VelocityComp, PositionComp>::new(c){
+        position.pos += &velocity.vel;
     }
 }
