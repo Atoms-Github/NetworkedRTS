@@ -8,7 +8,7 @@ use crate::ecs::comp_store::{InternalEntity};
 use serde_big_array::*;
 
 pub type GlobalEntityID = usize;
-pub const MAX_ENTITIES :usize = 128;
+pub const MAX_ENTITIES :usize = 4;
 
 
 big_array! { BigArray; }
@@ -40,7 +40,8 @@ impl GlorifiedHashMap {
         Self{
             alive: [false; MAX_ENTITIES],
             entity_ids: entity_ids.as_slice().try_into().unwrap(),
-            internal_details: internal_details.as_slice().try_into().unwrap(),
+            internal_details: internal_details.try_into()
+                .unwrap_or_else(|v: Vec<InternalEntity>| panic!("Expected a Vec of length {} but it was {}", MAX_ENTITIES, v.len()))
         }
     }
     pub fn create_entity(&mut self, mut internal_entity: InternalEntity) -> GlobalEntityID{
@@ -56,14 +57,25 @@ impl GlorifiedHashMap {
         }
         panic!("Exceeded entity storage capacity! Increase MAX_ENTITIES.");
     }
-    pub fn delete(&mut self, query_id: GlobalEntityID) -> Option<&InternalEntity>{
+    pub fn delete(&mut self, entity_id: GlobalEntityID) -> Option<&InternalEntity>{
+        let index = entity_id % MAX_ENTITIES;
+        // If an entity lives in the spot.
+        if self.alive[index]{
+            // If the correct generation.
+            if self.entity_ids[index] == entity_id {
+                self.alive[index] = false;
+                self.entity_ids[index] += MAX_ENTITIES;
+            }
+        }
+        return None;
+    }
+    pub fn get_mut(&mut self, query_id: GlobalEntityID) -> Option<&mut InternalEntity>{
         let index = query_id % MAX_ENTITIES;
         // If an entity lives in the spot.
         if self.alive[index]{
             // If the correct generation.
             if self.entity_ids[index] == query_id{
-                self.alive[index] = false;
-                self.entity_ids[index] += MAX_ENTITIES;
+                return Some(&mut self.internal_details[index]);
             }
         }
         return None;
