@@ -14,4 +14,24 @@ impl PendingEntity{
             SizeComp{ size: PointFloat::new(50.0, 50.0) }
         )
     }
+    pub fn new_player(owner: GlobalEntityID) -> Self{
+        Self::new3(
+            PlayerComp{ inputs: Default::default(), name: [0; PLAYER_NAME_SIZE_MAX] },
+            CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
+            InputComp{ mode: InputMode::None },
+        )
+    }
+    pub fn new_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
+        Self::new9(
+            RenderComp{ colour: (255,255,255)},
+            ShootMouseComp{ time_since_shot: 0.0 },
+            SizeComp{ size: PointFloat::new(100.0, 100.0)},
+            PositionComp{ pos: position },
+            VelocityComp{ vel: PointFloat::new(0.0, 0.0) },
+            OwnedComp { owner },
+            VelocityWithInputsComp{ speed: 2.0 },
+            LifeComp{ life: 100.0, max_life: 100.0 },
+            CollisionComp{  },
+        )
+    }
 }

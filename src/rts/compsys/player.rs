@@ -3,11 +3,12 @@ use crate::netcode::InputState;
 use ggez::event::{KeyCode, MouseButton};
 use crate::rts::compsys::RtsMouseEvent::{NoMouse, MouseUp};
 use crate::rts::compsys::RtsKeyEvent::NoKey;
+use crate::pub_types::PointFloat;
 
 pub const PLAYER_NAME_SIZE_MAX: usize = 12;
 
 pub struct PlayerComp {
-    pub rts_inputs: RtsInputState,
+    pub inputs: RtsInputState,
     pub name: [u8; PLAYER_NAME_SIZE_MAX]
 }
 
@@ -15,6 +16,7 @@ pub struct RtsInputState{
     pub primitive: InputState,
     pub mouse_event: RtsMouseEvent,
     pub key_event: RtsKeyEvent,
+    pub mouse_moved: PointFloat,
     mouse_btn_held: Option<usize>,
     key_held: Option<usize>,
 }
@@ -32,6 +34,8 @@ pub enum RtsKeyEvent {
 }
 impl RtsInputState{
     pub fn set_input_state(&mut self, new_input: InputState){
+        self.mouse_moved = new_input.get_mouse_loc().clone() - self.primitive.get_mouse_loc();
+
         self.mouse_event = NoMouse;
         self.key_event = NoKey;
 
@@ -79,6 +83,7 @@ impl Default for RtsInputState{
             primitive: InputState::default(),
             mouse_event: RtsMouseEvent::NoMouse,
             key_event: RtsKeyEvent::NoKey,
+            mouse_moved: PointFloat::new(0.0,0.0),
             mouse_btn_held: None,
             key_held: None
         }

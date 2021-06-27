@@ -13,6 +13,7 @@ pub struct RenderComp{
 pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
 
+
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
 

@@ -9,12 +9,14 @@ pub struct CameraComp{
 }
 
 impl CameraComp{
-    pub fn get_as_screen_coords<'a>(&self, ecs: &'a CompStorage, entity_id: GlobalEntityID) -> (&'a PointFloat, &'a PointFloat){
+    pub fn get_as_screen_coords(&self, ecs: &CompStorage, entity_id: GlobalEntityID) -> (PointFloat, PointFloat){
 
-        let position : &'a PointFloat = &ecs.get::<PositionComp>(entity_id).unwrap().pos;
-        let size : &'a PointFloat = &ecs.get::<SizeComp>(entity_id).unwrap().size;
-// &PointFloat::new(100.0, 100.0)
-        return (position, size);
+        let position  = &ecs.get::<PositionComp>(entity_id).unwrap().pos.clone();
+        let size  = &ecs.get::<SizeComp>(entity_id).unwrap().size.clone();
+
+        let pos_screen = self.game_space_to_screen_space(*position);
+        let size_screen = self.game_size_to_screen_size(*size);
+        return (pos_screen, size_screen);
     }
     pub fn game_space_to_screen_space(&self, coords: PointFloat) -> PointFloat{
         return coords - &self.translation;

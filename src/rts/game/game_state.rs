@@ -14,16 +14,19 @@ use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::compsys::*;
 
 
-const MAX_PLAYERS : usize = 12;
+const MAX_PLAYERS : usize = 1;
 
 pub type UsingResources = GameResources;
 pub type UsingSystemsList = GameResources;
 
 pub fn global_get_systems() -> Vec<System<UsingResources>>{
-    vec![crate::rts::compsys::velocity::VELOCITY_SYS.clone(),
+    vec![
+         crate::rts::compsys::input::INPUT_SYS.clone(),
+         crate::rts::compsys::velocity::VELOCITY_SYS.clone(),
          crate::rts::compsys::shoot_mouse::SHOOT_MOUSE_SYS.clone(),
          crate::rts::compsys::collision::COLLISION_SYS.clone(),
-         crate::rts::compsys::velocity_with_inputs::VELOCITY_WITH_INPUTS_SYS.clone()]
+         crate::rts::compsys::velocity_with_inputs::VELOCITY_WITH_INPUTS_SYS.clone()
+    ]
 }
 
 
@@ -53,23 +56,13 @@ impl GameState {
     pub fn init(&mut self){
         //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
         for player_index in 0..MAX_PLAYERS{
-            let mut pending = PendingEntity::new();
-            pending.add_comp(PlayerComp{ rts_inputs: Default::default(), name: [0; PLAYER_NAME_SIZE_MAX] });
-            pending.add_comp(CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 });
+            let mut pending = PendingEntity::new_player(player_index as GlobalEntityID);
             assert_eq!(player_index, self.ecs.c.create_entity(pending))
         }
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
-        let mut new_entity = PendingEntity::new();
-        new_entity.add_comp(RenderComp{ colour: (255,255,255) });
-        new_entity.add_comp(ShootMouseComp{ time_since_shot: 0.0 });
-        new_entity.add_comp( SizeComp{ size: PointFloat::new(100.0, 100.0) });
-        new_entity.add_comp(PositionComp{ pos: PointFloat::new(300.0, 1.0) });
-        new_entity.add_comp(VelocityComp{ vel: PointFloat::new(0.0, 0.0) });
-        new_entity.add_comp( OwnedComp { owner: player_id as GlobalEntityID });
-        new_entity.add_comp( VelocityWithInputsComp{ speed: 2.0 });
-        new_entity.add_comp( LifeComp{ life: 100.0, max_life: 100.0 });
-        new_entity.add_comp( CollisionComp{  });
+
+        let new_entity = PendingEntity::new_pawn(player_id as GlobalEntityID, PointFloat::new(0.0, 0.0));
         self.ecs.c.create_entity(new_entity);
 
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().name = crate::utils::pad_name(username);
@@ -80,7 +73,8 @@ impl GameState {
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
         for (player_id, input_state) in inputs{
             if let Some(existing_player) = self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID){
-                existing_player.rts_inputs.set_input_state(input_state);
+
+                existing_player.inputs.set_input_state(input_state);
             }
         }
         self.ecs.sim_systems(UsingResources{});

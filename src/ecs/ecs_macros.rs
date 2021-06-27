@@ -69,6 +69,8 @@ comp_iter_def!(CompIter5, get5, get5_unwrap, new5, A, B, C, D, E);
 comp_iter_def!(CompIter6, get6, get6_unwrap, new6, A, B, C, D, E, F);
 comp_iter_def!(CompIter7, get7, get7_unwrap, new7, A, B, C, D, E, F, G);
 comp_iter_def!(CompIter8, get8, get8_unwrap, new8, A, B, C, D, E, F, G, H);
+comp_iter_def!(CompIter9, get9, get9_unwrap, new9, A, B, C, D, E, F, G, H, I);
+comp_iter_def!(CompIter10, get10, get10_unwrap, new10, A, B, C, D, E, F, G, H, I, J);
 
 
 

@@ -49,13 +49,18 @@ impl LogicSimHeaderEx{
                         input_state.clone()
                     }
                     None => {
-                        InputState::new() // TODO1: Use last instead.
+                        // Get my previous frame's input.
+                        let maybe_info_for_sim: Option<&InfoForSim> = sim_infos.last();
+                        if let Some(info_for_sim) = maybe_info_for_sim{
+                            info_for_sim.inputs_map.get(&player_id).clone().unwrap().clone()
+                        }else{
+                            InputState::new()
+                        }
+
                     }
                 };
                 sim_info.inputs_map.insert(player_id, this_players_input);
-
             }
-
             sim_infos.push(sim_info);
         }
         return sim_infos;
