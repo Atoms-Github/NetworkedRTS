@@ -14,7 +14,7 @@ use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::compsys::*;
 
 
-const MAX_PLAYERS : usize = 1;
+const MAX_PLAYERS : usize = 10;
 
 pub type UsingResources = GameResources;
 pub type UsingSystemsList = GameResources;
