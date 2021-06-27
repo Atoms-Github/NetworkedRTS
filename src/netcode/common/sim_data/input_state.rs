@@ -65,6 +65,12 @@ impl Default for InputState{
 }
 
 impl InputState{
+    pub fn get_keys_array(&self) -> &[bool; KEY_COUNT]{
+        return &self.keys_pressed;
+    }
+    pub fn get_mouse_array(&self) -> &[bool; MOUSE_BUTTONS_COUNT]{
+        return &self.mouse_btns_pressed;
+    }
     pub fn new() -> InputState{
         InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
@@ -72,10 +78,17 @@ impl InputState{
             mouse_btns_pressed: [false; MOUSE_BUTTONS_COUNT],
         }
     }
+    pub fn u32_to_keycode(num: u32) -> Option<KeyCode>{
+        if num >= KeyCode::Key1 as u32 && num <= KeyCode::Cut as u32 {
+            Some(unsafe { std::mem::transmute(num) })
+        } else {
+            None
+        }
+    }
     pub fn get_mouse_loc(&self) -> &PointFloat{
         return &self.mouse_loc;
     }
-    fn get_button_index(&self, button: MouseButton) -> usize{
+    pub fn get_button_index(button: MouseButton) -> usize{
         match button{
             MouseButton::Left => {0}
             MouseButton::Right => {1}
@@ -86,12 +99,27 @@ impl InputState{
             }
         }
     }
+    pub fn is_modif_key(key: u32) -> bool{
+        let id = InputState::u32_to_keycode(key).unwrap();
+        return id != KeyCode::LShift && id != KeyCode::LAlt && id != KeyCode::LWin && id != KeyCode::LControl;
+    }
+    pub fn get_button_enum(button: usize) -> MouseButton{
+        match button{
+            0 => MouseButton::Left,
+            1 => MouseButton::Right,
+            2 => MouseButton::Middle,
+            other => {
+                let bonus = other - 3;
+                MouseButton::Other(bonus as u8)
+            }
+        }
+    }
     pub fn set_mouse_pressed(&mut self, button: MouseButton, is_down: bool){
-        let index = self.get_button_index(button);
+        let index = Self::get_button_index(button);
         self.mouse_btns_pressed[index] = is_down;
     }
     pub fn get_mouse_pressed(&self, button: MouseButton) -> bool{
-        let index = self.get_button_index(button);
+        let index = Self::get_button_index(button);
         self.mouse_btns_pressed[index]
     }
     pub fn is_keyid_pressed(&self, key_id: usize) -> bool{

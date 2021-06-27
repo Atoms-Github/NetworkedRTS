@@ -22,9 +22,10 @@ pub static SHOOT_MOUSE_SYS: System<GameResources> = System{
 // query!();
 fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
     for (id, shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
-        let input_state = &c.get::<PlayerComp>(owned.owner).unwrap().inputs;
+        let input_state = &c.get::<PlayerComp>(owned.owner).unwrap().rts_inputs.primitive;
 
         if shoot.time_since_shot >= 1.0{
+
             if input_state.get_mouse_pressed(MouseButton::Left){
                 let velocity_vec = (input_state.get_mouse_loc() - &position.pos).normalize().mul(6.0);
                 let mut new_entity = PendingEntity::new_bullet(owned.owner, position.pos.clone());

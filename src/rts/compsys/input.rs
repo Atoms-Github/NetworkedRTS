@@ -18,6 +18,8 @@ pub static INPUT_SYS: System<GameResources> = System{
 };
 fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (entity_id, velocity, position) in CompIter2::<VelocityComp, PositionComp>::new(c){
-        position.pos += &velocity.vel;
+
     }
 }
+
+

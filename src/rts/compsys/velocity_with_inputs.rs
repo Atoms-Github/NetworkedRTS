@@ -14,7 +14,7 @@ pub static VELOCITY_WITH_INPUTS_SYS: System<GameResources> = System{
 fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (ent, velocity, velocity_with_inputs, owned) in
     CompIter3::<VelocityComp, VelocityWithInputsComp, OwnedComp>::new(c){
-        let my_inputs = &c.get::<PlayerComp>(owned.owner).unwrap().inputs;
+        let my_inputs = &c.get::<PlayerComp>(owned.owner).unwrap().rts_inputs.primitive;
 
         let mut speed = velocity_with_inputs.speed;
         if my_inputs.is_keycode_pressed(ggez::input::keyboard::KeyCode::Space){

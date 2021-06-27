@@ -14,7 +14,7 @@ use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::compsys::*;
 
 
-const MAX_PLAYERS : usize = 8;
+const MAX_PLAYERS : usize = 12;
 
 pub type UsingResources = GameResources;
 pub type UsingSystemsList = GameResources;
@@ -54,7 +54,7 @@ impl GameState {
         //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
         for player_index in 0..MAX_PLAYERS{
             let mut pending = PendingEntity::new();
-            pending.add_comp(PlayerComp{ inputs: Default::default(), name: [0; PLAYER_NAME_SIZE_MAX] });
+            pending.add_comp(PlayerComp{ rts_inputs: Default::default(), name: [0; PLAYER_NAME_SIZE_MAX] });
             pending.add_comp(CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 });
             assert_eq!(player_index, self.ecs.c.create_entity(pending))
         }
@@ -80,7 +80,7 @@ impl GameState {
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
         for (player_id, input_state) in inputs{
             if let Some(existing_player) = self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID){
-                existing_player.inputs = input_state;
+                existing_player.rts_inputs.set_input_state(input_state);
             }
         }
         self.ecs.sim_systems(UsingResources{});
