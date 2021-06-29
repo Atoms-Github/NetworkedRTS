@@ -21,11 +21,13 @@ pub type UsingResources = Arc<GameResources>;
 
 pub fn global_get_systems() -> Vec<System<UsingResources>>{
     vec![
-        crate::rts::compsys::camera_pan::CAMERA_PAN_SYS.clone(),
-        crate::rts::compsys::velocity::VELOCITY_SYS.clone(),
-        crate::rts::compsys::shoot_mouse::SHOOT_MOUSE_SYS.clone(),
-        crate::rts::compsys::collision::COLLISION_SYS.clone(),
-        crate::rts::compsys::velocity_with_inputs::VELOCITY_WITH_INPUTS_SYS.clone()
+        INPUT_PREPROC.clone(),
+        CAMERA_PAN_SYS.clone(),
+        VELOCITY_SYS.clone(),
+        INPUT_SELECTION_BOX.clone(),
+        SHOOT_MOUSE_SYS.clone(),
+        COLLISION_SYS.clone(),
+        VELOCITY_WITH_INPUTS_SYS.clone()
     ]
 }
 

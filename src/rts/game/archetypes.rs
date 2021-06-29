@@ -18,7 +18,7 @@ impl PendingEntity{
         Self::new3(
             PlayerComp{ name: [0; PLAYER_NAME_SIZE_MAX] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
-            InputComp{ inputs: Default::default(), mode: InputMode::None, hovered_entity: None },
+            InputComp{ inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0,0.0) },
         )
     }
     pub fn new_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -32,6 +32,15 @@ impl PendingEntity{
             VelocityWithInputsComp{ speed: 2.0 },
             LifeComp{ life: 100.0, max_life: 100.0 },
             CollisionComp{  },
+        )
+    }
+    pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{
+        Self::new5(
+            RenderComp{ colour: (255,255,255)},
+            SizeComp{ size: PointFloat::new(100.0, 100.0)},
+            SelBoxComp{ },
+            PositionComp{ pos: position },
+            OwnedComp { owner },
         )
     }
     pub fn new_arena() -> Self{

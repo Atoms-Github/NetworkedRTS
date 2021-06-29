@@ -23,6 +23,9 @@ impl CameraComp{
     pub fn game_space_to_screen_space(&self, coords: PointFloat) -> PointFloat{
         return coords - &self.translation;
     }
+    pub fn screen_space_to_game_space(&self, coords: PointFloat) -> PointFloat{
+        return coords + &self.translation;
+    }
     pub fn game_size_to_screen_size(&self, coords: PointFloat) -> PointFloat{
         return coords * self.zoom;
     }
@@ -33,8 +36,10 @@ pub static CAMERA_PAN_SYS: System<ResourcesPtr> = System{
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
-        if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
-            input.mode = InputMode::PanCamera;
+        if input.mode == InputMode::None{
+            if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
+                input.mode = InputMode::PanCamera;
+            }
         }
         if input.mode == InputMode::PanCamera{
             if input.inputs.mouse_event == RtsMouseEvent::MouseUp{

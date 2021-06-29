@@ -11,8 +11,9 @@ pub mod camera_pan;
 pub mod size;
 pub mod input;
 pub mod arena;
-pub mod hover;
+pub mod input_preproc;
 pub mod input_selection_box;
+pub mod sel_box;
 
 pub use position::*;
 pub use owner::*;
@@ -27,8 +28,9 @@ pub use camera_pan::*;
 pub use size::*;
 pub use input::*;
 pub use arena::*;
-pub use hover::*;
+pub use input_preproc::*;
 pub use input_selection_box::*;
+pub use sel_box::*;
 
 pub use crate::pub_types::ResourcesPtr;
 pub use crate::ecs::pending_entity::*;

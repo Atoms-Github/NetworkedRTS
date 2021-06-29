@@ -11,11 +11,12 @@ pub struct InputComp{
     pub mode: InputMode,
     pub inputs: RtsInputState,
     pub hovered_entity: Option<GlobalEntityID>,
+    pub mouse_pos_game_world: PointFloat,
 }
 #[derive(Clone, PartialEq)]
 pub enum InputMode{
     None,
-    SelectionBox(GlobalEntityID),
+    SelectionBox,
     ClickUI(GlobalEntityID),
     PanCamera,
 }
