@@ -22,7 +22,7 @@ pub static SHOOT_MOUSE_SYS: System<GameResources> = System{
 // query!();
 fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
     for (id, shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
-        let input_state = &c.get::<PlayerComp>(owned.owner).unwrap().inputs.primitive;
+        let input_state = &c.get::<InputComp>(owned.owner).unwrap().inputs.primitive;
 
         if shoot.time_since_shot >= 1.0{
 

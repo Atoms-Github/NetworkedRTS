@@ -21,7 +21,7 @@ pub type UsingSystemsList = GameResources;
 
 pub fn global_get_systems() -> Vec<System<UsingResources>>{
     vec![
-         crate::rts::compsys::input::INPUT_SYS.clone(),
+         crate::rts::compsys::camera::CAMERA_SYS.clone(),
          crate::rts::compsys::velocity::VELOCITY_SYS.clone(),
          crate::rts::compsys::shoot_mouse::SHOOT_MOUSE_SYS.clone(),
          crate::rts::compsys::collision::COLLISION_SYS.clone(),
@@ -72,7 +72,7 @@ impl GameState {
     }
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, delta: f32, frame_index: FrameIndex){
         for (player_id, input_state) in inputs{
-            if let Some(existing_player) = self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID){
+            if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(player_id as GlobalEntityID){
 
                 existing_player.inputs.set_input_state(input_state);
             }

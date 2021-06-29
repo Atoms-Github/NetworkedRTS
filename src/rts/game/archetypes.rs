@@ -16,9 +16,9 @@ impl PendingEntity{
     }
     pub fn new_player(owner: GlobalEntityID) -> Self{
         Self::new3(
-            PlayerComp{ inputs: Default::default(), name: [0; PLAYER_NAME_SIZE_MAX] },
+            PlayerComp{ name: [0; PLAYER_NAME_SIZE_MAX] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
-            InputComp{ mode: InputMode::None },
+            InputComp{ inputs: Default::default(), mode: InputMode::None },
         )
     }
     pub fn new_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
