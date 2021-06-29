@@ -10,8 +10,9 @@ use crate::pub_types::PointFloat;
 pub struct InputComp{
     pub mode: InputMode,
     pub inputs: RtsInputState,
+    pub hovered_entity: Option<GlobalEntityID>,
 }
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum InputMode{
     None,
     SelectionBox(GlobalEntityID),

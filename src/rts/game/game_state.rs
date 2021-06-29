@@ -15,17 +15,17 @@ use crate::rts::compsys::*;
 
 
 const MAX_PLAYERS : usize = 10;
+pub const ARENA_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
-pub type UsingResources = GameResources;
-pub type UsingSystemsList = GameResources;
+pub type UsingResources = Arc<GameResources>;
 
 pub fn global_get_systems() -> Vec<System<UsingResources>>{
     vec![
-         crate::rts::compsys::camera::CAMERA_SYS.clone(),
-         crate::rts::compsys::velocity::VELOCITY_SYS.clone(),
-         crate::rts::compsys::shoot_mouse::SHOOT_MOUSE_SYS.clone(),
-         crate::rts::compsys::collision::COLLISION_SYS.clone(),
-         crate::rts::compsys::velocity_with_inputs::VELOCITY_WITH_INPUTS_SYS.clone()
+        crate::rts::compsys::camera_pan::CAMERA_PAN_SYS.clone(),
+        crate::rts::compsys::velocity::VELOCITY_SYS.clone(),
+        crate::rts::compsys::shoot_mouse::SHOOT_MOUSE_SYS.clone(),
+        crate::rts::compsys::collision::COLLISION_SYS.clone(),
+        crate::rts::compsys::velocity_with_inputs::VELOCITY_WITH_INPUTS_SYS.clone()
     ]
 }
 
@@ -33,7 +33,7 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
     ecs: ActiveEcs<UsingResources>,
-    player_count: usize
+    player_count: usize,
 }
 
 // No clone or serde.
@@ -59,6 +59,7 @@ impl GameState {
             let mut pending = PendingEntity::new_player(player_index as GlobalEntityID);
             assert_eq!(player_index, self.ecs.c.create_entity(pending))
         }
+        assert_eq!(self.ecs.c.create_entity(PendingEntity::new_arena()), ARENA_ENT_ID);
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
 
@@ -77,14 +78,13 @@ impl GameState {
                 existing_player.inputs.set_input_state(input_state);
             }
         }
-        self.ecs.sim_systems(UsingResources{});
+        self.ecs.sim_systems(res);
     }
     pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID){
         crate::rts::compsys::render::render(&mut self.ecs, ctx, player_id as GlobalEntityID);
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = GameResources {
-
         };
         return Arc::new(resources);
     }

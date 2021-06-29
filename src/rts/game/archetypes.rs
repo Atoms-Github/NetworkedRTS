@@ -18,7 +18,7 @@ impl PendingEntity{
         Self::new3(
             PlayerComp{ name: [0; PLAYER_NAME_SIZE_MAX] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
-            InputComp{ inputs: Default::default(), mode: InputMode::None },
+            InputComp{ inputs: Default::default(), mode: InputMode::None, hovered_entity: None },
         )
     }
     pub fn new_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -32,6 +32,13 @@ impl PendingEntity{
             VelocityWithInputsComp{ speed: 2.0 },
             LifeComp{ life: 100.0, max_life: 100.0 },
             CollisionComp{  },
+        )
+    }
+    pub fn new_arena() -> Self{
+        Self::new1(
+            ArenaComp{
+                pathing: [[true; ARENA_SIZE]; ARENA_SIZE]
+            }
         )
     }
 }

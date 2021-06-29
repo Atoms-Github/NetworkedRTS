@@ -22,13 +22,13 @@ impl<R> SuperbEcs<R>{
     pub fn set_systems(&mut self, systems: Vec<System<R>>){
         self.systems = systems;
     }
-    pub fn sim_systems(&mut self, resources: R){
+    pub fn sim_systems(&mut self, resources: &R){
         let mut pending_changes = EntStructureChanges{
             new_entities: vec![],
             deleted_entities: vec![]
         };
         for system in &self.systems{
-            (system.run)(&resources, &mut self.c, &mut pending_changes);
+            (system.run)(resources, &mut self.c, &mut pending_changes);
         }
         pending_changes.apply(&mut self.c);
     }

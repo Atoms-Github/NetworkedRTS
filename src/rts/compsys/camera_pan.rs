@@ -13,7 +13,6 @@ pub struct CameraComp{
 
 impl CameraComp{
     pub fn get_as_screen_coords(&self, ecs: &CompStorage, entity_id: GlobalEntityID) -> (PointFloat, PointFloat){
-
         let position  = &ecs.get::<PositionComp>(entity_id).unwrap().pos.clone();
         let size  = &ecs.get::<SizeComp>(entity_id).unwrap().size.clone();
 
@@ -29,26 +28,19 @@ impl CameraComp{
     }
 }
 
-pub static CAMERA_SYS: System<GameResources> = System{
+pub static CAMERA_PAN_SYS: System<ResourcesPtr> = System{
     run
 };
-fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
-        match input.mode.clone(){
-            InputMode::None => {
-                if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
-                    input.mode = InputMode::PanCamera;
-                }
+        if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
+            input.mode = InputMode::PanCamera;
+        }
+        if input.mode == InputMode::PanCamera{
+            if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
+                input.mode = InputMode::None;
             }
-            InputMode::SelectionBox(_) => {}
-            InputMode::ClickUI(_) => {}
-            InputMode::PanCamera => {
-                if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
-                    input.mode = InputMode::None;
-                }
-                camera.translation -= &input.inputs.mouse_moved;
-
-            }
+            camera.translation -= &input.inputs.mouse_moved;
         }
     }
 }

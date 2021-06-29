@@ -14,13 +14,13 @@ pub struct ShootMouseComp {
     pub time_since_shot: f32
 }
 
-pub static SHOOT_MOUSE_SYS: System<GameResources> = System{
+pub static SHOOT_MOUSE_SYS: System<ResourcesPtr> = System{
     run
 };
 // Macros: eget!(); to get variable nubmer of compoentns.
 // query_id!();
 // query!();
-fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
+fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
     for (id, shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
         let input_state = &c.get::<InputComp>(owned.owner).unwrap().inputs.primitive;
 

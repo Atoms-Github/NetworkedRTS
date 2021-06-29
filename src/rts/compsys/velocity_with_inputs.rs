@@ -8,10 +8,10 @@ pub struct VelocityWithInputsComp {
     pub speed: f32,
 }
 
-pub static VELOCITY_WITH_INPUTS_SYS: System<GameResources> = System{
+pub static VELOCITY_WITH_INPUTS_SYS: System<ResourcesPtr> = System{
     run
 };
-fn run(res: &GameResources, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (ent, velocity, velocity_with_inputs, owned) in
     CompIter3::<VelocityComp, VelocityWithInputsComp, OwnedComp>::new(c){
         let my_inputs = &c.get::<InputComp>(owned.owner).unwrap().inputs.primitive;
