@@ -12,7 +12,12 @@ pub static INPUT_SELECTION_BOX: System<ResourcesPtr> = System{
     run
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c) {
+    //: (usize, &mut CameraComp, &mut InputComp)
+    for group in CompIter1::<CameraComp>::new(c) {
+        let (id, camera) : (usize, &mut CameraComp) = group;
+
+    }
+    for (player_id ,camera, input) in CompIter2::<CameraComp, InputComp>::new(c) {
         match input.mode.clone() {
             InputMode::None => {
                 if input.hovered_entity.is_none() {
