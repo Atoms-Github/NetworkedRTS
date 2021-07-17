@@ -8,7 +8,7 @@ use crate::netcode::InputState;
 use crate::pub_types::PointFloat;
 
 pub struct InputComp{
-    pub mode: InputMode,
+    pub mode: InputMode, // TODO: Add boolean here for 'isPanning', so can pan while units selected.
     pub inputs: RtsInputState,
     pub hovered_entity: Option<GlobalEntityID>,
     pub mouse_pos_game_world: PointFloat,

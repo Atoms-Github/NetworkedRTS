@@ -56,7 +56,7 @@ impl EntStructureChanges{
             storage.create_entity(new_entity);
         }
         for del_entity in self.deleted_entities{
-            // breaking storage.delete_entity(del_entity);
+            storage.delete_entity(del_entity);
         }
     }
 }

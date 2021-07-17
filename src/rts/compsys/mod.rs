@@ -14,6 +14,8 @@ pub mod arena;
 pub mod input_preproc;
 pub mod input_selection_box;
 pub mod sel_box;
+pub mod selectable;
+pub mod hiker;
 
 pub use position::*;
 pub use owner::*;
@@ -31,6 +33,8 @@ pub use arena::*;
 pub use input_preproc::*;
 pub use input_selection_box::*;
 pub use sel_box::*;
+pub use selectable::*;
+pub use hiker::*;
 
 pub use crate::pub_types::ResourcesPtr;
 pub use crate::ecs::pending_entity::*;
