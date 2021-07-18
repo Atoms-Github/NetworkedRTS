@@ -7,6 +7,7 @@ use crate::ecs::comp_store::CompStorage;
 use crate::ecs::pending_entity::PendingEntity;
 use winit::MouseButton;
 use crate::ecs::ecs_macros::{CompIter3, CompIter4};
+use std::ops::Mul;
 
 pub struct HikerCollisionComp {
     pub size: f32
@@ -43,7 +44,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
         }
     }
 }
-use std::ops::Mul;
+
 fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
     let pos_diff = boppee.pos.clone() - &bopper.pos;
     let move_dist = pos_diff.normalize().mul(bop_dist);
