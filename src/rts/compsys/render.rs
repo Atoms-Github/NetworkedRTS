@@ -48,6 +48,7 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_ent
     }
 }
 fn draw_rect(ctx: &mut Context, color: Color, mesh: graphics::Rect){
+
     let mode = graphics::DrawMode::fill();
     let bounds = mesh;
     let color = color;
