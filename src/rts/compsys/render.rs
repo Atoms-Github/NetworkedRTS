@@ -25,6 +25,14 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_ent
             draw_rect(ctx, graphics::Color::from_rgb(0,200,0),
                       graphics::Rect::new(on_screen_pos.x, on_screen_pos.y,life_comp.life, 5.0));
         }
+        if let Some(selectable_comp) = ecs.c.get::<SelectableComp>(entity_id){
+            if selectable_comp.is_selected{
+                draw_rect(ctx, graphics::Color::from_rgb(200,200,0),
+                          graphics::Rect::new(on_screen_pos.x, on_screen_pos.y,10.0, 10.0));
+            }
+
+
+        }
     }
     for (entity_id, owned, position) in CompIter2::<OwnedComp, PositionComp>::new(&ecs.c){
         let on_screen_pos = player_camera.game_space_to_screen_space(position.pos.clone());

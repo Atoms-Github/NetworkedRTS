@@ -23,7 +23,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     // Spawning it.
     for (player_id ,camera, input) in CompIter2::<CameraComp, InputComp>::new(c) {
         match input.mode.clone() {
-            InputMode::None => {
+            InputMode::None | InputMode::UnitsSelected => {
                 if input.hovered_entity.is_none() {
                     if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Left) {
 
@@ -35,7 +35,6 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             // Deleting it.
             InputMode::SelectionBox => {
                 if input.inputs.mouse_event == RtsMouseEvent::MouseUp {
-
                     for (box_id, sel, owner) in CompIter2::<SelBoxComp, OwnedComp>::new(c) {
                         if owner.owner == player_id{
                             // ent_changes.deleted_entities.push(box_id);

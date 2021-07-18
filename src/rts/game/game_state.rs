@@ -25,6 +25,7 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
         CAMERA_PAN_SYS.clone(),
         VELOCITY_SYS.clone(),
         INPUT_SELECTION_BOX.clone(),
+        HIKER_SYS.clone(),
         SHOOT_MOUSE_SYS.clone(),
         COLLISION_SYS.clone(),
         VELOCITY_WITH_INPUTS_SYS.clone()
@@ -65,7 +66,7 @@ impl GameState {
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
 
-        let new_entity = PendingEntity::new_pawn(player_id as GlobalEntityID, PointFloat::new(0.0, 0.0));
+        let new_entity = PendingEntity::new_test_unit(player_id as GlobalEntityID, PointFloat::new(0.0, 0.0));
         self.ecs.c.create_entity(new_entity);
 
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().name = crate::utils::pad_name(username);

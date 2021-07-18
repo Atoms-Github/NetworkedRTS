@@ -17,6 +17,7 @@ pub struct InputComp{
 pub enum InputMode{
     None,
     SelectionBox,
+    UnitsSelected,
     ClickUI(GlobalEntityID),
     PanCamera,
 }
