@@ -25,6 +25,7 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
         CAMERA_PAN_SYS.clone(),
         VELOCITY_SYS.clone(),
         INPUT_SELECTION_BOX.clone(),
+        ORDERS_SYS.clone(),
         HIKER_SYS.clone(),
         HIKER_COLLISION_SYS.clone(),
         SHOOT_MOUSE_SYS.clone(),

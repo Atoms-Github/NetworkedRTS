@@ -21,6 +21,7 @@ pub static HIKER_SYS: System<ResourcesPtr> = System{
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id, hiker, position) in CompIter2::<HikerComp, PositionComp>::new(c) {
+        // Moving the units.
         let mut made_destination = false;
         if let Some(my_destination) = &mut hiker.destination{
             if (my_destination.clone() - &position.pos).magnitude() < hiker.speed{

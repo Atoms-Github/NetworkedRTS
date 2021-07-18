@@ -17,6 +17,7 @@ pub mod sel_box;
 pub mod selectable;
 pub mod hiker;
 pub mod hiker_collision;
+pub mod orders;
 
 pub use position::*;
 pub use owner::*;
@@ -37,6 +38,7 @@ pub use sel_box::*;
 pub use selectable::*;
 pub use hiker::*;
 pub use hiker_collision::*;
+pub use orders::*;
 
 pub use crate::pub_types::ResourcesPtr;
 pub use crate::ecs::pending_entity::*;
