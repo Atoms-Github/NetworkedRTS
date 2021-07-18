@@ -1,6 +1,6 @@
 use crate::rts::game::game_state::*;
 use crate::rts::compsys::*;
-use crate::pub_types::PointFloat;
+use crate::pub_types::{PointFloat, ResourcesPtr};
 use crate::ecs::superb_ecs::*;
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::pending_entity::PendingEntity;

@@ -1,45 +1,27 @@
-pub mod position;
-pub mod owner;
-pub mod player;
-pub mod velocity;
-pub mod velocity_with_inputs;
-pub mod render;
-pub mod life;
-pub mod shoot_mouse;
-pub mod collision;
-pub mod camera_pan;
-pub mod size;
-pub mod input;
-pub mod arena;
-pub mod input_preproc;
-pub mod input_selection_box;
-pub mod sel_box;
-pub mod selectable;
-pub mod hiker;
-pub mod hiker_collision;
-pub mod orders;
 
-pub use position::*;
-pub use owner::*;
-pub use player::*;
-pub use velocity::*;
-pub use velocity_with_inputs::*;
-pub use render::*;
-pub use life::*;
-pub use shoot_mouse::*;
-pub use collision::*;
-pub use camera_pan::*;
-pub use size::*;
+
+pub use clickshooter_game::*;
+pub mod clickshooter_game;
+
+pub use general::*;
+pub mod general;
+
+pub use hikers::*;
+pub mod hikers;
+
 pub use input::*;
-pub use arena::*;
-pub use input_preproc::*;
-pub use input_selection_box::*;
-pub use sel_box::*;
-pub use selectable::*;
-pub use hiker::*;
-pub use hiker_collision::*;
-pub use orders::*;
+pub mod input;
 
-pub use crate::pub_types::ResourcesPtr;
-pub use crate::ecs::pending_entity::*;
+pub use players::*;
+pub mod players;
+
+pub use the_map::*;
+pub mod the_map;
+
+pub use visuals::*;
+pub mod visuals;
+
+pub use crate::rts::game::game_state::*;
+pub use crate::pub_types::*;
 pub use crate::ecs::ecs_macros::*;
+pub use crate::ecs::pending_entity::*;

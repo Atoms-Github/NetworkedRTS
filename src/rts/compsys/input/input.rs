@@ -1,11 +1,12 @@
-use crate::rts::compsys::*;
-use crate::ecs::superb_ecs::{System, EntStructureChanges};
-use crate::rts::game::game_state::GameResources;
+use ggez::event::{KeyCode, MouseButton};
+
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::GlobalEntityID;
-use ggez::event::{MouseButton, KeyCode};
+use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::netcode::InputState;
 use crate::pub_types::PointFloat;
+use crate::rts::compsys::*;
+use crate::rts::game::game_state::GameResources;
 
 pub struct InputComp{
     pub mode: InputMode, // TODO: Add boolean here for 'isPanning', so can pan while units selected.

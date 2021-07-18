@@ -8,9 +8,10 @@ use crate::rts::compsys::*;
 use crate::rts::game::game_state::{ARENA_ENT_ID, GameResources};
 use ggez::graphics::Rect;
 
+
 pub struct SelBoxComp{
 }
-pub static INPUT_SELECTION_BOX: System<ResourcesPtr> = System{
+pub static SELECTION_BOX: System<ResourcesPtr> = System{
     run
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){

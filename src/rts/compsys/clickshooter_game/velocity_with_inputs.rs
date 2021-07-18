@@ -4,6 +4,7 @@ use crate::ecs::comp_store::CompStorage;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use std::ops::Mul;
 
+
 pub struct VelocityWithInputsComp {
     pub speed: f32,
 }
