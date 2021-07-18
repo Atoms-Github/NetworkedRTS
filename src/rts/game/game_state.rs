@@ -71,6 +71,9 @@ impl GameState {
         let new_entity = PendingEntity::new_test_unit(player_id as GlobalEntityID, PointFloat::new(0.0, 0.0));
         self.ecs.c.create_entity(new_entity);
 
+        let new_entity = PendingEntity::new_test_unit(player_id as GlobalEntityID, PointFloat::new(200.0, 50.0));
+        self.ecs.c.create_entity(new_entity);
+
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().name = crate::utils::pad_name(username);
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){

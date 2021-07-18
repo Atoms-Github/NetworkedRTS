@@ -36,13 +36,23 @@ impl PendingEntity{
         )
     }
     pub fn new_test_unit(owner: GlobalEntityID, position: PointFloat) -> Self{
-        Self::new6(
+        Self::new9(
             RenderComp{ colour: (255,255,255)},
             SizeComp{ size: PointFloat::new(100.0, 100.0)},
             PositionComp{ pos: position },
             OwnedComp { owner },
             LifeComp{ life: 100.0, max_life: 100.0 },
             SelectableComp{ is_selected: false },
+            OrdersComp{},
+            HikerComp{
+                destination: None,
+                speed: 2.0,
+                quest_importance: 0
+            },
+            HikerCollisionComp{
+                radius: 100.0
+            }
+
         )
     }
     pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{

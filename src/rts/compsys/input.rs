@@ -13,7 +13,7 @@ pub struct InputComp{
     pub hovered_entity: Option<GlobalEntityID>,
     pub mouse_pos_game_world: PointFloat,
 }
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum InputMode{
     None,
     SelectionBox,

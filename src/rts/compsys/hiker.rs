@@ -28,7 +28,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                 position.pos = my_destination.clone();
                 made_destination = true;
             }else{
-                position.pos += (my_destination.clone() - &position.pos).mul(hiker.speed);
+                position.pos += (my_destination.clone() - &position.pos).normalize().mul(hiker.speed);
 
             }
         }

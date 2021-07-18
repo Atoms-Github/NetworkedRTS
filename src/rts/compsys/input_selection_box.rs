@@ -45,7 +45,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                             sel.is_selected = true;
                         }
                     }
-                    input.mode = InputMode::None;
+                    input.mode = InputMode::UnitsSelected;
 
                 }
             }
