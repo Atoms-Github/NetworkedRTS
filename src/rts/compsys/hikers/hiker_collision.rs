@@ -45,7 +45,14 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
 
 fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
     let pos_diff = boppee.pos.clone() - &bopper.pos;
-    let move_dist = pos_diff.normalize().mul(bop_dist);
+    let safe_diff = {
+        if pos_diff.magnitude_squared() > 0.01{
+            pos_diff
+        }else{
+            PointFloat::new(1.0,0.0)
+        }
+    };
+    let move_dist = safe_diff.normalize().mul(bop_dist);
     boppee.pos += move_dist;
 }
 
