@@ -7,9 +7,11 @@ use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
 use crate::rts::game::game_state::{ARENA_ENT_ID, GameResources};
 use ggez::graphics::Rect;
+use std::ops::Div;
 
 
 pub struct SelBoxComp{
+    pub starting_pos: PointFloat
 }
 pub static SELECTION_BOX: System<ResourcesPtr> = System{
     run
@@ -17,7 +19,9 @@ pub static SELECTION_BOX: System<ResourcesPtr> = System{
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {
         let mouse_pos = c.get::<InputComp>(owned.owner).unwrap().mouse_pos_game_world.clone();
-        size.size = mouse_pos - position.pos;
+        size.size = mouse_pos - sel_box.starting_pos;
+        position.pos = sel_box.starting_pos + size.size.clone().div(2.0);
+
     }
 
     for (player_id , input) in CompIter1::<InputComp>::new(c) {
@@ -77,12 +81,8 @@ fn deselect_all(c: &CompStorage, player_id: GlobalEntityID) {
 
 fn select_units_in_box(c: &CompStorage, box_id: GlobalEntityID) -> bool{
     let (owned_box, position_box, size_box) = c.get3_unwrap::<OwnedComp, PositionComp, SizeComp>(box_id);
-    let sel_box_rect = Rect{
-        x: position_box.pos.x,
-        y: position_box.pos.y,
-        w: size_box.size.x,
-        h: size_box.size.y,
-    };
+
+    let sel_box_rect = size_box.get_as_rect(position_box);
 
     let mut selected_any = false;
     for (unit_id, sel_unit, position_unit, owned_unit) in CompIter3::<SelectableComp, PositionComp, OwnedComp>::new(c) {

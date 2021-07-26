@@ -58,7 +58,9 @@ impl PendingEntity{
         Self::new5(
             RenderComp{ colour: (255,255,255)},
             SizeComp{ size: PointFloat::new(100.0, 100.0)},
-            SelBoxComp{ },
+            SelBoxComp{
+                starting_pos: position
+            },
             PositionComp{ pos: position },
             OwnedComp { owner },
         )
