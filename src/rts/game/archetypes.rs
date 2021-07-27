@@ -2,6 +2,7 @@ use crate::ecs::pending_entity::PendingEntity;
 use crate::ecs::GlobalEntityID;
 use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
+use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT};
 
 impl PendingEntity{
     pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -15,8 +16,9 @@ impl PendingEntity{
         )
     }
     pub fn new_player(owner: GlobalEntityID) -> Self{
-        Self::new3(
+        Self::new4(
             PlayerComp{ name: [0; PLAYER_NAME_SIZE_MAX] },
+            OwnsResourcesComp{ resources: [0; RESOURCES_COUNT] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
             InputComp{ inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0,0.0) },
         )
@@ -37,7 +39,7 @@ impl PendingEntity{
     pub fn new_test_unit(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new9(
             RenderComp{ colour: (255,255,255)},
-            SizeComp{ size: PointFloat::new(100.0, 100.0)},
+            SizeComp{ size: PointFloat::new(30.0, 30.0)},
             PositionComp{ pos: position },
             OwnedComp { owner },
             LifeComp{ life: 100.0, max_life: 100.0 },
@@ -49,7 +51,7 @@ impl PendingEntity{
                 quest_importance: 0
             },
             HikerCollisionComp{
-                radius: 100.0
+                radius: 30.0
             }
 
         )

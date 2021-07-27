@@ -86,7 +86,6 @@ fn select_units_in_box(c: &CompStorage, box_id: GlobalEntityID) -> bool{
     let (owned_box, position_box, size_box) = c.get3_unwrap::<OwnedComp, PositionComp, SizeComp>(box_id);
 
     let sel_box_rect = size_box.get_as_rect(position_box);
-    println!("{:?}", sel_box_rect);
 
     let mut selected_any = false;
     for (unit_id, sel_unit, position_unit, owned_unit) in CompIter3::<SelectableComp, PositionComp, OwnedComp>::new(c) {
