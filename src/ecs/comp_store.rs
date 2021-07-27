@@ -47,7 +47,6 @@ impl CompStorage{
         return self.get::<T>(entity_id).map(|unmut|{unsafe{very_bad_function(unmut)}});
     }
     pub fn delete_entity(&mut self, entity_id: GlobalEntityID) -> Option<()>{
-
         let deleting_internal = self.internal_entities.get(entity_id)?;
         let composition_id = deleting_internal.composition_id;
         let deleting_index: InternalIndex = deleting_internal.internal_index;
@@ -61,6 +60,7 @@ impl CompStorage{
         self.internal_entities.delete(entity_id);
 
 
+        self.global_ids_as_comps.get_mut(composition_id).unwrap().swap_remove(deleting_index);
         // Fix the displaced entity's pointer.
         // If array is empty (last() returns nothing), there were no displaced entities.
 
@@ -71,7 +71,6 @@ impl CompStorage{
             displaced_internal.internal_index = deleting_index;
         }
 
-        self.global_ids_as_comps.get_mut(composition_id).unwrap().swap_remove(deleting_index);
 
         return Some(());
 
@@ -249,6 +248,40 @@ mod ecs_tests {
         ecs.delete_entity(id1);
 
         assert!(ecs.get::<TestComp1>(id2).is_none());
+    }
+    #[test]
+    fn test_delete_then_query() {
+        let mut ecs = CompStorage::default();
+        let mut pending_entity = PendingEntity::new();
+        pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
+        let id1 = ecs.create_entity(pending_entity);
+
+        ecs.delete_entity(id1);
+
+        for ent_id in ecs.query(vec![
+            crate::utils::gett::<TestComp1>()
+        ]){
+            if ecs.get::<TestComp1>(ent_id).is_none(){
+                let woah = 2;
+            }
+        }
+        for ent_id in ecs.query(vec![
+            crate::utils::gett::<TestComp1>()
+        ]){
+        }
+
+
+
+
+
+        for ent_id in ecs.query(vec![
+            crate::utils::gett::<TestComp1>()
+
+        ]){
+            let crash = ecs.get::<TestComp1>(ent_id).unwrap();
+        }
+
+
     }
 
     // impl Component for TestComp1 {}

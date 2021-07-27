@@ -19,8 +19,8 @@ pub static SELECTION_BOX: System<ResourcesPtr> = System{
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {
         let mouse_pos = c.get::<InputComp>(owned.owner).unwrap().mouse_pos_game_world.clone();
-        size.size = mouse_pos - sel_box.starting_pos;
-        position.pos = sel_box.starting_pos + size.size.clone().div(2.0);
+        size.size = mouse_pos - &sel_box.starting_pos;
+        position.pos = sel_box.starting_pos.clone() + size.size.clone().div(2.0);
 
     }
 
@@ -32,21 +32,23 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             }
             // Deleting it.
             InputMode::SelectionBox => {
-                check_delete_box(c, player_id)
+                check_delete_box(c, ent_changes, player_id)
             }
             _ => {}
         }
     }
 }
 
-fn check_delete_box(c: &CompStorage, player_id: GlobalEntityID) {
+fn check_delete_box(c: &CompStorage, ent_changes: &mut EntStructureChanges,  player_id: GlobalEntityID) {
     let input = c.get1_unwrap::<InputComp>(player_id);
     if input.inputs.mouse_event == RtsMouseEvent::MouseUp {
         if let Some(box_id) = get_box(c, player_id){
-            // ent_changes.deleted_entities.push(box_id);
+            ent_changes.deleted_entities.push(box_id);
             let any_selected = select_units_in_box(c, box_id);
             if any_selected{
                 input.mode = InputMode::UnitsSelected;
+            }else{
+                input.mode = InputMode::None;
             }
         }
     }

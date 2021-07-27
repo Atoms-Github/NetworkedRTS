@@ -57,7 +57,7 @@ impl GlorifiedHashMap {
         }
         panic!("Exceeded entity storage capacity! Increase MAX_ENTITIES.");
     }
-    pub fn delete(&mut self, entity_id: GlobalEntityID) -> Option<&InternalEntity>{
+    pub fn delete(&mut self, entity_id: GlobalEntityID) -> Option<InternalEntity>{
         let index = entity_id % MAX_ENTITIES;
         // If an entity lives in the spot.
         if self.alive[index]{
@@ -65,6 +65,8 @@ impl GlorifiedHashMap {
             if self.entity_ids[index] == entity_id {
                 self.alive[index] = false;
                 self.entity_ids[index] += MAX_ENTITIES;
+
+                // TODO: Make this work? So it actually pops it. return Some(self.internal_details[index]);
             }
         }
         return None;
