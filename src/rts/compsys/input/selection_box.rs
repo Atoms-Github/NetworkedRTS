@@ -19,8 +19,9 @@ pub static SELECTION_BOX: System<ResourcesPtr> = System{
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {
         let mouse_pos = c.get::<InputComp>(owned.owner).unwrap().mouse_pos_game_world.clone();
-        size.size = mouse_pos - &sel_box.starting_pos;
-        position.pos = sel_box.starting_pos.clone() + size.size.clone().div(2.0);
+        let box_size_vec = mouse_pos - &sel_box.starting_pos;
+        size.set_abs(&box_size_vec);
+        position.pos = sel_box.starting_pos.clone() + box_size_vec.div(2.0);
 
     }
 
@@ -85,6 +86,7 @@ fn select_units_in_box(c: &CompStorage, box_id: GlobalEntityID) -> bool{
     let (owned_box, position_box, size_box) = c.get3_unwrap::<OwnedComp, PositionComp, SizeComp>(box_id);
 
     let sel_box_rect = size_box.get_as_rect(position_box);
+    println!("{:?}", sel_box_rect);
 
     let mut selected_any = false;
     for (unit_id, sel_unit, position_unit, owned_unit) in CompIter3::<SelectableComp, PositionComp, OwnedComp>::new(c) {

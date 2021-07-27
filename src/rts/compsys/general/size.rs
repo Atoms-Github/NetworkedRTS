@@ -8,7 +8,12 @@ pub struct SizeComp{
 }
 
 
+
 impl SizeComp{
+    pub fn set_abs(&mut self, new_size: &PointFloat){
+        self.size.x = new_size.x.abs();
+        self.size.y = new_size.y.abs();
+    }
     pub fn get_corner_top_left(&self, position: &PositionComp) -> PointFloat{
         return PointFloat::new(position.pos.x - self.size.x / 2.0, position.pos.y - self.size.y / 2.0);
     }
