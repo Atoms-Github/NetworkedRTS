@@ -37,8 +37,9 @@ impl PendingEntity{
         )
     }
     pub fn new_test_unit(owner: GlobalEntityID, position: PointFloat) -> Self{
-        Self::new9(
+        Self::new10(
             RenderComp{ colour: (255,255,255)},
+            WorkerComp{ },
             SizeComp{ size: PointFloat::new(30.0, 30.0)},
             PositionComp{ pos: position },
             OwnedComp { owner },

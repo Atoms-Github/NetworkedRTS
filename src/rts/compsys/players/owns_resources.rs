@@ -26,6 +26,9 @@ impl OwnsResourcesComp{
     pub fn get_count(&mut self, res_type: ResourceType) -> i32{
         return self.resources[res_type as usize];
     }
+    pub fn get_counti(&mut self, res_type: usize) -> i32{
+        return self.resources[res_type];
+    }
 }
 
 #[repr(u8)]

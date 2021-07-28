@@ -5,6 +5,7 @@ use crate::rts::compsys::*;
 use crate::ecs::{ActiveEcs, GlobalEntityID};
 use crate::rts::game::game_state::UsingResources;
 use nalgebra::Point2;
+use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 
 pub struct RenderComp{
     pub colour: (u8, u8, u8)
@@ -12,6 +13,7 @@ pub struct RenderComp{
 
 pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
+
 
 
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
@@ -45,6 +47,23 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_ent
             &player_name_display,
             (Point2::new(on_screen_pos.x, on_screen_pos.y), graphics::Color::from((0,153,255))),
         ).unwrap();
+    }
+    for (player_id, owns_resources) in CompIter1::<OwnsResourcesComp>::new(&ecs.c){
+        if player_id == player_entity_id{
+            for res_index in 0..RESOURCES_COUNT{
+                let on_screen_pos = PointFloat::new(50.0 + res_index as f32 * 100.0, 50.0);
+
+                let res_count = owns_resources.get_counti(res_index).to_string();
+                let res_count_display = Text::new(res_count);
+
+                graphics::draw(
+                    ctx,
+                    &res_count_display,
+                    (Point2::new(on_screen_pos.x, on_screen_pos.y), graphics::Color::from((255,255,255))),
+                ).unwrap();
+            }
+        }
+
     }
 }
 fn draw_rect(ctx: &mut Context, color: Color, mesh: graphics::Rect){

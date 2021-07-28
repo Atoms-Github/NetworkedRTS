@@ -14,7 +14,7 @@ use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::compsys::*;
 
 
-const MAX_PLAYERS : usize = 6;
+const MAX_PLAYERS : usize = 7;
 pub const ARENA_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingResources = Arc<GameResources>;
@@ -27,10 +27,11 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
         SELECTION_BOX.clone(),
         ORDERS_SYS.clone(),
         HIKER_SYS.clone(),
-        // HIKER_COLLISION_SYS.clone(),
+        HIKER_COLLISION_SYS.clone(),
         SHOOT_MOUSE_SYS.clone(),
         COLLISION_SYS.clone(),
-        VELOCITY_WITH_INPUTS_SYS.clone()
+        VELOCITY_WITH_INPUTS_SYS.clone(),
+        WORKER_SYS.clone()
     ]
 }
 
@@ -80,7 +81,7 @@ impl GameState {
     fn get_player_spawn(&self, player_id: PlayerID) -> PointFloat{
         let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
         let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
-        let radius = 200.0;
+        let radius = 300.0;
         println!("Player {} spawns {:?} radians", player_id, my_radius_round);
 
         return PointFloat::new(my_radius_round.sin() * radius, my_radius_round.cos() as f32 * radius);

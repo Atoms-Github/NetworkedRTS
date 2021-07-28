@@ -1,13 +1,13 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="LET THEM LOOSE" type="CompoundRunConfigurationType">
-    <toRun name="Run LiteralPoggySourceClientE4" type="CargoCommandRunConfiguration" />
     <toRun name="Run LiteralPoggySourceClientC2" type="CargoCommandRunConfiguration" />
-    <toRun name="Run LiteralPoggySourceClientD3" type="CargoCommandRunConfiguration" />
-    <toRun name="Run LiteralPoggySourceClientG6" type="CargoCommandRunConfiguration" />
     <toRun name="Run LiteralPoggySourceClientA0" type="CargoCommandRunConfiguration" />
-    <toRun name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientE4" type="CargoCommandRunConfiguration" />
     <toRun name="Run LiteralPoggySourceClientF5" type="CargoCommandRunConfiguration" />
     <toRun name="Run Server" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientG6" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientD3" type="CargoCommandRunConfiguration" />
     <method v="2" />
   </configuration>
 </component>

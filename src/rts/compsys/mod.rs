@@ -21,6 +21,9 @@ pub mod the_map;
 pub use visuals::*;
 pub mod visuals;
 
+pub use units::*;
+pub mod units;
+
 pub use crate::rts::game::game_state::*;
 pub use crate::pub_types::*;
 pub use crate::ecs::ecs_macros::*;
