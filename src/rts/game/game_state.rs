@@ -74,9 +74,13 @@ impl GameState {
         let player_ent_id = player_id as GlobalEntityID;
         let spawn_point = self.get_player_spawn(player_id);
         println!("spawn_point {:?}", spawn_point);
-        for _ in 0..2{
-            let new_entity = PendingEntity::new_test_unit(player_ent_id, spawn_point.clone());
-            self.ecs.c.create_entity(new_entity);
+        for _ in 0..1{
+            let new_worker = PendingEntity::new_test_worker(player_ent_id, spawn_point.clone());
+            self.ecs.c.create_entity(new_worker);
+        }
+        for _ in 0..1{
+            let new_warrior = PendingEntity::new_test_worker(player_ent_id, spawn_point.clone());
+            self.ecs.c.create_entity(new_warrior);
         }
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = crate::utils::pad_name(username);
         self.ecs.c.get_mut::<CameraComp>(player_ent_id).unwrap().translation = spawn_point;

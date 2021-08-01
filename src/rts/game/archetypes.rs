@@ -3,6 +3,7 @@ use crate::ecs::GlobalEntityID;
 use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT};
+use crate::bibble::data::data_types::WeaponID;
 
 impl PendingEntity{
     pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -36,10 +37,34 @@ impl PendingEntity{
             CollisionComp{  },
         )
     }
-    pub fn new_test_unit(owner: GlobalEntityID, position: PointFloat) -> Self{
+    pub fn new_test_worker(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new10(
             RenderComp{ colour: (255,255,255)},
             WorkerComp{ },
+            SizeComp{ size: PointFloat::new(30.0, 30.0)},
+            PositionComp{ pos: position },
+            OwnedComp { owner },
+            LifeComp{ life: 100.0, max_life: 100.0 },
+            SelectableComp{ is_selected: false },
+            OrdersComp{},
+            HikerComp{
+                destination: None,
+                speed: 2.0,
+                quest_importance: 0
+            },
+            HikerCollisionComp{
+                radius: 30.0
+            }
+
+        )
+    }
+    pub fn new_test_warrior(owner: GlobalEntityID, position: PointFloat) -> Self{
+        Self::new10(
+            RenderComp{ colour: (255,255,255)},
+            WeaponComp{
+                weapon_id: WeaponID::GLAIVES,
+                time_since_shot: 0.0
+            },
             SizeComp{ size: PointFloat::new(30.0, 30.0)},
             PositionComp{ pos: position },
             OwnedComp { owner },

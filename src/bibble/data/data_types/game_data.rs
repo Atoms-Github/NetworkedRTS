@@ -12,9 +12,9 @@ pub struct GameData{
 
 impl GameData{
     pub fn add_weapon(&mut self, id: WeaponID, mould: WeaponMould){
-        data.weapons.insert(id, mould);
+        self.weapons.insert(id, mould);
     }
     pub fn get_weapon(&mut self, id: WeaponID) -> &WeaponMould{
-        return data.weapons.get(&id).unwrap();
+        return self.weapons.get(&id).unwrap();
     }
 }

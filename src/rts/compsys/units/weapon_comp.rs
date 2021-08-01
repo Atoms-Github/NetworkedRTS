@@ -23,14 +23,21 @@ pub static WEAPON_SYS: System<ResourcesPtr> = System{
     run
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    for (shooter_id, weapon, owned, position) in CompIter3::<WeaponComp, OwnedComp, PositionComp>::new(c) {
+    for (shooter_id, weapon, owned_shooter, position_shooter) in CompIter3::<WeaponComp, OwnedComp, PositionComp>::new(c) {
         weapon.time_since_shot += 1.0;
-        
-        for (target_id, owned, position) in CompIter2::<OwnedComp, PositionComp>::new(c) {
-            if shooter_id != target_id{
 
+        if res.game_data.get_weapon(weapon.weapon_id).cooldown < weapon.time_since_shot{
+            for (target_id, owned_target, position_target, life_target) in CompIter3::<OwnedComp, PositionComp, LifeComp>::new(c) {
+                let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude() < 100.0;
+                if shooter_id != target_id && owned_target.owner != owned_shooter.owner && in_range{
+                    weapon.time_since_shot = 0.0;
+                    life_target.life -= 10.0;
+                    break;
+                }
             }
         }
+
+
     }
 
 }

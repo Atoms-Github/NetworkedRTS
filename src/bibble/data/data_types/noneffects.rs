@@ -31,6 +31,7 @@ pub struct UnitMould{
 }
 pub struct WeaponMould{
     pub effect: EffectUnitToUnit,
+    pub cooldown: f32,
 }
 pub struct ActorMould{
     pub image: String
