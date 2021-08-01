@@ -12,6 +12,7 @@ pub use crate::utils::gett;
 use crate::ecs::superb_ecs::System;
 use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::compsys::*;
+use crate::bibble::data::data_types::GameData;
 
 
 const MAX_PLAYERS : usize = 7;
@@ -31,7 +32,8 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
         SHOOT_MOUSE_SYS.clone(),
         COLLISION_SYS.clone(),
         VELOCITY_WITH_INPUTS_SYS.clone(),
-        WORKER_SYS.clone()
+        WORKER_SYS.clone(),
+        WEAPON_SYS.clone()
     ]
 }
 
@@ -44,6 +46,7 @@ pub struct GameState {
 
 // No clone or serde.
 pub struct GameResources {
+    pub game_data: GameData // This'll eventually be changed to be modifiable.
 }
 
 impl Default for GameState {
@@ -103,6 +106,7 @@ impl GameState {
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = GameResources {
+            game_data: crate::bibble::data::gen_game_data()
         };
         return Arc::new(resources);
     }
