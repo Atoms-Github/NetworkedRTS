@@ -1,4 +1,4 @@
-use ggez::event::MouseButton;
+use ggez::event::{MouseButton, KeyCode};
 
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::GlobalEntityID;
@@ -8,6 +8,8 @@ use crate::rts::compsys::*;
 use crate::rts::game::game_state::{ARENA_ENT_ID, GameResources};
 use ggez::graphics::Rect;
 use std::ops::Div;
+use winit::VirtualKeyCode;
+use std::future::Pending;
 
 
 pub struct SelBoxComp{
@@ -25,15 +27,29 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
 
     }
 
-    for (player_id , input) in CompIter1::<InputComp>::new(c) {
+    for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         match input.mode.clone() {
             // Spawning it.
             InputMode::None | InputMode::UnitsSelected => {
-                check_create_box(c, ent_changes, player_id, input)
+                check_create_box(c, ent_changes, player_id, input);
             }
             // Deleting it.
             InputMode::SelectionBox => {
-                check_delete_box(c, ent_changes, player_id)
+                check_delete_box(c, ent_changes, player_id);
+
+                let input = c.get1_unwrap::<InputComp>(player_id);
+                if input.inputs.key_event == RtsKeyEvent::KeyDown(VirtualKeyCode::W){
+                    if resources_temp.try_pay(ResourceType::BLUENESS, 50){
+                        ent_changes.new_entities.push(PendingEntity::new_test_worker(player_id, input.mouse_pos_game_world.clone()));
+
+                    }
+                }
+                if input.inputs.key_event == RtsKeyEvent::KeyDown(VirtualKeyCode::S){
+                    if resources_temp.try_pay(ResourceType::BLUENESS, 100){
+                        ent_changes.new_entities.push(PendingEntity::new_test_warrior(player_id, input.mouse_pos_game_world.clone()));
+                    }
+
+                }
             }
             _ => {}
         }
