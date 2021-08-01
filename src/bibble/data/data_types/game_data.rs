@@ -14,7 +14,7 @@ impl GameData{
     pub fn add_weapon(&mut self, id: WeaponID, mould: WeaponMould){
         self.weapons.insert(id, mould);
     }
-    pub fn get_weapon(&mut self, id: WeaponID) -> &WeaponMould{
+    pub fn get_weapon(&self, id: WeaponID) -> &WeaponMould{
         return self.weapons.get(&id).unwrap();
     }
 }

@@ -9,5 +9,5 @@ mod weapons;
 
 
 pub fn gather(data: &mut GameData){
-    
+    weapons::weapons(data);
 }

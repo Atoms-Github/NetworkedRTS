@@ -79,7 +79,7 @@ impl GameState {
             self.ecs.c.create_entity(new_worker);
         }
         for _ in 0..1{
-            let new_warrior = PendingEntity::new_test_worker(player_ent_id, spawn_point.clone());
+            let new_warrior = PendingEntity::new_test_warrior(player_ent_id, spawn_point.clone());
             self.ecs.c.create_entity(new_warrior);
         }
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = crate::utils::pad_name(username);
