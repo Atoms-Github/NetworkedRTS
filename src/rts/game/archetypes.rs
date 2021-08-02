@@ -39,7 +39,7 @@ impl PendingEntity{
     }
     pub fn new_test_worker(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new10(
-            RenderComp{ colour: (255,255,255)},
+            RenderComp{ colour: (255,255,0)},
             WorkerComp{ },
             SizeComp{ size: PointFloat::new(30.0, 30.0)},
             PositionComp{ pos: position },
@@ -60,7 +60,7 @@ impl PendingEntity{
     }
     pub fn new_test_warrior(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new10(
-            RenderComp{ colour: (255,255,255)},
+            RenderComp{ colour: (255,0,0)},
             WeaponComp{
                 weapon_id: WeaponID::GLAIVES,
                 time_since_shot: 0.0
