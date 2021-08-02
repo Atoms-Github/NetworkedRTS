@@ -8,7 +8,7 @@ use crate::netcode::netcode_types::ServerEvents;
 
 mod server;
 mod client;
-mod common;
+pub(crate) mod common;
 mod netcode_types;
 
 pub type PlayerInputs = HashMap<PlayerID, InputState>;

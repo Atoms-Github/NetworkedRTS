@@ -91,10 +91,13 @@ impl DT{
             name
         }
     }
-    pub fn stop(self){
+
+    pub fn stop(self) -> Duration{
+        let time_since = SystemTime::now().duration_since(self.time).unwrap();
         if crate::DEBUG_MSGS_TIMERS{
-            log::info!("TIMER {} -> {:?}", self.name, SystemTime::now().duration_since(self.time).unwrap());
+            log::info!("TIMER {} -> {:?}", self.name, time_since);
         }
+        return time_since;
     }
     pub fn stop_warn(self, micro_seconds_limit: u128){
 

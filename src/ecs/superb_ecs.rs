@@ -5,7 +5,7 @@ use anymap::AnyMap;
 use crate::ecs::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
-
+use crate::netcode::common::time::timekeeping::*;
 
 // TODO: Implement ser and de manually.
 pub struct SuperbEcs<R>{
@@ -27,8 +27,12 @@ impl<R> SuperbEcs<R>{
             new_entities: vec![],
             deleted_entities: vec![]
         };
+        println!("NewStart!");
         for system in &self.systems{
+            let timer = DT::start("A system");
             (system.run)(resources, &mut self.c, &mut pending_changes);
+            let time = timer.stop();
+            println!("Time for a system: {:?}", time);
         }
         pending_changes.apply(&mut self.c);
     }
