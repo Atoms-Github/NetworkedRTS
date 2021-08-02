@@ -22,7 +22,7 @@ impl<R> SuperbEcs<R>{
     pub fn set_systems(&mut self, systems: Vec<System<R>>){
         self.systems = systems;
     }
-    pub fn sim_systems(&mut self, resources: &R){
+    pub fn sim_systems(&mut self, resources: &R, quality: SimQuality){
         let mut pending_changes = EntStructureChanges{
             new_entities: vec![],
             deleted_entities: vec![]
@@ -32,7 +32,9 @@ impl<R> SuperbEcs<R>{
             let timer = DT::start("A system");
             (system.run)(resources, &mut self.c, &mut pending_changes);
             let time = timer.stop();
-            println!("Time for a system: {:?}", time);
+            if quality == SimQuality::DETERMA{
+                println!("Time for a system: {:?}", time);
+            }
         }
         pending_changes.apply(&mut self.c);
     }
@@ -141,6 +143,7 @@ use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
 use crate::ecs::pending_entity::PendingEntity;
+use crate::pub_types::SimQuality;
 
 impl ECSVisitor {
     fn new() -> Self {

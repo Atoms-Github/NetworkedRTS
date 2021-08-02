@@ -96,7 +96,7 @@ impl LogicSimHeaderIn {
     }
     fn calculate_new_head(&mut self, mut sim_packet: HeadSimPacket) -> NetGameState {
         for sim_info in sim_packet.sim_data{
-            sim_packet.game_state.simulate_tick(sim_info, &self.res, FRAME_DURATION_MILLIS);
+            sim_packet.game_state.simulate_tick(sim_info, &self.res, SimQuality::HEAD, FRAME_DURATION_MILLIS);
         }
         return sim_packet.game_state;
     }
