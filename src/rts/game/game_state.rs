@@ -74,12 +74,11 @@ impl GameState {
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let player_ent_id = player_id as GlobalEntityID;
         let spawn_point = self.get_player_spawn(player_id);
-        println!("spawn_point {:?}", spawn_point);
-        for _ in 0..10{
+        for _ in 0..100{
             let new_worker = PendingEntity::new_test_worker(player_ent_id, spawn_point.clone());
             self.ecs.c.create_entity(new_worker);
         }
-        for _ in 0..10{
+        for _ in 0..0{
             let new_warrior = PendingEntity::new_test_warrior(player_ent_id, spawn_point.clone());
             self.ecs.c.create_entity(new_warrior);
         }
@@ -90,7 +89,6 @@ impl GameState {
         let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
         let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
         let radius = 300.0;
-        println!("Player {} spawns {:?} radians", player_id, my_radius_round);
 
         return PointFloat::new(my_radius_round.sin() * radius, my_radius_round.cos() as f32 * radius);
     }

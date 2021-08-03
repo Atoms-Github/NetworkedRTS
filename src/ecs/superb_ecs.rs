@@ -27,7 +27,9 @@ impl<R> SuperbEcs<R>{
             new_entities: vec![],
             deleted_entities: vec![]
         };
-        println!("NewStart!");
+        if quality == SimQuality::DETERMA{
+            println!("NewStart");
+        }
         for system in &self.systems{
             let timer = DT::start("A system");
             (system.run)(resources, &mut self.c, &mut pending_changes);
