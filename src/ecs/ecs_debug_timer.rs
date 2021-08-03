@@ -45,7 +45,7 @@ impl EcsDebugTimer{
 
     }
     pub fn print_all(&self){
-        println!("Times:");
+        println!(" ---- Times: ---- ");
         for (key, value) in &self.entries{
             let average = value.total / value.entries;
             println!("{} - {:?}", key, average);

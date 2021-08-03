@@ -17,7 +17,50 @@ pub static HIKER_COLLISION_SYS: System<ResourcesPtr> = System{
     name: "hiker_collision"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {
+    let unit_ids = c.query(vec![
+        crate::utils::gett::<HikerCollisionComp>(),
+        crate::utils::gett::<HikerComp>(),
+        crate::utils::gett::<PositionComp>(),
+    ]);
+    let mut comps = vec![];
+
+    for unit_id in &unit_ids{
+        comps.push((
+            *unit_id,
+            c.get_mut::<HikerCollisionComp>(*unit_id).unwrap(),
+            c.get_mut::<HikerComp>(*unit_id).unwrap(),
+            c.get_mut::<PositionComp>(*unit_id).unwrap()
+        ));
+    }
+    for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in &comps{
+        for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in &comps{
+            if unit_id_1 != unit_id_2 && position_1.pos.x >= 1000000000.0{
+                let actual_distance_squared =  (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
+                let min_distance = hiker_collision_1.radius + hiker_collision_2.radius;
+                if actual_distance_squared < min_distance.powi(2) {
+                    let distance_too_close = min_distance - actual_distance_squared.sqrt();
+                    const IMPORTANTER_ONE_BOP_FRACTION : f32 = 0.25;
+                    let bop_fraction_for_1 = {
+                        if hiker_comp_1.quest_importance == hiker_comp_2.quest_importance{
+                            0.5
+                        }else if hiker_comp_1.quest_importance > hiker_comp_2.quest_importance{
+                            IMPORTANTER_ONE_BOP_FRACTION
+                        }else{
+                            1.0 - IMPORTANTER_ONE_BOP_FRACTION
+                        }
+                    };
+                    let bop_dist_1 = bop_fraction_for_1 * distance_too_close;
+                    let bop_dist_2 = (1.0 - bop_fraction_for_1) * distance_too_close;
+                    // apply_bop(bop_dist_1, *position_1, position_2); breaking
+                    // apply_bop(bop_dist_2, *position_2, position_1);
+                }
+            }
+        }
+    }
+
+/* Original (slow) version. (1.1ms for 220 entities)
+
+for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in CompIter3::<>::new(c) {
         for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {
             if unit_id_1 != unit_id_2 && position_1.pos.x >= 1000000000.0{
                 let actual_distance_squared =  (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
@@ -42,6 +85,11 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             }
         }
     }
+
+ */
+
+
+
 }
 
 fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
@@ -70,6 +118,7 @@ fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
 
 
 
+//
 
 
 
