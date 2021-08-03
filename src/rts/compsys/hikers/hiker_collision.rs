@@ -32,9 +32,10 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             c.get_mut::<PositionComp>(*unit_id).unwrap()
         ));
     }
+
     for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in &comps{
         for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in &comps{
-            if unit_id_1 != unit_id_2 && position_1.pos.x >= 1000000000.0{
+            if unit_id_1 != unit_id_2{
                 let actual_distance_squared =  (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
                 let min_distance = hiker_collision_1.radius + hiker_collision_2.radius;
                 if actual_distance_squared < min_distance.powi(2) {
@@ -51,8 +52,9 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                     };
                     let bop_dist_1 = bop_fraction_for_1 * distance_too_close;
                     let bop_dist_2 = (1.0 - bop_fraction_for_1) * distance_too_close;
-                    // apply_bop(bop_dist_1, *position_1, position_2); breaking
-                    // apply_bop(bop_dist_2, *position_2, position_1);
+                    apply_bop(bop_dist_1, unsafe{crate::utils::unsafe_const_cheat(position_1)}, position_2);
+                    apply_bop(bop_dist_2, unsafe{crate::utils::unsafe_const_cheat(position_2)}, position_1);
+
                 }
             }
         }

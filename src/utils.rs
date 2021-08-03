@@ -42,3 +42,8 @@ pub fn pad_name(name: String) -> [u8; PLAYER_NAME_SIZE_MAX]{
     return buffer;
 }
 
+pub unsafe fn unsafe_const_cheat<T>(reference: &T) -> &mut T {
+    let const_ptr = reference as *const T;
+    let mut_ptr = const_ptr as *mut T;
+    &mut *mut_ptr
+}
