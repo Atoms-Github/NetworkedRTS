@@ -10,7 +10,8 @@ pub struct VelocityWithInputsComp {
 }
 
 pub static VELOCITY_WITH_INPUTS_SYS: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "velocity_with_inputs".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (ent, velocity, velocity_with_inputs, owned) in

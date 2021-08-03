@@ -34,7 +34,8 @@ impl CameraComp{
 }
 
 pub static CAMERA_PAN_SYS: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "camera_pan".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){

@@ -15,7 +15,8 @@ pub struct ShootMouseComp {
 }
 
 pub static SHOOT_MOUSE_SYS: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "shoot_mouse".to_string()
 };
 // Macros: eget!(); to get variable nubmer of compoentns.
 // query_id!();

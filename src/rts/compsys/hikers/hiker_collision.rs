@@ -13,7 +13,8 @@ pub struct HikerCollisionComp {
     pub radius: f32
 }
 pub static HIKER_COLLISION_SYS: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "hiker_collision".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {

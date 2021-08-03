@@ -20,7 +20,8 @@ pub struct WeaponComp {
 
 
 pub static WEAPON_SYS: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "weapon".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (shooter_id, weapon, owned_shooter, position_shooter) in CompIter3::<WeaponComp, OwnedComp, PositionComp>::new(c) {

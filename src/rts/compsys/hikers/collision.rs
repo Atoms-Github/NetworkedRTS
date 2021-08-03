@@ -12,7 +12,8 @@ pub struct CollisionComp {
 }
 
 pub static COLLISION_SYS: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "collision".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (ship_id, ship_collision, ship_position, ship_life, ship_owned) in

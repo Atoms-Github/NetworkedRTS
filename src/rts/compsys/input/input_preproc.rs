@@ -8,7 +8,8 @@ use crate::netcode::InputState;
 use crate::pub_types::PointFloat;
 
 pub static INPUT_PREPROC: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "input_preproc".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){

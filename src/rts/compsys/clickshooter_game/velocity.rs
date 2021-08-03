@@ -9,7 +9,8 @@ pub struct VelocityComp {
 }
 
 pub static VELOCITY_SYS: System<ResourcesPtr> = System{
-    run
+    run,
+    name: "velocity".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (entity_id, velocity, position) in CompIter2::<VelocityComp, PositionComp>::new(c){

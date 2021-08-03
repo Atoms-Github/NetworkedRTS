@@ -15,8 +15,9 @@ use std::future::Pending;
 pub struct SelBoxComp{
     pub starting_pos: PointFloat
 }
-pub static SELECTION_BOX: System<ResourcesPtr> = System{
-    run
+pub static SELECTION_BOX_SYS: System<ResourcesPtr> = System{
+    run,
+    name: "selection_box".to_string()
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {
