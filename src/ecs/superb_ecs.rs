@@ -11,12 +11,14 @@ use crate::netcode::common::time::timekeeping::*;
 pub struct SuperbEcs<R>{
     systems: Vec<System<R>>,
     pub c: CompStorage,
+    debug_times: EcsDebugTimer,
 }
 impl<R> SuperbEcs<R>{
     pub fn new(systems: Vec<System<R>>) -> Self{
         Self{
             systems,
             c: Default::default(),
+            debug_times: Default::default()
         }
     }
     pub fn set_systems(&mut self, systems: Vec<System<R>>){
@@ -27,18 +29,22 @@ impl<R> SuperbEcs<R>{
             new_entities: vec![],
             deleted_entities: vec![]
         };
-        if quality == SimQuality::DETERMA{
-            println!("NewStart");
-        }
+
         for system in &self.systems{
-            let timer = DT::start("A system");
-            (system.run)(resources, &mut self.c, &mut pending_changes);
-            let time = timer.stop();
             if quality == SimQuality::DETERMA{
-                println!("Time for a system: {:?}", time);
+                self.debug_times.start_timer(String::from(system.name));
+            }
+            (system.run)(resources, &mut self.c, &mut pending_changes);
+
+            if quality == SimQuality::DETERMA{
+                self.debug_times.stop_timer(String::from(system.name));
             }
         }
         pending_changes.apply(&mut self.c);
+
+        if quality == SimQuality::DETERMA{
+            self.debug_times.print_all();
+        }
     }
 
 }
@@ -47,6 +53,7 @@ impl<R> Clone for SuperbEcs<R>{
         Self{
             systems: self.systems.clone(),
             c: self.c.clone(),
+            debug_times: self.debug_times.clone()
         }
     }
 }
@@ -148,6 +155,7 @@ use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
 use crate::ecs::pending_entity::PendingEntity;
 use crate::pub_types::SimQuality;
+use crate::ecs::ecs_debug_timer::EcsDebugTimer;
 
 impl ECSVisitor {
     fn new() -> Self {
@@ -171,7 +179,8 @@ impl<'de> Visitor<'de> for ECSVisitor
 
         return Ok(SuperbEcs{
             systems: crate::rts::game::game_state::global_get_systems(),
-            c: comp_store
+            c: comp_store,
+            debug_times: Default::default()
         });
     }
 }

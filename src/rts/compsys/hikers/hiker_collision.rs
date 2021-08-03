@@ -19,7 +19,7 @@ pub static HIKER_COLLISION_SYS: System<ResourcesPtr> = System{
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {
         for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {
-            if unit_id_1 != unit_id_2{
+            if unit_id_1 != unit_id_2 && position_1.pos.x >= 1000000000.0{
                 let actual_distance_squared =  (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
                 let min_distance = hiker_collision_1.radius + hiker_collision_2.radius;
                 if actual_distance_squared < min_distance.powi(2) {

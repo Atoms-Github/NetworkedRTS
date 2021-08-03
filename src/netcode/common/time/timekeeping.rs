@@ -77,9 +77,18 @@ impl KnownFrameInfo{
     }
 }
 
+#[derive(Clone)]
 pub struct DT{ // Debug Timer.
     time: SystemTime,
-    name: String
+    pub name: String
+}
+impl Default for DT{
+    fn default() -> Self {
+        Self{
+            time: SystemTime::now(),
+            name: "NoNameSet".to_string()
+        }
+    }
 }
 impl DT{
     pub fn start(name: &str) -> DT{

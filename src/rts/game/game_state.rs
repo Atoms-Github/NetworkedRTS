@@ -74,7 +74,7 @@ impl GameState {
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let player_ent_id = player_id as GlobalEntityID;
         let spawn_point = self.get_player_spawn(player_id);
-        for _ in 0..100{
+        for _ in 0..190{
             let new_worker = PendingEntity::new_test_worker(player_ent_id, spawn_point.clone());
             self.ecs.c.create_entity(new_worker);
         }
@@ -98,7 +98,6 @@ impl GameState {
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, sim_quality: SimQuality, delta: f32, frame_index: FrameIndex){
         for (player_id, input_state) in inputs{
             if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(player_id as GlobalEntityID){
-
                 existing_player.inputs.set_input_state(input_state);
             }
         }

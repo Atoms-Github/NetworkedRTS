@@ -125,6 +125,9 @@ impl CompStorage{
 
         return global_entity_id;
     }
+    pub fn get_entity_count(&self) -> usize{
+        self.query(vec![]).len()
+    }
     pub fn query(&self, must_include: Vec<TypeIdNum>) -> Vec<GlobalEntityID>{
         let mut found_entities = vec![];
         for type_set in self.composition_ids.keys(){
