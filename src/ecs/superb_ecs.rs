@@ -53,7 +53,7 @@ impl<R> Clone for SuperbEcs<R>{
 
 pub struct System<R>{
     pub run: fn(&R, &mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges),
-    pub name: String,
+    pub name: &'static str,
 }
 pub struct EntStructureChanges{
     pub new_entities: Vec<PendingEntity>,
@@ -115,7 +115,8 @@ impl EntStructureChanges{
 impl<R> Clone for System<R> {
     fn clone(&self) -> Self {
         Self{
-            run: self.run
+            run: self.run,
+            name: self.name.clone(),
         }
     }
 }

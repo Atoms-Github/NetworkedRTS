@@ -15,7 +15,7 @@ pub struct OrdersComp {
 
 pub static ORDERS_SYS: System<ResourcesPtr> = System{
     run,
-    name: "orders".to_string()
+    name: "orders"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id, inputs) in CompIter1::<InputComp>::new(c) {

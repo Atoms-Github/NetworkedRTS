@@ -14,7 +14,7 @@ pub struct HikerCollisionComp {
 }
 pub static HIKER_COLLISION_SYS: System<ResourcesPtr> = System{
     run,
-    name: "hiker_collision".to_string()
+    name: "hiker_collision"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {

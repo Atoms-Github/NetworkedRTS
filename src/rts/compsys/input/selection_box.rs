@@ -17,7 +17,7 @@ pub struct SelBoxComp{
 }
 pub static SELECTION_BOX_SYS: System<ResourcesPtr> = System{
     run,
-    name: "selection_box".to_string()
+    name: "selection_box"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {

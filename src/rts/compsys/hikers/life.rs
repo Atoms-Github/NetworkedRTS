@@ -18,7 +18,7 @@ pub struct LifeComp{
 
 pub static LIFE_SYS: System<ResourcesPtr> = System{
     run,
-    name: "life".to_string()
+    name: "life"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id, life) in CompIter1::<LifeComp>::new(c) {

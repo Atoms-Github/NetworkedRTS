@@ -16,7 +16,7 @@ pub struct WorkerComp {
 
 pub static WORKER_SYS: System<ResourcesPtr> = System{
     run,
-    name: "worker".to_string()
+    name: "worker"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (worker_id, worker, owned) in CompIter2::<WorkerComp, OwnedComp>::new(c) {

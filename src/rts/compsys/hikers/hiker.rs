@@ -18,7 +18,7 @@ pub struct HikerComp { // Walks comp, but includes fliers and sailers too.
 
 pub static HIKER_SYS: System<ResourcesPtr> = System{
     run,
-    name: "hiker".to_string()
+    name: "hiker"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id, hiker, position) in CompIter2::<HikerComp, PositionComp>::new(c) {
