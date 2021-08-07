@@ -43,7 +43,7 @@ impl<R> SuperbEcs<R>{
         pending_changes.apply(&mut self.c);
 
         if quality == SimQuality::DETERMA{
-            self.debug_times.print_all();
+            //self.debug_times.print_all();
         }
     }
 
