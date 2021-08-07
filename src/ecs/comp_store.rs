@@ -25,7 +25,7 @@ pub struct InternalEntity {
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct CompStorage {
     columns: BTreeMap<TypeIdNum, Column>,
-    internal_entities: GlorifiedHashMap,
+    internal_entities: Box<GlorifiedHashMap>, // Box to avoid stack overflow.
     composition_ids: BTreeMap<TypesSet, CompositionID>,
     next_composition_id: CompositionID,
     global_ids_as_comps: Vec<Vec<GlobalEntityID>>,

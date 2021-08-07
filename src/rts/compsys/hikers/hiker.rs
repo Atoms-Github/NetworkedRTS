@@ -21,6 +21,12 @@ pub static HIKER_SYS: System<ResourcesPtr> = System{
     name: "hiker"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+
+    for test_id in c.query(vec![crate::utils::gett::<HikerComp>(), crate::utils::gett::<PositionComp>()]){
+        let woah = c.get::<HikerComp>(test_id).unwrap();
+        let woah_2 = c.get::<PositionComp>(test_id).unwrap();
+    }
+
     for (unit_id, hiker, position) in CompIter2::<HikerComp, PositionComp>::new(c) {
         // Moving the units.
         let mut made_destination = false;
