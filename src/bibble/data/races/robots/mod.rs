@@ -1,13 +1,15 @@
-use crate::bibble::data::data_types::GameData;
+use crate::bibble::data::data_types::{GameData, RaceID, RaceMould, EffectToPoint};
 
 mod actors;
 mod effects;
 mod projectiles;
-mod race;
 mod units;
+mod race;
 mod weapons;
 
 
 pub fn gather(data: &mut GameData){
     weapons::weapons(data);
+    units::units(data);
+    race::race(data);
 }

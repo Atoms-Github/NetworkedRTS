@@ -8,7 +8,7 @@ pub enum EffectToUnit{
 }
 
 pub struct EffectToUnitDamage{
-    pub amount: u32,
+    pub amount: f32,
 }
 
 pub struct EffectToUnitAddWeapon{

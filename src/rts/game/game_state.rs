@@ -12,7 +12,8 @@ pub use crate::utils::gett;
 use crate::ecs::superb_ecs::System;
 use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::compsys::*;
-use crate::bibble::data::data_types::GameData;
+use crate::bibble::data::data_types::{GameData, RaceID};
+use crate::bibble::effect_resolver::revolver::Revolver;
 
 
 const MAX_PLAYERS : usize = 7;
@@ -71,17 +72,19 @@ impl GameState {
         }
         assert_eq!(self.ecs.c.create_entity(PendingEntity::new_arena()), ARENA_ENT_ID);
     }
-    pub fn player_connects(&mut self, player_id: PlayerID, username: String){
+    pub fn player_connects(&mut self, res: &ResourcesPtr, player_id: PlayerID, username: String){
         let player_ent_id = player_id as GlobalEntityID;
         let spawn_point = self.get_player_spawn(player_id);
-        for _ in 0..190{
-            let new_worker = PendingEntity::new_test_worker(player_ent_id, spawn_point.clone());
-            self.ecs.c.create_entity(new_worker);
-        }
-        for _ in 0..0{
-            let new_warrior = PendingEntity::new_test_warrior(player_ent_id, spawn_point.clone());
-            self.ecs.c.create_entity(new_warrior);
-        }
+
+        let mut race = RaceID::ROBOTS;
+
+        let mut revolver = Revolver::new(&self.ecs.c, &res.game_data);
+
+        let effect = res.game_data.get_race(race).spawn_effect.clone();
+        revolver.resolve_tp(effect, spawn_point.clone(), player_ent_id);
+
+        revolver.end().apply(&mut self.ecs.c);
+
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = crate::utils::pad_name(username);
         self.ecs.c.get_mut::<CameraComp>(player_ent_id).unwrap().translation = spawn_point;
     }

@@ -19,7 +19,7 @@ pub static WORKER_SYS: System<ResourcesPtr> = System{
     name: "worker"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    for (worker_id, worker, owned) in CompIter2::<WorkerComp, OwnedComp>::new(c) {
+    for (worker_id, life, owned) in CompIter2::<LifeComp, OwnedComp>::new(c) {
         let resources_comp = c.get_mut::<OwnsResourcesComp>(owned.owner).unwrap();
         resources_comp.gain(ResourceType::BLUENESS, 1);
 

@@ -2,7 +2,7 @@ use super::*;
 
 pub enum EffectUnitToUnit{
     LAUNCH_PROJECTILE(ProjectileID),
-    INSTA_DAMAGE_TEST
+    INSTA_AFFECT_TARGET(EffectToUnit)
 }
 
 

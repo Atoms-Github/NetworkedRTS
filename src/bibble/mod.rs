@@ -1,3 +1,3 @@
 
 pub mod data;
-pub mod resolver;
+pub mod effect_resolver;

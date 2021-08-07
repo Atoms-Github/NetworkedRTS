@@ -37,51 +37,6 @@ impl PendingEntity{
             CollisionComp{  },
         )
     }
-    pub fn new_test_worker(owner: GlobalEntityID, position: PointFloat) -> Self{
-        Self::new10(
-            RenderComp{ colour: (255,255,0)},
-            WorkerComp{ },
-            SizeComp{ size: PointFloat::new(30.0, 30.0)},
-            PositionComp{ pos: position },
-            OwnedComp { owner },
-            LifeComp{ life: 100.0, max_life: 100.0 },
-            SelectableComp{ is_selected: false },
-            OrdersComp{},
-            HikerComp{
-                destination: None,
-                speed: 2.0,
-                quest_importance: 0
-            },
-            HikerCollisionComp{
-                radius: 30.0
-            }
-
-        )
-    }
-    pub fn new_test_warrior(owner: GlobalEntityID, position: PointFloat) -> Self{
-        Self::new10(
-            RenderComp{ colour: (255,0,0)},
-            WeaponComp{
-                weapon_id: WeaponID::GLAIVES,
-                time_since_shot: 0.0
-            },
-            SizeComp{ size: PointFloat::new(30.0, 30.0)},
-            PositionComp{ pos: position },
-            OwnedComp { owner },
-            LifeComp{ life: 100.0, max_life: 100.0 },
-            SelectableComp{ is_selected: false },
-            OrdersComp{},
-            HikerComp{
-                destination: None,
-                speed: 2.0,
-                quest_importance: 0
-            },
-            HikerCollisionComp{
-                radius: 30.0
-            }
-
-        )
-    }
     pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new5(
             RenderComp{ colour: (255,255,255)},

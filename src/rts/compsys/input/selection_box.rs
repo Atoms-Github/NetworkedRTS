@@ -10,6 +10,8 @@ use ggez::graphics::Rect;
 use std::ops::Div;
 use winit::VirtualKeyCode;
 use std::future::Pending;
+use crate::bibble::effect_resolver::revolver::Revolver;
+use crate::bibble::data::data_types::{EffectToPoint, UnitID};
 
 
 pub struct SelBoxComp{
@@ -28,17 +30,19 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
 
     }
 
+    let mut revolver = Revolver::new(c, &res.game_data);
+
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         let input = c.get1_unwrap::<InputComp>(player_id);
         if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::W){
-            if resources_temp.try_pay(ResourceType::BLUENESS, 50){
-                ent_changes.new_entities.push(PendingEntity::new_test_worker(player_id, input.mouse_pos_game_world.clone()));
+            if resources_temp.try_pay(ResourceType::BLUENESS, 300){
+                revolver.resolve_tp(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR),input.mouse_pos_game_world.clone(), player_id);
 
             }
         }
         if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::S){
-            if resources_temp.try_pay(ResourceType::BLUENESS, 100){
-                ent_changes.new_entities.push(PendingEntity::new_test_warrior(player_id, input.mouse_pos_game_world.clone()));
+            if resources_temp.try_pay(ResourceType::BLUENESS, 1000){
+                revolver.resolve_tp(EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER),input.mouse_pos_game_world.clone(), player_id);
             }
 
         }
@@ -56,6 +60,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             _ => {}
         }
     }
+    revolver.end().move_into(ent_changes);
 }
 
 fn check_delete_box(c: &CompStorage, ent_changes: &mut EntStructureChanges,  player_id: GlobalEntityID) {

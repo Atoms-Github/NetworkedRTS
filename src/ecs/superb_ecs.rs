@@ -75,6 +75,14 @@ impl EntStructureChanges{
             storage.delete_entity(del_entity);
         }
     }
+    pub fn move_into(self, other: &mut Self){
+        for new_entity in self.new_entities{
+            other.new_entities.push(new_entity);
+        }
+        for del_entity in self.deleted_entities{
+            other.deleted_entities.push(del_entity);
+        }
+    }
 }
 
 

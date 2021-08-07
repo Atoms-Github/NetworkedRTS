@@ -10,6 +10,7 @@ use ggez::graphics::Rect;
 use std::ops::Div;
 
 use crate::bibble::data::data_types::WeaponID;
+use crate::bibble::effect_resolver::revolver::Revolver;
 
 
 pub struct WeaponComp {
@@ -24,10 +25,12 @@ pub static WEAPON_SYS: System<ResourcesPtr> = System{
     name: "weapon"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+    let mut revolver = Revolver::new(c, &res.game_data);
+
     for (shooter_id, weapon, owned_shooter, position_shooter) in CompIter3::<WeaponComp, OwnedComp, PositionComp>::new(c) {
         weapon.time_since_shot += 1.0;
-
-        if res.game_data.get_weapon(weapon.weapon_id).cooldown < weapon.time_since_shot{
+        let weapon_mould = res.game_data.get_weapon(weapon.weapon_id);
+        if weapon_mould.cooldown < weapon.time_since_shot{
             for (target_id, owned_target, position_target, life_target) in CompIter3::<OwnedComp, PositionComp, LifeComp>::new(c) {
                 let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude() < 100.0;
                 if shooter_id != target_id && owned_target.owner != owned_shooter.owner && in_range{
@@ -37,8 +40,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                 }
             }
         }
-
-
     }
+    revolver.end().move_into(ent_changes);
 
 }
