@@ -6,6 +6,7 @@ pub fn weapons(data: &mut GameData){
         effect: EffectUnitToUnit::INSTA_AFFECT_TARGET(EffectToUnit::DAMAGE(EffectToUnitDamage{
             amount: 10.0
         })),
-        cooldown: 60.0
+        cooldown: 60.0,
+        range: 200.0
     });
 }

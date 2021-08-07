@@ -32,7 +32,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
         let weapon_mould = res.game_data.get_weapon(weapon.weapon_id);
         if weapon_mould.cooldown < weapon.time_since_shot{
             for (target_id, owned_target, position_target, life_target) in CompIter3::<OwnedComp, PositionComp, LifeComp>::new(c) {
-                let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude() < 100.0;
+                let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude_squared() < weapon_mould.range.powf(2.0);
                 if shooter_id != target_id && owned_target.owner != owned_shooter.owner && in_range{
                     weapon.time_since_shot = 0.0;
                     life_target.life -= 10.0;
