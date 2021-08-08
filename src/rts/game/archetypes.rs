@@ -39,7 +39,7 @@ impl PendingEntity{
     }
     pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new5(
-            RenderComp{ colour: (255,255,255)},
+            RenderComp{ colour: (255,255,100)},
             SizeComp{ size: PointFloat::new(100.0, 100.0)},
             SelBoxComp{
                 starting_pos: position
@@ -51,7 +51,7 @@ impl PendingEntity{
     pub fn new_arena() -> Self{
         Self::new1(
             ArenaComp{
-                pathing: [[true; ARENA_SIZE]; ARENA_SIZE]
+                pathing: [[true; ARENA_DIMENSIONS]; ARENA_DIMENSIONS]
             }
         )
     }

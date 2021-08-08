@@ -14,7 +14,31 @@ pub struct RenderComp{
 pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
 
+    // Draw base.
+    for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
+        let screen_pos = player_camera.game_space_to_screen_space(arena_comp.get_top_left());
+        let screen_size = player_camera.game_size_to_screen_size(arena_comp.get_size());
 
+        draw_rect(ctx, graphics::Color::from((200,200,200)),
+                  graphics::Rect::new(screen_pos.x, screen_pos.y, screen_size.x, screen_size.y));
+    }
+
+    for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
+        let base_pos_game = arena_comp.get_top_left();
+        let small_size =  player_camera.game_size_to_screen_size(
+            PointFloat::new(arena_comp.get_box_length() as f32 - 1.0, arena_comp.get_box_length() as f32 - 1.0)
+        );
+        for x in 0..arena_comp.pathing.len(){
+            for y in 0..arena_comp.pathing[x].len(){
+                let small_top_left_game = PointFloat::new((x * arena_comp.get_box_length()) as f32,
+                                                     (y * arena_comp.get_box_length()) as f32) + &base_pos_game;
+                println!("SmallTopLEeft {:?}", small_top_left_game);
+                let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
+                draw_rect(ctx, graphics::Color::from((180,180,180)),
+                          graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y));
+            }
+        }
+    }
 
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
@@ -63,8 +87,8 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_ent
                 ).unwrap();
             }
         }
-
     }
+
 }
 fn draw_rect(ctx: &mut Context, color: Color, mesh: graphics::Rect){
 
