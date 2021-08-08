@@ -28,7 +28,7 @@ pub struct CompStorage {
     internal_entities: Box<GlorifiedHashMap>, // Box to avoid stack overflow.
     composition_ids: BTreeMap<TypesSet, CompositionID>,
     next_composition_id: CompositionID,
-    global_ids_as_comps: Vec<Vec<GlobalEntityID>>,
+    global_ids_as_comps: Vec<Vec<GlobalEntityID>>, // (Pretty much a column<GlobalEntityID>)
 }
 pub struct DeleteResult{
 
@@ -103,8 +103,9 @@ impl CompStorage{
         for (type_id, bytes) in pending_entity.iter(){
             let block = self.get_block_or_make(*type_id, composition_id);
             let new_internal_index = block.len();
-            block.push(bytes.clone());
+            block.push(bytes.clone()); // TODO: Why need to clone?
 
+            // Confirm that the 'end' of each block is the same place.
             if let Some(existing_internal_index) = internal_index{
                 assert_eq!(existing_internal_index, new_internal_index, "ECS internal indices for new entity were different!");
             }else{
