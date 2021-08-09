@@ -91,9 +91,17 @@ impl GameState {
     fn get_player_spawn(&self, player_id: PlayerID) -> PointFloat{
         let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
         let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
-        let radius = 300.0;
+        let radius = ARENA_WIDTH as f32 / 3.0;
 
-        return PointFloat::new(my_radius_round.sin() * radius, my_radius_round.cos() as f32 * radius);
+
+        let offset_from_centre = PointFloat::new(
+            my_radius_round.sin() * radius,
+            my_radius_round.cos() * radius
+        );
+
+        let centre = PointFloat::new(ARENA_WIDTH as f32 / 2.0, ARENA_WIDTH as f32 / 2.0);
+
+        return centre + offset_from_centre;
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
