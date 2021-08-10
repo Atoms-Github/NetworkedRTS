@@ -6,13 +6,33 @@ use crate::ecs::{ActiveEcs, GlobalEntityID};
 use crate::rts::game::game_state::UsingResources;
 use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
+use crate::bibble::data::data_types::AbilityID;
 
 pub struct RenderComp{
     pub colour: (u8, u8, u8)
 }
 
-pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, player_entity_id: GlobalEntityID){
+pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &ResourcesPtr, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
+
+    // Draw ability buttons.
+    for (unit_id, abilities, selectable, owned)
+    in CompIter3::<AbilitiesComp, SelectableComp, OwnedComp>::new(&ecs.c){
+        if owned.owner == player_entity_id && selectable.is_selected{
+            for i in 0..5{
+                let ability = abilities.abilities[i];
+                if ability != AbilityID::NONE{
+                    let ability_mould= res.game_data.get_ability(ability);
+                    let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
+                    draw_rect(ctx, graphics::Color::from(ability_mould.button_info.color),
+                              graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
+                }
+            }
+            // Just render for first unit.
+            break;
+        }
+    }
+
 
     // Draw base.
     for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){

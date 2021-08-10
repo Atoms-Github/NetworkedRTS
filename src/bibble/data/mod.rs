@@ -10,6 +10,7 @@ pub fn gen_game_data() -> GameData{
         weapons: Default::default(),
         races: Default::default(),
         projectiles: Default::default(),
+        abilities: Default::default()
     };
 
     races::gather_races(&mut game_data);

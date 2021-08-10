@@ -4,7 +4,7 @@ mod effect_unit;
 mod effect_unittounit;
 mod effect_unittopoint;
 mod game_data;
-mod ability;
+pub mod ability;
 
 pub use effect_point::*;
 pub use effect_unit::*;

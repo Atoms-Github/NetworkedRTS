@@ -107,7 +107,7 @@ impl NetGameState {
 
 
     }
-    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID){
-        self.game_state.render(ctx, player_id)
+    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &ResourcesPtr){
+        self.game_state.render(ctx, player_id, res)
     }
 }

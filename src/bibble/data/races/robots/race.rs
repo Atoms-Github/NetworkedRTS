@@ -9,6 +9,9 @@ pub fn race(data: &mut GameData){
     for _ in 0..1{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER));
     }
+    for _ in 0..1{
+        starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::FOUNDRY));
+    }
 
 
     data.races.insert(RaceID::ROBOTS, RaceMould{

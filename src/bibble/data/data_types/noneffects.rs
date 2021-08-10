@@ -39,6 +39,7 @@ pub struct UnitMould {
     pub radius: f32,
     pub actor: ActorMould,
     pub weapons: Vec<WeaponID>,
+    pub abilities: Vec<AbilityID>,
     pub unit_flavour: UnitFlavour,
     pub unit_cost: u32,
 }

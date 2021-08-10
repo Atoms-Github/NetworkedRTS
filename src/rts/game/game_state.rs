@@ -114,8 +114,8 @@ impl GameState {
         }
         self.ecs.sim_systems(res, sim_quality);
     }
-    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID){
-        crate::rts::compsys::render::render(&mut self.ecs, ctx, player_id as GlobalEntityID);
+    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &ResourcesPtr){
+        crate::rts::compsys::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = GameResources {

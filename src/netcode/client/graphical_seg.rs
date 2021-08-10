@@ -15,12 +15,16 @@ use ggez::graphics::Text;
 use std::collections::BTreeMap;
 use nalgebra::Point2;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
+use std::sync::Arc;
+use crate::rts::compsys::GameResources;
+use crate::rts::GameState;
 
 pub struct GraphicalIn {
     render_head_rec: Receiver<NetGameState>,
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
     texts: BTreeMap<&'static str, Text>,
+    resources: ResourcesPtr
 }
 pub struct GraphicalEx {
     pub input_rec: Receiver<InputChange>,
@@ -41,6 +45,7 @@ impl GraphicalEx{
             my_player_id,
             input_sink,
             texts,
+            resources: GameState::gen_resources()
         }.start();
 
         GraphicalEx{
@@ -93,7 +98,7 @@ impl EventHandler for GraphicalIn {
         graphics::clear(ctx, graphics::BLACK);
 
         let mut render_state = self.pull_newest_usable_state();
-        render_state.render(ctx, self.my_player_id);
+        render_state.render(ctx, self.my_player_id, &self.resources);
 
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {}", fps));

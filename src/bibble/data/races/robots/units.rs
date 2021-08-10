@@ -6,6 +6,7 @@ pub fn units(data: &mut GameData){
         radius: 30.0,
         actor: ActorMould { colour: (100, 0, 100) },
         weapons: vec![WeaponID::GLAIVES],
+        abilities: vec![],
         unit_flavour: UnitFlavour::HIKER,
         unit_cost: 1000
     });
@@ -13,6 +14,7 @@ pub fn units(data: &mut GameData){
         radius: 20.0,
         actor: ActorMould { colour: (100, 0, 200) },
         weapons: vec![],
+        abilities: vec![],
         unit_flavour: UnitFlavour::HIKER,
         unit_cost: 300
     });
@@ -20,8 +22,9 @@ pub fn units(data: &mut GameData){
 
     data.units.insert(UnitID::FOUNDRY, UnitMould{
         radius: 20.0,
-        actor: ActorMould { colour: (100, 255, 200) },
+        actor: ActorMould { colour: (200, 60, 60) },
         weapons: vec![],
+        abilities: vec![AbilityID::SPAWN_SCUTTLER],
         unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
             footprint: Point2::new(2,3)
         }),

@@ -10,6 +10,12 @@ use crate::pub_types::PointFloat;
 
 impl<'a> Revolver<'a>{
     pub fn spawn_unit(&mut self, mould: &UnitMould, position: PointFloat, owner: GlobalEntityID){
+        let mut abilities_comp = AbilitiesComp{
+            abilities: [AbilityID::NONE; 5]
+        };
+        for (i, ability) in mould.abilities.iter().enumerate(){
+            abilities_comp.abilities[i] = *ability;
+        }
         let mut pending = PendingEntity::new7(
             PositionComp{ pos: position },
             OwnedComp { owner },
@@ -25,6 +31,7 @@ impl<'a> Revolver<'a>{
                 radius: mould.radius
             }
         );
+        pending.add_comp(abilities_comp);
         if mould.weapons.len() > 0{
             pending.add_comp(WeaponComp{
                 weapon_id: *mould.weapons.get(0).unwrap(),
