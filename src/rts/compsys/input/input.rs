@@ -9,6 +9,7 @@ use crate::rts::compsys::*;
 use crate::rts::game::game_state::GameResources;
 
 pub struct InputComp{
+    pub is_panning: bool,
     pub mode: InputMode, // TODO: Add boolean here for 'isPanning', so can pan while units selected.
     pub inputs: RtsInputState,
     pub hovered_entity: Option<GlobalEntityID>,
@@ -18,9 +19,10 @@ pub struct InputComp{
 pub enum InputMode{
     None,
     SelectionBox,
-    UnitsSelected,
+    UnitsSelected, // TODO: Remove?
     ClickUI(GlobalEntityID),
-    PanCamera,
+    TargettingAbility,
+
 }
 
 

@@ -21,6 +21,7 @@ pub enum ActorID {
     DISCIPLE,
 }
 
+
 #[repr(u16)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProjectileID {

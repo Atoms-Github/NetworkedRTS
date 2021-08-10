@@ -21,7 +21,7 @@ impl PendingEntity{
             PlayerComp{ name: [0; PLAYER_NAME_SIZE_MAX] },
             OwnsResourcesComp{ resources: [0; RESOURCES_COUNT] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
-            InputComp{ inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0,0.0) },
+            InputComp{ is_panning: false, inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0, 0.0) },
         )
     }
     pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{

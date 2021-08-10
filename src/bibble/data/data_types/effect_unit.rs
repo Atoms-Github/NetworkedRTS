@@ -10,6 +10,9 @@ pub enum EffectToUnit{
 pub struct EffectToUnitDamage{
     pub amount: f32,
 }
+pub struct EffectToUnitStartTrain{
+    pub unit: UnitID
+}
 
 pub struct EffectToUnitAddWeapon{
     pub weapon_id: WeaponID,

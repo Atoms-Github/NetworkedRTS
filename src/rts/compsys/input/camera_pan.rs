@@ -39,14 +39,12 @@ pub static CAMERA_PAN_SYS: System<ResourcesPtr> = System{
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
-        if input.mode == InputMode::None{
-            if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
-                input.mode = InputMode::PanCamera;
-            }
+        if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
+            input.is_panning = true;
         }
-        if input.mode == InputMode::PanCamera{
+        if input.is_panning{
             if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
-                input.mode = InputMode::None;
+                input.is_panning = false;
             }
             camera.translation -= &input.inputs.mouse_moved;
         }
