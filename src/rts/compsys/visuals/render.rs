@@ -15,26 +15,10 @@ pub struct RenderComp{
 pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &ResourcesPtr, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
 
-    // Draw ability buttons.
-    for (unit_id, abilities, selectable, owned)
-    in CompIter3::<AbilitiesComp, SelectableComp, OwnedComp>::new(&ecs.c){
-        if owned.owner == player_entity_id && selectable.is_selected{
-            for i in 0..5{
-                let ability = abilities.abilities[i];
-                if ability != AbilityID::NONE{
-                    let ability_mould= res.game_data.get_ability(ability);
-                    let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
-                    draw_rect(ctx, graphics::Color::from(ability_mould.button_info.color),
-                              graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
-                }
-            }
-            // Just render for first unit.
-            break;
-        }
-    }
 
 
-    // Draw base.
+
+    // Draw arena background.
     for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
         let screen_pos = player_camera.game_space_to_screen_space(arena_comp.get_top_left());
         let screen_size = player_camera.game_size_to_screen_size(arena_comp.get_size());
@@ -43,6 +27,7 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                   graphics::Rect::new(screen_pos.x, screen_pos.y, screen_size.x, screen_size.y));
     }
 
+    // Draw arena boxes.
     for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
         let base_pos_game = arena_comp.get_top_left();
         let small_size =  player_camera.game_size_to_screen_size(
@@ -61,6 +46,7 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
         }
     }
 
+    // Draw units.
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
 
@@ -81,6 +67,7 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
 
         }
     }
+    // Draw names.
     for (entity_id, owned, position) in CompIter2::<OwnedComp, PositionComp>::new(&ecs.c){
         let on_screen_pos = player_camera.game_space_to_screen_space(position.pos.clone());
         let player_name = ecs.c.get::<PlayerComp>(owned.owner).unwrap().name.clone();
@@ -93,6 +80,24 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
             (Point2::new(on_screen_pos.x, on_screen_pos.y), graphics::Color::from((0,153,255))),
         ).unwrap();
     }
+    // Draw ability buttons.
+    for (unit_id, abilities, selectable, owned)
+    in CompIter3::<AbilitiesComp, SelectableComp, OwnedComp>::new(&ecs.c){
+        if owned.owner == player_entity_id && selectable.is_selected{
+            for i in 0..5{
+                let ability = abilities.abilities[i];
+                if ability != AbilityID::NONE{
+                    let ability_mould= res.game_data.get_ability(ability);
+                    let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
+                    draw_rect(ctx, graphics::Color::from(ability_mould.button_info.color),
+                              graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
+                }
+            }
+            // Just render for first unit.
+            break;
+        }
+    }
+    // Draw resources.
     for (player_id, owns_resources) in CompIter1::<OwnsResourcesComp>::new(&ecs.c){
         if player_id == player_entity_id{
             for res_index in 0..RESOURCES_COUNT{
