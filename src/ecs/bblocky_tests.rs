@@ -14,7 +14,7 @@ use std::fmt;
 
 
 #[test]
-fn testing() {
+fn test_ser_de() {
     let original = TestStructB{
         integer: 3,
         vec: vec![vec![], vec![TestStructA{
@@ -30,6 +30,21 @@ fn testing() {
 
     let new_version = reser.get::<TestStructB>().clone();
     assert_eq!(original, new_version);
+}
+
+#[test]
+fn test_clone() {
+    let original = TestStructB{
+        integer: 3,
+        vec: vec![vec![], vec![TestStructA{
+            integer: 0,
+            float: 3.7,
+            vec: vec![8,5]
+        }]],
+        float: 100.2
+    };
+    let super_any = SuperAny::new(original.clone());
+    assert_eq!(*super_any.clone().get::<TestStructB>(), original);
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct TestStructA{

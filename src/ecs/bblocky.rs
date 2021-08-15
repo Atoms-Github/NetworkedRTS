@@ -60,27 +60,27 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct SuperAny {
-    item: Box<dyn Any>,
+    boxed: Box<dyn Any>,
 }
 impl SuperAny {
     pub fn new<T : 'static>(item: T) -> Self{
         let block_box = Self{
-            item: Box::new(item),
+            boxed: Box::new(item),
         };
         return block_box;
     }
     pub fn get<T : 'static>(&self) -> &T{
-        return self.item.downcast_ref::<T>().unwrap();
+        return (*self.boxed).downcast_ref::<T>().unwrap();
     }
     pub fn get_mut<T : 'static>(&mut self) -> &mut T{
-        return self.item.downcast_mut::<T>().unwrap();
+        return (*self.boxed).downcast_mut::<T>().unwrap();
     }
 }
 impl Clone for SuperAny {
     fn clone(&self) -> Self {
-        let functions = FUNCTION_MAP.get_from_type_id(self.item.type_id());
+        let functions = FUNCTION_MAP.get_from_type_id((*self.boxed).type_id());
         return SuperAny{
-            item: Box::new((functions.do_clone)(&self.item))
+            boxed: (functions.do_clone)(&self.boxed)
         };
     }
 }
@@ -88,21 +88,20 @@ impl Clone for SuperAny {
 
 #[derive(Serialize, Clone, Deserialize)]
 struct SuperAnyPortable{
-    bytes: Vec<u8>,
     type_id: TypeIdNum,
+    bytes: Vec<u8>,
 }
 impl Serialize for SuperAny{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
     {
-        let functions = FUNCTION_MAP.get_from_type_id(self.item.type_id());
-        let bytes = (functions.ser)(&self.item);
+        let functions = FUNCTION_MAP.get_from_type_id((*self.boxed).type_id());
         let portable = SuperAnyPortable{
-            bytes,
-            type_id: crate::utils::crack_type_id(self.item.type_id()),
+            bytes: (functions.ser)(&self.boxed),
+            type_id: crate::utils::crack_type_id((*self.boxed).type_id()),
         };
-        serializer.serialize_bytes(bincode::serialize(&portable).unwrap().as_slice())
+        portable.serialize(serializer)
     }
 }
 struct SuperAnyVisitor {}
@@ -119,7 +118,7 @@ impl<'de> Deserialize<'de> for SuperAny
         let item = (functions.deser)(&portable.bytes);
 
         return Ok(Self{
-            item: Box::new(item)
+            boxed: item
         });
     }
 }
