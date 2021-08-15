@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 use nalgebra::Point2;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 use std::sync::Arc;
-use crate::rts::compsys::GameResources;
+use crate::rts::compsys::RenderResources;
 use crate::rts::GameState;
 
 pub struct GraphicalIn {

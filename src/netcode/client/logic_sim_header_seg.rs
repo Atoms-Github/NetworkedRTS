@@ -9,7 +9,7 @@ use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 use std::sync::mpsc::channel;
-use crate::rts::game::game_state::GameResources;
+use crate::rts::game::game_state::RenderResources;
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 

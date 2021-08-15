@@ -5,7 +5,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID, GameResources};
+use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
 use ggez::graphics::Rect;
 use std::ops::Div;
 

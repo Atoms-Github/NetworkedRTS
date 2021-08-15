@@ -35,6 +35,7 @@ lazy_static! {
         map.register_type::<WeaponComp>();
         map.register_type::<WorkerComp>();
         map.register_type::<RenderComp>();
+        map.register_type::<TechTreeComp>();
 
 
         map

@@ -4,7 +4,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
 use crate::rts::compsys::*;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
-use crate::rts::game::game_state::GameResources;
+use crate::rts::game::game_state::RenderResources;
 use ggez::event::MouseButton;
 
 pub const ARENA_DIMENSIONS: usize = 4;

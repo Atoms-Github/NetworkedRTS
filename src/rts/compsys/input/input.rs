@@ -6,7 +6,7 @@ use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::netcode::InputState;
 use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::GameResources;
+use crate::rts::game::game_state::RenderResources;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct InputComp{

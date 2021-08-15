@@ -3,7 +3,7 @@ use crate::ecs::GlobalEntityID;
 use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT};
-use crate::bibble::data::data_types::WeaponID;
+use crate::bibble::data::data_types::{WeaponID, GameData};
 
 impl PendingEntity{
     pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -17,11 +17,12 @@ impl PendingEntity{
         )
     }
     pub fn new_player(owner: GlobalEntityID) -> Self{
-        Self::new4(
+        Self::new5(
             PlayerComp{ name: "NamelessWonder".to_string() },
             OwnsResourcesComp{ resources: [0; RESOURCES_COUNT] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
             InputComp{ is_panning: false, inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0, 0.0) },
+            TechTreeComp{ tree: GameData::gen_game_data() }
         )
     }
     pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{

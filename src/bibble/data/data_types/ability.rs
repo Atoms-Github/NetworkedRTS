@@ -12,6 +12,7 @@ pub enum AbilityID{
 /// Ain't work with cost, but rest fine.
 ///
 /// Hmm. Or maybe better to just use trainer attribute of buildings, since then we can set rally points.
+#[derive(Serialize, Deserialize, Clone)]
 pub struct AbilityMould{
     pub cost: f32,
     pub targetting: AbilityTargetType,
@@ -19,9 +20,11 @@ pub struct AbilityMould{
     pub range: f32
 }
 // Let's make buttons stateless.
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ButtonMould{
     pub color: (u8, u8, u8),
 }
+#[derive(Serialize, Deserialize, Clone)]
 pub enum AbilityTargetType{
     NoTarget(EffectToUnit),
     Unit(EffectUnitToUnit),

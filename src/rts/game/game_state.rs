@@ -14,11 +14,12 @@ use crate::rts::compsys::*;
 use crate::bibble::data::data_types::{GameData, RaceID};
 use crate::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
 
 const MAX_PLAYERS : usize = 7;
 pub const ARENA_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
-pub type UsingResources = Arc<GameResources>;
+pub type UsingResources = Arc<RenderResources>;
 
 pub fn global_get_systems() -> Vec<System<UsingResources>>{
     vec![
@@ -46,8 +47,9 @@ pub struct GameState {
 }
 
 // No clone or serde.
-pub struct GameResources {
-    pub game_data: GameData // This'll eventually be changed to be modifiable.
+pub struct RenderResources {
+    pub game_data: GameData, // This'll eventually be changed to be modifiable.
+    pub images: HashMap<String, graphics::Image>
 }
 
 impl Default for GameState {
@@ -117,9 +119,15 @@ impl GameState {
         crate::rts::compsys::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
     }
     pub fn gen_resources() -> ResourcesPtr{
-        let mut resources = GameResources {
-            game_data: crate::bibble::data::gen_game_data()
+        let mut resources = RenderResources {
+            game_data: GameData::gen_game_data(),
+            images: Default::default(),
         };
+        for file in std::fs::read_dir("resources/images").unwrap(){
+            // let image = ggez::graphics::Image::new();
+            // resources.images.insert("", image);
+            // println!("{}", file.unwrap().);
+        }
         return Arc::new(resources);
     }
 }

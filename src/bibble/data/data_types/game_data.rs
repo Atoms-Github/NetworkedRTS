@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
+use serde::*;
 use super::*;
 
-pub struct GameData{
+#[derive(Serialize, Deserialize, Clone)]
+pub struct GameData{ // TODO: Rename :)
     pub units: BTreeMap<UnitID, UnitMould>,
     pub weapons: BTreeMap<WeaponID, WeaponMould>,
     pub races: BTreeMap<RaceID, RaceMould>,
