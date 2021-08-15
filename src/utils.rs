@@ -1,5 +1,4 @@
 use std::any::TypeId;
-use crate::rts::compsys::player::PLAYER_NAME_SIZE_MAX;
 
 pub type TypeIdNum = u64;
 
@@ -34,13 +33,13 @@ pub fn get_line_input(message: &str) -> String{
 }
 
 
-pub fn pad_name(name: String) -> [u8; PLAYER_NAME_SIZE_MAX]{
-    let mut buffer = [0;PLAYER_NAME_SIZE_MAX];
-    let name_bytes = name.as_bytes();
-
-    buffer[..name_bytes.len()].clone_from_slice(&name_bytes);
-    return buffer;
-}
+// pub fn pad_name(name: String) -> [u8; PLAYER_NAME_SIZE_MAX]{
+//     let mut buffer = [0;PLAYER_NAME_SIZE_MAX];
+//     let name_bytes = name.as_bytes();
+// 
+//     buffer[..name_bytes.len()].clone_from_slice(&name_bytes);
+//     return buffer;
+// }
 
 pub unsafe fn unsafe_const_cheat<T>(reference: &T) -> &mut T {
     let const_ptr = reference as *const T;

@@ -72,7 +72,6 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     for (entity_id, owned, position) in CompIter2::<OwnedComp, PositionComp>::new(&ecs.c){
         let on_screen_pos = player_camera.game_space_to_screen_space(position.pos.clone());
         let player_name = ecs.c.get::<PlayerComp>(owned.owner).unwrap().name.clone();
-        let player_name = String::from_utf8(player_name.to_vec()).unwrap();
         let player_name_display = Text::new(player_name);
 
         graphics::draw(

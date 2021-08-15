@@ -9,7 +9,7 @@ use crate::ecs::pending_entity::PendingEntity;
 use serde_closure::internal::std::future::Pending;
 pub use crate::utils::gett;
 use crate::ecs::superb_ecs::System;
-use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
+use crate::rts::compsys::player::{PlayerComp};
 use crate::rts::compsys::*;
 use crate::bibble::data::data_types::{GameData, RaceID};
 use crate::bibble::effect_resolver::revolver::Revolver;
@@ -84,7 +84,7 @@ impl GameState {
 
         revolver.end().apply(&mut self.ecs.c);
 
-        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = crate::utils::pad_name(username);
+        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
         self.ecs.c.get_mut::<CameraComp>(player_ent_id).unwrap().translation = spawn_point;
     }
     fn get_player_spawn(&self, player_id: PlayerID) -> PointFloat{
