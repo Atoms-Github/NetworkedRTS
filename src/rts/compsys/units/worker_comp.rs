@@ -9,7 +9,7 @@ use crate::rts::game::game_state::{ARENA_ENT_ID, GameResources};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WorkerComp {
 }
 

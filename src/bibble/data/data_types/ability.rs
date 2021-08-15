@@ -1,7 +1,8 @@
 use crate::bibble::data::data_types::*;
+use serde::*;
 
 #[repr(u16)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum AbilityID{
     WALK,
     SPAWN_SCUTTLER,

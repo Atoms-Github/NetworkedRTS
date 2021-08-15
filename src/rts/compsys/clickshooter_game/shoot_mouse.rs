@@ -9,7 +9,7 @@ use std::ops::Mul;
 use serde_closure::internal::std::borrow::Cow::Owned;
 use crate::ecs::ecs_macros::CompIter3;
 use serde_closure::internal::std::future::Pending;
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ShootMouseComp {
     pub time_since_shot: f32
 }

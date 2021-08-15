@@ -8,6 +8,7 @@ pub mod ecs_macros;
 pub mod ecs_debug_timer;
 pub mod bblocky;
 mod bblocky_tests;
+mod comp_registration;
 
 pub type GlobalEntityID = usize;
 pub type ActiveEcs<T> = SuperbEcs<T>;

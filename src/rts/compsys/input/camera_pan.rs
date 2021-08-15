@@ -5,7 +5,7 @@ use crate::rts::compsys::*;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use crate::rts::game::game_state::GameResources;
 use ggez::event::MouseButton;
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct CameraComp{
     pub translation: PointFloat,
     pub zoom: f32,

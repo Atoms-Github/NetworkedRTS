@@ -12,7 +12,7 @@ use std::ops::Div;
 use crate::bibble::data::data_types::{WeaponID, AbilityID};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct AbilitiesComp {
     pub abilities: [AbilityID; 5],
 

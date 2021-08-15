@@ -10,7 +10,7 @@ use crate::ecs::ecs_macros::{CompIter3, CompIter4};
 use std::ops::Mul;
 
 
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct LifeComp{
     pub life: f32,
     pub max_life: f32,

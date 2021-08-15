@@ -8,6 +8,7 @@ use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
 use crate::rts::game::game_state::GameResources;
 
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct InputComp{
     pub is_panning: bool,
     pub mode: InputMode, // TODO: Add boolean here for 'isPanning', so can pan while units selected.
@@ -15,7 +16,7 @@ pub struct InputComp{
     pub hovered_entity: Option<GlobalEntityID>,
     pub mouse_pos_game_world: PointFloat,
 }
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum InputMode{
     None,
     SelectionBox,
@@ -26,7 +27,7 @@ pub enum InputMode{
 }
 
 
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RtsInputState{
     pub primitive: InputState,
     pub mouse_event: RtsMouseEvent,
@@ -35,13 +36,13 @@ pub struct RtsInputState{
     mouse_btn_held: Option<usize>,
     key_held: Option<usize>,
 }
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum RtsMouseEvent {
     MouseDown(MouseButton),
     MouseUp,
     NoMouse,
 }
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum RtsKeyEvent {
     KeyDown(KeyCode),
     KeyUp,

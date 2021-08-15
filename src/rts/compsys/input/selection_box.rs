@@ -13,7 +13,7 @@ use std::future::Pending;
 use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::bibble::data::data_types::{EffectToPoint, UnitID};
 
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct SelBoxComp{
     pub starting_pos: PointFloat
 }

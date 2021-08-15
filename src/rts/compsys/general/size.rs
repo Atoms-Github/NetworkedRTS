@@ -2,7 +2,10 @@ use crate::pub_types::PointFloat;
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::eid_manager::GlobalEntityID;
 use crate::rts::compsys::PositionComp;
+use crate::rts::compsys::*;
 
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct SizeComp{
     pub size: PointFloat,
 }

@@ -1,4 +1,6 @@
 
+pub use serde::{Serialize, Deserialize};
+pub use crate::ecs::eid_manager::GlobalEntityID;
 
 pub use clickshooter_game::*;
 pub mod clickshooter_game;
@@ -28,3 +30,4 @@ pub use crate::rts::game::game_state::*;
 pub use crate::pub_types::*;
 pub use crate::ecs::ecs_macros::*;
 pub use crate::ecs::pending_entity::*;
+

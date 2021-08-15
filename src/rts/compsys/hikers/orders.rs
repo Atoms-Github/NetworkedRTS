@@ -8,7 +8,7 @@ use crate::ecs::pending_entity::PendingEntity;
 use winit::MouseButton;
 use crate::ecs::ecs_macros::{CompIter3, CompIter4};
 use std::ops::Mul;
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct OrdersComp {
     // TODO: Have vec (mem-safe vec) of orders list. Will go down the orders list, doing them one by one, and redirecting them to the proper components.
 }

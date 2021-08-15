@@ -4,8 +4,10 @@ use crate::rts::compsys::RtsMouseEvent::{NoMouse, MouseUp};
 use crate::rts::compsys::RtsKeyEvent::NoKey;
 use crate::pub_types::PointFloat;
 
-pub const RESOURCES_COUNT: usize = 3;
+use crate::rts::compsys::*;
 
+pub const RESOURCES_COUNT: usize = 3;
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct OwnsResourcesComp {
     pub resources: [i32; RESOURCES_COUNT]
 }

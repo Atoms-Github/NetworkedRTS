@@ -8,6 +8,7 @@ use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 use crate::bibble::data::data_types::AbilityID;
 
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
     pub colour: (u8, u8, u8)
 }

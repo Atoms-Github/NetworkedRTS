@@ -1,8 +1,9 @@
 use super::*;
 use nalgebra::{Point, Point2};
+use serde::*;
 
 #[repr(u16)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Serialize, Deserialize,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WeaponID {
     GLAIVES,
 }

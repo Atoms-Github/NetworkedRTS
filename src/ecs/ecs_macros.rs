@@ -14,12 +14,12 @@ use crate::ecs::pending_entity::PendingEntity;
 macro_rules! comp_iter_def {
 	($query_name:ident, $get_name:ident, $get_name_unwrap:ident, $new_name:ident, $($type_name:ident),+) => {
         #[allow(non_snake_case)]
-        pub struct $query_name<'a, $($type_name: 'static,)+> {
+        pub struct $query_name<'a, $($type_name: 'static + Send,)+> {
             $($type_name: PhantomData<$type_name>,)+
             ecs: &'a CompStorage,
             vec: Vec<GlobalEntityID>
         }// C:/Users/tomul/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust/library/core/src/slice/iter.rs:66
-        impl<'a, $($type_name: 'static,)+> $query_name<'a, $($type_name,)+>{
+        impl<'a, $($type_name: 'static + Send,)+> $query_name<'a, $($type_name,)+>{
             pub fn new(ecs: &'a CompStorage) -> Self{
                 let mut my_vec = ecs.query(vec![$(gett::<$type_name>()),+]).iter().as_slice().to_vec();
                 my_vec.reverse();
@@ -30,7 +30,7 @@ macro_rules! comp_iter_def {
                 }
             }
         }
-        impl<'a, $($type_name: 'static,)+> Iterator for $query_name<'a, $($type_name,)+>{
+        impl<'a, $($type_name: 'static + Send,)+> Iterator for $query_name<'a, $($type_name,)+>{
             type Item = (GlobalEntityID, $(&'a mut $type_name),+);
             fn next(&mut self) -> Option<Self::Item> {
                 let entity_id = self.vec.pop()?;
@@ -43,16 +43,16 @@ macro_rules! comp_iter_def {
         }
         #[allow(unused_parens)]
         impl CompStorage{
-            pub fn $get_name<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
+            pub fn $get_name<$($type_name : 'static + Send),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
                 return ($(self.get_mut::<$type_name>(entity_id)),+ );
             }
-            pub fn $get_name_unwrap<$($type_name : 'static),+>(&self, entity_id: GlobalEntityID) -> ($(&mut $type_name),+){
+            pub fn $get_name_unwrap<$($type_name : 'static + Send),+>(&self, entity_id: GlobalEntityID) -> ($(&mut $type_name),+){
                 return ($(self.get_mut::<$type_name>(entity_id).unwrap()),+ );
             }
         }
         #[allow(unused_parens, non_snake_case)]
         impl PendingEntity{
-            pub fn $new_name<$($type_name : 'static),+>($($type_name: $type_name),+) -> Self{
+            pub fn $new_name<$($type_name : 'static + Send),+>($($type_name: $type_name),+) -> Self{
                 let mut pending = Self::new();
                 $(pending.add_comp($type_name);)+
                 return pending;

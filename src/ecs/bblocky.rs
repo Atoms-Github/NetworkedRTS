@@ -3,7 +3,8 @@ use std::any::{TypeId, Any};
 use std::collections::HashMap;
 use serde::*;
 
-use lazy_static::lazy_static;
+use crate::rts::compsys::*;
+
 use crate::utils::*;
 use serde::de::DeserializeOwned;
 use crate::ecs::comp_store::*;
@@ -11,15 +12,15 @@ use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use std::fmt::Write;
 use std::fmt;
-use super::bblocky_tests::*;
+use super::comp_registration::*;
 
 
 #[derive(Default)]
-struct FunctionMap{
+pub struct FunctionMap{
     map: HashMap<TypeIdNum, SuperbFunctions>,
 }
 impl FunctionMap{
-    fn register_type<T : 'static + Serialize + Clone + DeserializeOwned>(&mut self){
+    pub fn register_type<T : 'static + Serialize + Clone + DeserializeOwned + Send>(&mut self){
         self.map.insert(gett::<T>(), SuperbFunctions {
             do_clone: |item| {
                 let casted = (*item).downcast_ref::<T>().unwrap();
@@ -42,28 +43,20 @@ impl FunctionMap{
         return self.map.get(&type_id_num).expect("Type wasn't registered!");
     }
 }
-struct SuperbFunctions {
-    do_clone: fn(&Box<dyn Any>) -> Box<dyn Any>,
-    ser: fn(&Box<dyn Any>) -> Vec<u8>,
-    deser: fn(&Vec<u8>) -> Box<dyn Any>,
-}
-lazy_static! {
-    static ref FUNCTION_MAP: FunctionMap = {
-        let mut map = FunctionMap::default();
-        map.register_type::<TestStructB>();
-        // register_type::<ATestStruct>(&mut map);
-        map
-    };
+pub struct SuperbFunctions {
+    do_clone: fn(&Box<dyn Any + Send>) -> Box<dyn Any + Send>,
+    ser: fn(&Box<dyn Any + Send>) -> Vec<u8>,
+    deser: fn(&Vec<u8>) -> Box<dyn Any + Send>,
 }
 
 
 
 #[derive(Debug)]
 pub struct SuperAny {
-    boxed: Box<dyn Any>,
+    boxed: Box<dyn Any + Send>,
 }
 impl SuperAny {
-    pub fn new<T : 'static>(item: T) -> Self{
+    pub fn new<T : 'static + Send>(item: T) -> Self{
         let block_box = Self{
             boxed: Box::new(item),
         };

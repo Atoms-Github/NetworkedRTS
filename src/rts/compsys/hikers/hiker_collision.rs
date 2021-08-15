@@ -8,7 +8,7 @@ use crate::ecs::pending_entity::PendingEntity;
 use winit::MouseButton;
 use crate::ecs::ecs_macros::{CompIter3, CompIter4};
 use std::ops::Mul;
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct HikerCollisionComp {
     pub radius: f32
 }

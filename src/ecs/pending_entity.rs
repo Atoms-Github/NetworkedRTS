@@ -4,10 +4,12 @@ use serde::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use crate::ecs::comp_store::TypesSet;
+use super::comp_store::SingleComp;
+use crate::ecs::bblocky::SuperAny;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PendingEntity{
-    data: BTreeMap<TypeIdNum, Vec<u8>>,
+    data: BTreeMap<TypeIdNum, SingleComp>,
 }
 
 impl PendingEntity {
@@ -21,17 +23,17 @@ impl PendingEntity {
         }
         return types;
     }
-    pub fn iter(&self) -> std::collections::btree_map::Iter<TypeIdNum, Vec<u8>>{ // Optimum make it return move instead of reference (then clone).
+    pub fn iter(&self) -> std::collections::btree_map::Iter<TypeIdNum, SingleComp>{ // Optimum make it return move instead of reference (then clone).
         return self.data.iter();
     }
-    pub fn add_comp<T: 'static>(&mut self, value: T) {
+    pub fn add_comp<T: 'static + Send>(&mut self, value: T) {
         assert!(self.set_comp(value).is_none(), "Pending entity already contained that component type!");
     }
-    pub fn set_comp<T: 'static>(&mut self, value: T) -> Option<Vec<u8>> {
+    pub fn set_comp<T: 'static + Send>(&mut self, value: T) -> Option<SingleComp> {
         let bytes = unsafe {any_as_u8_slice(&value)}.to_vec();
-        return self.data.insert(crate::utils::gett::<T>(), bytes);
+        return self.data.insert(crate::utils::gett::<T>(), SuperAny::new(value));
     }
-    pub fn remove<T: 'static>(&mut self) {
+    pub fn remove<T: 'static + Send>(&mut self) {
         self.data.remove(&crate::utils::gett::<T>());
     }
 }

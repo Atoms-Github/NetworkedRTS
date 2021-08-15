@@ -1,4 +1,3 @@
-use serde::*;
 use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr, PointFloat};
 use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::{*};
@@ -14,7 +13,7 @@ use crate::rts::compsys::player::{PlayerComp, PLAYER_NAME_SIZE_MAX};
 use crate::rts::compsys::*;
 use crate::bibble::data::data_types::{GameData, RaceID};
 use crate::bibble::effect_resolver::revolver::Revolver;
-
+use serde::{Serialize, Deserialize};
 
 const MAX_PLAYERS : usize = 7;
 pub const ARENA_ENT_ID: GlobalEntityID = MAX_PLAYERS;

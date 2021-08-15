@@ -5,9 +5,10 @@ use crate::ecs::eid_manager::{GlorifiedHashMap, GlobalEntityID};
 use anymap::AnyMap;
 use crate::ecs::pending_entity::PendingEntity;
 use mopa::Any;
+use crate::ecs::bblocky::*;
 
-type ByteBlock = Vec<u8>;
-type Column = Vec<Vec<ByteBlock>>;
+pub type SingleComp = SuperAny;
+type Column = Vec<Vec<SingleComp>>;
 
 pub type CompositionID = usize;
 pub type GenerationNum = usize;
@@ -40,8 +41,8 @@ impl CompStorage{
         let column = self.get_column::<T>()?;
         let bytes = column.get(internal.composition_id)?.get(internal.internal_index)?;
 
-        let casted : &T = unsafe{u8_slice_to_ref(bytes.as_slice())};
-        return Some(casted);
+
+        return Some(bytes.get());
     }
     pub fn get_mut<T : 'static>(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID) -> Option<&mut T>{
         return self.get::<T>(entity_id).map(|unmut|{unsafe{very_bad_function(unmut)}});
@@ -155,7 +156,7 @@ impl CompStorage{
         }
         self.global_ids_as_comps.get_mut(composition_id).unwrap().push(global_id);
     }
-    fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut Vec<ByteBlock>{
+    fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut Vec<SingleComp>{
         let column = self.get_column_mut_or_make_key(type_id);
         for new_block_index in column.len()..(composition_id + 1){
             column.push(vec![]);
@@ -194,20 +195,20 @@ unsafe fn u8_slice_to_ref_mut<T>(bytes: &mut [u8]) -> &mut T {
     let value : &mut T = unsafe {test.as_mut()}.unwrap();
     return value;
 }
-
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct TestComp1 {
+    value: usize,
+    value2: f32,
+}
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct TestComp0 {
+    value: usize,
+}
 #[cfg(test)]
-mod ecs_tests {
+pub mod ecs_tests {
     use super::*;
 
-    pub struct TestComp1 {
-        value: usize,
-        value2: f32,
-    }
 
-    pub struct TestComp0 {
-        value: usize,
-    }
 
     #[test]
     fn test_delete_123() {

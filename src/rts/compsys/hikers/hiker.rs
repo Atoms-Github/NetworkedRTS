@@ -8,7 +8,7 @@ use crate::ecs::pending_entity::PendingEntity;
 use winit::MouseButton;
 use crate::ecs::ecs_macros::{CompIter3, CompIter4};
 use std::ops::Mul;
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct HikerComp { // Walks comp, but includes fliers and sailers too.
     pub destination: Option<PointFloat>, // TODO: Change to in_mem_vec.
     pub speed: f32,

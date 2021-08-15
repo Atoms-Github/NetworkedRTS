@@ -12,7 +12,7 @@ use std::ops::Div;
 use crate::bibble::data::data_types::WeaponID;
 use crate::bibble::effect_resolver::revolver::Revolver;
 
-
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WeaponComp {
     pub weapon_id: WeaponID,
     pub time_since_shot: f32,

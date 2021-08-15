@@ -11,6 +11,7 @@ pub const ARENA_DIMENSIONS: usize = 4;
 pub const ARENA_SQUARE_SIZE: usize = 200;
 pub const ARENA_WIDTH : usize = ARENA_DIMENSIONS * ARENA_SQUARE_SIZE;
 
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ArenaComp {
     pub pathing: [[bool; ARENA_DIMENSIONS]; ARENA_DIMENSIONS]
 }
