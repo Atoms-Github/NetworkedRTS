@@ -11,44 +11,53 @@ use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use std::fmt::Write;
 use std::fmt;
+use bblocky_tests::*;
 
-lazy_static! {
-    static ref FUNCTION_MAP: HashMap<TypeIdNum, SuperbFunctions> = {
-        let mut map = HashMap::new();
-        // register_type::<ATestStruct>(&mut map);
-        map
-    };
+#[derive(Default)]
+struct FunctionMap{
+    map: HashMap<TypeIdNum, SuperbFunctions>,
 }
-
-fn register_type<T : 'static + Serialize + Clone + DeserializeOwned>(map: &mut HashMap<TypeIdNum, SuperbFunctions>){
-    map.insert(gett::<T>(), SuperbFunctions {
-        do_clone: |item| {
-            let casted = (*item).downcast_ref::<T>().unwrap();
-            Box::new(casted.clone())
-        },
-        ser: |item| {
-            let casted = (*item).downcast_ref::<T>().unwrap();
-            return bincode::serialize(casted).unwrap();
-        },
-        deser: |bytes| {
-            let item = bincode::deserialize::<T>(bytes).unwrap();
-            return Box::new(item);
-        },
-    });
+impl FunctionMap{
+    fn register_type<T : 'static + Serialize + Clone + DeserializeOwned>(&mut self){
+        self.map.insert(gett::<T>(), SuperbFunctions {
+            do_clone: |item| {
+                let casted = (*item).downcast_ref::<T>().unwrap();
+                Box::new(casted.clone())
+            },
+            ser: |item| {
+                let casted = (*item).downcast_ref::<T>().unwrap();
+                return bincode::serialize(casted).unwrap();
+            },
+            deser: |bytes| {
+                let item = bincode::deserialize::<T>(bytes).unwrap();
+                return Box::new(item);
+            },
+        });
+    }
+    pub fn get_from_type_id(&self, type_id: TypeId) -> &SuperbFunctions {
+        return self.get(crack_type_id(type_id));
+    }
+    pub fn get(&self, type_id_num: TypeIdNum) -> &SuperbFunctions {
+        return self.map.get(&type_id_num).expect("Type wasn't registered!");
+    }
 }
 struct SuperbFunctions {
     do_clone: fn(&Box<dyn Any>) -> Box<dyn Any>,
     ser: fn(&Box<dyn Any>) -> Vec<u8>,
     deser: fn(&Vec<u8>) -> Box<dyn Any>,
 }
-impl SuperbFunctions{
-    pub fn get_from_type_id(type_id: TypeId) -> &'static Self{
-        return Self::get(crack_type_id(type_id));
-    }
-    pub fn get(type_id_num: TypeIdNum) -> &'static Self{
-        return FUNCTION_MAP.get(&type_id_num).expect("Type wasn't registered!");
-    }
+lazy_static! {
+    static ref FUNCTION_MAP: FunctionMap = {
+        let mut map = FunctionMap::default();
+        map.register_type::<TestStructB>();
+        // register_type::<ATestStruct>(&mut map);
+        map
+    };
 }
+
+
+
+#[derive(Debug)]
 struct SuperAny {
     item: Box<dyn Any>,
 }
@@ -59,10 +68,16 @@ impl SuperAny {
         };
         return block_box;
     }
+    pub fn get<T : 'static>(&self) -> &T{
+        return self.item.downcast_ref::<T>().unwrap();
+    }
+    pub fn get_mut<T : 'static>(&mut self) -> &mut T{
+        return self.item.downcast_mut::<T>().unwrap();
+    }
 }
 impl Clone for SuperAny {
     fn clone(&self) -> Self {
-        let functions = SuperbFunctions::get_from_type_id(self.item.type_id());
+        let functions = FUNCTION_MAP.get_from_type_id(self.item.type_id());
         return SuperAny{
             item: Box::new((functions.do_clone)(&self.item))
         };
@@ -70,30 +85,34 @@ impl Clone for SuperAny {
 }
 
 #[cfg(test)]
-mod ecs_tests {
+mod bblocky_tests {
     use super::*;
     #[test]
     fn testing() {
-        let strb = TestStructB{
-            integer: 0,
+        let original = TestStructB{
+            integer: 3,
             vec: vec![vec![], vec![TestStructA{
                 integer: 0,
-                float: 0.0,
+                float: 3.7,
                 vec: vec![8,5]
             }]],
-            float: 0.0
+            float: 100.2
         };
-        let e = 3;
+        let strb = SuperAny::new(original.clone());
+        let bytes = bincode::serialize(&strb).unwrap();
+        let reser = bincode::deserialize::<SuperAny>(bytes.as_slice()).unwrap();
 
+        let new_version = reser.get::<TestStructB>().clone();
+        assert_eq!(original, new_version);
     }
-    #[derive(Serialize, Deserialize, Clone)]
-    struct TestStructA{
+    #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+    pub struct TestStructA{
         integer: u32,
         float: f32,
         vec: Vec<i32>,
     }
-    #[derive(Serialize, Deserialize, Clone)]
-    struct TestStructB{
+    #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+    pub struct TestStructB{
         integer: u32,
         vec: Vec<Vec<TestStructA>>,
         float: f32,
@@ -110,7 +129,7 @@ impl Serialize for SuperAny{
         where
             S: Serializer,
     {
-        let functions = SuperbFunctions::get_from_type_id(self.item.type_id());
+        let functions = FUNCTION_MAP.get_from_type_id(self.item.type_id());
         let bytes = (functions.ser)(&self.item);
         let portable = SuperAnyPortable{
             bytes,
@@ -128,7 +147,7 @@ impl<'de> Deserialize<'de> for SuperAny
     {
         let portable = SuperAnyPortable::deserialize(deserializer).unwrap();
 
-        let functions = SuperbFunctions::get(portable.type_id);
+        let functions = FUNCTION_MAP.get(portable.type_id);
 
         let item = (functions.deser)(&portable.bytes);
 

@@ -220,6 +220,7 @@ mod ecs_tests {
         pending_entity.add_comp(TestComp1{ value: 3, value2: 3.3 });
         let id3 = ecs.create_entity(pending_entity);
 
+        assert_eq!(ecs.get::<TestComp1>(id2).unwrap().value, 2);
         ecs.delete_entity(id1);
 
         assert_eq!(ecs.get::<TestComp1>(id2).unwrap().value, 2);
