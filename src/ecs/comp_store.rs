@@ -46,41 +46,41 @@ impl CompStorage{
     pub fn get_mut<T : 'static>(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID) -> Option<&mut T>{
         return self.get::<T>(entity_id).map(|unmut|{unsafe{very_bad_function(unmut)}});
     }
-    pub fn delete_entity(&mut self, entity_id: GlobalEntityID) -> Option<()>{
-        let deleting_internal = self.internal_entities.get(entity_id)?;
-        let composition_id = deleting_internal.composition_id;
-        let deleting_index: InternalIndex = deleting_internal.internal_index;
-
-        for my_type in &deleting_internal.comp_types{
-            self.columns.get_mut(&my_type).unwrap().get_mut(composition_id).unwrap().swap_remove(deleting_index);
-        }
-
-
-
-        self.internal_entities.delete(entity_id);
-
-
-        self.global_ids_as_comps.get_mut(composition_id).unwrap().swap_remove(deleting_index);
-        // Fix the displaced entity's pointer.
-        // If array is empty (last() returns nothing), there were no displaced entities.
-
-        // If we've displaced something.
-        if deleting_index < self.global_ids_as_comps.get(composition_id).unwrap().len(){
-            let displaced_global_id = self.global_ids_as_comps.get(composition_id).unwrap().last().unwrap();
-            let displaced_internal = self.internal_entities.get_mut(*displaced_global_id)?;
-            displaced_internal.internal_index = deleting_index;
-        }
-
-
-        return Some(());
-
-
+    pub fn delete_entity(&mut self, entity_id: GlobalEntityID) -> bool{
         // What we want to do:
         // Find all the components that the entity has.
         // Find the entity's composition ID.
         // Delete a horizontal slice in the correct place, and move the entity at the bottom of that into that space.
         // Find the internal entity block of the moved entity, and update it.
         // Remember to also delete in global_ids_as_comps.
+        let deleting_internal = self.internal_entities.get(entity_id);
+        if deleting_internal.is_none(){
+            return false;
+        }
+        let deleting_internal = deleting_internal.unwrap();
+        let composition_id = deleting_internal.composition_id;
+        let deleting_index: InternalIndex = deleting_internal.internal_index;
+
+
+
+        // Do the deleting.
+        {
+            for my_type in &deleting_internal.comp_types{
+                self.columns.get_mut(&my_type).unwrap().get_mut(composition_id).unwrap().swap_remove(deleting_index);
+            }
+            self.global_ids_as_comps.get_mut(composition_id).unwrap().swap_remove(deleting_index);
+            self.internal_entities.delete(entity_id);
+        }
+        // Fix the displaced entity's pointer. If lens are same, then took off end.
+        let did_swap = deleting_index != self.global_ids_as_comps.get(composition_id).unwrap().len();
+        if did_swap {
+            let displaced_global_id = self.global_ids_as_comps.get(composition_id).unwrap().get(deleting_index).unwrap();
+            let displaced_internal = self.internal_entities.get_mut(*displaced_global_id).unwrap();
+            displaced_internal.internal_index = deleting_index;
+        }
+        return true;
+
+
 
 
     }
@@ -205,63 +205,67 @@ mod ecs_tests {
         value2: f32,
     }
 
+    pub struct TestComp0 {
+        value: usize,
+    }
+
     #[test]
     fn test_delete_123() {
         let mut ecs = CompStorage::default();
         let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
+        pending_entity.add_comp(TestComp0{ value: 0});
+        let id0 = ecs.create_entity(pending_entity);
+
+        let mut pending_entity = PendingEntity::new();
+        pending_entity.add_comp(TestComp0{ value: 1 });
         let id1 = ecs.create_entity(pending_entity);
 
         let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp1{ value: 2, value2: 2.2 });
+        pending_entity.add_comp(TestComp0{ value: 2});
         let id2 = ecs.create_entity(pending_entity);
 
-        let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp1{ value: 3, value2: 3.3 });
-        let id3 = ecs.create_entity(pending_entity);
+        assert_eq!(ecs.get::<TestComp0>(id1).unwrap().value, 1);
+        ecs.delete_entity(id0);
 
-        assert_eq!(ecs.get::<TestComp1>(id2).unwrap().value, 2);
+        assert_eq!(ecs.get::<TestComp0>(id1).unwrap().value, 1);
+        assert_eq!(ecs.get::<TestComp0>(id2).unwrap().value, 2);
+
         ecs.delete_entity(id1);
 
-        assert_eq!(ecs.get::<TestComp1>(id2).unwrap().value, 2);
-        assert_eq!(ecs.get::<TestComp1>(id3).unwrap().value, 3);
+        assert_eq!(ecs.get::<TestComp0>(id2).unwrap().value, 2);
 
         ecs.delete_entity(id2);
 
-        assert_eq!(ecs.get::<TestComp1>(id3).unwrap().value, 3);
 
-        ecs.delete_entity(id3);
-
-
-        assert!(ecs.get::<TestComp1>(id3).is_none());
+        assert!(ecs.get::<TestComp0>(id2).is_none());
     }
     #[test]
     fn test_delete_21() {
         let mut ecs = CompStorage::default();
         let mut pending_entity = PendingEntity::new();
         pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
-        let id1 = ecs.create_entity(pending_entity);
+        let id0 = ecs.create_entity(pending_entity);
 
         let mut pending_entity = PendingEntity::new();
         pending_entity.add_comp(TestComp1{ value: 2, value2: 2.2 });
-        let id2 = ecs.create_entity(pending_entity);
-
-        ecs.delete_entity(id2);
-
-        assert_eq!(ecs.get::<TestComp1>(id1).unwrap().value, 1);
+        let id1 = ecs.create_entity(pending_entity);
 
         ecs.delete_entity(id1);
 
-        assert!(ecs.get::<TestComp1>(id2).is_none());
+        assert_eq!(ecs.get::<TestComp1>(id0).unwrap().value, 1);
+
+        ecs.delete_entity(id0);
+
+        assert!(ecs.get::<TestComp1>(id1).is_none());
     }
     #[test]
     fn test_delete_then_query() {
         let mut ecs = CompStorage::default();
         let mut pending_entity = PendingEntity::new();
         pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
-        let id1 = ecs.create_entity(pending_entity);
+        let id0 = ecs.create_entity(pending_entity);
 
-        ecs.delete_entity(id1);
+        ecs.delete_entity(id0);
 
         for ent_id in ecs.query(vec![
             crate::utils::gett::<TestComp1>()
