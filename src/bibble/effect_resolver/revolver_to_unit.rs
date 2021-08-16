@@ -7,7 +7,7 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 
 
 impl<'a> Revolver<'a>{
-    pub fn resolve_tu(&mut self, effect: EffectToUnit, target: GlobalEntityID){
+    pub fn resolve_tu(&mut self, data: &GameData, effect: EffectToUnit, target: GlobalEntityID){
         match effect{
             EffectToUnit::DAMAGE(damage) => {
                 let life = self.c.get1_unwrap::<LifeComp>(target);

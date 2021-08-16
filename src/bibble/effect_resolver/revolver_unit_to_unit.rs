@@ -6,10 +6,10 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 
 
 impl<'a> Revolver<'a> {
-    pub fn resolve_utu(&mut self, c: &mut CompStorage, effect: EffectUnitToUnit, source: GlobalEntityID, target: GlobalEntityID) {
+    pub fn resolve_utu(&mut self, data: &GameData, c: &mut CompStorage, effect: EffectUnitToUnit, source: GlobalEntityID, target: GlobalEntityID) {
         match effect {
             EffectUnitToUnit::INSTA_AFFECT_TARGET(to_unit) => {
-                self.resolve_tu(to_unit, target);
+                self.resolve_tu(data, to_unit, target);
             }
             _ => {
                 unimplemented!()

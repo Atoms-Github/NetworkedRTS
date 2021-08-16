@@ -25,15 +25,17 @@ pub static WEAPON_SYS: System<ResourcesPtr> = System{
     name: "weapon"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    let mut revolver = Revolver::new(c, &res.game_data);
+    let mut revolver = Revolver::new(c);
 
     for (shooter_id, weapon, owned_shooter, position_shooter) in CompIter3::<WeaponComp, OwnedComp, PositionComp>::new(c) {
         weapon.time_since_shot += 1.0;
-        let weapon_mould = res.game_data.get_weapon(weapon.weapon_id);
+        let data = shooter_id.get_owner_data(c);
+        let weapon_mould = data.get_weapon(weapon.weapon_id);
         if weapon_mould.cooldown < weapon.time_since_shot{
             for (target_id, owned_target, position_target, life_target) in CompIter3::<OwnedComp, PositionComp, LifeComp>::new(c) {
                 let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude_squared() < weapon_mould.range.powf(2.0);
                 if shooter_id != target_id && owned_target.owner != owned_shooter.owner && in_range{
+
                     weapon.time_since_shot = 0.0;
                     life_target.life -= 10.0;
                     break;

@@ -9,7 +9,7 @@ use crate::pub_types::PointFloat;
 
 
 impl<'a> Revolver<'a>{
-    pub fn spawn_unit(&mut self, mould: &UnitMould, position: PointFloat, owner: GlobalEntityID){
+    pub fn spawn_unit(&mut self, data: &GameData, mould: &UnitMould, position: PointFloat, owner: GlobalEntityID){
         let mut abilities_comp = AbilitiesComp{
             abilities: [AbilityID::NONE; 5]
         };
@@ -38,10 +38,10 @@ impl<'a> Revolver<'a>{
                 time_since_shot: 0.0
             });
         }
-        self.add_actor(&mould.actor, &mut pending);
+        self.add_actor(data, &mould.actor, &mut pending);
         self.changes.new_entities.push(pending);
     }
-    pub fn add_actor(&mut self, mould: &ActorMould, pending: &mut PendingEntity){
+    pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, pending: &mut PendingEntity){
         pending.add_comp(RenderComp{ colour: mould.colour});
         pending.add_comp(SizeComp{ size: PointFloat::new(30.0, 30.0)});
     }

@@ -48,7 +48,6 @@ pub struct GameState {
 
 // No clone or serde.
 pub struct RenderResources {
-    pub game_data: GameData, // This'll eventually be changed to be modifiable.
     pub images: HashMap<String, graphics::Image>
 }
 
@@ -79,10 +78,11 @@ impl GameState {
 
         let mut race = RaceID::ROBOTS;
 
-        let mut revolver = Revolver::new(&self.ecs.c, &res.game_data);
+        let mut revolver = Revolver::new(&self.ecs.c);
 
-        let effect = res.game_data.get_race(race).spawn_effect.clone();
-        revolver.resolve_tp(effect, spawn_point.clone(), player_ent_id);
+        let data = player_ent_id.get_player_data(&self.ecs.c);
+        let effect = data.get_race(race).spawn_effect.clone();
+        revolver.resolve_tp(data, effect, spawn_point.clone(), player_ent_id);
 
         revolver.end().apply(&mut self.ecs.c);
 
@@ -120,7 +120,6 @@ impl GameState {
     }
     pub fn gen_resources() -> ResourcesPtr{
         let mut resources = RenderResources {
-            game_data: GameData::gen_game_data(),
             images: Default::default(),
         };
         for file in std::fs::read_dir("resources/images").unwrap(){
