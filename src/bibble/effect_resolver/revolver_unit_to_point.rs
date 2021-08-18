@@ -4,15 +4,14 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
 use crate::rts::compsys::LifeComp;
 use crate::bibble::effect_resolver::revolver::Revolver;
+use crate::pub_types::PointFloat;
 
 
 impl<'a> Revolver<'a>{
-    pub fn revolve_to_unit(&mut self, data: &GameData, effect: &EffectToUnit, target: GlobalEntityID){
+    pub fn revolve_unit_to_point(&mut self, data: &GameData, effect: &EffectUnitToPoint, source: GlobalEntityID,
+                                 target: PointFloat){
         match effect{
-            EffectToUnit::DAMAGE(damage) => {
-                let life = self.c.get1_unwrap::<LifeComp>(target);
-                life.life -= damage.amount;
-            }
+            EffectUnitToPoint::NOTHING => {}
             _ => {
                 unimplemented!()
             }

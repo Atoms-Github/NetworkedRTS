@@ -17,7 +17,8 @@ pub struct AbilityMould{
     pub cost: f32,
     pub targetting: AbilityTargetType,
     pub button_info: ButtonMould,
-    pub range: f32
+    pub range: f32,
+    pub casting_time: f32,
 }
 // Let's make buttons stateless.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

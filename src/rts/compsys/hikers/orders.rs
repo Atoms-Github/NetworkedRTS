@@ -12,6 +12,7 @@ use std::ops::Mul;
 use crate::bibble::data::data_types::AbilityID;
 use mopa::Any;
 use nalgebra::{distance, distance_squared};
+use crate::bibble::effect_resolver::revolver::Revolver;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct OrderInstance{
@@ -113,7 +114,13 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (unit_id, orders)
     in CompIter1::<OrdersComp>::new(c) {
         if let OrderState::CHANNELLING(channel_time) = orders.state.clone(){
-            if channel_time > 1.0{
+            let tech_tree = unit_id.get_owner_tech_tree(c);
+            let executing_order = orders.orders_queue.remove(0);
+            let ability = tech_tree.get_ability(executing_order.ability);
+            if channel_time >= ability.casting_time{
+                // Now execute ability.
+                let mut revolver = Revolver::new(c);
+                revolver.revolve_ability_execution(tech_tree, unit_id, executing_order.ability, executing_order.target);
 
             }
         }

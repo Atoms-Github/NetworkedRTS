@@ -8,7 +8,8 @@ pub fn abilities(data: &mut GameData){
         button_info: ButtonMould{
             color: (50, 20, 100)
         },
-        range: 0.0
+        range: 0.0,
+        casting_time: 200.0,
     });
 
 }

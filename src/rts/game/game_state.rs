@@ -81,8 +81,8 @@ impl GameState {
         let mut revolver = Revolver::new(&self.ecs.c);
 
         let data = player_ent_id.get_player_tech_tree(&self.ecs.c);
-        let effect = data.get_race(race).spawn_effect.clone();
-        revolver.resolve_tp(data, effect, spawn_point.clone(), player_ent_id);
+        let effect = &data.get_race(race).spawn_effect;
+        revolver.revolve_to_point(data, effect, &spawn_point, player_ent_id);
 
         revolver.end().apply(&mut self.ecs.c);
 

@@ -6,6 +6,7 @@ pub fn abilities(data: &mut GameData){
         cost: 0.0,
         targetting: AbilityTargetType::Point(EffectUnitToPoint::NOTHING),
         button_info: ButtonMould { color: (0, 255, 0) },
-        range: 0.0
+        range: 0.0,
+        casting_time: 0.0,
     });
 }
