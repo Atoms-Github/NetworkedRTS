@@ -21,7 +21,7 @@ impl<'a> Revolver<'a>{
             OwnedComp { owner },
             LifeComp{ life: 100.0, max_life: 100.0 },
             SelectableComp{ is_selected: false },
-            OrdersComp{},
+            OrdersComp{ orders_queue: vec![], state: OrderState::NONE },
             HikerComp{
                 destination: None,
                 speed: 2.0,

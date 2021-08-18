@@ -87,7 +87,7 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
             for i in 0..5{
                 let ability = abilities.abilities[i];
                 if ability != AbilityID::NONE{
-                    let ability_mould = unit_id.get_owner_data(&ecs.c).get_ability(ability);
+                    let ability_mould = unit_id.get_owner_tech_tree(&ecs.c).get_ability(ability);
                     let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
                     draw_rect(ctx, graphics::Color::from(ability_mould.button_info.color),
                               graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));

@@ -35,7 +35,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         let input = c.get1_unwrap::<InputComp>(player_id);
 
-        let data = player_id.get_player_data(c);
+        let data = player_id.get_player_tech_tree(c);
         if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::W){
             if resources_temp.try_pay(ResourceType::BLUENESS, 300){
                 revolver.resolve_tp(data, EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR),input.mouse_pos_game_world.clone(), player_id);

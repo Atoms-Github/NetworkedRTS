@@ -29,7 +29,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
 
     for (shooter_id, weapon, owned_shooter, position_shooter) in CompIter3::<WeaponComp, OwnedComp, PositionComp>::new(c) {
         weapon.time_since_shot += 1.0;
-        let data = shooter_id.get_owner_data(c);
+        let data = shooter_id.get_owner_tech_tree(c);
         let weapon_mould = data.get_weapon(weapon.weapon_id);
         if weapon_mould.cooldown < weapon.time_since_shot{
             for (target_id, owned_target, position_target, life_target) in CompIter3::<OwnedComp, PositionComp, LifeComp>::new(c) {
