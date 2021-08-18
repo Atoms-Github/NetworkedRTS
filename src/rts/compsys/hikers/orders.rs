@@ -50,8 +50,6 @@ impl OrdersComp{
                 self.state = OrderState::MOVING;
             }
         }
-
-
     }
 }
 
@@ -115,13 +113,14 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     in CompIter1::<OrdersComp>::new(c) {
         if let OrderState::CHANNELLING(channel_time) = orders.state.clone(){
             let tech_tree = unit_id.get_owner_tech_tree(c);
-            let executing_order = orders.orders_queue.remove(0);
+            let executing_order = orders.orders_queue.get(0).unwrap();
             let ability = tech_tree.get_ability(executing_order.ability);
             if channel_time >= ability.casting_time{
+                let executed_order = orders.orders_queue.remove(0);
                 // Now execute ability.
                 let mut revolver = Revolver::new(c);
-                revolver.revolve_ability_execution(tech_tree, unit_id, executing_order.ability, executing_order.target);
-
+                revolver.revolve_ability_execution(tech_tree, unit_id, executed_order.ability, executed_order.target);
+                orders.state = OrderState::NONE
             }
         }
     }

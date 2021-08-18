@@ -3,5 +3,6 @@ use super::*;
 pub enum EffectUnitToPoint{
     APPLY_FORCE,
     NOTHING,
+    TO_POINT(EffectToPoint)
 }
 

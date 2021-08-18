@@ -44,7 +44,7 @@ impl<'a> Revolver<'a>{
             AbilityTargetType::Point(effect_to_point) => {
                 match ability_target{
                     AbilityTargetInstance::POINT(target_point) => {
-                        self.revolve_unit_to_point(data, effect_to_point, source_unit, target_point);
+                        self.revolve_unit_to_point(data, effect_to_point, source_unit, &target_point);
                     }
                     _ => {panic!("Wrong target type.")}
                 }
