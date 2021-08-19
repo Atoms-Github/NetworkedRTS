@@ -81,11 +81,12 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
             (Point2::new(on_screen_pos.x, on_screen_pos.y), graphics::Color::from((0,153,255))),
         ).unwrap();
     }
-    // Draw ability buttons.
+    // Find ability buttons.
+    let mut rendering_abilities = BTreeMap::new();
     for (unit_id, abilities, selectable, owned)
     in CompIter3::<AbilitiesComp, SelectableComp, OwnedComp>::new(&ecs.c){
 
-        let mut rendering_abilities = BTreeMap::new();
+
         if owned.owner == player_entity_id && selectable.is_selected{
             for (i, ability_id) in abilities.abilities.iter().enumerate(){
                 let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(*ability_id).button_info;
@@ -96,12 +97,13 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
 
             }
         }
-        for (i, (hotkey, ability_id)) in rendering_abilities.iter().enumerate(){
-            let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(**ability_id).button_info;
-            let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
-            draw_rect(ctx, graphics::Color::from(button_mould.color),
-                      graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
-        }
+    }
+    // Draw ability buttons.
+    for (i, (hotkey, ability_id)) in rendering_abilities.iter().enumerate(){
+        let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(**ability_id).button_info;
+        let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
+        draw_rect(ctx, graphics::Color::from(button_mould.color),
+                  graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
     }
     // Draw resources.
     for (player_id, owns_resources) in CompIter1::<OwnsResourcesComp>::new(&ecs.c){
