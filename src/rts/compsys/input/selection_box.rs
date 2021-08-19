@@ -36,19 +36,6 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
         let input = c.get1_unwrap::<InputComp>(player_id);
 
         let data = player_id.get_player_tech_tree(c);
-        if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::W){
-            if resources_temp.try_pay(ResourceType::BLUENESS, 300){
-                revolver.revolve_to_point(data, &EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR), &input.mouse_pos_game_world, player_id);
-            }
-        }
-        if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::S){
-            if resources_temp.try_pay(ResourceType::BLUENESS, 1000){
-                revolver.revolve_to_point(data, &EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER), &input.mouse_pos_game_world, player_id);
-            }
-
-        }
-
-
         match input.mode.clone() {
             // Spawning it.
             InputMode::None => {
