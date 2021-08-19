@@ -16,8 +16,8 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct OrderInstance{
-    ability: AbilityID,
-    target: AbilityTargetInstance,
+    pub ability: AbilityID,
+    pub target: AbilityTargetInstance,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum AbilityTargetInstance{

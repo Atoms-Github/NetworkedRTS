@@ -24,6 +24,7 @@ pub type UsingResources = Arc<RenderResources>;
 pub fn global_get_systems() -> Vec<System<UsingResources>>{
     vec![
         INPUT_PREPROC.clone(),
+        ABILITY_TARGETING.clone(),
         ABILITIES_SYS.clone(),
         CAMERA_PAN_SYS.clone(),
         VELOCITY_SYS.clone(),

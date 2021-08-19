@@ -101,7 +101,7 @@ impl InputState{
     }
     pub fn is_modif_key(key: u32) -> bool{
         let id = InputState::u32_to_keycode(key).unwrap();
-        return id != KeyCode::LShift && id != KeyCode::LAlt && id != KeyCode::LWin && id != KeyCode::LControl;
+        return id == KeyCode::LShift || id == KeyCode::LAlt || id == KeyCode::LWin || id == KeyCode::LControl;
     }
     pub fn get_button_enum(button: usize) -> MouseButton{
         match button{

@@ -8,6 +8,8 @@ use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 use crate::bibble::data::data_types::AbilityID;
 use std::collections::BTreeMap;
+use winit::VirtualKeyCode;
+use std::fmt;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
@@ -16,7 +18,7 @@ pub struct RenderComp{
 
 pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &ResourcesPtr, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
-
+    let player_input = ecs.c.get::<InputComp>(player_entity_id).unwrap();
 
 
 
@@ -85,8 +87,6 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     let mut rendering_abilities = BTreeMap::new();
     for (unit_id, abilities, selectable, owned)
     in CompIter3::<AbilitiesComp, SelectableComp, OwnedComp>::new(&ecs.c){
-
-
         if owned.owner == player_entity_id && selectable.is_selected{
             for (i, ability_id) in abilities.abilities.iter().enumerate(){
                 let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(*ability_id).button_info;
@@ -100,10 +100,18 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     }
     // Draw ability buttons.
     for (i, (hotkey, ability_id)) in rendering_abilities.iter().enumerate(){
-        let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(**ability_id).button_info;
+        let button_mould = &player_entity_id.get_player_tech_tree(&ecs.c).get_ability(**ability_id).button_info;
         let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
         draw_rect(ctx, graphics::Color::from(button_mould.color),
                   graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
+        if let InputMode::TargettingAbility(targetting_ability_id) = player_input.mode{
+            if targetting_ability_id == **ability_id{
+                draw_rect(ctx, graphics::Color::from_rgb(255,204,0),
+                          graphics::Rect::new(screen_pos.x - 5.0, screen_pos.y - 5.0, 40.0,40.0));
+            }
+        }
+        draw_text(ctx, screen_pos, hotkey.my_to_string(), graphics::Color::from_rgb(0,0,0));
+
     }
     // Draw resources.
     for (player_id, owns_resources) in CompIter1::<OwnsResourcesComp>::new(&ecs.c){
@@ -112,27 +120,29 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                 let on_screen_pos = PointFloat::new(50.0 + res_index as f32 * 100.0, 50.0);
 
                 let res_count = owns_resources.get_counti(res_index).to_string();
-                let res_count_display = Text::new(res_count);
-
-                graphics::draw(
-                    ctx,
-                    &res_count_display,
-                    (Point2::new(on_screen_pos.x, on_screen_pos.y), graphics::Color::from((255,255,255))),
-                ).unwrap();
+                draw_text(ctx, on_screen_pos, res_count, graphics::Color::from((255, 255, 255)));
             }
         }
     }
-
 }
-fn draw_rect(ctx: &mut Context, color: Color, mesh: graphics::Rect){
 
+
+fn draw_text(ctx: &mut Context, on_screen_pos: PointFloat, text: String, color: graphics::Color) {
+    let text_display = Text::new(text);
+
+    graphics::draw(
+        ctx,
+        &text_display,
+        (Point2::new(on_screen_pos.x, on_screen_pos.y), color),
+    ).unwrap();
+}
+
+fn draw_rect(ctx: &mut Context, color: Color, mesh: graphics::Rect){
     let mode = graphics::DrawMode::fill();
-    let bounds = mesh;
-    let color = color;
     let mesh: graphics::Mesh = graphics::Mesh::new_rectangle(
         ctx,
         mode,
-        bounds,
+        mesh,
         color,
     ).unwrap();
     graphics::draw(
@@ -140,4 +150,16 @@ fn draw_rect(ctx: &mut Context, color: Color, mesh: graphics::Rect){
         &mesh,
         DrawParam::new(),
     ).unwrap();
+}
+
+
+
+trait MyToString{
+    fn my_to_string(&self) -> String;
+}
+impl MyToString for VirtualKeyCode{
+    fn my_to_string(&self) -> String {
+        let test = format!("{:?}", self);
+        return test;
+    }
 }

@@ -59,7 +59,7 @@ impl RtsInputState{
         self.mouse_event = RtsMouseEvent::NoMouse;
         self.key_event = RtsKeyEvent::NoKey;
 
-        match self.mouse_btn_held.clone() {
+        match self.mouse_btn_held {
             None => {
                 for (mouse_id, is_down) in new_input.get_mouse_array().iter().enumerate(){
                     if *is_down{

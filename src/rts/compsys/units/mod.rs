@@ -7,3 +7,6 @@ pub use weapon_comp::*;
 
 pub mod abilities_comp;
 pub use abilities_comp::*;
+
+pub mod ability_targeting;
+pub use ability_targeting::*;
