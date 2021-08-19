@@ -1,7 +1,7 @@
 [package]
 name = "literal_poggy_source"
 version = "0.1.0"
-authors = ["Tom <tomullender@gmail.com>"]
+authors = ["Thomas <tomullender@gmail.com>"]
 edition = "2018"
 
 
@@ -12,24 +12,19 @@ debug = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#time = "0.2.10"
-#sntpc = "0.2"
-paste = "0.1.5"
-anymap = "0.12.1"
+chrono = "*"
+metatype = "0.2.1"
+anymap = "*"
 ggez = {version = "*"}#, features = ["serde"] }
-nalgebra = {version = "0.18", features = ["mint", "serde-serialize"] }
-bincode = "1.1.4"
-log = { version = "0.4.13", features = ["max_level_debug", "release_max_level_info"] }
-env_logger = "0.8.2"
-chrono = "0.4.19"
-typetag = "0.1"
-mopa = "0.2.2"
-serde_closure = "0.3.2"
-serde_traitobject = "0.2.7"
-local_ipaddress = "0.1.3"
-struct_deser = "0.1.1"
-snap = "1"
-lazy_static = "1.4.0"
+nalgebra = {version = "*", features = ["mint", "serde-serialize"] }
+bincode = "*"
+log = { version = "*", features = ["max_level_debug", "release_max_level_info"] }
+env_logger = "*"
+typetag = "*"
+mopa = "*"
+serde_closure = "*"
+serde_traitobject = "*"
+lazy_static = "*"
 
 
 #futures = "0.1.29"

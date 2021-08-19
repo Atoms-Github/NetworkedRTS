@@ -11,7 +11,7 @@ pub fn abilities(data: &mut GameData){
             color: (150, 120, 200),
             hotkey: VirtualKeyCode::Q
         },
-        range: 0.0,
+        range: 1000.0,
         casting_time: 200.0,
     });
 

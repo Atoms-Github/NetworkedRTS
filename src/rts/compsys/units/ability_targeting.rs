@@ -12,12 +12,6 @@ use std::ops::Div;
 use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub struct AbilitiesComp {
-    pub abilities: Vec<AbilityID>,
-}
-
-
 pub static ABILITY_TARGETING: System<ResourcesPtr> = System{
     run,
     name: "ability_targeting"
@@ -27,7 +21,6 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         if let RtsKeyEvent::KeyDown(down_key) = input.inputs.key_event{
             let data = player_id.get_player_tech_tree(c);
-            println!("For key: {}", c.query(vec![gett::<OwnedComp>(), gett::<SelectableComp>(), gett::<AbilitiesComp>()]).len());
             'units :for (unit_id , owned, selectable, abilities)
             in CompIter3::<OwnedComp, SelectableComp, AbilitiesComp>::new(c) {
                 if selectable.is_selected{

@@ -111,6 +111,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
         }
     }
 
+    let mut revolver = Revolver::new(c);
     // Finish orders.
     for (unit_id, orders)
     in CompIter1::<OrdersComp>::new(c) {
@@ -121,12 +122,13 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             if channel_time >= ability.casting_time{
                 let executed_order = orders.orders_queue.remove(0);
                 // Now execute ability.
-                let mut revolver = Revolver::new(c);
+
                 revolver.revolve_ability_execution(tech_tree, unit_id, executed_order.ability, executed_order.target);
                 orders.state = OrderState::NONE
             }
         }
     }
+    revolver.end().apply(c);
 }
 
 
