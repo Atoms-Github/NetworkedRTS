@@ -41,7 +41,8 @@ pub struct OrdersComp {
 impl OrdersComp{
     pub fn enqueue(&mut self, order: OrderInstance, before: bool){
         if before{
-            self.orders_queue.insert(0, order);
+            self.orders_queue.clear();
+            self.orders_queue.push(order);
             // Abort current (potentially channelling) action, and move to new one.
             self.state = OrderState::MOVING;
         }else{
@@ -51,8 +52,17 @@ impl OrdersComp{
             }
         }
     }
-    pub fn nothing(){
-
+    pub fn get_executing_order(&self) -> Option<&OrderInstance>{
+        return self.orders_queue.get(0);
+    }
+    pub fn finish_order(&mut self) -> OrderInstance{
+        let removed = self.orders_queue.remove(0);
+        if self.orders_queue.len() > 0{
+            self.state = OrderState::MOVING;
+        }else{
+            self.state = OrderState::NONE;
+        }
+        return removed;
     }
 }
 
@@ -80,7 +90,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
         if orders.state == OrderState::MOVING{
-            if let Some(current_order) = orders.orders_queue.get(0){
+            if let Some(current_order) = orders.get_executing_order(){
                 let ability = unit_id.get_owner_tech_tree(c).get_ability(current_order.ability);
                 let target_pos = match &current_order.target{
                     AbilityTargetInstance::NO_TARGET => {
@@ -117,14 +127,12 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     in CompIter1::<OrdersComp>::new(c) {
         if let OrderState::CHANNELLING(channel_time) = orders.state.clone(){
             let tech_tree = unit_id.get_owner_tech_tree(c);
-            let executing_order = orders.orders_queue.get(0).unwrap();
+            let executing_order = orders.get_executing_order().unwrap();
             let ability = tech_tree.get_ability(executing_order.ability);
             if channel_time >= ability.casting_time{
-                let executed_order = orders.orders_queue.remove(0);
+                let executed_order = orders.finish_order();
                 // Now execute ability.
-
                 revolver.revolve_ability_execution(tech_tree, unit_id, executed_order.ability, executed_order.target);
-                orders.state = OrderState::NONE
             }
         }
     }

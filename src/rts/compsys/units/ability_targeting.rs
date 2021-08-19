@@ -9,7 +9,7 @@ use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
-use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode};
+use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode, AbilityTargetType};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
 pub static ABILITY_TARGETING: System<ResourcesPtr> = System{
@@ -21,12 +21,25 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         if let RtsKeyEvent::KeyDown(down_key) = input.inputs.key_event{
             let data = player_id.get_player_tech_tree(c);
-            'units :for (unit_id , owned, selectable, abilities)
-            in CompIter3::<OwnedComp, SelectableComp, AbilitiesComp>::new(c) {
+            'units :for (unit_id , owned, selectable, abilities, orders)
+            in CompIter4::<OwnedComp, SelectableComp, AbilitiesComp, OrdersComp>::new(c) {
                 if selectable.is_selected{
                     for ability_id in &abilities.abilities{
-                        if data.get_ability(*ability_id).button_info.hotkey == down_key{
-                            input.start_targetting(*ability_id);
+                        let ability_mould = data.get_ability(*ability_id);
+                        if ability_mould.button_info.hotkey == down_key{
+                            match ability_mould.targetting{
+                                AbilityTargetType::NoTarget(_) => {
+                                    orders.enqueue(OrderInstance{
+                                        ability: *ability_id,
+                                        target: AbilityTargetInstance::NO_TARGET
+                                    }, !input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
+                                }
+                                AbilityTargetType::Unit(_) |
+                                AbilityTargetType::Point(_)=> {
+                                    input.start_targetting(*ability_id);
+                                }
+                            }
+
                             break 'units;
                         }
                     }
