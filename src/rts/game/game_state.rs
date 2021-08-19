@@ -88,6 +88,8 @@ impl GameState {
 
         revolver.end().apply(&mut self.ecs.c);
 
+        println!("After spawn {}", self.ecs.c.query(vec![gett::<OwnedComp>(), gett::<SelectableComp>(), gett::<AbilitiesComp>()]).len());
+
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
         self.ecs.c.get_mut::<CameraComp>(player_ent_id).unwrap().translation = spawn_point;
     }
