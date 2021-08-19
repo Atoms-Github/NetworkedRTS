@@ -27,6 +27,8 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         if let RtsKeyEvent::KeyDown(down_key) = input.inputs.key_event{
             let data = player_id.get_player_tech_tree(c);
+            let count = c.query(vec![gett::<OwnedComp>(), gett::<SelectableComp>(), gett::<AbilitiesComp>()]);
+            println!("Found {}", count.len());
             'units :for (unit_id , owned, selectable, abilities)
             in CompIter3::<OwnedComp, SelectableComp, AbilitiesComp>::new(c) {
                 if selectable.is_selected{

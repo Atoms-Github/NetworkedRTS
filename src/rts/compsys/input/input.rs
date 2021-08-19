@@ -53,7 +53,7 @@ pub enum RtsKeyEvent {
     NoKey,
 }
 impl RtsInputState{
-    pub fn set_input_state(&mut self, new_input: InputState){
+    pub fn update_input_state(&mut self, new_input: InputState){
         self.mouse_moved = new_input.get_mouse_loc().clone() - self.primitive.get_mouse_loc();
 
         self.mouse_event = RtsMouseEvent::NoMouse;

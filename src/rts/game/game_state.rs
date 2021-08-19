@@ -112,7 +112,7 @@ impl GameState {
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, sim_quality: SimQuality, delta: f32, frame_index: FrameIndex){
         for (player_id, input_state) in inputs{
             if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(player_id as GlobalEntityID){
-                existing_player.inputs.set_input_state(input_state);
+                existing_player.inputs.update_input_state(input_state);
             }
         }
         self.ecs.sim_systems(res, sim_quality);
