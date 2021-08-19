@@ -7,6 +7,7 @@ use crate::netcode::InputState;
 use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
 use crate::rts::game::game_state::RenderResources;
+use crate::bibble::data::data_types::AbilityID;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct InputComp{
@@ -22,10 +23,13 @@ pub enum InputMode{
     SelectionBox,
     UnitsSelected, // TODO: Remove?
     ClickUI(GlobalEntityID),
-    TargettingAbility,
-
+    TargettingAbility(AbilityID),
 }
-
+impl InputComp{
+    pub fn start_targetting(&mut self, ability: AbilityID){
+        self.mode = InputMode::TargettingAbility(ability);
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RtsInputState{

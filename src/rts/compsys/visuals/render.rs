@@ -7,6 +7,7 @@ use crate::rts::game::game_state::UsingResources;
 use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 use crate::bibble::data::data_types::AbilityID;
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
@@ -83,18 +84,23 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     // Draw ability buttons.
     for (unit_id, abilities, selectable, owned)
     in CompIter3::<AbilitiesComp, SelectableComp, OwnedComp>::new(&ecs.c){
+
+        let mut rendering_abilities = BTreeMap::new();
         if owned.owner == player_entity_id && selectable.is_selected{
-            for i in 0..5{
-                let ability = abilities.abilities[i];
-                if ability != AbilityID::NONE{
-                    let ability_mould = unit_id.get_owner_tech_tree(&ecs.c).get_ability(ability);
-                    let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
-                    draw_rect(ctx, graphics::Color::from(ability_mould.button_info.color),
-                              graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
+            for (i, ability_id) in abilities.abilities.iter().enumerate(){
+                let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(*ability_id).button_info;
+
+                if rendering_abilities.get(&button_mould.hotkey).is_none(){
+                    rendering_abilities.insert(button_mould.hotkey, ability_id);
                 }
+
             }
-            // Just render for first unit.
-            break;
+        }
+        for (i, (hotkey, ability_id)) in rendering_abilities.iter().enumerate(){
+            let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(**ability_id).button_info;
+            let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
+            draw_rect(ctx, graphics::Color::from(button_mould.color),
+                      graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
         }
     }
     // Draw resources.

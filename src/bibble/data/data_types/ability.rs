@@ -1,5 +1,6 @@
 use crate::bibble::data::data_types::*;
 use serde::*;
+use winit::VirtualKeyCode;
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -24,6 +25,7 @@ pub struct AbilityMould{
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ButtonMould{
     pub color: (u8, u8, u8),
+    pub hotkey: VirtualKeyCode,
 }
 #[derive(Serialize, Deserialize, Clone)]
 pub enum AbilityTargetType{

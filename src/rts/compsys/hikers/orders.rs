@@ -51,6 +51,9 @@ impl OrdersComp{
             }
         }
     }
+    pub fn nothing(){
+
+    }
 }
 
 pub static ORDERS_SYS: System<ResourcesPtr> = System{
@@ -124,7 +127,6 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             }
         }
     }
-
 }
 
 

@@ -11,11 +11,8 @@ use crate::pub_types::PointFloat;
 impl<'a> Revolver<'a>{
     pub fn spawn_unit(&mut self, data: &GameData, mould: &UnitMould, position: &PointFloat, owner: GlobalEntityID){
         let mut abilities_comp = AbilitiesComp{
-            abilities: [AbilityID::NONE; 5]
+            abilities: mould.abilities.clone(),
         };
-        for (i, ability) in mould.abilities.iter().enumerate(){
-            abilities_comp.abilities[i] = *ability;
-        }
         let mut pending = PendingEntity::new7(
             PositionComp{ pos: position.clone() },
             OwnedComp { owner },

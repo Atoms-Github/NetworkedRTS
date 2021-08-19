@@ -16,3 +16,5 @@ pub use ability::*;
 pub mod noneffects;
 pub use noneffects::*;
 pub use serde::*;
+
+pub use winit::VirtualKeyCode;
