@@ -63,7 +63,7 @@ pub static ORDERS_SYS: System<ResourcesPtr> = System{
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     // Check for move commands.
     for (player_id, inputs) in CompIter1::<InputComp>::new(c) {
-        if inputs.mode == InputMode::UnitsSelected && inputs.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Right){
+        if inputs.mode == InputMode::None && inputs.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Right){
             for (unit_id, selectable, owned, orders, hiker)
             in CompIter4::<SelectableComp, OwnedComp, OrdersComp, HikerComp>::new(c) {
                 if selectable.is_selected && owned.owner == player_id{

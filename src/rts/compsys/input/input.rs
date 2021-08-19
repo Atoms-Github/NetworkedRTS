@@ -21,7 +21,6 @@ pub struct InputComp{
 pub enum InputMode{
     None,
     SelectionBox,
-    UnitsSelected, // TODO: Remove?
     ClickUI(GlobalEntityID),
     TargettingAbility(AbilityID),
 }

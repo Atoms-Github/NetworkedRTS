@@ -51,7 +51,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
 
         match input.mode.clone() {
             // Spawning it.
-            InputMode::None | InputMode::UnitsSelected => {
+            InputMode::None => {
                 check_create_box(c, ent_changes, player_id, input);
             }
             // Deleting it.
@@ -70,12 +70,8 @@ fn check_delete_box(c: &CompStorage, ent_changes: &mut EntStructureChanges,  pla
         if let Some(box_id) = get_box(c, player_id){
             ent_changes.deleted_entities.push(box_id);
             let any_selected = select_units_in_box(c, box_id);
-            if any_selected{
-                input.mode = InputMode::UnitsSelected;
-            }else{
-                input.mode = InputMode::None;
-            }
         }
+        input.mode = InputMode::None;
     }
 }
 

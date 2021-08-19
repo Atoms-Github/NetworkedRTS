@@ -12,7 +12,7 @@ pub fn abilities(data: &mut GameData){
             hotkey: VirtualKeyCode::Q
         },
         range: 1000.0,
-        casting_time: 200.0,
+        casting_time: 1000.0,
     });
 
 }
