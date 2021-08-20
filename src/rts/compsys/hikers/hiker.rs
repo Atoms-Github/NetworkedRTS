@@ -27,22 +27,24 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
         let woah_2 = c.get::<PositionComp>(test_id).unwrap();
     }
 
-    for (unit_id, hiker, position) in CompIter2::<HikerComp, PositionComp>::new(c) {
-        // Moving the units.
-        let mut made_destination = false;
-        if let Some(my_destination) = &mut hiker.destination{
-            if (my_destination.clone() - &position.pos).magnitude() < hiker.speed{
-                position.pos = my_destination.clone();
-                made_destination = true;
-            }else{
-                position.pos += (my_destination.clone() - &position.pos).normalize().mul(hiker.speed);
+    for (unit_id, hiker, position, order) in
+    CompIter3::<HikerComp, PositionComp, OrdersComp>::new(c) {
+        if order.state == OrderState::MOVING{
+            // Moving the units.
+            let mut made_destination = false;
+            if let Some(my_destination) = &mut hiker.destination{
+                if (my_destination.clone() - &position.pos).magnitude() < hiker.speed{
+                    position.pos = my_destination.clone();
+                    made_destination = true;
+                }else{
+                    position.pos += (my_destination.clone() - &position.pos).normalize().mul(hiker.speed);
 
+                }
+            }
+            if made_destination{
+                hiker.destination = None;
             }
         }
-        if made_destination{
-            hiker.destination = None;
-        }
-
     }
 }
 

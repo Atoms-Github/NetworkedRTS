@@ -132,7 +132,8 @@ impl LogicSimTailer{
 
             }
             Some(existing_hash) => {
-                assert!(*existing_hash == framed_hash.hash, format!("Out of sync! Frame index {}", framed_hash.frame));
+                let msg = format!("Out of sync! Frame index {}", framed_hash.frame);
+                assert_eq!(*existing_hash, framed_hash.hash, "Out of sync! Frame index {}", framed_hash.frame);
             }
         }
     }

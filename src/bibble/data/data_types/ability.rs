@@ -6,6 +6,7 @@ use winit::VirtualKeyCode;
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum AbilityID{
     WALK,
+    ATTACK_GROUND,
     SPAWN_SCUTTLER,
     NONE
 }
