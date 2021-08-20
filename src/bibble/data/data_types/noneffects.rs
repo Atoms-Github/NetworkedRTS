@@ -23,11 +23,6 @@ pub enum ActorID {
 }
 
 
-#[repr(u16)]
-#[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ProjectileID {
-    DISCIPLE_GLAIVE,
-}
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -62,11 +57,6 @@ pub struct WeaponMould {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ActorMould {
     pub colour: (u8, u8, u8),
-}
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub struct ProjectileMould {
-    pub actor_id: ActorID,
-    pub speed: f32,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RaceMould {

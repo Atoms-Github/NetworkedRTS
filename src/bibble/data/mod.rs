@@ -9,7 +9,6 @@ impl GameData{
             units: Default::default(),
             weapons: Default::default(),
             races: Default::default(),
-            projectiles: Default::default(),
             abilities: Default::default()
         };
 

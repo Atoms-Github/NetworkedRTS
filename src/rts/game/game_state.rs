@@ -25,6 +25,7 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
     vec![
         INPUT_PREPROC.clone(),
         CAMERA_PAN_SYS.clone(),
+        SEEKING_PROJECTILES_COMP.clone(),
         SELECTION_BOX_SYS.clone(),
         ABILITY_TARGETING.clone(),
         ABILITIES_SYS.clone(),

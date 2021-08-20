@@ -9,7 +9,7 @@ pub enum AbilityID{
     NONE,
     ATTACK_GROUND,
     SPAWN_SCUTTLER,
-    WEP_GLAIVES,
+    WEP_SCUTTLER,
 }
 /// How 'bout, we just have a special class of ability, which resolves into appropriate behaviours and effects.
 /// Ain't work with cost, but rest fine.

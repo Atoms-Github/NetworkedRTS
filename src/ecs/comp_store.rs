@@ -35,6 +35,12 @@ pub struct DeleteResult{
 
 }
 impl CompStorage{
+    pub fn get_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
+        self.get::<T>(entity_id).unwrap()
+    }
+    pub fn get_mut_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
+        self.get_mut::<T>(entity_id).unwrap()
+    }
     pub fn get<T : 'static>(&self, entity_id: GlobalEntityID) -> Option<&T>{
         // Pog. Can be pure 0 processing time function if we use get_unsafe().
         let internal = self.internal_entities.get(entity_id)?;
@@ -43,6 +49,9 @@ impl CompStorage{
 
 
         return Some(bytes.get());
+    }
+    pub fn ent_alive(&self, entity_id: GlobalEntityID) -> bool{
+        return self.internal_entities.get(entity_id).is_some();
     }
     pub fn get_mut<T : 'static>(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID) -> Option<&mut T>{
         return self.get::<T>(entity_id).map(|unmut|{unsafe{very_bad_function(unmut)}});

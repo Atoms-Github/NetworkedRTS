@@ -2,7 +2,7 @@ use super::*;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum EffectUnitToUnit{
-    LAUNCH_PROJECTILE(ProjectileID),
+    LAUNCH_PROJECTILE(ProjectileMould),
     INSTA_AFFECT_TARGET(EffectToUnit)
 }
 
@@ -10,5 +10,5 @@ pub enum EffectUnitToUnit{
 pub struct ProjectileMould {
     pub actor_id: ActorID,
     pub speed: f32,
-    pub hit_effect: EffectUnitToUnit,
+    pub hit_effect: EffectToUnit,
 }

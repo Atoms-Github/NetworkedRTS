@@ -7,7 +7,6 @@ pub struct GameData{ // TODO: Rename :)
     pub units: BTreeMap<UnitID, UnitMould>,
     pub weapons: BTreeMap<WeaponID, WeaponMould>,
     pub races: BTreeMap<RaceID, RaceMould>,
-    pub projectiles: BTreeMap<ProjectileID, ProjectileMould>,
     pub abilities: BTreeMap<AbilityID, AbilityMould>,
 }
 

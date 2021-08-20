@@ -36,6 +36,7 @@ lazy_static! {
         map.register_type::<WorkerComp>();
         map.register_type::<RenderComp>();
         map.register_type::<TechTreeComp>();
+        map.register_type::<SeekingProjComp>();
 
         map
     };

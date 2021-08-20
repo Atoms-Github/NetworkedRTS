@@ -44,9 +44,9 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                 let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
                 let color = {
                     if arena_comp.pathing[x][y]{
-                        graphics::Color::from((100,180,100))
+                        graphics::Color::from_rgba(180,100,100, 100)
                     }else{
-                        graphics::Color::from((180,100,100))
+                        graphics::Color::from_rgba(100,180,100, 100)
                     }
                 };
                 draw_rect(ctx, color,
