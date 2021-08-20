@@ -1,6 +1,7 @@
 use super::*;
 use nalgebra::{Point, Point2};
 use serde::*;
+use crate::pub_types::PointFloat;
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -57,6 +58,7 @@ pub struct WeaponMould {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ActorMould {
     pub colour: (u8, u8, u8),
+    pub size: PointFloat,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RaceMould {

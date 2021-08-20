@@ -1,6 +1,7 @@
 use crate::bibble::data::data_types::*;
 use nalgebra::Point2;
 use winit::VirtualKeyCode;
+use crate::pub_types::PointFloat;
 
 pub fn abilities(data: &mut GameData){
     data.abilities.insert(AbilityID::SPAWN_SCUTTLER, AbilityMould{
@@ -18,9 +19,10 @@ pub fn abilities(data: &mut GameData){
         cost: 0.0,
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
             actor: ActorMould {
-                colour: (20, 20, 20)
+                colour: (20, 20, 20),
+                size: PointFloat::new(10.0,10.0)
             },
-            speed: 1.0,
+            speed: 0.25,
             hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
                 amount: 5.0
             })

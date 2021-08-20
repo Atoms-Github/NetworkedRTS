@@ -27,7 +27,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     // Increment time since shot.
     for (shooter_id, weapon, owned_shooter, position_shooter, orders)
     in CompIter4::<WeaponComp, OwnedComp, PositionComp, OrdersComp>::new(c) {
-        weapon.time_since_shot += 1.0;
+        weapon.time_since_shot += crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
     }
     // Check for queuing up 'shoot once' commands.
     for (shooter_id, weapon, owned_shooter, position_shooter, orders)

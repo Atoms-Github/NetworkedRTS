@@ -117,7 +117,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (unit_id, orders)
     in CompIter1::<OrdersComp>::new(c) {
         if let OrderState::CHANNELLING(channel_time) = &mut orders.state{
-            *channel_time += 16.66;
+            *channel_time += crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
         }
     }
 

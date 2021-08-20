@@ -58,7 +58,7 @@ impl<'a> Revolver<'a>{
     }
     pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, pending: &mut PendingEntity){
         pending.add_comp(RenderComp{ colour: mould.colour});
-        pending.add_comp(SizeComp{ size: PointFloat::new(30.0, 30.0)});
+        pending.add_comp(SizeComp{ size: mould.size.clone()});
     }
 }
 
