@@ -6,6 +6,7 @@ use crate::rts::compsys::*;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use crate::rts::game::game_state::RenderResources;
 use ggez::event::MouseButton;
+use image::Pixel;
 
 pub const ARENA_DIMENSIONS: usize = 4;
 pub const ARENA_SQUARE_SIZE: usize = 200;
@@ -17,6 +18,23 @@ pub struct ArenaComp {
 }
 
 impl ArenaComp {
+    pub fn load(filepath: String) -> Self{
+        let mut lock = crate::rts::game::game_resources::GAME_RESOURCES.lock().unwrap();
+        let image = lock.get_image(filepath);
+        assert_eq!(image.width() as usize, ARENA_DIMENSIONS);
+        assert_eq!(image.height() as usize, ARENA_DIMENSIONS);
+        let mut pathing = [[true; ARENA_DIMENSIONS]; ARENA_DIMENSIONS];
+        for x in 0..ARENA_DIMENSIONS{
+            for y in 0..ARENA_DIMENSIONS{
+                let (r,g,b,a) = image.get_pixel(x as u32, y as u32).channels4();
+                pathing[x][y] = r == 0;
+            }
+        }
+        Self{
+            pathing
+        }
+    }
+
     pub fn get_box_length(&self) -> usize{
         ARENA_SQUARE_SIZE
     }

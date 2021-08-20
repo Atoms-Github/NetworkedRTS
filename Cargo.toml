@@ -25,6 +25,8 @@ mopa = "*"
 serde_closure = "*"
 serde_traitobject = "*"
 lazy_static = "*"
+image = "0.23.14"
+glob = "*"
 
 
 #futures = "0.1.29"

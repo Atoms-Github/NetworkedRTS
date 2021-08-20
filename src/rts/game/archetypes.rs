@@ -51,9 +51,7 @@ impl PendingEntity{
     }
     pub fn new_arena() -> Self{
         Self::new1(
-            ArenaComp{
-                pathing: [[true; ARENA_DIMENSIONS]; ARENA_DIMENSIONS]
-            }
+            ArenaComp::load("map.png".to_string()),
         )
     }
 }

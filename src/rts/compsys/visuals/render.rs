@@ -42,8 +42,14 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                 let small_top_left_game = PointFloat::new((x * arena_comp.get_box_length()) as f32,
                                                      (y * arena_comp.get_box_length()) as f32) + &base_pos_game;
                 let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
-
-                draw_rect(ctx, graphics::Color::from((180,180,180)),
+                let color = {
+                    if arena_comp.pathing[x][y]{
+                        graphics::Color::from((100,180,100))
+                    }else{
+                        graphics::Color::from((180,100,100))
+                    }
+                };
+                draw_rect(ctx, color,
                           graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y));
 
             }
