@@ -94,7 +94,8 @@ impl GameState {
     fn get_player_spawn(&self, player_id: PlayerID) -> PointFloat{
         let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
         let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
-        let radius = ARENA_WIDTH as f32 / 3.0;
+        let arena_width = self.ecs.c.get::<ArenaComp>(ARENA_ENT_ID).unwrap().get_length();
+        let radius = arena_width as f32 / 3.0;
 
 
         let offset_from_centre = PointFloat::new(
@@ -102,7 +103,7 @@ impl GameState {
             my_radius_round.cos() * radius
         );
 
-        let centre = PointFloat::new(ARENA_WIDTH as f32 / 2.0, ARENA_WIDTH as f32 / 2.0);
+        let centre = PointFloat::new(arena_width as f32 / 2.0, arena_width as f32 / 2.0);
 
         return centre + offset_from_centre;
     }
