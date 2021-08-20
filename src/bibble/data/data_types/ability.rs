@@ -6,9 +6,10 @@ use winit::VirtualKeyCode;
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum AbilityID{
     WALK,
+    NONE,
     ATTACK_GROUND,
     SPAWN_SCUTTLER,
-    NONE
+    WEP_GLAIVES,
 }
 /// How 'bout, we just have a special class of ability, which resolves into appropriate behaviours and effects.
 /// Ain't work with cost, but rest fine.

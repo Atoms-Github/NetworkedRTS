@@ -88,11 +88,11 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     for (unit_id, abilities, selectable, owned)
     in CompIter3::<AbilitiesComp, SelectableComp, OwnedComp>::new(&ecs.c){
         if owned.owner == player_entity_id && selectable.is_selected{
-            for (i, ability_id) in abilities.abilities.iter().enumerate(){
-                let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(*ability_id).button_info;
+            for (i, ability_instance) in abilities.abilities.iter().enumerate(){
+                let button_mould = &unit_id.get_owner_tech_tree(&ecs.c).get_ability(ability_instance.id).button_info;
 
                 if rendering_abilities.get(&button_mould.hotkey).is_none(){
-                    rendering_abilities.insert(button_mould.hotkey, ability_id);
+                    rendering_abilities.insert(button_mould.hotkey, ability_instance.id);
                 }
 
             }
@@ -100,10 +100,10 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     }
     // Draw ability buttons.
     for (i, (hotkey, ability_id)) in rendering_abilities.iter().enumerate(){
-        let button_mould = &player_entity_id.get_player_tech_tree(&ecs.c).get_ability(**ability_id).button_info;
+        let button_mould = &player_entity_id.get_player_tech_tree(&ecs.c).get_ability(*ability_id).button_info;
         let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
         if let InputMode::TargettingAbility(targetting_ability_id) = player_input.mode{
-            if targetting_ability_id == **ability_id{
+            if targetting_ability_id == *ability_id{
                 draw_rect(ctx, graphics::Color::from_rgb(255,204,0),
                           graphics::Rect::new(screen_pos.x - 5.0, screen_pos.y - 5.0, 40.0,40.0));
             }

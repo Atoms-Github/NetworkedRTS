@@ -14,7 +14,12 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct AbilitiesComp {
-    pub abilities: Vec<AbilityID>,
+    pub abilities: Vec<AbilityInstance>,
+}
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct AbilityInstance{
+    pub id: AbilityID,
+    pub time_since_use: f32,
 }
 
 

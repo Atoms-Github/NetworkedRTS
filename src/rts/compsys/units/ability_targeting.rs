@@ -24,19 +24,19 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             'units :for (unit_id , owned, selectable, abilities, orders)
             in CompIter4::<OwnedComp, SelectableComp, AbilitiesComp, OrdersComp>::new(c) {
                 if selectable.is_selected{
-                    for ability_id in &abilities.abilities{
-                        let ability_mould = data.get_ability(*ability_id);
+                    for ability_instance in &abilities.abilities{
+                        let ability_mould = data.get_ability(ability_instance.id);
                         if ability_mould.button_info.hotkey == down_key{
                             match ability_mould.targetting{
                                 AbilityTargetType::NoTarget(_) => {
                                     orders.enqueue(OrderInstance{
-                                        ability: *ability_id,
+                                        ability: ability_instance.id,
                                         target: AbilityTargetInstance::NO_TARGET
                                     }, !input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
                                 }
                                 AbilityTargetType::Unit(_) |
                                 AbilityTargetType::Point(_)=> {
-                                    input.start_targetting(*ability_id);
+                                    input.start_targetting(ability_instance.id);
                                 }
                             }
 
@@ -58,7 +58,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                         in CompIter4::<OwnedComp, SelectableComp, AbilitiesComp, OrdersComp>::new(c) {
                             if selectable.is_selected{
                                 for ability_id in &abilities.abilities{
-                                    if *ability_id == using_ability_id{
+                                    if ability_id.id == using_ability_id{
                                         orders.enqueue(OrderInstance{
                                             ability: using_ability_id,
                                             target: AbilityTargetInstance::POINT(input.mouse_pos_game_world.clone()),
