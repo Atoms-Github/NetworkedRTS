@@ -5,7 +5,7 @@ pub fn units(data: &mut GameData){
     data.units.insert(UnitID::SCUTTLER, UnitMould{
         radius: 30.0,
         actor: ActorMould { colour: (100, 0, 100) },
-        weapons: vec![WeaponID::GLAIVES],
+        weapons: vec![AbilityID::WEP_SCUTTLER],
         abilities: vec![AbilityID::WEP_SCUTTLER],
         unit_flavour: UnitFlavour::HIKER,
         unit_cost: 1000

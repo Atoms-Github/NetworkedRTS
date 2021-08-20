@@ -22,6 +22,7 @@ pub struct AbilityMould{
     pub button_info: ButtonMould,
     pub range: f32,
     pub casting_time: f32,
+    pub cooldown: f32,
 }
 // Let's make buttons stateless.
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

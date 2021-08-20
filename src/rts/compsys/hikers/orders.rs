@@ -78,7 +78,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             in CompIter4::<SelectableComp, OwnedComp, OrdersComp, HikerComp>::new(c) {
                 if selectable.is_selected && owned.owner == player_id{
                     let order = OrderInstance{
-                        ability: AbilityID::WALK,
+                        ability: AbilityID::ATTACK_GROUND,
                         target: AbilityTargetInstance::POINT(inputs.mouse_pos_game_world.clone()),
                     };
                     orders.enqueue(order, !inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
@@ -103,8 +103,8 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                         target.clone()
                     }
                 };
-                // If in range, start channelling.
-                if (position.pos.clone() - &target_pos).magnitude_squared() <= ability.range.powf(2.0){
+                let in_range = (position.pos.clone() - &target_pos).magnitude_squared() <= ability.range.powf(2.0);
+                if in_range{
                     // Start channelling.
                     orders.state = OrderState::CHANNELLING(0.0);
                 }else{ // If out of range, set hiking destination.

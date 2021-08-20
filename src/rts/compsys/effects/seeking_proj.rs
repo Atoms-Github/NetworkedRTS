@@ -15,7 +15,6 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct SeekingProjComp {
-    pub abilities: Vec<AbilityInstance>,
     pub speed: f32,
     pub hit_effect: EffectToUnit,
     pub target: GlobalEntityID,

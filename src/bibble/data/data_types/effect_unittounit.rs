@@ -8,7 +8,7 @@ pub enum EffectUnitToUnit{
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ProjectileMould {
-    pub actor_id: ActorID,
+    pub actor: ActorMould,
     pub speed: f32,
     pub hit_effect: EffectToUnit,
 }

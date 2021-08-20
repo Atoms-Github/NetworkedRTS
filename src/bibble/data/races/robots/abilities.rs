@@ -12,11 +12,14 @@ pub fn abilities(data: &mut GameData){
         },
         range: 1000.0,
         casting_time: 1000.0,
+        cooldown: 0.0
     });
     data.abilities.insert(AbilityID::WEP_SCUTTLER, AbilityMould{
         cost: 0.0,
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
-            actor_id: ActorID::DISCIPLE,
+            actor: ActorMould {
+                colour: (20, 20, 20)
+            },
             speed: 1.0,
             hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
                 amount: 5.0
@@ -27,7 +30,8 @@ pub fn abilities(data: &mut GameData){
             hotkey: VirtualKeyCode::Minus
         },
         range: 200.0,
-        casting_time: 10.0,
+        casting_time: 1000.0,
+        cooldown: 100.0
     });
 
 }

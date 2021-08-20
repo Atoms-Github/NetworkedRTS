@@ -9,8 +9,22 @@ use crate::pub_types::PointFloat;
 
 
 impl<'a> Revolver<'a>{
+    pub fn spawn_seeker_proj(&mut self, data: &GameData, mould: &ProjectileMould, shooter: GlobalEntityID, target: GlobalEntityID){
+        let owner = self.c.get_unwrap::<OwnedComp>(shooter).owner;
+        let position = self.c.get_unwrap::<PositionComp>(shooter).pos.clone();
+        let mut pending = PendingEntity::new3(
+            PositionComp{ pos: position },
+            OwnedComp { owner },
+            SeekingProjComp{
+                speed: mould.speed,
+                hit_effect: mould.hit_effect.clone(),
+                target
+            }
+        );
+        self.add_actor(data, &mould.actor, &mut pending);
+        self.changes.new_entities.push(pending);
+    }
     pub fn spawn_unit(&mut self, data: &GameData, mould: &UnitMould, position: &PointFloat, owner: GlobalEntityID){
-
         let mut abilities_comp = AbilitiesComp{
             abilities: mould.abilities.iter().map(|ability_id|{AbilityInstance{
                 id: *ability_id,
@@ -35,8 +49,8 @@ impl<'a> Revolver<'a>{
         pending.add_comp(abilities_comp);
         if mould.weapons.len() > 0{
             pending.add_comp(WeaponComp{
-                weapon_id: *mould.weapons.get(0).unwrap(),
-                time_since_shot: 0.0
+                time_since_shot: 0.0,
+                wep_ability_id: *mould.weapons.get(0).unwrap()
             });
         }
         self.add_actor(data, &mould.actor, &mut pending);
