@@ -31,12 +31,20 @@ impl<'a> Revolver<'a>{
                 time_since_use: 0.0
             }}).collect(),
         };
+        abilities_comp.abilities.push(AbilityInstance{
+            id: AbilityID::ATTACK_GROUND,
+            time_since_use: 0.0
+        });
+        abilities_comp.abilities.push(AbilityInstance{
+            id: AbilityID::WALK,
+            time_since_use: 0.0
+        });
         let mut pending = PendingEntity::new7(
             PositionComp{ pos: position.clone() },
             OwnedComp { owner },
             LifeComp{ life: 100.0, max_life: 100.0 },
             SelectableComp{ is_selected: false },
-            OrdersComp{ orders_queue: vec![], state: OrderState::NONE },
+            OrdersComp{ orders_queue: vec![], state: OrderState::NONE, order_target_loc: PointFloat::new(0.0,0.0) },
             HikerComp{
                 destination: None,
                 speed: 2.0,

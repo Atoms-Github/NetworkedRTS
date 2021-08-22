@@ -21,6 +21,24 @@ pub struct AbilityInstance{
     pub id: AbilityID,
     pub time_since_use: f32,
 }
+impl AbilitiesComp{
+    pub fn get_ability(&self, id: AbilityID) -> &AbilityInstance{
+        for instance in &self.abilities{
+            if instance.id == id{
+                return instance;
+            }
+        }
+        panic!("Can't find ability {:?}", id);
+    }
+    pub fn get_ability_mut(&mut self, id: AbilityID) -> &mut AbilityInstance{
+        for instance in &mut self.abilities{
+            if instance.id == id{
+                return instance;
+            }
+        }
+        panic!("Can't find ability {:?}", id);
+    }
+}
 
 
 pub static ABILITIES_SYS: System<ResourcesPtr> = System{
@@ -28,7 +46,13 @@ pub static ABILITIES_SYS: System<ResourcesPtr> = System{
     name: "abilities"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-
+    // Increment time since use timers.
+    for (unit_id, abilities)
+    in CompIter1::<AbilitiesComp>::new(c) {
+        for ability in &mut abilities.abilities{
+            ability.time_since_use += crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
+        }
+    }
 }
 
 

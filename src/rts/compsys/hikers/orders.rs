@@ -28,15 +28,17 @@ pub enum AbilityTargetInstance{
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum OrderState {
-    CHANNELLING(f32),
-    MOVING,
     NONE,
+    MOVING,
+    WAITING_FOR_COOLDOWN,
+    CHANNELLING(f32),
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct OrdersComp {
     pub orders_queue: Vec<OrderInstance>,
     pub state: OrderState,
+    pub order_target_loc: PointFloat,
 }
 impl OrdersComp{
     pub fn enqueue(&mut self, order: OrderInstance, before: bool){
@@ -78,7 +80,13 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             in CompIter4::<SelectableComp, OwnedComp, OrdersComp, HikerComp>::new(c) {
                 if selectable.is_selected && owned.owner == player_id{
                     let order = OrderInstance{
-                        ability: AbilityID::ATTACK_GROUND,
+                        ability: {
+                            if inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LControl){
+                                AbilityID::WALK
+                            }else{
+                                AbilityID::ATTACK_GROUND
+                            }
+                        },
                         target: AbilityTargetInstance::POINT(inputs.mouse_pos_game_world.clone()),
                     };
                     orders.enqueue(order, !inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
@@ -86,31 +94,77 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             }
         }
     }
-    // Check for in-range to start channelling:
+    // Check for dead target.
+    for (unit_id, owned, orders, position, hiker)
+    in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
+        let mut dead = false;
+        if let Some(executing_order) = orders.get_executing_order(){
+            if let AbilityTargetInstance::UNIT(target_unit) = executing_order.target{
+                if !c.ent_alive(target_unit){
+                    dead = true;
+                }
+            }
+        }
+        if dead{
+            orders.finish_order();
+        }
+    }
+    // Set order target loc.
+    for (unit_id, owned, orders, position, hiker)
+    in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
+        if let Some(current_order) = orders.get_executing_order(){
+            let ability = unit_id.get_owner_tech_tree(c).get_ability(current_order.ability);
+            let target_pos = match &current_order.target{
+                AbilityTargetInstance::NO_TARGET => {
+                    position.pos.clone()
+                }
+                AbilityTargetInstance::UNIT(target_unit) => {
+                    c.get1_unwrap::<PositionComp>(*target_unit).pos.clone()
+                }
+                AbilityTargetInstance::POINT(target) => {
+                    target.clone()
+                }
+            };
+            orders.order_target_loc = target_pos;
+        }
+    }
+    // Check for in-range.
+    for (unit_id, owned, orders, position, hiker)
+    in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
+        // These are the two states that care about range.
+        if orders.state == OrderState::MOVING || orders.state == OrderState::WAITING_FOR_COOLDOWN{
+            if let Some(current_order) = orders.get_executing_order(){
+                let ability = unit_id.get_owner_tech_tree(c).get_ability(current_order.ability);
+                let target_pos = &orders.order_target_loc;
+                let in_range = (position.pos.clone() - target_pos).magnitude_squared() <= ability.range.powf(2.0);
+                if in_range{
+                    // Start channelling/waiting.
+                    orders.state = OrderState::WAITING_FOR_COOLDOWN;
+                }else{
+                    // Not in range. Move to it.
+                    orders.state = OrderState::MOVING;
+                }
+            }
+        }
+    }
+    // Check for ability cooled down.
+    for (unit_id, owned, orders, position, abilities)
+    in CompIter4::<OwnedComp, OrdersComp, PositionComp, AbilitiesComp>::new(c) {
+        // These are the two states that care about range.
+        if orders.state == OrderState::WAITING_FOR_COOLDOWN{
+            if let Some(current_order) = orders.get_executing_order(){
+                let ability = unit_id.get_owner_tech_tree(c).get_ability(current_order.ability);
+                if abilities.get_ability(current_order.ability).time_since_use >= ability.cooldown{
+                    orders.state = OrderState::CHANNELLING(0.0);
+                }
+            }
+        }
+    }
+    // Move towards target.
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
         if orders.state == OrderState::MOVING{
-            if let Some(current_order) = orders.get_executing_order(){
-                let ability = unit_id.get_owner_tech_tree(c).get_ability(current_order.ability);
-                let target_pos = match &current_order.target{
-                    AbilityTargetInstance::NO_TARGET => {
-                        position.pos.clone()
-                    }
-                    AbilityTargetInstance::UNIT(target_unit) => {
-                        c.get1_unwrap::<PositionComp>(*target_unit).pos.clone()
-                    }
-                    AbilityTargetInstance::POINT(target) => {
-                        target.clone()
-                    }
-                };
-                let in_range = (position.pos.clone() - &target_pos).magnitude_squared() <= ability.range.powf(2.0);
-                if in_range{
-                    // Start channelling.
-                    orders.state = OrderState::CHANNELLING(0.0);
-                }else{ // If out of range, set hiking destination.
-                    hiker.destination = Some(target_pos);
-                }
-            }
+            hiker.destination = Some(orders.order_target_loc.clone());
         }
     }
     // Increment channelling timers.
@@ -123,14 +177,15 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
 
     let mut revolver = Revolver::new(c);
     // Finish orders.
-    for (unit_id, orders)
-    in CompIter1::<OrdersComp>::new(c) {
+    for (unit_id, orders, abilities)
+    in CompIter2::<OrdersComp, AbilitiesComp>::new(c) {
         if let OrderState::CHANNELLING(channel_time) = orders.state.clone(){
             let tech_tree = unit_id.get_owner_tech_tree(c);
             let executing_order = orders.get_executing_order().unwrap();
             let ability = tech_tree.get_ability(executing_order.ability);
             if channel_time >= ability.casting_time{
                 let executed_order = orders.finish_order();
+                abilities.get_ability_mut(executed_order.ability).time_since_use = 0.0;
                 // Now execute ability.
                 revolver.revolve_ability_execution(tech_tree, unit_id, executed_order.ability, executed_order.target);
             }

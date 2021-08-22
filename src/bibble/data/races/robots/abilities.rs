@@ -32,8 +32,8 @@ pub fn abilities(data: &mut GameData){
             hotkey: VirtualKeyCode::Minus
         },
         range: 200.0,
-        casting_time: 1000.0,
-        cooldown: 100.0
+        casting_time: 0.0,
+        cooldown: 2000.0
     });
 
 }
