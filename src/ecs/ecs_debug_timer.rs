@@ -49,7 +49,12 @@ impl EcsDebugTimer{
         println!("Budget: {}ms", time_budget_ms);
 
         let mut total_duration = Duration::from_secs(0);
-        for (key, value) in &self.entries{
+        let mut sorted: Vec<(&String, &Entry)> = self.entries.iter().collect();
+        sorted.sort_by(|(name1, entry1), (name2, entry2)| {
+            entry1.total.cmp(&entry2.total).reverse()
+        });
+
+        for (key, value) in sorted{
             let average = value.total / value.entries;
             total_duration += average;
             println!("{}% - {} - {:?}", average.as_nanos() as f32 / (time_budget_ms * 1_000_000.0) * 100.0, key, average);
