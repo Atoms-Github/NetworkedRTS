@@ -1,5 +1,5 @@
 use ggez::{graphics, Context};
-use ggez::graphics::{DrawParam, Text, Color, Mesh};
+use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable};
 use crate::utils::gett;
 use crate::rts::compsys::*;
 use crate::ecs::{ActiveEcs, GlobalEntityID};
@@ -37,6 +37,8 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
         let small_size =  player_camera.game_size_to_screen_size(
             PointFloat::new(arena_comp.get_box_length() as f32 - 1.0, arena_comp.get_box_length() as f32 - 1.0)
         );
+        let mut builder = MeshBuilder::new();
+
         for x in 0..arena_comp.pathing.len(){
             for y in 0..arena_comp.pathing[x].len(){
                 let small_top_left_game = PointFloat::new((x * arena_comp.get_box_length()) as f32,
@@ -44,16 +46,17 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                 let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
                 let color = {
                     if arena_comp.pathing[x][y]{
-                        graphics::Color::from_rgba(180,100,100, 100)
-                    }else{
                         graphics::Color::from_rgba(100,180,100, 100)
+                    }else{
+                        graphics::Color::from_rgba(180,100,100, 100)
                     }
                 };
-                draw_rect(ctx, color,
-                          graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y));
+                let rect = graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y);
 
+                builder.rectangle(graphics::DrawMode::fill(), rect, color);
             }
         }
+        builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
     }
 
     // Draw units.

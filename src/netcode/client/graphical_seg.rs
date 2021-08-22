@@ -57,7 +57,7 @@ impl GraphicalIn {
     pub fn start(mut self){
         let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
-            .window_mode(conf::WindowMode::default().dimensions(960.0, 540.0)).add_resource_path(""); // TODO3: Find what resource path.
+            .window_mode(conf::WindowMode::default().dimensions(1440.0, 810.0)).add_resource_path(""); // TODO3: Find what resource path.
 
 
 
