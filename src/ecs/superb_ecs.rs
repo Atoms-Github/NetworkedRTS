@@ -42,8 +42,8 @@ impl<R> SuperbEcs<R>{
         }
         pending_changes.apply(&mut self.c);
 
-        if quality == SimQuality::DETERMA{
-            //self.debug_times.print_all();
+        if quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.1){
+            self.debug_times.print_all();
         }
     }
 
@@ -164,6 +164,7 @@ use std::slice::Iter;
 use crate::ecs::pending_entity::PendingEntity;
 use crate::pub_types::SimQuality;
 use crate::ecs::ecs_debug_timer::EcsDebugTimer;
+use rand::Rng;
 
 impl ECSVisitor {
     fn new() -> Self {

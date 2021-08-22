@@ -45,9 +45,17 @@ impl EcsDebugTimer{
     }
     pub fn print_all(&self){
         println!(" ---- Times: ---- ");
+        let time_budget_ms = crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS / 20.0;
+        println!("Budget: {}ms", time_budget_ms);
+
+        let mut total_duration = Duration::from_secs(0);
         for (key, value) in &self.entries{
             let average = value.total / value.entries;
-            println!("{} - {:?}", key, average);
+            total_duration += average;
+            println!("{}% - {} - {:?}", average.as_nanos() as f32 / (time_budget_ms * 1_000_000.0) * 100.0, key, average);
         }
+        println!("Total: {}% {:?}/{}ms",
+                 total_duration.as_nanos() as f32 / (time_budget_ms * 1_000_000.0) * 100.0,
+                 total_duration, time_budget_ms);
     }
 }
