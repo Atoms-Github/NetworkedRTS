@@ -73,27 +73,7 @@ pub static ORDERS_SYS: System<ResourcesPtr> = System{
     name: "orders"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    // Check for move commands.
-    for (player_id, inputs) in CompIter1::<InputComp>::new(c) {
-        if inputs.mode == InputMode::None && inputs.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Right){
-            for (unit_id, selectable, owned, orders, hiker)
-            in CompIter4::<SelectableComp, OwnedComp, OrdersComp, HikerComp>::new(c) {
-                if selectable.is_selected && owned.owner == player_id{
-                    let order = OrderInstance{
-                        ability: {
-                            if inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LControl){
-                                AbilityID::WALK
-                            }else{
-                                AbilityID::ATTACK_GROUND
-                            }
-                        },
-                        target: AbilityTargetInstance::POINT(inputs.mouse_pos_game_world.clone()),
-                    };
-                    orders.enqueue(order, !inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
-                }
-            }
-        }
-    }
+
     // Check for dead target.
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {

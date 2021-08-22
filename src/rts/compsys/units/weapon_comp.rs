@@ -9,7 +9,7 @@ use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
-use crate::bibble::data::data_types::{WeaponID, AbilityID};
+use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -23,6 +23,28 @@ pub static WEAPON_SYS: System<ResourcesPtr> = System{
     name: "weapon"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+    // Check for move commands.
+    for (player_id, inputs) in CompIter1::<InputComp>::new(c) {
+        if inputs.mode == InputMode::None && inputs.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Right){
+            for (unit_id, selectable, owned, orders, hiker)
+            in CompIter4::<SelectableComp, OwnedComp, OrdersComp, HikerComp>::new(c) {
+                if selectable.is_selected && owned.owner == player_id{
+                    let order = OrderInstance{
+                        ability: {
+                            if inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LControl){
+                                AbilityID::WALK
+                            }else{
+                                AbilityID::ATTACK_GROUND
+                            }
+                        },
+                        target: AbilityTargetInstance::POINT(inputs.mouse_pos_game_world.clone()),
+                    };
+                    orders.enqueue(order, !inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
+                }
+            }
+        }
+    }
+
     let mut revolver = Revolver::new(c);
     // Increment time since shot.
     for (shooter_id, weapon, owned_shooter, position_shooter, orders)
