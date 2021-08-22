@@ -39,7 +39,7 @@ impl CompStorage{
     pub fn get_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
         self.get::<T>(entity_id).unwrap()
     }
-    pub fn get_mut_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
+    pub fn get_mut_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &mut T{
         self.get_mut::<T>(entity_id).unwrap()
     }
     pub fn get<T : 'static>(&self, entity_id: GlobalEntityID) -> Option<&T>{

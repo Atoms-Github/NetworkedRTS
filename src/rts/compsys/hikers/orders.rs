@@ -185,7 +185,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             let ability = tech_tree.get_ability(executing_order.ability);
             if channel_time >= ability.casting_time{
                 let executed_order = orders.finish_order();
-                if c.get_unwrap::<OwnsResourcesComp>(owned.owner).try_pay(ResourceType::BLUENESS, ability.cost){
+                if c.get_mut_unwrap::<OwnsResourcesComp>(owned.owner).try_pay(ResourceType::BLUENESS, ability.cost as i32){
                     abilities.get_ability_mut(executed_order.ability).time_since_use = 0.0;
                     // Now execute ability.
                     revolver.revolve_ability_execution(tech_tree, unit_id, executed_order.ability, executed_order.target);
