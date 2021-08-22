@@ -32,12 +32,13 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
         if order.state == OrderState::MOVING{
             // Moving the units.
             let mut made_destination = false;
+            let dist_can_move = hiker.speed * crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
             if let Some(my_destination) = &mut hiker.destination{
-                if (my_destination.clone() - &position.pos).magnitude() < hiker.speed{
+                if (my_destination.clone() - &position.pos).magnitude() < dist_can_move{
                     position.pos = my_destination.clone();
                     made_destination = true;
                 }else{
-                    position.pos += (my_destination.clone() - &position.pos).normalize().mul(hiker.speed);
+                    position.pos += (my_destination.clone() - &position.pos).normalize().mul(dist_can_move);
 
                 }
             }

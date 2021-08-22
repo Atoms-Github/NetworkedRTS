@@ -95,7 +95,7 @@ impl GameState {
     fn get_player_spawn(&self, player_id: PlayerID) -> PointFloat{
         let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
         let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
-        let arena_width = self.ecs.c.get::<ArenaComp>(ARENA_ENT_ID).unwrap().get_length();
+        let arena_width = self.ecs.c.get::<ArenaComp>(ARENA_ENT_ID).unwrap().get_length() * 6.0;
         let radius = arena_width as f32 / 3.0;
 
 

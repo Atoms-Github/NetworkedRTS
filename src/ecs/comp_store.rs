@@ -35,6 +35,7 @@ pub struct DeleteResult{
 
 }
 impl CompStorage{
+    // TODO: Swap get and get unwrap, and call them get and get_maybe.
     pub fn get_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
         self.get::<T>(entity_id).unwrap()
     }

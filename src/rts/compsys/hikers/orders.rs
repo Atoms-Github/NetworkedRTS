@@ -177,17 +177,20 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
 
     let mut revolver = Revolver::new(c);
     // Finish orders.
-    for (unit_id, orders, abilities)
-    in CompIter2::<OrdersComp, AbilitiesComp>::new(c) {
+    for (unit_id, orders, abilities, owned)
+    in CompIter3::<OrdersComp, AbilitiesComp, OwnedComp>::new(c) {
         if let OrderState::CHANNELLING(channel_time) = orders.state.clone(){
             let tech_tree = unit_id.get_owner_tech_tree(c);
             let executing_order = orders.get_executing_order().unwrap();
             let ability = tech_tree.get_ability(executing_order.ability);
             if channel_time >= ability.casting_time{
                 let executed_order = orders.finish_order();
-                abilities.get_ability_mut(executed_order.ability).time_since_use = 0.0;
-                // Now execute ability.
-                revolver.revolve_ability_execution(tech_tree, unit_id, executed_order.ability, executed_order.target);
+                if c.get_unwrap::<OwnsResourcesComp>(owned.owner).try_pay(ResourceType::BLUENESS, ability.cost){
+                    abilities.get_ability_mut(executed_order.ability).time_since_use = 0.0;
+                    // Now execute ability.
+                    revolver.revolve_ability_execution(tech_tree, unit_id, executed_order.ability, executed_order.target);
+                }
+
             }
         }
     }

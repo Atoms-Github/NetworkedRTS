@@ -8,7 +8,9 @@ pub enum AbilityID{
     WALK,
     NONE,
     ATTACK_GROUND,
-    SPAWN_SCUTTLER,
+    TRAIN_SCUTTLER,
+    TRAIN_CONSTRUCTOR,
+    BUILD_FOUNDRY,
     WEP_SCUTTLER,
 }
 /// How 'bout, we just have a special class of ability, which resolves into appropriate behaviours and effects.

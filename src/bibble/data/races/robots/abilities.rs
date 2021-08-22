@@ -4,15 +4,37 @@ use winit::VirtualKeyCode;
 use crate::pub_types::PointFloat;
 
 pub fn abilities(data: &mut GameData){
-    data.abilities.insert(AbilityID::SPAWN_SCUTTLER, AbilityMould{
-        cost: 50.0,
+    data.abilities.insert(AbilityID::BUILD_FOUNDRY, AbilityMould{
+        cost: 1000.0,
+        targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::FOUNDRY))),
+        button_info: ButtonMould{
+            color: (150, 120, 200),
+            hotkey: VirtualKeyCode::F
+        },
+        range: 0.0,
+        casting_time: 2000.0,
+        cooldown: 0.0
+    });
+    data.abilities.insert(AbilityID::TRAIN_SCUTTLER, AbilityMould{
+        cost: 500.0,
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER))),
         button_info: ButtonMould{
             color: (150, 120, 200),
-            hotkey: VirtualKeyCode::Q
+            hotkey: VirtualKeyCode::S
         },
-        range: 1000.0,
+        range: 0.0,
         casting_time: 1000.0,
+        cooldown: 0.0
+    });
+    data.abilities.insert(AbilityID::TRAIN_CONSTRUCTOR, AbilityMould{
+        cost: 300.0,
+        targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR))),
+        button_info: ButtonMould{
+            color: (150, 120, 200),
+            hotkey: VirtualKeyCode::C
+        },
+        range: 0.0,
+        casting_time: 500.0,
         cooldown: 0.0
     });
     data.abilities.insert(AbilityID::WEP_SCUTTLER, AbilityMould{

@@ -47,7 +47,7 @@ impl<'a> Revolver<'a>{
             OrdersComp{ orders_queue: vec![], state: OrderState::NONE, order_target_loc: PointFloat::new(0.0,0.0) },
             HikerComp{
                 destination: None,
-                speed: 2.0,
+                speed: mould.move_speed,
                 quest_importance: 0
             },
             HikerCollisionComp{

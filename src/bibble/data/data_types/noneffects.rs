@@ -39,6 +39,7 @@ pub struct UnitMould {
     pub abilities: Vec<AbilityID>,
     pub unit_flavour: UnitFlavour,
     pub unit_cost: u32,
+    pub move_speed: f32,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum UnitFlavour{
