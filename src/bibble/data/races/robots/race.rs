@@ -6,7 +6,7 @@ pub fn race(data: &mut GameData){
     for _ in 0..1{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR));
     }
-    for _ in 0..10{
+    for _ in 0..50{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER));
     }
     for _ in 0..1{

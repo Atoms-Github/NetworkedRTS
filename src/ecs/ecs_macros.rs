@@ -22,7 +22,6 @@ macro_rules! comp_iter_def {
         impl<'a, $($type_name: 'static + Send,)+> $query_name<'a, $($type_name,)+>{
             pub fn new(ecs: &'a CompStorage) -> Self{
                 let mut my_vec = ecs.query(vec![$(gett::<$type_name>()),+]).iter().as_slice().to_vec();
-                my_vec.reverse();
                 Self{
                     $($type_name: Default::default(),)+
                     ecs,
