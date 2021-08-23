@@ -1,4 +1,4 @@
-use super::bblocky::*;
+use super::super_any::*;
 use std::any::{TypeId, Any};
 use std::collections::HashMap;
 use serde::*;
@@ -11,6 +11,7 @@ use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use std::fmt::Write;
 use std::fmt;
+use crate::ecs::bblocky::super_any::SuperAny;
 
 
 #[test]
@@ -48,13 +49,13 @@ fn test_clone() {
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct TestStructA{
-    integer: u32,
-    float: f32,
-    vec: Vec<i32>,
+    pub integer: u32,
+    pub float: f32,
+    pub vec: Vec<i32>,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct TestStructB{
-    integer: u32,
-    vec: Vec<Vec<TestStructA>>,
-    float: f32,
+    pub integer: u32,
+    pub vec: Vec<Vec<TestStructA>>,
+    pub float: f32,
 }

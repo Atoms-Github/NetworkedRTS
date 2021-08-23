@@ -6,6 +6,7 @@ use anymap::AnyMap;
 use crate::ecs::pending_entity::PendingEntity;
 use mopa::Any;
 use crate::ecs::bblocky::*;
+use crate::ecs::bblocky::super_any::SuperAny;
 
 pub type SingleComp = SuperAny;
 type Column = Vec<Vec<SingleComp>>;
@@ -55,7 +56,7 @@ impl CompStorage{
         return self.internal_entities.get(entity_id).is_some();
     }
     pub fn get_mut<T : 'static>(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID) -> Option<&mut T>{
-        return self.get::<T>(entity_id).map(|unmut|{unsafe{very_bad_function(unmut)}});
+        return self.get::<T>(entity_id).map(|unmut|{unsafe{crate::unsafe_utils::very_bad_function(unmut)}});
     }
     pub fn delete_entity(&mut self, entity_id: GlobalEntityID) -> bool{
         // What we want to do:
@@ -188,23 +189,7 @@ impl CompStorage{
     }
 
 }
-unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
-    let const_ptr = reference as *const T;
-    let mut_ptr = const_ptr as *mut T;
-    &mut *mut_ptr
-}
-unsafe fn u8_slice_to_ref<T>(bytes: &[u8]) -> &T {
-    let bytes_ptr = bytes.as_ptr();
-    let test : *const T = unsafe{ std::mem::transmute(bytes_ptr) };
-    let value = unsafe {test.as_ref()}.unwrap();
-    return value;
-}
-unsafe fn u8_slice_to_ref_mut<T>(bytes: &mut [u8]) -> &mut T {
-    let bytes_ptr = bytes.as_ptr();
-    let test : *mut T = unsafe{ std::mem::transmute(bytes_ptr) };
-    let value : &mut T = unsafe {test.as_mut()}.unwrap();
-    return value;
-}
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct TestComp1 {
     value: usize,

@@ -5,7 +5,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use crate::ecs::comp_store::TypesSet;
 use super::comp_store::SingleComp;
-use crate::ecs::bblocky::SuperAny;
+use crate::ecs::bblocky::super_any::SuperAny;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PendingEntity{
@@ -30,7 +30,7 @@ impl PendingEntity {
         assert!(self.set_comp(value).is_none(), "Pending entity already contained that component type!");
     }
     pub fn set_comp<T: 'static + Send>(&mut self, value: T) -> Option<SingleComp> {
-        let bytes = unsafe {any_as_u8_slice(&value)}.to_vec();
+        let bytes = unsafe {crate::unsafe_utils::any_as_u8_slice(&value)}.to_vec();
         return self.data.insert(crate::utils::gett::<T>(), SuperAny::new(value));
     }
     pub fn remove<T: 'static + Send>(&mut self) {
@@ -38,9 +38,3 @@ impl PendingEntity {
     }
 }
 
-unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
-    ::std::slice::from_raw_parts(
-        (p as *const T) as *const u8,
-        ::std::mem::size_of::<T>(),
-    )
-}
