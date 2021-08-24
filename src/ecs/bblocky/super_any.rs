@@ -19,7 +19,7 @@ use super::comp_registration::*;
 
 #[derive(Debug)]
 pub struct SuperAny {
-    boxed: Box<dyn Any + Send>,
+    pub boxed: Box<dyn Any + Send>,
 }
 impl SuperAny {
     pub fn new<T : 'static + Send>(item: T) -> Self{

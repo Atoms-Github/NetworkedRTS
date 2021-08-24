@@ -24,7 +24,9 @@ use std::fmt;
 lazy_static! {
     pub static ref FUNCTION_MAP: FunctionMap = {
         let mut map = FunctionMap::default();
+        map.register_type::<TestStructA>();
         map.register_type::<TestStructB>();
+        map.register_type::<TestStructC>();
         map.register_type::<TestComp0>();
         map.register_type::<TestComp1>();
         map.register_type::<ShootMouseComp>();
@@ -89,7 +91,7 @@ impl FunctionMap{
             },
             meme_deser_and_forget: |serialized_bytes| {
                 let item : T = bincode::deserialize::<T>(serialized_bytes).unwrap();
-                let my_ref = unsafe{crate::unsafe_utils::any_as_u8_slice(&item)};
+                let my_ref = unsafe{crate::unsafe_utils::struct_as_u8_slice(&item)};
                 let to_return = my_ref.to_vec();
                 std::mem::forget(item); // TODO: Confirm this.
                 return to_return;
@@ -97,7 +99,7 @@ impl FunctionMap{
             meme_clone_and_forget: |item|{
                 let as_type :&T = unsafe{crate::unsafe_utils::u8_slice_to_ref(item)};
                 let cloned = as_type.clone();
-                let back_to_bytes = unsafe{crate::unsafe_utils::any_as_u8_slice(&cloned)}.to_vec();
+                let back_to_bytes = unsafe{crate::unsafe_utils::struct_as_u8_slice(&cloned)}.to_vec();
                 std::mem::forget(cloned);
                 return back_to_bytes;
             },

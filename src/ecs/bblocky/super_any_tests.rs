@@ -59,3 +59,10 @@ pub struct TestStructB{
     pub vec: Vec<Vec<TestStructA>>,
     pub float: f32,
 }
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct TestStructC{
+    pub byte_a: u8,
+    pub byte_b: u8,
+    pub byte_c: u8,
+}

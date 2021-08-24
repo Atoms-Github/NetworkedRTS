@@ -40,7 +40,9 @@ impl SuperVec {
     }
     pub fn push(&mut self, item: SuperAny){
         assert_eq!(item.get_contained_type(), self.item_type);
-        let mut as_bytes = unsafe{crate::unsafe_utils::any_as_u8_slice(&item)}.to_vec();
+        let reff = &*item.boxed;
+        let as_slice = unsafe{crate::unsafe_utils::struct_as_u8_slice(reff)};
+        let mut as_bytes = as_slice.to_vec();
         assert_eq!(as_bytes.len(), self.item_size);
         self.data.append(&mut as_bytes);
         std::mem::forget(item);
@@ -48,7 +50,8 @@ impl SuperVec {
     pub fn get_as_bytes(&self, index: usize) -> &[u8]{
         return &self.data[index * self.item_size..(index + 1) * self.item_size];
     }
-    pub fn get<T>(&self, index: usize) -> Option<&T>{
+    pub fn get<T : 'static>(&self, index: usize) -> Option<&T>{
+        assert_eq!(gett::<T>(), self.item_type);
         if self.len() <= index{
             return None;
         }else{

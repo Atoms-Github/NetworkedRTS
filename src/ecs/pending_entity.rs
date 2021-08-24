@@ -30,7 +30,7 @@ impl PendingEntity {
         assert!(self.set_comp(value).is_none(), "Pending entity already contained that component type!");
     }
     pub fn set_comp<T: 'static + Send>(&mut self, value: T) -> Option<SingleComp> {
-        let bytes = unsafe {crate::unsafe_utils::any_as_u8_slice(&value)}.to_vec();
+        let bytes = unsafe {crate::unsafe_utils::struct_as_u8_slice(&value)}.to_vec();
         return self.data.insert(crate::utils::gett::<T>(), SuperAny::new(value));
     }
     pub fn remove<T: 'static + Send>(&mut self) {
