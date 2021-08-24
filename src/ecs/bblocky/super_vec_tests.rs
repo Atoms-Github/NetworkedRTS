@@ -18,16 +18,15 @@ use crate::ecs::bblocky::super_any_tests::*;
 #[test]
 fn test_ser_de() {
     let original = TestStructC{
-        byte_a: 3,
+        byte_a: 7,
         byte_b: 2,
         byte_c: 5
     };
     let my_type = gett::<TestStructC>();
 
-    let super_any = SuperAny::new(original.clone());
     let mut my_vec = SuperVec::new(my_type);
 
-    my_vec.push(super_any);
+    my_vec.push(original.clone());
 
     let bytes = bincode::serialize(&my_vec).unwrap();
     let reser = bincode::deserialize::<SuperVec>(bytes.as_slice()).unwrap();

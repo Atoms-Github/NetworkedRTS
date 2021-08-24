@@ -13,8 +13,10 @@ use std::fmt::Write;
 use std::fmt;
 use super::comp_registration::*;
 use crate::ecs::bblocky::super_any::SuperAny;
+use std::clone::Clone;
 
 
+#[derive(Debug)]
 pub struct SuperVec {
     item_size: usize,
     data: Vec<u8>,
@@ -23,9 +25,6 @@ pub struct SuperVec {
 
 
 impl SuperVec {
-    pub fn new_from_any(example_item: &SuperAny) -> Self{
-        Self::new(example_item.get_contained_type())
-    }
     pub fn new(item_type: TypeIdNum) -> Self{
         let functions = FUNCTION_MAP.get(item_type);
         Self{
@@ -34,14 +33,24 @@ impl SuperVec {
             item_type
         }
     }
+    pub fn new_and_push<T : 'static + Send>(item: T) -> Self{
+        let mut vec = Self::new(gett::<T>());
+        vec.push(item);
+        return vec;
+    }
     pub fn len(&self) -> usize{
         assert_eq!(self.data.len() % self.item_size, 0);
         return self.data.len() / self.item_size;
     }
-    pub fn push(&mut self, item: SuperAny){
-        assert_eq!(item.get_contained_type(), self.item_type);
-        let reff = &*item.boxed;
-        let as_slice = unsafe{crate::unsafe_utils::struct_as_u8_slice(reff)};
+    pub fn push_super_any<T : 'static + Clone>(&mut self, item: SuperAny){
+        // Yes, we're doing 1 extra unnec clone.
+        let cloned_ref: &T = item.get::<T>();
+        let cloned = cloned_ref.clone();
+        self.push(cloned);
+    }
+    pub fn push<T : 'static>(&mut self, item: T){ // Just push absolutely anything you want.
+        assert_eq!(gett::<T>(), self.item_type);
+        let as_slice = unsafe{crate::unsafe_utils::struct_as_u8_slice(&item)};
         let mut as_bytes = as_slice.to_vec();
         assert_eq!(as_bytes.len(), self.item_size);
         self.data.append(&mut as_bytes);
@@ -50,6 +59,7 @@ impl SuperVec {
     pub fn get_as_bytes(&self, index: usize) -> &[u8]{
         return &self.data[index * self.item_size..(index + 1) * self.item_size];
     }
+
     pub fn get<T : 'static>(&self, index: usize) -> Option<&T>{
         assert_eq!(gett::<T>(), self.item_type);
         if self.len() <= index{
@@ -78,7 +88,7 @@ impl Clone for SuperVec {
 }
 impl Drop for SuperVec{
     fn drop(&mut self) {
-        todo!()
+        // TODO. Note to self. Don't put a todo!() inside a drop function. Don't put any panic inside todo.
     }
 }
 #[derive(Serialize, Clone, Deserialize)]
@@ -120,7 +130,7 @@ impl<'de> Deserialize<'de> for SuperVec
         let functions = FUNCTION_MAP.get(portable.item_type_when_deser);
         let mut data = vec![];
         for serialized in portable.data{
-            let mut forgotten_item = (functions.meme_deser_and_forget)(&data);
+            let mut forgotten_item = (functions.meme_deser_and_forget)(&serialized);
             data.append(&mut forgotten_item);
         }
         return Ok(Self{
