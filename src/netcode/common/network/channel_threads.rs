@@ -63,7 +63,7 @@ impl GameSocketTcp for TcpStream{
                                 msgs_sink.send(Msg(msg, peer_address.clone())).unwrap();
                             }
                             err => {
-                                panic!("Err {:?}", err)
+                                panic!("Deserialize error: {:?}", err)
                             }
                         }
                     }
