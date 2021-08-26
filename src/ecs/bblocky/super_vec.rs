@@ -16,7 +16,7 @@ use crate::ecs::bblocky::super_any::SuperAny;
 use std::clone::Clone;
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SuperVec {
     item_size: usize,
     data: Vec<u8>,
@@ -64,10 +64,16 @@ impl SuperVec {
         return self.data.drain(index * self.item_size..(index + 1) * self.item_size).collect();
     }
     pub fn swap_remove(&mut self, index: usize){
-        let source_index = self.data.len() - self.item_size;
-        let target_index = index * self.item_size;
-        let my_data : Vec<u8> = self.data.drain(source_index..source_index + self.item_size).collect();
-        self.data.splice(target_index..target_index + self.item_size, my_data);
+        // If we can simply just normal remove off the end.
+        if index == self.len() - 1{
+            self.data.drain((self.data.len() - self.item_size)..);
+        }else{
+            let swap_source_index = self.data.len() - self.item_size;
+            let swap_target_index = index * self.item_size;
+            let my_data : Vec<u8> = self.data.drain(swap_source_index..swap_source_index + self.item_size).collect();
+            // Splice if in middle, otherwise just remove from end.
+            self.data.splice(swap_target_index..swap_target_index + self.item_size, my_data);
+        }
     }
 
     pub fn get<T : 'static>(&self, index: usize) -> Option<&T>{

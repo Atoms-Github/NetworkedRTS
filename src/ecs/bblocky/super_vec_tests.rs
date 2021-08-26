@@ -22,17 +22,12 @@ fn test_ser_de() {
         byte_b: 2,
         byte_c: 5
     };
-    let my_type = gett::<TestStructC>();
-
-    let mut my_vec = SuperVec::new(my_type);
-
-    my_vec.push(original.clone());
+    let mut my_vec = SuperVec::new_and_push(original);
 
     let bytes = bincode::serialize(&my_vec).unwrap();
     let reser = bincode::deserialize::<SuperVec>(bytes.as_slice()).unwrap();
 
-    let new_version = reser.get::<TestStructC>(0).unwrap().clone();
-    assert_eq!(original, new_version);
+    assert_eq!(my_vec, reser);
 }
 #[test]
 fn test_from_any() {
@@ -53,4 +48,34 @@ fn test_from_any() {
 
     let new_version = reser.get::<TestStructC>(0).unwrap().clone();
     assert_eq!(original, new_version);
+}
+
+#[test]
+fn test_swap_remove() {
+    let original = TestStructC{
+        byte_a: 7,
+        byte_b: 2,
+        byte_c: 5
+    };
+    let mut my_vec = SuperVec::new_and_push(original.clone());
+
+    let original2 = TestStructC{
+        byte_a: 1,
+        byte_b: 2,
+        byte_c: 6
+    };
+    my_vec.push(original2.clone());
+
+    let original3 = TestStructC{
+        byte_a: 3,
+        byte_b: 8,
+        byte_c: 12
+    };
+    my_vec.push(original3.clone());
+
+    my_vec.swap_remove(0);
+    let first = my_vec.get::<TestStructC>(0).unwrap().clone();
+    assert_eq!(first, original3);
+
+
 }
