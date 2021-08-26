@@ -63,6 +63,12 @@ impl SuperVec {
         assert!(index < self.len());
         return self.data.drain(index * self.item_size..(index + 1) * self.item_size).collect();
     }
+    pub fn swap_remove(&mut self, index: usize){
+        let source_index = self.data.len() - self.item_size;
+        let target_index = index * self.item_size;
+        let my_data : Vec<u8> = self.data.drain(source_index..source_index + self.item_size).collect();
+        self.data.splice(target_index..target_index + self.item_size, my_data);
+    }
 
     pub fn get<T : 'static>(&self, index: usize) -> Option<&T>{
         assert_eq!(gett::<T>(), self.item_type);

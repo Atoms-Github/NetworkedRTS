@@ -7,9 +7,10 @@ use crate::ecs::pending_entity::PendingEntity;
 use mopa::Any;
 use crate::ecs::bblocky::*;
 use crate::ecs::bblocky::super_any::SuperAny;
+use crate::ecs::bblocky::super_vec::SuperVec;
 
 pub type SingleComp = SuperAny;
-type Column = Vec<Vec<SingleComp>>;
+type Column = Vec<SuperVec>;
 
 pub type CompositionID = usize;
 pub type GenerationNum = usize;
@@ -47,10 +48,8 @@ impl CompStorage{
         // Pog. Can be pure 0 processing time function if we use get_unsafe().
         let internal = self.internal_entities.get(entity_id)?;
         let column = self.get_column::<T>()?;
-        let bytes = column.get(internal.composition_id)?.get(internal.internal_index)?;
-
-
-        return Some(bytes.get());
+        let block = column.get(internal.composition_id)?;
+        return block.get(internal.internal_index);
     }
     pub fn ent_alive(&self, entity_id: GlobalEntityID) -> bool{
         return self.internal_entities.get(entity_id).is_some();
@@ -115,7 +114,7 @@ impl CompStorage{
         for (type_id, bytes) in pending_entity.iter(){
             let block = self.get_block_or_make(*type_id, composition_id);
             let new_internal_index = block.len();
-            block.push(bytes.clone()); // TODO: Why need to clone?
+            block.push_super_any(bytes.clone()); // TODO: Why need to clone?
 
             // Confirm that the 'end' of each block is the same place.
             if let Some(existing_internal_index) = internal_index{
@@ -167,10 +166,10 @@ impl CompStorage{
         }
         self.global_ids_as_comps.get_mut(composition_id).unwrap().push(global_id);
     }
-    fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut Vec<SingleComp>{
+    fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut SuperVec{
         let column = self.get_column_mut_or_make_key(type_id);
         for new_block_index in column.len()..(composition_id + 1){
-            column.push(vec![]);
+            column.push(SuperVec::new(type_id));
         }
         return column.get_mut(composition_id).unwrap();
     }
