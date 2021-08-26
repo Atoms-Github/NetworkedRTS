@@ -34,18 +34,23 @@ fn test_ser_de() {
     let new_version = reser.get::<TestStructC>(0).unwrap().clone();
     assert_eq!(original, new_version);
 }
-
 #[test]
-fn test_clone() {
-    let original = TestStructB{
-        integer: 3,
-        vec: vec![vec![], vec![TestStructA{
-            integer: 0,
-            float: 3.7,
-            vec: vec![8,5]
-        }]],
-        float: 100.2
+fn test_from_any() {
+    let original = TestStructC{
+        byte_a: 7,
+        byte_b: 2,
+        byte_c: 5
     };
     let super_any = SuperAny::new(original.clone());
-    assert_eq!(*super_any.clone().get::<TestStructB>(), original);
+    let my_type = gett::<TestStructC>();
+
+    let mut my_vec = SuperVec::new(my_type);
+
+    my_vec.push_super_any(super_any);
+
+    let bytes = bincode::serialize(&my_vec).unwrap();
+    let reser = bincode::deserialize::<SuperVec>(bytes.as_slice()).unwrap();
+
+    let new_version = reser.get::<TestStructC>(0).unwrap().clone();
+    assert_eq!(original, new_version);
 }

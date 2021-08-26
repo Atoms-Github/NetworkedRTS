@@ -42,11 +42,11 @@ impl SuperVec {
         assert_eq!(self.data.len() % self.item_size, 0);
         return self.data.len() / self.item_size;
     }
-    pub fn push_super_any<T : 'static + Clone>(&mut self, item: SuperAny){
-        // Yes, we're doing 1 extra unnec clone.
-        let cloned_ref: &T = item.get::<T>();
-        let cloned = cloned_ref.clone();
-        self.push(cloned);
+    pub fn push_super_any(&mut self, mut item: SuperAny){
+        assert_eq!(self.item_size, item.list.item_size);
+        assert_eq!(self.item_type, item.list.item_type);
+        let mut bytes = item.list.move_as_bytes(0);
+        self.data.append(&mut bytes);
     }
     pub fn push<T : 'static>(&mut self, item: T){ // Just push absolutely anything you want.
         assert_eq!(gett::<T>(), self.item_type);
@@ -58,6 +58,10 @@ impl SuperVec {
     }
     pub fn get_as_bytes(&self, index: usize) -> &[u8]{
         return &self.data[index * self.item_size..(index + 1) * self.item_size];
+    }
+    pub fn move_as_bytes(&mut self, index: usize) -> Vec<u8>{
+        assert!(index < self.len());
+        return self.data.drain(index * self.item_size..(index + 1) * self.item_size).collect();
     }
 
     pub fn get<T : 'static>(&self, index: usize) -> Option<&T>{
