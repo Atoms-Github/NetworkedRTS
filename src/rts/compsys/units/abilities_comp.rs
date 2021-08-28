@@ -22,6 +22,14 @@ pub struct AbilityInstance{
     pub time_since_use: f32,
 }
 impl AbilitiesComp{
+    pub fn has_ability(&self, id: AbilityID) -> bool{
+        for instance in &self.abilities{
+            if instance.id == id{
+                return true;
+            }
+        }
+        return false;
+    }
     pub fn get_ability(&self, id: AbilityID) -> &AbilityInstance{
         for instance in &self.abilities{
             if instance.id == id{

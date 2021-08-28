@@ -25,7 +25,7 @@ pub fn units(data: &mut GameData){
         unit_flavour: UnitFlavour::HIKER,
         move_speed: 0.30,
         periodic_gain: ResourceBlock{
-            resource_counts: [0.0, 0.0, 0.001]
+            resource_counts: [0.0, 0.0, 0.0005]
         },
         life: 30.0,
     });

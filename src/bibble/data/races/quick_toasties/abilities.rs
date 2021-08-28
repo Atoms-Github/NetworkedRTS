@@ -5,7 +5,7 @@ use crate::pub_types::PointFloat;
 
 pub fn abilities(data: &mut GameData){
     data.abilities.insert(AbilityID::BAKE_DOUGH, AbilityMould{
-        cost: 10.0,
+        cost: 15.0,
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::DOUGH))),
         button_info: ButtonMould{
             color: (150, 120, 200),
@@ -27,7 +27,7 @@ pub fn abilities(data: &mut GameData){
         cooldown: 0.0
     });
     data.abilities.insert(AbilityID::BAKE_DOUGH_LAUNCHER, AbilityMould{
-        cost: 1000.0,
+        cost: 500.0,
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::DOUGH_LAUNCHER))),
         button_info: ButtonMould{
             color: (150, 120, 200),
@@ -76,6 +76,6 @@ pub fn abilities(data: &mut GameData){
         },
         range: 3000.0,
         casting_time: 0.0,
-        cooldown: 10000.0
+        cooldown: 5000.0
     });
 }

@@ -26,8 +26,8 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     // Check for move commands.
     for (player_id, inputs) in CompIter1::<InputComp>::new(c) {
         if inputs.mode == InputMode::None && inputs.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Right){
-            for (unit_id, selectable, owned, orders, hiker)
-            in CompIter4::<SelectableComp, OwnedComp, OrdersComp, HikerComp>::new(c) {
+            for (unit_id, selectable, owned, orders, hiker, abilities)
+            in CompIter5::<SelectableComp, OwnedComp, OrdersComp, HikerComp, AbilitiesComp>::new(c) {
                 if selectable.is_selected && owned.owner == player_id{
                     let order = OrderInstance{
                         ability: {
@@ -39,7 +39,10 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                         },
                         target: AbilityTargetInstance::POINT(inputs.mouse_pos_game_world.clone()),
                     };
-                    orders.enqueue(order, !inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
+                    // Don't give structures the move command.
+                    if abilities.has_ability(order.ability){
+                        orders.enqueue(order, !inputs.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
+                    }
                 }
             }
         }

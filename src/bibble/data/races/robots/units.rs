@@ -37,7 +37,7 @@ pub fn units(data: &mut GameData){
             }),
             move_speed: 0.0,
             periodic_gain: ResourceBlock{
-                resource_counts: [0.0, 0.0, 0.003]
+                resource_counts: [0.0, 0.0, 100000.003]
             },
             life: 200.0
         }
