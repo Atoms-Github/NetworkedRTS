@@ -5,7 +5,7 @@ use crate::pub_types::PointFloat;
 
 pub fn abilities(data: &mut GameData){
     data.abilities.insert(AbilityID::BUILD_FOUNDRY, AbilityMould{
-        cost: 1000.0,
+        cost: 60.0,
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::FOUNDRY))),
         button_info: ButtonMould{
             color: (150, 120, 200),
@@ -16,7 +16,7 @@ pub fn abilities(data: &mut GameData){
         cooldown: 0.0
     });
     data.abilities.insert(AbilityID::TRAIN_SCUTTLER, AbilityMould{
-        cost: 500.0,
+        cost: 30.0,
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER))),
         button_info: ButtonMould{
             color: (150, 120, 200),
@@ -27,7 +27,7 @@ pub fn abilities(data: &mut GameData){
         cooldown: 0.0
     });
     data.abilities.insert(AbilityID::TRAIN_CONSTRUCTOR, AbilityMould{
-        cost: 300.0,
+        cost: 15.0,
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR))),
         button_info: ButtonMould{
             color: (150, 120, 200),
@@ -46,7 +46,7 @@ pub fn abilities(data: &mut GameData){
             },
             speed: 0.25,
             hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
-                amount: 5.0
+                amount: 10.0
             })
         })),
         button_info: ButtonMould{

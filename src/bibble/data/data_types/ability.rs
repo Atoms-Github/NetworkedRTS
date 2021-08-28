@@ -12,6 +12,11 @@ pub enum AbilityID{
     TRAIN_CONSTRUCTOR,
     BUILD_FOUNDRY,
     WEP_SCUTTLER,
+    WEP_BREAD,
+    WEP_DOUGH_LAUNCHER,
+    BAKE_DOUGH,
+    BAKE_BREAD,
+    BAKE_DOUGH_LAUNCHER,
 }
 /// How 'bout, we just have a special class of ability, which resolves into appropriate behaviours and effects.
 /// Ain't work with cost, but rest fine.

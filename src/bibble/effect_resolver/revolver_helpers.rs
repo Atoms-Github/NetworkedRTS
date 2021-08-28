@@ -39,10 +39,11 @@ impl<'a> Revolver<'a>{
             id: AbilityID::WALK,
             time_since_use: 0.0
         });
-        let mut pending = PendingEntity::new7(
+
+        let mut pending = PendingEntity::new8(
             PositionComp{ pos: position.clone() },
             OwnedComp { owner },
-            LifeComp{ life: 100.0, max_life: 100.0 },
+            LifeComp{ life: mould.life, max_life: mould.life },
             SelectableComp{ is_selected: false },
             OrdersComp{ orders_queue: vec![], state: OrderState::NONE, order_target_loc: PointFloat::new(0.0,0.0) },
             HikerComp{
@@ -52,6 +53,9 @@ impl<'a> Revolver<'a>{
             },
             HikerCollisionComp{
                 radius: mould.radius
+            },
+            WorkerComp{
+                resource_gain_per_ms: mould.periodic_gain.clone()
             }
         );
         pending.add_comp(abilities_comp);

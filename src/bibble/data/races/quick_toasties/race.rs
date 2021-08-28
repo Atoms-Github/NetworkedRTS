@@ -4,13 +4,10 @@ pub fn race(data: &mut GameData){
     let mut starting_effects = vec![];
 
     for _ in 0..1{
-        starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR));
+        starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::BREAD));
     }
-    for _ in 0..0{
-        starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER));
-    }
-    for _ in 0..1{
-        starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::FOUNDRY));
+    for _ in 0..5{
+        starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::DOUGH));
     }
 
 

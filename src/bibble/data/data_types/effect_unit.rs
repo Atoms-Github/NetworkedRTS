@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum EffectToUnit{
     DAMAGE(EffectToUnitDamage),
     ADD_WEAPON(EffectToUnitAddWeapon),

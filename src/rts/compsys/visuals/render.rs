@@ -109,7 +109,7 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     }
     // Draw ability buttons.
     for (i, (hotkey, ability_id)) in rendering_abilities.iter().enumerate(){
-        let button_mould = &player_entity_id.get_player_tech_tree(&ecs.c).get_ability(*ability_id).button_info;
+        let ability_mould = &player_entity_id.get_player_tech_tree(&ecs.c).get_ability(*ability_id);
         let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
         if let InputMode::TargettingAbility(targetting_ability_id) = player_input.mode{
             if targetting_ability_id == *ability_id{
@@ -117,9 +117,10 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                           graphics::Rect::new(screen_pos.x - 5.0, screen_pos.y - 5.0, 40.0,40.0));
             }
         }
-        draw_rect(ctx, graphics::Color::from(button_mould.color),
+        draw_rect(ctx, graphics::Color::from(ability_mould.button_info.color),
                   graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
         draw_text(ctx, screen_pos, hotkey.my_to_string(), graphics::Color::from_rgb(0,0,0));
+        draw_text(ctx, screen_pos.clone() + PointFloat::new(0.0,-30.0), ability_mould.cost.to_string(), graphics::Color::from_rgb(0,0,200));
 
     }
     // Draw resources.

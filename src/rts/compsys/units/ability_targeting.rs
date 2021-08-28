@@ -21,7 +21,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         if let RtsKeyEvent::KeyDown(down_key) = input.inputs.key_event{
             let data = player_id.get_player_tech_tree(c);
-            'units :for (unit_id , owned, selectable, abilities, orders)
+            for (unit_id , owned, selectable, abilities, orders)
             in CompIter4::<OwnedComp, SelectableComp, AbilitiesComp, OrdersComp>::new(c) {
                 if selectable.is_selected && owned.owner == player_id{
                     for ability_instance in &abilities.abilities{
@@ -39,8 +39,6 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
                                     input.start_targetting(ability_instance.id);
                                 }
                             }
-
-                            break 'units;
                         }
                     }
                 }

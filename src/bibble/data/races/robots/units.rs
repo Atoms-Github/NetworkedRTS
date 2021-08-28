@@ -9,8 +9,9 @@ pub fn units(data: &mut GameData){
         weapons: vec![AbilityID::WEP_SCUTTLER],
         abilities: vec![AbilityID::WEP_SCUTTLER],
         unit_flavour: UnitFlavour::HIKER,
-        unit_cost: 1000,
-        move_speed: 0.15
+        move_speed: 0.15,
+        periodic_gain: Default::default(),
+        life: 100.0
     });
     data.units.insert(UnitID::CONSTRUCTOR, UnitMould{
         radius: 15.0,
@@ -18,8 +19,9 @@ pub fn units(data: &mut GameData){
         weapons: vec![],
         abilities: vec![AbilityID::BUILD_FOUNDRY],
         unit_flavour: UnitFlavour::HIKER,
-        unit_cost: 300,
-        move_speed: 0.05
+        move_speed: 0.05,
+        periodic_gain: Default::default(),
+        life: 50.0
     });
 
 
@@ -33,8 +35,11 @@ pub fn units(data: &mut GameData){
             unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
                 footprint: Point2::new(2,3)
             }),
-            unit_cost: 2000,
-            move_speed: 0.0
+            move_speed: 0.0,
+            periodic_gain: ResourceBlock{
+                resource_counts: [0.0, 0.0, 0.003]
+            },
+            life: 200.0
         }
     );
 

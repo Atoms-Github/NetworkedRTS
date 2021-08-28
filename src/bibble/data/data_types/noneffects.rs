@@ -2,6 +2,7 @@ use super::*;
 use nalgebra::{Point, Point2};
 use serde::*;
 use crate::pub_types::PointFloat;
+use crate::rts::compsys::ResourceBlock;
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -14,7 +15,10 @@ pub enum WeaponID {
 pub enum UnitID {
     SCUTTLER,
     CONSTRUCTOR,
-    FOUNDRY
+    FOUNDRY,
+    DOUGH,
+    BREAD,
+    DOUGH_LAUNCHER,
 }
 
 #[repr(u16)]
@@ -39,8 +43,9 @@ pub struct UnitMould {
     pub weapons: Vec<AbilityID>,
     pub abilities: Vec<AbilityID>,
     pub unit_flavour: UnitFlavour,
-    pub unit_cost: u32,
     pub move_speed: f32,
+    pub periodic_gain: ResourceBlock,
+    pub life: f32,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum UnitFlavour{

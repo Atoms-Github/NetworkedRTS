@@ -38,7 +38,8 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
         VELOCITY_WITH_INPUTS_SYS.clone(),
         WORKER_SYS.clone(),
         WEAPON_SYS.clone(),
-        LIFE_SYS.clone()
+        LIFE_SYS.clone(),
+        NO_LEAVE_MAP.clone(),
     ]
 }
 

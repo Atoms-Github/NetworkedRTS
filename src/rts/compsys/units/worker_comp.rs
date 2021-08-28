@@ -11,6 +11,7 @@ use std::ops::Div;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WorkerComp {
+    pub resource_gain_per_ms: ResourceBlock,
 }
 
 
@@ -19,10 +20,10 @@ pub static WORKER_SYS: System<ResourcesPtr> = System{
     name: "worker"
 };
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
-    for (worker_id, life, owned) in CompIter2::<LifeComp, OwnedComp>::new(c) {
+    for (worker_id, life, owned, worker) in
+    CompIter3::<LifeComp, OwnedComp, WorkerComp>::new(c) {
         let resources_comp = c.get_mut::<OwnsResourcesComp>(owned.owner).unwrap();
-        resources_comp.gain(ResourceType::BLUENESS, 1);
-
+        resources_comp.gain_block(&worker.resource_gain_per_ms, crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS);
     }
 
 }
