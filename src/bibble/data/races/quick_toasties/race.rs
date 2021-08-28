@@ -6,15 +6,15 @@ pub fn race(data: &mut GameData){
     for _ in 0..1{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR));
     }
-    for _ in 0..1{
+    for _ in 0..0{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::SCUTTLER));
     }
-    for _ in 0..0{
+    for _ in 0..1{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::FOUNDRY));
     }
 
 
-    data.races.insert(RaceID::ROBOTS, RaceMould{
+    data.races.insert(RaceID::QUICK_TASTERS, RaceMould{
         spawn_effect: EffectToPoint::COMPOSITE(starting_effects),
     });
 }

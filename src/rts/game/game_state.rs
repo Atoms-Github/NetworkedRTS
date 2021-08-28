@@ -79,7 +79,13 @@ impl GameState {
         let player_ent_id = player_id as GlobalEntityID;
         let spawn_point = self.get_player_spawn(player_id);
 
-        let mut race = RaceID::ROBOTS;
+        let mut race = {
+            if username == "QuickToast"{
+                RaceID::QUICK_TASTERS
+            }else{
+                RaceID::ROBOTS
+            }
+        };
 
         let mut revolver = Revolver::new(&self.ecs.c);
 

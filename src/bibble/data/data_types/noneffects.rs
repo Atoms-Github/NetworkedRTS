@@ -29,6 +29,7 @@ pub enum ActorID {
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum RaceID {
     ROBOTS,
+    QUICK_TASTERS
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
