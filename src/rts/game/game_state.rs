@@ -16,7 +16,7 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
-const MAX_PLAYERS : usize = 7;
+const MAX_PLAYERS : usize = 4;
 pub const ARENA_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingResources = Arc<RenderResources>;

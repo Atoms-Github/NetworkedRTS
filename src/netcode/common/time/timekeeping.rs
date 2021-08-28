@@ -108,6 +108,10 @@ impl DT{
         }
         return time_since;
     }
+    pub fn stop_fmt(self) -> String{
+        let time_since = SystemTime::now().duration_since(self.time).unwrap();
+        return format!("TIMER {} -> {:?}", self.name, time_since);
+    }
     pub fn stop_warn(self, micro_seconds_limit: u128){
 
         let duration = SystemTime::now().duration_since(self.time).unwrap();

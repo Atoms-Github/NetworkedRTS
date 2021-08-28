@@ -10,6 +10,8 @@ use crate::bibble::data::data_types::AbilityID;
 use std::collections::BTreeMap;
 use winit::VirtualKeyCode;
 use std::fmt;
+use crate::netcode::common::time::timekeeping::DT;
+use rand::Rng;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
@@ -17,6 +19,7 @@ pub struct RenderComp{
 }
 
 pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &ResourcesPtr, player_entity_id: GlobalEntityID){
+    let timer = DT::start("Render");
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
     let player_input = ecs.c.get::<InputComp>(player_entity_id).unwrap();
 
@@ -52,7 +55,6 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                     }
                 };
                 let rect = graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y);
-
                 builder.rectangle(graphics::DrawMode::fill(), rect, color);
             }
         }
@@ -133,6 +135,9 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                 draw_text(ctx, on_screen_pos, res_count, graphics::Color::from((255, 255, 255)));
             }
         }
+    }
+    if rand::thread_rng().gen_bool(0.01){
+        println!("{}", timer.stop_fmt());
     }
 }
 

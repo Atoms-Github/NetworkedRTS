@@ -42,7 +42,8 @@ impl<R> SuperbEcs<R>{
         }
         pending_changes.apply(&mut self.c);
 
-        if quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.1){
+        if quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.01){
+            println!("Entities: {}", self.c.get_entity_count());
             self.debug_times.print_all();
         }
     }

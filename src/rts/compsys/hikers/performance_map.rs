@@ -22,8 +22,8 @@ pub static PERFORMANCE_MAP: System<ResourcesPtr> = System{
 fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     let arena = c.get1_unwrap::<ArenaComp>(ARENA_ENT_ID);
     arena.clear_performance_map();
-    for (unit_id, position)
-    in CompIter1::<PositionComp>::new(c) {
+    for (unit_id, position, owned, life)
+    in CompIter3::<PositionComp, OwnedComp, LifeComp>::new(c) {
         arena.register_performance_map_entity(unit_id, &position.pos)
     }
 }
