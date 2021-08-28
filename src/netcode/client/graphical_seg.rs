@@ -18,6 +18,7 @@ use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGam
 use std::sync::Arc;
 use crate::rts::compsys::RenderResources;
 use crate::rts::GameState;
+use std::path::Path;
 
 pub struct GraphicalIn {
     render_head_rec: Receiver<NetGameState>,
@@ -64,9 +65,10 @@ impl GraphicalIn {
 
         thread::spawn(move ||{
             let (ctx, events_loop) = &mut cb.build().unwrap();
-
-            let mut meme = self;
-            event::run(ctx, events_loop, &mut meme).unwrap();
+            let path = Path::new("C:/_C_/Home/Produce/Code/Projects/Rust/BigYoshis/LiteralPoggySource/resources/images");
+            let path = Path::new("C:/_C_/Home/Produce/Code/Projects/Rust/BigYoshis/LiteralPoggySource/resources/images/factory.jpg");
+            ggez::filesystem::mount(ctx, path, false);
+            event::run(ctx, events_loop, &mut self).unwrap();
 
             log::info!("Shutting down.");
             println!("------------- ------------- -------------     ------------- ------------- -------------");

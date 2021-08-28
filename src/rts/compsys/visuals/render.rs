@@ -12,6 +12,7 @@ use winit::VirtualKeyCode;
 use std::fmt;
 use crate::netcode::common::time::timekeeping::DT;
 use rand::Rng;
+use crate::rts::game::cool_batcher::CoolBatcher;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
@@ -20,6 +21,9 @@ pub struct RenderComp{
 
 pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &ResourcesPtr, player_entity_id: GlobalEntityID){
     let timer = DT::start("Render");
+
+    let mut cool_batcher = CoolBatcher::new();
+
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
     let player_input = ecs.c.get::<InputComp>(player_entity_id).unwrap();
 
@@ -78,8 +82,6 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
                 draw_rect(ctx, graphics::Color::from_rgb(200,200,0),
                           graphics::Rect::new(on_screen_pos.x, on_screen_pos.y,10.0, 10.0));
             }
-
-
         }
     }
     // Draw names.
@@ -136,7 +138,11 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
             }
         }
     }
-    if rand::thread_rng().gen_bool(0.01){
+
+    cool_batcher.add_image("factory.jpg".to_string(), DrawParam::new(), 5);
+    cool_batcher.gogo_draw(ctx);
+
+    if rand::thread_rng().gen_bool(0.02){
         println!("{}", timer.stop_fmt());
     }
 }
