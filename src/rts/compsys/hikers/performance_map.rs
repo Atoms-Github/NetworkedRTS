@@ -1,0 +1,41 @@
+
+use crate::rts::game::game_state::*;
+use crate::rts::compsys::*;
+use crate::pub_types::PointFloat;
+use crate::ecs::superb_ecs::{System, EntStructureChanges};
+use crate::ecs::comp_store::CompStorage;
+use crate::ecs::pending_entity::PendingEntity;
+use winit::MouseButton;
+use winit::VirtualKeyCode;
+use crate::ecs::ecs_macros::{CompIter3, CompIter4};
+use std::ops::Mul;
+use crate::bibble::data::data_types::AbilityID;
+use mopa::Any;
+use nalgebra::{distance, distance_squared};
+use crate::bibble::effect_resolver::revolver::Revolver;
+
+
+pub static PERFORMANCE_MAP: System<ResourcesPtr> = System{
+    run,
+    name: "orders"
+};
+fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+    let arena = c.get1_unwrap::<ArenaComp>(ARENA_ENT_ID);
+    arena.clear_performance_map();
+    for (unit_id, position)
+    in CompIter1::<PositionComp>::new(c) {
+        arena.register_performance_map_entity(unit_id, &position.pos)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
