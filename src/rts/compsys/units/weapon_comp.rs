@@ -61,7 +61,7 @@ fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureCh
             // Don't check cooldowns here. That's done on ability execution.
             for (target_id, owned_target, position_target, life_target) in
             CompIter3::<OwnedComp, PositionComp, LifeComp>::new(c) {
-                let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude_squared() < ability_mould.range.powf(2.0);
+                let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude() < ability_mould.range;
                 if owned_target.owner != owned_shooter.owner && in_range{
                     orders.enqueue(OrderInstance{
                         ability: weapon.wep_ability_id,

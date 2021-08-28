@@ -19,6 +19,7 @@ use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use std::fmt::Write;
 use std::fmt;
+// use super::my_benchmark::BenchStruct;
 
 
 lazy_static! {
@@ -55,6 +56,7 @@ lazy_static! {
         map.register_type::<RenderComp>();
         map.register_type::<TechTreeComp>();
         map.register_type::<SeekingProjComp>();
+        // map.register_type::<BenchStruct>();
 
         map
     };
