@@ -26,12 +26,12 @@ impl ArenaComp {
     pub fn clear_performance_map(&mut self){
         self.performance_map = Self::get_blank_performance_map(&self.pathing);
     }
-    pub fn get_nearby_performance_map_entities(&self, position: &PointFloat, radius: f32) -> Vec<GlobalEntityID>{
+    pub fn get_nearby_performance_map_entities(&self, position: &PointFloat, radius: f32) -> impl Iterator<Item = &GlobalEntityID>{
         // Steps:
         // Get the radius.
         // Round it up to the next box.
         // That's how many out you want to go, not including yourself, in each direction.
-        let mut collected_ids = vec![];
+        let mut matching_boxes = vec![];
         let out_in_each_direction = (radius / PERFORMANCE_MAP_BOX_SIZE) as i32 + 1;
         for x_offset in -out_in_each_direction..out_in_each_direction + 1{
             for y_offset in -out_in_each_direction..out_in_each_direction + 1{
@@ -40,14 +40,14 @@ impl ArenaComp {
                 if box_x >= 0 && box_x < self.performance_map.len() as i32{
                     let column = self.performance_map.get(box_x as usize).unwrap();
                     if box_y >= 0 && box_y < column.len() as i32{
-                        let mut square = column.get(box_y as usize).unwrap().clone();
-                        collected_ids.append(&mut square);
+                        let mut square = column.get(box_y as usize).unwrap();
+                        matching_boxes.push(square);
                     }
                 }
             }
         }
-        return collected_ids;
-
+        let iter = matching_boxes.into_iter().flat_map(|f|{f}).into_iter();
+        return iter;
     }
     pub fn register_performance_map_entity(&mut self, entity: GlobalEntityID, position: &PointFloat){
         let x = (position.x / PERFORMANCE_MAP_BOX_SIZE) as usize;

@@ -65,18 +65,19 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
             let nearby_units = arena.get_nearby_performance_map_entities(&position_shooter.pos, ability_mould.range);
             // Don't check cooldowns here. That's done on ability execution.
             for target_id in nearby_units {
-                let owned_target= c.get_mut_unwrap::<OwnedComp>(target_id);
-                let position_target= c.get_mut_unwrap::<PositionComp>(target_id);
+                let owned_target= c.get_mut_unwrap::<OwnedComp>(*target_id);
+                let position_target= c.get_mut_unwrap::<PositionComp>(*target_id);
                 let in_range = (position_target.pos.clone() - &position_shooter.pos).magnitude() < ability_mould.range;
                 if owned_target.owner != owned_shooter.owner && in_range{
                     orders.enqueue(OrderInstance{
                         ability: weapon.wep_ability_id,
-                        target: AbilityTargetInstance::UNIT(target_id)
+                        target: AbilityTargetInstance::UNIT(*target_id)
                     }, true);
                     break;
                 }
             }
         }
     }
+
     revolver.end().move_into(ent_changes);
 }
