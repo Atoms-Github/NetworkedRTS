@@ -82,13 +82,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     for (entity_id, owned, position) in CompIter2::<OwnedComp, PositionComp>::new(&ecs.c){
         let on_screen_pos = player_camera.game_space_to_screen_space(position.pos.clone());
         let player_name = ecs.c.get::<PlayerComp>(owned.owner).unwrap().name.clone();
-        let player_name_display = Text::new(player_name);
-
-        graphics::draw(
-            ctx,
-            &player_name_display,
-            (Point2::new(on_screen_pos.x, on_screen_pos.y), graphics::Color::from((0,153,255))),
-        ).unwrap();
+        cool_batcher.add_text(on_screen_pos, player_name, graphics::Color::from((0,153,255)), 150);
     }
     // Find ability buttons.
     let mut rendering_abilities = BTreeMap::new();
@@ -110,14 +104,15 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
         if let InputMode::TargettingAbility(targetting_ability_id) = player_input.mode{
             if targetting_ability_id == *ability_id{
-                draw_rect(ctx, graphics::Color::from_rgb(255,204,0),
-                          graphics::Rect::new(screen_pos.x - 5.0, screen_pos.y - 5.0, 40.0,40.0));
+                cool_batcher.add_rectangle_rect(graphics::Rect::new(screen_pos.x - 5.0, screen_pos.y - 5.0, 40.0,40.0),
+                graphics::Color::from_rgb(255,204,0), 190);
             }
         }
-        draw_rect(ctx, graphics::Color::from(ability_mould.button_info.color),
-                  graphics::Rect::new(screen_pos.x, screen_pos.y, 30.0,30.0));
-        draw_text(ctx, screen_pos, hotkey.my_to_string(), graphics::Color::from_rgb(0,0,0));
-        draw_text(ctx, screen_pos.clone() + PointFloat::new(0.0,-30.0), ability_mould.cost.to_string(), graphics::Color::from_rgb(0,0,200));
+        cool_batcher.add_rectangle(&screen_pos, &PointFloat::new(30.0,30.0),
+                                   Color::from(ability_mould.button_info.color), 192);
+        cool_batcher.add_text(screen_pos, hotkey.my_to_string(), Color::from_rgb(0,0,0), 193);
+        cool_batcher.add_text(screen_pos.clone() + PointFloat::new(0.0,-30.0),
+                              ability_mould.cost.to_string(), Color::from_rgb(0,0,200), 193);
 
     }
     // Draw resources.
@@ -127,7 +122,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                 let on_screen_pos = PointFloat::new(50.0 + res_index as f32 * 100.0, 50.0);
 
                 let res_count = owns_resources.get_counti(res_index).to_string();
-                draw_text(ctx, on_screen_pos, res_count, graphics::Color::from((255, 255, 255)));
+                cool_batcher.add_text(on_screen_pos, res_count, graphics::Color::from((255, 255, 255)), 200);
             }
         }
     }
@@ -136,7 +131,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     // cool_batcher.add_image("factory.jpg".to_string(), test_param, 5);
     cool_batcher.gogo_draw(ctx, res);
 
-    if rand::thread_rng().gen_bool(0.02){
+    if rand::thread_rng().gen_bool(1.0){
         println!("{}", timer.stop_fmt());
     }
 }

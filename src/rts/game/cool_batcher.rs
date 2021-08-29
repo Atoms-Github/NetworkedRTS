@@ -1,4 +1,4 @@
-use ggez::graphics::{Color, DrawParam, Image, DrawMode, Rect, MeshBuilder, Drawable};
+use ggez::graphics::{Color, DrawParam, Image, DrawMode, Rect, MeshBuilder, Drawable, FilterMode, Text};
 use std::collections::HashMap;
 use crate::pub_types::{PointFloat, RenderResourcesPtr};
 use ggez::{Context, graphics};
@@ -18,6 +18,7 @@ pub struct CoolBatcher{
 pub struct RenderLayer{
     images: HashMap<String, Vec<DrawParam>>,
     rectangles: Vec<(Rect, Color)>,
+    texts: Vec<(PointFloat, String, Color)>,
 }
 
 
@@ -42,8 +43,10 @@ impl CoolBatcher{
             .or_default()
             .push(draw_param);
     }
-    pub fn add_text(&mut self, text: String){
-
+    pub fn add_text(&mut self, position: PointFloat, text: String, color: Color, z: u8){
+        self.layers
+            .entry(z)
+            .or_default().texts.push((position, text, color));
     }
     pub fn gogo_draw(self, ctx: &mut Context, res: &RenderResourcesPtr){
         // Iterate spritebatches ordered by z and actually render each of them
@@ -60,16 +63,33 @@ impl CoolBatcher{
                     sprite_batch.add(*draw_param);
                 }
 
-                graphics::draw(ctx, &sprite_batch, graphics::DrawParam::new())
-                    .expect("expected render");
+                graphics::draw(ctx, &sprite_batch, graphics::DrawParam::new()).unwrap()
+            }
+            // Draw rectangles:
+            if render_layer.rectangles.len() > 0{
+                let mut builder = MeshBuilder::new();
+                for (rect, color) in render_layer.rectangles.into_iter() {
+                    builder.rectangle(graphics::DrawMode::fill(), rect, color);
+                }
+                builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
             }
 
-            // Draw rectangles:
-            let mut builder = MeshBuilder::new();
-            for (rect, color) in render_layer.rectangles.into_iter() {
-                builder.rectangle(graphics::DrawMode::fill(), rect, color);
+
+            // Draw text:
+            for (position, text_str, color) in render_layer.texts.into_iter() {
+                let text_display = Text::new(text_str);
+
+                graphics::draw(
+                    ctx,
+                    &text_display,
+                    (nalgebra::Point2::from(position), color),
+                ).unwrap();
+                // TODO3: Batch seems to be slow for some reason.
+                // let text_text = ggez::graphics::Text::new(text_str);
+                // let my_point = nalgebra::Point2::from(position);
+                // ggez::graphics::queue_text(ctx, &text_text, my_point, Some(color));
             }
-            builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
+            // ggez::graphics::draw_queued_text(ctx, DrawParam::new(), None, FilterMode::Linear).unwrap();
         }
     }
 }
