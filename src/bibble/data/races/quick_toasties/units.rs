@@ -20,8 +20,8 @@ pub fn units(data: &mut GameData){
     data.units.insert(UnitID::DOUGH, UnitMould{
         radius: 10.0,
         actor: ActorMould { colour: (217, 180, 48), size: PointFloat::new(20.0,20.0) },
-        weapons: vec![],
-        abilities: vec![AbilityID::BAKE_BREAD, AbilityID::BAKE_DOUGH, AbilityID::BAKE_DOUGH_LAUNCHER],
+        weapons: vec![AbilityID::WEP_SCUTTLER],
+        abilities: vec![AbilityID::WEP_SCUTTLER, AbilityID::BAKE_BREAD, AbilityID::BAKE_DOUGH, AbilityID::BAKE_DOUGH_LAUNCHER],
         unit_flavour: UnitFlavour::HIKER,
         move_speed: 0.30,
         periodic_gain: ResourceBlock{
