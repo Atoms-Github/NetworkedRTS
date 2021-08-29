@@ -54,6 +54,17 @@ impl ArenaComp {
         let y = (position.y / PERFORMANCE_MAP_BOX_SIZE) as usize;
         self.performance_map.get_mut(x).unwrap().get_mut(y).unwrap().push(entity);
     }
+    pub fn in_wall(&self, position: &PointFloat) -> bool{
+        let square_coords_x = position.x / ARENA_SQUARE_SIZE as f32;
+        let square_coords_y = position.y / ARENA_SQUARE_SIZE as f32;
+        if square_coords_x >= 0.0 && square_coords_x < self.pathing.len() as f32
+        && square_coords_y >= 0.0 && square_coords_y < self.pathing.get(0).unwrap().len() as f32{
+            return !*self.pathing.get(square_coords_x as usize).unwrap().get(square_coords_y as usize).unwrap();
+        }
+        // Out map = in wall.
+        return true;
+
+    }
     pub fn get_blank_performance_map(pathing: &PathingMap) -> PerformanceMap{
         let width_pixels = ARENA_SQUARE_SIZE * pathing.len();
         let height_pixels = ARENA_SQUARE_SIZE * pathing.get(0).unwrap().len();

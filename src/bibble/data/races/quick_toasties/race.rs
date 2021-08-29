@@ -6,7 +6,7 @@ pub fn race(data: &mut GameData){
     for _ in 0..1{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::BREAD));
     }
-    for _ in 0..253{
+    for _ in 0..3{
         starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::DOUGH));
     }
 

@@ -8,6 +8,8 @@ use crate::ecs::pending_entity::PendingEntity;
 use winit::MouseButton;
 use crate::ecs::ecs_macros::{CompIter3, CompIter4};
 use std::ops::Mul;
+use mopa::Any;
+use std::ops::Div;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct HikerCollisionComp {
     pub radius: f32
@@ -16,7 +18,42 @@ pub static HIKER_COLLISION_SYS: System = System{
     run,
     name: "hiker_collision"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
+    do_bops(c);
+    // Do walls:
+    let arena = c.get_unwrap::<ArenaComp>(ARENA_ENT_ID);
+    for (unit_id, position) in CompIter1::<PositionComp>::new(c) {
+        // First, work out if in wall.
+        if arena.in_wall(&position.pos){
+            let position_within_box : PointFloat =
+                PointFloat::new(position.pos.x % ARENA_SQUARE_SIZE as f32,
+                                position.pos.y % ARENA_SQUARE_SIZE as f32);
+            let position_within_box_normalized : PointFloat =
+                position_within_box.clone() / ARENA_SQUARE_SIZE as f32;
+            let bottom_right_half = (position_within_box_normalized.x + position_within_box_normalized.y) > 1.0;
+            let top_left_half = !bottom_right_half; // True.
+            let top_right_half = (position_within_box_normalized.x - position_within_box_normalized.y) > 0.0;
+            let bottom_left_half = !top_right_half; // True.
+
+            let top_quad = top_left_half && top_right_half;
+            let bottom_quad = bottom_left_half && bottom_right_half;
+            let left_quad = top_left_half && bottom_left_half;
+            let right_quad = top_right_half && bottom_right_half;
+
+            if top_quad{
+                position.pos.y -= position_within_box.y;
+            }else if bottom_quad{
+                position.pos.y += ARENA_SQUARE_SIZE as f32 - position_within_box.y;
+            }else if left_quad{
+                position.pos.x -= position_within_box.x;
+            }else if right_quad{
+                position.pos.x += ARENA_SQUARE_SIZE as f32 - position_within_box.x;
+            }
+        }
+    }
+}
+
+fn do_bops(c: &mut CompStorage) {
     let unit_ids = c.query(vec![
         crate::utils::gett::<HikerCollisionComp>(),
         crate::utils::gett::<HikerComp>(),
@@ -24,7 +61,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     ]);
     let mut comps = vec![];
 
-    for unit_id in &unit_ids{
+    for unit_id in &unit_ids {
         comps.push((
             *unit_id,
             c.get_mut::<HikerCollisionComp>(*unit_id).unwrap(),
@@ -32,66 +69,31 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
             c.get_mut::<PositionComp>(*unit_id).unwrap()
         ));
     }
-
-    for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in &comps{
-        for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in &comps{
-            if unit_id_1 != unit_id_2{
-                let actual_distance_squared =  (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
+    for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in &comps {
+        for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in &comps {
+            if unit_id_1 != unit_id_2 {
+                let actual_distance_squared = (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
                 let min_distance = hiker_collision_1.radius + hiker_collision_2.radius;
                 if actual_distance_squared < min_distance.powi(2) {
                     let distance_too_close = min_distance - actual_distance_squared.sqrt();
-                    const IMPORTANTER_ONE_BOP_FRACTION : f32 = 0.25;
+                    const IMPORTANTER_ONE_BOP_FRACTION: f32 = 0.25;
                     let bop_fraction_for_1 = {
-                        if hiker_comp_1.quest_importance == hiker_comp_2.quest_importance{
+                        if hiker_comp_1.quest_importance == hiker_comp_2.quest_importance {
                             0.5
-                        }else if hiker_comp_1.quest_importance > hiker_comp_2.quest_importance{
+                        } else if hiker_comp_1.quest_importance > hiker_comp_2.quest_importance {
                             IMPORTANTER_ONE_BOP_FRACTION
-                        }else{
+                        } else {
                             1.0 - IMPORTANTER_ONE_BOP_FRACTION
                         }
                     };
                     let bop_dist_1 = bop_fraction_for_1 * distance_too_close;
                     let bop_dist_2 = (1.0 - bop_fraction_for_1) * distance_too_close;
-                    apply_bop(bop_dist_1, unsafe{crate::utils::unsafe_const_cheat(position_1)}, position_2);
-                    apply_bop(bop_dist_2, unsafe{crate::utils::unsafe_const_cheat(position_2)}, position_1);
-
+                    apply_bop(bop_dist_1, unsafe { crate::utils::unsafe_const_cheat(position_1) }, position_2);
+                    apply_bop(bop_dist_2, unsafe { crate::utils::unsafe_const_cheat(position_2) }, position_1);
                 }
             }
         }
     }
-
-/* Original (slow) version. (1.1ms for 220 entities)
-
-for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in CompIter3::<>::new(c) {
-        for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {
-            if unit_id_1 != unit_id_2 && position_1.pos.x >= 1000000000.0{
-                let actual_distance_squared =  (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
-                let min_distance = hiker_collision_1.radius + hiker_collision_2.radius;
-                if actual_distance_squared < min_distance.powi(2) {
-                    let distance_too_close = min_distance - actual_distance_squared.sqrt();
-                    const IMPORTANTER_ONE_BOP_FRACTION : f32 = 0.25;
-                    let bop_fraction_for_1 = {
-                        if hiker_comp_1.quest_importance == hiker_comp_2.quest_importance{
-                            0.5
-                        }else if hiker_comp_1.quest_importance > hiker_comp_2.quest_importance{
-                            IMPORTANTER_ONE_BOP_FRACTION
-                        }else{
-                            1.0 - IMPORTANTER_ONE_BOP_FRACTION
-                        }
-                    };
-                    let bop_dist_1 = bop_fraction_for_1 * distance_too_close;
-                    let bop_dist_2 = (1.0 - bop_fraction_for_1) * distance_too_close;
-                    apply_bop(bop_dist_1, position_1, position_2);
-                    apply_bop(bop_dist_2, position_2, position_1);
-                }
-            }
-        }
-    }
-
- */
-
-
-
 }
 
 fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
@@ -128,5 +130,33 @@ fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
 
 
 
+/* Original (slow) version. (1.1ms for 220 entities)
 
+for (unit_id_1, hiker_collision_1, hiker_comp_1, position_1) in CompIter3::<>::new(c) {
+        for (unit_id_2, hiker_collision_2, hiker_comp_2, position_2) in CompIter3::<HikerCollisionComp, HikerComp, PositionComp>::new(c) {
+            if unit_id_1 != unit_id_2 && position_1.pos.x >= 1000000000.0{
+                let actual_distance_squared =  (position_1.pos.x - position_2.pos.x).powi(2) + (position_1.pos.y - position_2.pos.y).powi(2);
+                let min_distance = hiker_collision_1.radius + hiker_collision_2.radius;
+                if actual_distance_squared < min_distance.powi(2) {
+                    let distance_too_close = min_distance - actual_distance_squared.sqrt();
+                    const IMPORTANTER_ONE_BOP_FRACTION : f32 = 0.25;
+                    let bop_fraction_for_1 = {
+                        if hiker_comp_1.quest_importance == hiker_comp_2.quest_importance{
+                            0.5
+                        }else if hiker_comp_1.quest_importance > hiker_comp_2.quest_importance{
+                            IMPORTANTER_ONE_BOP_FRACTION
+                        }else{
+                            1.0 - IMPORTANTER_ONE_BOP_FRACTION
+                        }
+                    };
+                    let bop_dist_1 = bop_fraction_for_1 * distance_too_close;
+                    let bop_dist_2 = (1.0 - bop_fraction_for_1) * distance_too_close;
+                    apply_bop(bop_dist_1, position_1, position_2);
+                    apply_bop(bop_dist_2, position_2, position_1);
+                }
+            }
+        }
+    }
+
+ */
 

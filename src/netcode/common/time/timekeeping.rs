@@ -76,7 +76,28 @@ impl KnownFrameInfo{
         self.start_frame_stream_from_any(self.get_intended_current_frame())
     }
 }
-
+pub struct SpeedTimer{
+    item: Option<DT>
+}
+impl SpeedTimer{
+    pub fn new() -> Self{
+        Self{
+            item: None
+        }
+    }
+    pub fn start(&mut self){
+        if self.item.is_none(){
+            self.item = Some(DT::start("testing!"));
+        }
+    }
+    pub fn end(&mut self){
+        if let Some(item) = &self.item{
+            let time_since = SystemTime::now().duration_since(item.time).unwrap();
+            println!("Testtimer: {:?}", time_since);
+        }
+        self.item = None;
+    }
+}
 #[derive(Clone)]
 pub struct DT{ // Debug Timer.
     time: SystemTime,
