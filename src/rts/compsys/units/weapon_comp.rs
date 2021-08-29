@@ -5,7 +5,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
+use crate::rts::game::game_state::{ARENA_ENT_ID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
@@ -18,11 +18,11 @@ pub struct WeaponComp {
     pub wep_ability_id: AbilityID,
 }
 
-pub static WEAPON_SYS: System<ResourcesPtr> = System{
+pub static WEAPON_SYS: System = System{
     run,
     name: "weapon"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     let arena = c.get_unwrap::<ArenaComp>(ARENA_ENT_ID);
     // Check for move commands.
     for (player_id, inputs) in CompIter1::<InputComp>::new(c) {

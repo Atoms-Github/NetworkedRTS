@@ -5,7 +5,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
+use crate::rts::game::game_state::{ARENA_ENT_ID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
@@ -49,11 +49,11 @@ impl AbilitiesComp{
 }
 
 
-pub static ABILITIES_SYS: System<ResourcesPtr> = System{
+pub static ABILITIES_SYS: System = System{
     run,
     name: "abilities"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     // Increment time since use timers.
     for (unit_id, abilities)
     in CompIter1::<AbilitiesComp>::new(c) {

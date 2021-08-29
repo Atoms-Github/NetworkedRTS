@@ -47,11 +47,9 @@ impl ServerMainStateIn {
         game_state
     }
     pub fn start_segments(self) -> ServerMainStateEx {
-        let resources = GameState::gen_resources();
-
         let seg_net_hub = NetworkingHubEx::start(self.hosting_ip.clone());
         let seg_data_store = SimDataStorage::new(0);
-        let mut seg_logic_tail = LogicSimTailer::new(self.init_state(), self.known_frame.clone(), resources);
+        let mut seg_logic_tail = LogicSimTailer::new(self.init_state(), self.known_frame.clone());
         let missing_data_kick_msg_tx = seg_net_hub.down_sink.clone();
 
         let event_distributor = ServerEventDistributor::new(seg_net_hub.down_sink.clone());

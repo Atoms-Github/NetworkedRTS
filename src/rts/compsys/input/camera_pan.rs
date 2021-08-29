@@ -3,7 +3,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
 use crate::rts::compsys::*;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
-use crate::rts::game::game_state::RenderResources;
+
 use ggez::event::MouseButton;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct CameraComp{
@@ -33,11 +33,11 @@ impl CameraComp{
     }
 }
 
-pub static CAMERA_PAN_SYS: System<ResourcesPtr> = System{
+pub static CAMERA_PAN_SYS: System = System{
     run,
     name: "camera_pan"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
         if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
             input.is_panning = true;

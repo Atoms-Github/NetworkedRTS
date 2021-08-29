@@ -8,23 +8,23 @@ use serde::de::Visitor;
 use crate::netcode::common::time::timekeeping::*;
 
 // TODO: Implement ser and de manually.
-pub struct SuperbEcs<R>{
-    systems: Vec<System<R>>,
+pub struct SuperbEcs{
+    systems: Vec<System>,
     pub c: CompStorage,
     debug_times: EcsDebugTimer,
 }
-impl<R> SuperbEcs<R>{
-    pub fn new(systems: Vec<System<R>>) -> Self{
+impl SuperbEcs{
+    pub fn new(systems: Vec<System>) -> Self{
         Self{
             systems,
             c: Default::default(),
             debug_times: Default::default()
         }
     }
-    pub fn set_systems(&mut self, systems: Vec<System<R>>){
+    pub fn set_systems(&mut self, systems: Vec<System>){
         self.systems = systems;
     }
-    pub fn sim_systems(&mut self, resources: &R, quality: SimQuality){
+    pub fn sim_systems(&mut self, quality: SimQuality){
         let mut pending_changes = EntStructureChanges{
             new_entities: vec![],
             deleted_entities: vec![]
@@ -34,7 +34,7 @@ impl<R> SuperbEcs<R>{
             if quality == SimQuality::DETERMA{
                 self.debug_times.start_timer(String::from(system.name));
             }
-            (system.run)(resources, &mut self.c, &mut pending_changes);
+            (system.run)(&mut self.c, &mut pending_changes);
 
             if quality == SimQuality::DETERMA{
                 self.debug_times.stop_timer(String::from(system.name));
@@ -49,7 +49,7 @@ impl<R> SuperbEcs<R>{
     }
 
 }
-impl<R> Clone for SuperbEcs<R>{
+impl Clone for SuperbEcs{
     fn clone(&self) -> Self {
         Self{
             systems: self.systems.clone(),
@@ -59,8 +59,8 @@ impl<R> Clone for SuperbEcs<R>{
     }
 }
 
-pub struct System<R>{
-    pub run: fn(&R, &mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges),
+pub struct System{
+    pub run: fn(&mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges),
     pub name: &'static str,
 }
 pub struct EntStructureChanges{
@@ -128,7 +128,7 @@ impl EntStructureChanges{
 //  GARBAGE BELOW HERE.
 // ------------------------------
 
-impl<R> Clone for System<R> {
+impl Clone for System {
     fn clone(&self) -> Self {
         Self{
             run: self.run,
@@ -137,7 +137,7 @@ impl<R> Clone for System<R> {
     }
 }
 
-impl<R> Serialize for SuperbEcs<R>{
+impl Serialize for SuperbEcs{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
@@ -158,7 +158,7 @@ struct ECSVisitor {
 use std::fmt::Write;
 use std::fmt;
 use crate::utils::{TypeIdNum, gett};
-use crate::rts::game::game_state::UsingResources;
+use crate::rts::game::game_state::UsingRenderResources;
 use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
@@ -177,7 +177,7 @@ trait TraitTest{
 }
 impl<'de> Visitor<'de> for ECSVisitor
 {
-    type Value = SuperbEcs<UsingResources>;
+    type Value = SuperbEcs;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("An ECS")
@@ -195,7 +195,7 @@ impl<'de> Visitor<'de> for ECSVisitor
     }
 }
 
-impl<'de> Deserialize<'de> for SuperbEcs<UsingResources>
+impl<'de> Deserialize<'de> for SuperbEcs
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where

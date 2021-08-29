@@ -5,7 +5,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
+use crate::rts::game::game_state::{ARENA_ENT_ID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 use winit::VirtualKeyCode;
@@ -17,11 +17,11 @@ use crate::bibble::data::data_types::{EffectToPoint, UnitID};
 pub struct SelBoxComp{
     pub starting_pos: PointFloat
 }
-pub static SELECTION_BOX_SYS: System<ResourcesPtr> = System{
+pub static SELECTION_BOX_SYS: System = System{
     run,
     name: "selection_box"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {
         let mouse_pos = c.get::<InputComp>(owned.owner).unwrap().mouse_pos_game_world.clone();
         let box_size_vec = mouse_pos - &sel_box.starting_pos;

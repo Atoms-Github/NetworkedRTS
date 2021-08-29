@@ -3,7 +3,7 @@ use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable};
 use crate::utils::gett;
 use crate::rts::compsys::*;
 use crate::ecs::{ActiveEcs, GlobalEntityID};
-use crate::rts::game::game_state::UsingResources;
+use crate::rts::game::game_state::UsingRenderResources;
 use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 use crate::bibble::data::data_types::AbilityID;
@@ -19,7 +19,7 @@ pub struct RenderComp{
     pub colour: (u8, u8, u8)
 }
 
-pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &ResourcesPtr, player_entity_id: GlobalEntityID){
+pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, player_entity_id: GlobalEntityID){
     let timer = DT::start("Render");
 
     let mut cool_batcher = CoolBatcher::new();
@@ -140,7 +140,7 @@ pub fn render(ecs: &mut ActiveEcs<UsingResources>, ctx: &mut Context, res: &Reso
     }
 
     cool_batcher.add_image("factory.jpg".to_string(), DrawParam::new(), 5);
-    cool_batcher.gogo_draw(ctx);
+    cool_batcher.gogo_draw(ctx, res);
 
     if rand::thread_rng().gen_bool(0.02){
         println!("{}", timer.stop_fmt());

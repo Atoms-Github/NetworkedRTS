@@ -16,16 +16,17 @@ use std::collections::BTreeMap;
 use nalgebra::Point2;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
 use std::sync::Arc;
-use crate::rts::compsys::RenderResources;
+use crate::rts::game::render_resources::RenderResources;
 use crate::rts::GameState;
 use std::path::Path;
+use std::borrow::Borrow;
 
 pub struct GraphicalIn {
     render_head_rec: Receiver<NetGameState>,
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
     texts: BTreeMap<&'static str, Text>,
-    resources: ResourcesPtr
+    resources: Option<RenderResourcesPtr> // Yes, this can be refactored.
 }
 pub struct GraphicalEx {
     pub input_rec: Receiver<InputChange>,
@@ -46,7 +47,7 @@ impl GraphicalEx{
             my_player_id,
             input_sink,
             texts,
-            resources: GameState::gen_resources()
+            resources: None
         }.start();
 
         GraphicalEx{
@@ -56,18 +57,13 @@ impl GraphicalEx{
 }
 impl GraphicalIn {
     pub fn start(mut self){
-        let cb = ContextBuilder::new("Oh my literal pogger", "Atomsadiah")
+        let cb = ContextBuilder::new("Oh my literal pogger", "Atoms")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
-            .window_mode(conf::WindowMode::default().dimensions(1440.0, 810.0)).add_resource_path(""); // TODO3: Find what resource path.
-
-
-
+            .window_mode(conf::WindowMode::default().dimensions(1440.0, 810.0)).add_resource_path("");
 
         thread::spawn(move ||{
             let (ctx, events_loop) = &mut cb.build().unwrap();
-            let path = Path::new("C:/_C_/Home/Produce/Code/Projects/Rust/BigYoshis/LiteralPoggySource/resources/images");
-            let path = Path::new("C:/_C_/Home/Produce/Code/Projects/Rust/BigYoshis/LiteralPoggySource/resources/images/factory.jpg");
-            ggez::filesystem::mount(ctx, path, false);
+            self.resources = Some(GameState::gen_render_resources(ctx));
             event::run(ctx, events_loop, &mut self).unwrap();
 
             log::info!("Shutting down.");
@@ -100,7 +96,7 @@ impl EventHandler for GraphicalIn {
         graphics::clear(ctx, graphics::BLACK);
 
         let mut render_state = self.pull_newest_usable_state();
-        render_state.render(ctx, self.my_player_id, &self.resources);
+        render_state.render(ctx, self.my_player_id, self.resources.as_ref().unwrap());
 
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {}", fps));

@@ -5,7 +5,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
+use crate::rts::game::game_state::{ARENA_ENT_ID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 use std::ops::Mul;
@@ -20,11 +20,11 @@ pub struct SeekingProjComp {
     pub target: GlobalEntityID,
 }
 
-pub static SEEKING_PROJECTILES_COMP: System<ResourcesPtr> = System{
+pub static SEEKING_PROJECTILES_COMP: System = System{
     run,
     name: "seeking_projectiles"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     let mut revolver = Revolver::new(c);
     for (proj_id, seeking_proj, position, owner) in
     CompIter3::<SeekingProjComp, PositionComp, OwnedComp>::new(c){

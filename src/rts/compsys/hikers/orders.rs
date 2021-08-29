@@ -68,11 +68,11 @@ impl OrdersComp{
     }
 }
 
-pub static ORDERS_SYS: System<ResourcesPtr> = System{
+pub static ORDERS_SYS: System = System{
     run,
     name: "orders"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
 
     // Check for dead target.
     for (unit_id, owned, orders, position, hiker)

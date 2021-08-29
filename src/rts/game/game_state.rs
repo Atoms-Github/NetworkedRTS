@@ -1,4 +1,4 @@
-use crate::pub_types::{HashType, FrameIndex, PlayerID, ResourcesPtr, PointFloat};
+use crate::pub_types::{HashType, FrameIndex, PlayerID, RenderResourcesPtr, PointFloat};
 use crate::netcode::{InfoForSim, PlayerInputs};
 use ggez::{*};
 use std::sync::Arc;
@@ -15,13 +15,14 @@ use crate::bibble::data::data_types::{GameData, RaceID};
 use crate::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+use crate::rts::game::render_resources::RenderResources;
 
 const MAX_PLAYERS : usize = 4;
 pub const ARENA_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
-pub type UsingResources = Arc<RenderResources>;
+pub type UsingRenderResources = Arc<RenderResources>;
 
-pub fn global_get_systems() -> Vec<System<UsingResources>>{
+pub fn global_get_systems() -> Vec<System>{
     vec![
         INPUT_PREPROC.clone(),
         PERFORMANCE_MAP.clone(),
@@ -47,14 +48,11 @@ pub fn global_get_systems() -> Vec<System<UsingResources>>{
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
-    ecs: ActiveEcs<UsingResources>,
+    ecs: ActiveEcs,
     player_count: usize,
 }
 
-// No clone or serde.
-pub struct RenderResources {
-    pub images: HashMap<String, graphics::Image>
-}
+
 
 impl Default for GameState {
     fn default() -> Self {
@@ -77,7 +75,7 @@ impl GameState {
         }
         assert_eq!(self.ecs.c.create_entity(PendingEntity::new_arena()), ARENA_ENT_ID);
     }
-    pub fn player_connects(&mut self, res: &ResourcesPtr, player_id: PlayerID, username: String){
+    pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let player_ent_id = player_id as GlobalEntityID;
         let spawn_point = self.get_player_spawn(player_id);
 
@@ -119,26 +117,20 @@ impl GameState {
     pub fn player_disconnects(&mut self, player_id: PlayerID){
 
     }
-    pub fn simulate_tick(&mut self, inputs: PlayerInputs, res: &ResourcesPtr, sim_quality: SimQuality, delta: f32, frame_index: FrameIndex){
+    pub fn simulate_tick(&mut self, inputs: PlayerInputs, sim_quality: SimQuality, delta: f32, frame_index: FrameIndex){
         for (player_id, input_state) in inputs{
             if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(player_id as GlobalEntityID){
                 existing_player.inputs.update_input_state(input_state);
             }
         }
-        self.ecs.sim_systems(res, sim_quality);
+        self.ecs.sim_systems(sim_quality);
     }
-    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &ResourcesPtr){
+    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
         crate::rts::compsys::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
     }
-    pub fn gen_resources() -> ResourcesPtr{
-        let mut resources = RenderResources {
-            images: Default::default(),
-        };
-        for file in std::fs::read_dir("resources/images").unwrap(){
-            // let image = ggez::graphics::Image::new();
-            // resources.images.insert("", image);
-            // println!("{}", file.unwrap().);
-        }
+    pub fn gen_render_resources(ctx: &mut Context) -> RenderResourcesPtr {
+        let mut resources = RenderResources::load(ctx);
+
         return Arc::new(resources);
     }
 }

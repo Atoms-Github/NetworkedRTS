@@ -20,15 +20,13 @@ pub struct LogicSimTailer {
     pub game_state: NetGameState,
     pub known_frame: KnownFrameInfo,
     pub hashes: HashMap<FrameIndex, HashType>, // pointless_optimum Could use vec, but easier to use hashmap.
-    res: ResourcesPtr,
 }
 impl LogicSimTailer{
-    pub fn new(game_state: NetGameState, known_frame: KnownFrameInfo, res: ResourcesPtr) -> Self{
+    pub fn new(game_state: NetGameState, known_frame: KnownFrameInfo) -> Self{
         Self{
             game_state,
             known_frame,
             hashes: Default::default(),
-            res
         }
     }
     fn get_server_events(&self, data_store: &SimDataStorage) -> Result<ServerEvents, Vec<SimDataQuery>>{
@@ -98,7 +96,7 @@ impl LogicSimTailer{
             log::info!("Tail simming frame {} with server events: {:?} and {} player inputs",self.game_state.get_simmed_frame_index() + 1, sim_data.server_events, sim_data.inputs_map.len());
         }
         let timer = DT::start("Tail sim time");
-        self.game_state.simulate_tick(sim_data, &self.res, SimQuality::DETERMA, FRAME_DURATION_MILLIS);
+        self.game_state.simulate_tick(sim_data, SimQuality::DETERMA, FRAME_DURATION_MILLIS);
         log::debug!("TSimSuc: {}", self.game_state.get_simmed_frame_index());
         timer.stop_warn(2000);
         self.update_hash();

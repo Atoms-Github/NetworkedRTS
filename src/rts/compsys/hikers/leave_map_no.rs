@@ -15,11 +15,11 @@ use nalgebra::{distance, distance_squared};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
 
-pub static NO_LEAVE_MAP: System<ResourcesPtr> = System{
+pub static NO_LEAVE_MAP: System = System{
     run,
     name: "orders"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     let arena = c.get_unwrap::<ArenaComp>(ARENA_ENT_ID);
     for (unit_id, position)
     in CompIter1::<PositionComp>::new(c) {

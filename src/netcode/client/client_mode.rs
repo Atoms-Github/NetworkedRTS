@@ -80,8 +80,6 @@ impl ConnectedClient{
     }
     fn init_segs(&mut self, my_init_frame: FrameIndex) -> ClientEx{
 
-        let resources = GameState::gen_resources();
-
         let welcome_info = self.welcome_info.clone();
 
         let first_frame_to_store = welcome_info.game_state.get_simmed_frame_index() + 1;
@@ -92,9 +90,9 @@ impl ConnectedClient{
             seg_data_storage.add_new_player(connected_player, self.welcome_info.game_state.get_simmed_frame_index() + 1);
         }
         let seg_scheduler = SchedulerSegEx::start(welcome_info.known_frame.clone());
-        let mut seg_logic_tailer = LogicSimTailer::new(welcome_info.game_state, welcome_info.known_frame.clone(), resources.clone());
+        let mut seg_logic_tailer = LogicSimTailer::new(welcome_info.game_state, welcome_info.known_frame.clone());
 
-        let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone(), resources);
+        let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone());
         let seg_graphical = GraphicalEx::start(seg_logic_header.calculated_heads.take().unwrap(), welcome_info.assigned_player_id);
         let seg_input_handler = InputHandler::new(
              welcome_info.assigned_player_id,

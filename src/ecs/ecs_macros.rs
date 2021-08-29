@@ -1,6 +1,6 @@
 use crate::ecs::comp_store::*;
 use crate::utils::{TypeIdNum, gett};
-use crate::rts::game::game_state::UsingResources;
+use crate::rts::game::game_state::UsingRenderResources;
 use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;

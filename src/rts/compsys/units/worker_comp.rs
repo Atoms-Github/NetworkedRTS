@@ -5,7 +5,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
+use crate::rts::game::game_state::{ARENA_ENT_ID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
@@ -15,11 +15,11 @@ pub struct WorkerComp {
 }
 
 
-pub static WORKER_SYS: System<ResourcesPtr> = System{
+pub static WORKER_SYS: System = System{
     run,
     name: "worker"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (worker_id, life, owned, worker) in
     CompIter3::<LifeComp, OwnedComp, WorkerComp>::new(c) {
         let resources_comp = c.get_mut::<OwnsResourcesComp>(owned.owner).unwrap();

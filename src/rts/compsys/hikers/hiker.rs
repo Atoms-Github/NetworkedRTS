@@ -16,11 +16,11 @@ pub struct HikerComp { // Walks comp, but includes fliers and sailers too.
 }
 
 
-pub static HIKER_SYS: System<ResourcesPtr> = System{
+pub static HIKER_SYS: System = System{
     run,
     name: "hiker"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
 
     for test_id in c.query(vec![crate::utils::gett::<HikerComp>(), crate::utils::gett::<PositionComp>()]){
         let woah = c.get::<HikerComp>(test_id).unwrap();

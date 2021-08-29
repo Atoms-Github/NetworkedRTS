@@ -12,11 +12,11 @@ use std::ops::Mul;
 pub struct HikerCollisionComp {
     pub radius: f32
 }
-pub static HIKER_COLLISION_SYS: System<ResourcesPtr> = System{
+pub static HIKER_COLLISION_SYS: System = System{
     run,
     name: "hiker_collision"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     let unit_ids = c.query(vec![
         crate::utils::gett::<HikerCollisionComp>(),
         crate::utils::gett::<HikerComp>(),

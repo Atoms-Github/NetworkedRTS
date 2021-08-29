@@ -5,18 +5,18 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID, RenderResources};
+use crate::rts::game::game_state::{ARENA_ENT_ID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
 use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode, AbilityTargetType};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
-pub static ABILITY_TARGETING: System<ResourcesPtr> = System{
+pub static ABILITY_TARGETING: System = System{
     run,
     name: "ability_targeting"
 };
-fn run(res: &ResourcesPtr, c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     // Check for starting ability targetting:
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         if let RtsKeyEvent::KeyDown(down_key) = input.inputs.key_event{

@@ -7,17 +7,17 @@ use crate::ecs::macro_version::generic_version::EntityManager;
 
 // TODO: Implement ser and de manually.
 pub struct MacroEcs<R :Clone>{
-    systems: Vec<System<R>>,
+    systems: Vec<System>,
     eman: EntityManager,
 }
-impl<R : Clone> MacroEcs<R>{
-    pub fn new(systems: Vec<System<R>>) -> Self{
+impl<R : Clone> MacroEcs{
+    pub fn new(systems: Vec<System>) -> Self{
         Self{
             systems: vec![],
             eman: EntityManager::new(),
         }
     }
-    pub fn set_systems(&mut self, systems: Vec<System<R>>){
+    pub fn set_systems(&mut self, systems: Vec<System>){
         self.systems = systems;
     }
     pub fn sim_systems(&mut self, resources: R){

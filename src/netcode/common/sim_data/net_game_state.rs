@@ -1,13 +1,13 @@
 use serde::{Serialize, Deserialize};
 use crate::rts::GameState;
-use crate::pub_types::{PlayerID, FrameIndex, HashType, ResourcesPtr, SimQuality};
+use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQuality};
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
 use crate::netcode::{InfoForSim, ConnStatusChangeType};
 use std::hash::{Hash, Hasher};
 use crate::netcode::common::sim_data::sim_data_storage::ServerEvent;
-use crate::rts::game::game_state::RenderResources;
+
 use std::sync::Arc;
 use std::fmt::Debug;
 use serde::__private::Formatter;
@@ -90,24 +90,24 @@ impl NetGameState {
         net_state.game_state.init();
         return net_state;
     }
-    pub fn simulate_tick(&mut self, sim_info: InfoForSim, res: &ResourcesPtr, quality: SimQuality, delta: f32){
+    pub fn simulate_tick(&mut self, sim_info: InfoForSim, quality: SimQuality, delta: f32){
         for server_event in &sim_info.server_events{
             match server_event{
                 ServerEvent::JoinPlayer(player_id, name) => {
                     assert!(sim_info.inputs_map.contains_key(player_id), "Player connected, but didn't have input state for that frame. Frame {}", self.get_simmed_frame_index() + 1);
-                    self.game_state.player_connects(res, *player_id, (*name).clone());
+                    self.game_state.player_connects(*player_id, (*name).clone());
                 }
                 ServerEvent::DisconnectPlayer(player_id) => {
                     self.game_state.player_disconnects(*player_id);
                 }
             }
         }
-        self.game_state.simulate_tick(sim_info.inputs_map, res, quality, delta, self.simmed_frame_index);
+        self.game_state.simulate_tick(sim_info.inputs_map, quality, delta, self.simmed_frame_index);
         self.simmed_frame_index += 1;
 
 
     }
-    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &ResourcesPtr){
+    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
         self.game_state.render(ctx, player_id, res)
     }
 }
