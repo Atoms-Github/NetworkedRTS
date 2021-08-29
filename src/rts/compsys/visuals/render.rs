@@ -33,9 +33,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
         let screen_pos = player_camera.game_space_to_screen_space(arena_comp.get_top_left());
         let screen_size = player_camera.game_size_to_screen_size(arena_comp.get_size());
-
-        draw_rect(ctx, graphics::Color::from((200,200,200)),
-                  graphics::Rect::new(screen_pos.x, screen_pos.y, screen_size.x, screen_size.y));
+        cool_batcher.add_rectangle(&screen_pos, &screen_size, graphics::Color::from_rgb(200,200,200), 20);
     }
 
     // Draw arena boxes.
@@ -44,8 +42,6 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         let small_size =  player_camera.game_size_to_screen_size(
             PointFloat::new(arena_comp.get_box_length() as f32 - 1.0, arena_comp.get_box_length() as f32 - 1.0)
         );
-        let mut builder = MeshBuilder::new();
-
         for x in 0..arena_comp.pathing.len(){
             for y in 0..arena_comp.pathing[x].len(){
                 let small_top_left_game = PointFloat::new((x * arena_comp.get_box_length()) as f32,
@@ -59,28 +55,26 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                     }
                 };
                 let rect = graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y);
-                builder.rectangle(graphics::DrawMode::fill(), rect, color);
+                cool_batcher.add_rectangle_rect(rect, color, 50);
             }
         }
-        builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
     }
 
     // Draw units.
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
-
-        draw_rect(ctx, graphics::Color::from(render.colour),
-                  graphics::Rect::new(on_screen_pos.x, on_screen_pos.y, on_screen_size.x, on_screen_size.y));
+        cool_batcher.add_rectangle(&on_screen_pos, &on_screen_size,
+                                   graphics::Color::from(render.colour), 128);
         if let Some(life_comp) = ecs.c.get::<LifeComp>(entity_id){
-            draw_rect(ctx, graphics::Color::from_rgb(200,0,0),
-                      graphics::Rect::new(on_screen_pos.x, on_screen_pos.y,life_comp.max_life, 5.0));
-            draw_rect(ctx, graphics::Color::from_rgb(0,200,0),
-                      graphics::Rect::new(on_screen_pos.x, on_screen_pos.y,life_comp.life, 5.0));
+            cool_batcher.add_rectangle(&on_screen_pos, &PointFloat::new(life_comp.max_life, 5.0),
+                                       graphics::Color::from_rgb(200,0,0), 150);
+            cool_batcher.add_rectangle(&on_screen_pos, &PointFloat::new(life_comp.life, 5.0),
+                                       graphics::Color::from_rgb(0,200,0), 160);
         }
         if let Some(selectable_comp) = ecs.c.get::<SelectableComp>(entity_id){
             if selectable_comp.is_selected{
-                draw_rect(ctx, graphics::Color::from_rgb(200,200,0),
-                          graphics::Rect::new(on_screen_pos.x, on_screen_pos.y,10.0, 10.0));
+                cool_batcher.add_rectangle(&on_screen_pos, &PointFloat::new(10.0,10.0),
+                                           graphics::Color::from_rgb(200,200,0), 170);
             }
         }
     }
@@ -107,7 +101,6 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                 if rendering_abilities.get(&button_mould.hotkey).is_none(){
                     rendering_abilities.insert(button_mould.hotkey, ability_instance.id);
                 }
-
             }
         }
     }
@@ -139,7 +132,8 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         }
     }
 
-    cool_batcher.add_image("factory.jpg".to_string(), DrawParam::new(), 5);
+    let mut test_param = DrawParam::new();
+    // cool_batcher.add_image("factory.jpg".to_string(), test_param, 5);
     cool_batcher.gogo_draw(ctx, res);
 
     if rand::thread_rng().gen_bool(0.02){
