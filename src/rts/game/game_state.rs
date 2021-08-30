@@ -41,6 +41,7 @@ pub fn global_get_systems() -> Vec<System>{
         WORKER_SYS.clone(),
         WEAPON_SYS.clone(),
         LIFE_SYS.clone(),
+        LOSS_SYS.clone(),
         NO_LEAVE_MAP.clone(),
     ]
 }
@@ -77,8 +78,6 @@ impl GameState {
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let player_ent_id = player_id as GlobalEntityID;
-        let spawn_point = self.get_player_spawn(player_id);
-
         let mut race = {
             if username == "QuickToast"{
                 RaceID::QUICK_TASTERS
@@ -87,18 +86,25 @@ impl GameState {
             }
         };
 
+        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
+        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
+        self.spawn_player(player_ent_id, race);
+    }
+    fn spawn_player(&mut self, player_id: GlobalEntityID, race: RaceID){
+        let spawn_point = self.get_player_spawn(player_id);
+
         let mut revolver = Revolver::new(&self.ecs.c);
 
-        let data = player_ent_id.get_player_tech_tree(&self.ecs.c);
+        let data = player_id.get_player_tech_tree(&self.ecs.c);
         let effect = &data.get_race(race).spawn_effect;
-        revolver.revolve_to_point(data, effect, &spawn_point, player_ent_id);
+        revolver.revolve_to_point(data, effect, &spawn_point, player_id);
 
         revolver.end().apply(&mut self.ecs.c);
 
-        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
-        self.ecs.c.get_mut::<CameraComp>(player_ent_id).unwrap().translation = spawn_point;
+        self.ecs.c.get_mut::<PlayerComp>(player_id).unwrap().alive = true;
+        self.ecs.c.get_mut::<CameraComp>(player_id).unwrap().translation = spawn_point;
     }
-    fn get_player_spawn(&self, player_id: PlayerID) -> PointFloat{
+    fn get_player_spawn(&self, player_id: GlobalEntityID) -> PointFloat{
         let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
         let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
         let arena_width = self.ecs.c.get::<ArenaComp>(ARENA_ENT_ID).unwrap().get_length();
@@ -115,7 +121,7 @@ impl GameState {
         return centre + offset_from_centre;
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
-
+        self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;
     }
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, sim_quality: SimQuality, delta: f32, frame_index: FrameIndex){
         for (player_id, input_state) in inputs{

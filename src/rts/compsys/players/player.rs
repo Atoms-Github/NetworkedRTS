@@ -9,7 +9,9 @@ use crate::rts::compsys::*;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct PlayerComp {
-    pub name: String
+    pub name: String,
+    pub alive: bool,
+    pub connected: bool,
 }
 
 

@@ -84,6 +84,19 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         let player_name = ecs.c.get::<PlayerComp>(owned.owner).unwrap().name.clone();
         cool_batcher.add_text(on_screen_pos, player_name, graphics::Color::from((0,153,255)), 150);
     }
+    // Draw ded.
+    let mut y = 100.0;
+    for (entity_id, player) in CompIter1::<PlayerComp>::new(&ecs.c){
+        if player.connected{
+            y += 50.0;
+            cool_batcher.add_text(PointFloat::new(20.0, y), player.name.clone(), Color::from_rgb(0,0,0), 210);
+            if player.alive{
+                cool_batcher.add_text(PointFloat::new(150.0, y), "Alive".to_string(), Color::from_rgb(66, 245, 194), 210);
+            }else{
+                cool_batcher.add_text(PointFloat::new(150.0, y), "Ded".to_string(), Color::from_rgb(230,0,0), 210);
+            }
+        }
+    }
     // Find ability buttons.
     let mut rendering_abilities = BTreeMap::new();
     for (unit_id, abilities, selectable, owned)
@@ -132,7 +145,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     cool_batcher.gogo_draw(ctx, res);
 
     if rand::thread_rng().gen_bool(1.0){
-        println!("{}", timer.stop_fmt());
+        // println!("{}", timer.stop_fmt());
     }
 }
 
