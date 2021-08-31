@@ -11,6 +11,7 @@ use mopa::Any;
 use std::ops::Div;
 use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::bibble::data::data_types::RaceID;
+use log::logger;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -22,6 +23,7 @@ pub struct ScenePersistent{ // Means keep when scene changes.
 pub struct SceneManager{
     pub current: SceneType,
     pub next: SceneType,
+    pub completed_rounds: usize,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -36,8 +38,8 @@ pub static SCENE_SWITCHER_SYS: System = System{
     name: "scene_switcher"
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
-    let scene_man = c.get_unwrap::<SceneManager>(SCENE_ENT_ID);
-    if scene_man.current != scene_man.next{
+    let scene = c.get_mut_unwrap::<SceneManager>(SCENE_MAN_ENT_ID);
+    if scene.current != scene.next{
         // Delete all entities (that aren't presistent).
         for entity_id in c.query(vec![]){
             let persist = c.get::<ScenePersistent>(entity_id);
@@ -45,28 +47,35 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                 ent_changes.deleted_entities.push(entity_id);
             }
         }
-        match scene_man.next{
+        match scene.next{
             SceneType::InGame => {
                 let mut pending_arena_ent = PendingEntity::new_arena();
                 let mut pending_arena = pending_arena_ent.get_mut::<ArenaComp>().unwrap();
                 let player_ids = c.query(vec![gett::<PlayerComp>()]);
                 for player in player_ids{
-                    spawn_player_ingame(c, player, RaceID::ROBOTS, pending_arena);
+                    spawn_player_ingame(ent_changes, c, player, RaceID::ROBOTS, pending_arena);
                 }
 
                 ent_changes.new_entities.push(pending_arena_ent);
             }
             SceneType::Lobby => {
-
+                let game_start_cooldown = {
+                    if scene.completed_rounds == 0{
+                        20.0
+                    }else{
+                        5.0
+                    }
+                };
+                ent_changes.new_entities.push(PendingEntity::new_lobby(game_start_cooldown));
             }
             SceneType::None => {}
         }
-
+        scene.current = scene.next.clone();
     }
 }
 
-fn spawn_player_ingame(c: &mut CompStorage, player_id: GlobalEntityID, race: RaceID, arena: &mut ArenaComp){
-    let spawn_point = get_player_spawn(c, player_id, arena);
+fn spawn_player_ingame(ent_changes: &mut EntStructureChanges, c: &CompStorage, player_id: GlobalEntityID, race: RaceID, arena: &mut ArenaComp){
+    let spawn_point = get_player_spawn(player_id, arena);
 
     let mut revolver = Revolver::new(c);
 
@@ -74,12 +83,12 @@ fn spawn_player_ingame(c: &mut CompStorage, player_id: GlobalEntityID, race: Rac
     let effect = &data.get_race(race).spawn_effect;
     revolver.revolve_to_point(data, effect, &spawn_point, player_id);
 
-    revolver.end().apply(c);
+    revolver.end().move_into(ent_changes);
 
     c.get_mut::<PlayerComp>(player_id).unwrap().alive = true;
     c.get_mut::<CameraComp>(player_id).unwrap().translation = spawn_point;
 }
-fn get_player_spawn(c: &mut CompStorage, player_id: GlobalEntityID, arena: &mut ArenaComp) -> PointFloat{
+fn get_player_spawn(player_id: GlobalEntityID, arena: &mut ArenaComp) -> PointFloat{
     let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
     let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
     let arena_width = arena.get_length();

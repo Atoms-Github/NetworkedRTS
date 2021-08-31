@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 
 pub const MAX_PLAYERS : usize = 4;
-pub const SCENE_ENT_ID: GlobalEntityID = MAX_PLAYERS;
+pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingRenderResources = Arc<RenderResources>;
 
@@ -43,6 +43,7 @@ pub fn global_get_systems() -> Vec<System>{
         LIFE_SYS.clone(),
         LOSS_SYS.clone(),
         NO_LEAVE_MAP.clone(),
+        LOBBY_SYS.clone(),
         SCENE_SWITCHER_SYS.clone(),
     ]
 }
@@ -75,7 +76,7 @@ impl GameState {
             let mut pending = PendingEntity::new_player(player_index as GlobalEntityID);
             assert_eq!(player_index, self.ecs.c.create_entity(pending))
         }
-        assert_eq!(self.ecs.c.create_entity(PendingEntity::new_scene_manager()), SCENE_ENT_ID)
+        assert_eq!(self.ecs.c.create_entity(PendingEntity::new_scene_manager()), SCENE_MAN_ENT_ID)
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let player_ent_id = player_id as GlobalEntityID;

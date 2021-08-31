@@ -16,6 +16,9 @@ pub static LOSS_SYS: System = System{
     name: "loss"
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+    let scene = c.find_scene();
+
+    let mut alive_players = 0;
     for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
         if player.alive{
             if (input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F12)
@@ -38,8 +41,14 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
             }
             if lost{
                 player.alive = false;
+            }else{
+                alive_players += 1;
             }
         }
+    }
+    if alive_players <= 1{
+        scene.completed_rounds += 1;
+        scene.next = SceneType::Lobby;
     }
 }
 

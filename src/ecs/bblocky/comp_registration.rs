@@ -58,6 +58,7 @@ lazy_static! {
         map.register_type::<SeekingProjComp>();
         map.register_type::<SceneManager>();
         map.register_type::<ScenePersistent>();
+        map.register_type::<LobbyManager>();
         // map.register_type::<BenchStruct>();
 
         map

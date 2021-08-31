@@ -30,8 +30,13 @@ impl PendingEntity{
     }
     pub fn new_scene_manager() -> Self{
         Self::new2(
-            SceneManager{ current: SceneType::InGame, next: SceneType::InGame },
+            SceneManager{ current: SceneType::InGame, next: SceneType::InGame, completed_rounds: 0 },
             ScenePersistent{ keep_alive: true },
+        )
+    }
+    pub fn new_lobby(game_start_cooldown: f32) -> Self{
+        Self::new1(
+            LobbyManager{ game_start_cooldown },
         )
     }
     pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
