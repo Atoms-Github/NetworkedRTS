@@ -17,8 +17,8 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 
-const MAX_PLAYERS : usize = 4;
-pub const ARENA_ENT_ID: GlobalEntityID = MAX_PLAYERS;
+pub const MAX_PLAYERS : usize = 4;
+pub const SCENE_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingRenderResources = Arc<RenderResources>;
 
@@ -43,6 +43,7 @@ pub fn global_get_systems() -> Vec<System>{
         LIFE_SYS.clone(),
         LOSS_SYS.clone(),
         NO_LEAVE_MAP.clone(),
+        SCENE_SWITCHER_SYS.clone(),
     ]
 }
 
@@ -74,7 +75,7 @@ impl GameState {
             let mut pending = PendingEntity::new_player(player_index as GlobalEntityID);
             assert_eq!(player_index, self.ecs.c.create_entity(pending))
         }
-        assert_eq!(self.ecs.c.create_entity(PendingEntity::new_arena()), ARENA_ENT_ID);
+        assert_eq!(self.ecs.c.create_entity(PendingEntity::new_scene_manager()), SCENE_ENT_ID)
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String){
         let player_ent_id = player_id as GlobalEntityID;
@@ -85,40 +86,8 @@ impl GameState {
                 RaceID::ROBOTS
             }
         };
-
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
-        self.spawn_player(player_ent_id, race);
-    }
-    fn spawn_player(&mut self, player_id: GlobalEntityID, race: RaceID){
-        let spawn_point = self.get_player_spawn(player_id);
-
-        let mut revolver = Revolver::new(&self.ecs.c);
-
-        let data = player_id.get_player_tech_tree(&self.ecs.c);
-        let effect = &data.get_race(race).spawn_effect;
-        revolver.revolve_to_point(data, effect, &spawn_point, player_id);
-
-        revolver.end().apply(&mut self.ecs.c);
-
-        self.ecs.c.get_mut::<PlayerComp>(player_id).unwrap().alive = true;
-        self.ecs.c.get_mut::<CameraComp>(player_id).unwrap().translation = spawn_point;
-    }
-    fn get_player_spawn(&self, player_id: GlobalEntityID) -> PointFloat{
-        let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
-        let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
-        let arena_width = self.ecs.c.get::<ArenaComp>(ARENA_ENT_ID).unwrap().get_length();
-        let radius = arena_width as f32 / 3.0;
-
-
-        let offset_from_centre = PointFloat::new(
-            my_radius_round.sin() * radius,
-            my_radius_round.cos() * radius
-        );
-
-        let centre = PointFloat::new(arena_width as f32 / 2.0, arena_width as f32 / 2.0);
-
-        return centre + offset_from_centre;
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;

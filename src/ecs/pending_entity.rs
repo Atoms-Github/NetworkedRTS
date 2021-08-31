@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
-use crate::utils::TypeIdNum;
+use crate::utils::{TypeIdNum, gett};
 use serde::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -35,6 +35,9 @@ impl PendingEntity {
     }
     pub fn remove<T: 'static + Send>(&mut self) {
         self.data.remove(&crate::utils::gett::<T>());
+    }
+    pub fn get_mut<T: 'static + Send>(&mut self) -> Option<&mut T>{
+        self.data.get_mut(&gett::<T>()).map(|item|{item.get_mut::<T>()})
     }
 }
 

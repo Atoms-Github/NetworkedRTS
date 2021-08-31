@@ -5,7 +5,6 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
-use crate::rts::game::game_state::{ARENA_ENT_ID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 
@@ -20,7 +19,8 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
         if player.alive{
             if (input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F12)
-                && input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LControl))
+                && (input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LControl)
+            || input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::RControl)))
             || !player.connected /* Concede on disconnect. */{
                 // Delete everything owned by me.
                 for (entity, owned) in CompIter1::<OwnedComp>::new(c) {

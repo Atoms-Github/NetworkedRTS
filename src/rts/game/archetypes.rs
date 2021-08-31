@@ -7,22 +7,31 @@ use crate::bibble::data::data_types::{WeaponID, GameData};
 
 impl PendingEntity{
     pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
-        Self::new6(
+        Self::new7(
             RenderComp{ colour: (100,50,50) },
             PositionComp{ pos: position},
-            CollisionComp{  },
+            CollisionComp{ useless: false },
             VelocityComp{ vel: PointFloat::new(1.0,1.0) },
             OwnedComp { owner },
-            SizeComp{ size: PointFloat::new(50.0, 50.0) }
+            SizeComp{ size: PointFloat::new(50.0, 50.0) },
+            ScenePersistent{ keep_alive: false }
         )
     }
     pub fn new_player(owner: GlobalEntityID) -> Self{
-        Self::new5(
+        Self::new6(
             PlayerComp{ name: "NamelessWonder".to_string(), alive: true, connected: false },
             OwnsResourcesComp{ resources: [0.0; RESOURCES_COUNT] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
             InputComp{ is_panning: false, inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0, 0.0) },
-            TechTreeComp{ tree: GameData::gen_game_data() }
+            TechTreeComp{ tree: GameData::gen_game_data() },
+            ScenePersistent{ keep_alive: true },
+
+        )
+    }
+    pub fn new_scene_manager() -> Self{
+        Self::new2(
+            SceneManager{ current: SceneType::InGame, next: SceneType::InGame },
+            ScenePersistent{ keep_alive: true },
         )
     }
     pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -35,7 +44,7 @@ impl PendingEntity{
             OwnedComp { owner },
             VelocityWithInputsComp{ speed: 2.0 },
             LifeComp{ life: 100.0, max_life: 100.0 },
-            CollisionComp{  },
+            CollisionComp{ useless: false },
         )
     }
     pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{

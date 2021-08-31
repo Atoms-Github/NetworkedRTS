@@ -9,6 +9,7 @@ use winit::MouseButton;
 use crate::ecs::ecs_macros::{CompIter3, CompIter4};
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct CollisionComp {
+    pub useless: bool,
 }
 
 pub static COLLISION_SYS: System = System{

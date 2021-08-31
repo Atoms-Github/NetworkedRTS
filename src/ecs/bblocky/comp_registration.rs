@@ -56,6 +56,8 @@ lazy_static! {
         map.register_type::<RenderComp>();
         map.register_type::<TechTreeComp>();
         map.register_type::<SeekingProjComp>();
+        map.register_type::<SceneManager>();
+        map.register_type::<ScenePersistent>();
         // map.register_type::<BenchStruct>();
 
         map
@@ -74,6 +76,8 @@ struct MyData{
 }
 impl FunctionMap{
     pub fn register_type<T : 'static + Serialize + Clone + DeserializeOwned + Send>(&mut self){
+        let size = std::mem::size_of::<T>();
+        assert!(size > 0, "Components with size of 0 are disallowed.");
         self.map.insert(gett::<T>(), SuperbFunctions {
             do_clone: |item| {
                 let casted = (*item).downcast_ref::<T>().unwrap();
@@ -105,7 +109,7 @@ impl FunctionMap{
                 std::mem::forget(cloned);
                 return back_to_bytes;
             },
-            item_size: std::mem::size_of::<T>()
+            item_size: size,
         });
     }
     pub fn get_from_type_id(&self, type_id: TypeId) -> &SuperbFunctions {

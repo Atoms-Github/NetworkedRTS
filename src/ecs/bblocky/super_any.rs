@@ -35,4 +35,7 @@ impl SuperAny {
     pub fn get<T : 'static>(&self) -> &T{
         return self.list.get::<T>(0).unwrap();
     }
+    pub fn get_mut<T : 'static>(&mut self) -> &mut T{
+        return self.list.get_mut::<T>(0).unwrap();
+    }
 }

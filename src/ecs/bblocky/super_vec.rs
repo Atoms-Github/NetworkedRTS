@@ -14,6 +14,7 @@ use std::fmt;
 use super::comp_registration::*;
 use crate::ecs::bblocky::super_any::SuperAny;
 use std::clone::Clone;
+use crate::unsafe_utils::very_bad_function;
 
 
 #[derive(Debug, PartialEq)]
@@ -84,6 +85,9 @@ impl SuperVec {
             let value = unsafe{crate::unsafe_utils::u8_slice_to_ref(self.get_as_bytes(index))};
             return Some(value);
         }
+    }
+    pub fn get_mut<T : 'static>(&mut self, index: usize) -> Option<&mut T>{
+        return self.get(index).map(|item| unsafe {very_bad_function(item)});
     }
 }
 impl Clone for SuperVec {

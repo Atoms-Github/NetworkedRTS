@@ -10,6 +10,8 @@ use crate::ecs::ecs_macros::{CompIter3, CompIter4};
 use std::ops::Mul;
 use mopa::Any;
 use std::ops::Div;
+
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct HikerCollisionComp {
     pub radius: f32
@@ -21,33 +23,34 @@ pub static HIKER_COLLISION_SYS: System = System{
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
     do_bops(c);
     // Do walls:
-    let arena = c.get_unwrap::<ArenaComp>(ARENA_ENT_ID);
-    for (unit_id, position) in CompIter1::<PositionComp>::new(c) {
-        // First, work out if in wall.
-        if arena.in_wall(&position.pos){
-            let position_within_box : PointFloat =
-                PointFloat::new(position.pos.x % ARENA_SQUARE_SIZE as f32,
-                                position.pos.y % ARENA_SQUARE_SIZE as f32);
-            let position_within_box_normalized : PointFloat =
-                position_within_box.clone() / ARENA_SQUARE_SIZE as f32;
-            let bottom_right_half = (position_within_box_normalized.x + position_within_box_normalized.y) > 1.0;
-            let top_left_half = !bottom_right_half; // True.
-            let top_right_half = (position_within_box_normalized.x - position_within_box_normalized.y) > 0.0;
-            let bottom_left_half = !top_right_half; // True.
+    if let Some(arena) = c.find_arena(){
+        for (unit_id, position, life) in CompIter2::<PositionComp, LifeComp>::new(c) {
+            // First, work out if in wall.
+            if arena.in_wall(&position.pos){
+                let position_within_box : PointFloat =
+                    PointFloat::new(position.pos.x % ARENA_SQUARE_SIZE as f32,
+                                    position.pos.y % ARENA_SQUARE_SIZE as f32);
+                let position_within_box_normalized : PointFloat =
+                    position_within_box.clone() / ARENA_SQUARE_SIZE as f32;
+                let bottom_right_half = (position_within_box_normalized.x + position_within_box_normalized.y) > 1.0;
+                let top_left_half = !bottom_right_half; // True.
+                let top_right_half = (position_within_box_normalized.x - position_within_box_normalized.y) > 0.0;
+                let bottom_left_half = !top_right_half; // True.
 
-            let top_quad = top_left_half && top_right_half;
-            let bottom_quad = bottom_left_half && bottom_right_half;
-            let left_quad = top_left_half && bottom_left_half;
-            let right_quad = top_right_half && bottom_right_half;
+                let top_quad = top_left_half && top_right_half;
+                let bottom_quad = bottom_left_half && bottom_right_half;
+                let left_quad = top_left_half && bottom_left_half;
+                let right_quad = top_right_half && bottom_right_half;
 
-            if top_quad{
-                position.pos.y -= position_within_box.y;
-            }else if bottom_quad{
-                position.pos.y += ARENA_SQUARE_SIZE as f32 - position_within_box.y;
-            }else if left_quad{
-                position.pos.x -= position_within_box.x;
-            }else if right_quad{
-                position.pos.x += ARENA_SQUARE_SIZE as f32 - position_within_box.x;
+                if top_quad{
+                    position.pos.y -= position_within_box.y;
+                }else if bottom_quad{
+                    position.pos.y += ARENA_SQUARE_SIZE as f32 - position_within_box.y;
+                }else if left_quad{
+                    position.pos.x -= position_within_box.x;
+                }else if right_quad{
+                    position.pos.x += ARENA_SQUARE_SIZE as f32 - position_within_box.x;
+                }
             }
         }
     }
