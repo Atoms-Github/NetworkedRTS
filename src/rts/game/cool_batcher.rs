@@ -18,6 +18,7 @@ pub struct CoolBatcher{
 pub struct RenderLayer{
     images: HashMap<String, Vec<DrawParam>>,
     rectangles: Vec<(Rect, Color)>,
+    circles: Vec<(PointFloat, f32, Color)>,
     texts: Vec<(PointFloat, String, Color)>,
 }
 
@@ -34,8 +35,12 @@ impl CoolBatcher{
     pub fn add_rectangle(&mut self, position: &PointFloat, size: &PointFloat, color: Color, z: u8){
         self.add_rectangle_rect(Rect::new(position.x, position.y, size.x, size.y), color, z)
     }
+    pub fn add_circle(&mut self, position: &PointFloat, size: f32, color: Color, z: u8){
+        self.layers
+            .entry(z)
+            .or_default().circles.push((position.clone(), size, color));
+    }
     pub fn add_image(&mut self, filename: String, draw_param: DrawParam, z: u8){
-
         self.layers
             .entry(z)
             .or_default().images

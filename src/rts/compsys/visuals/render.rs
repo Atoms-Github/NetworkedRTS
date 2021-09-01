@@ -13,11 +13,27 @@ use std::fmt;
 use crate::netcode::common::time::timekeeping::DT;
 use rand::Rng;
 use crate::rts::game::cool_batcher::CoolBatcher;
+use crate::ecs::comp_store::CompStorage;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
-    pub colour: (u8, u8, u8)
+    pub z: u8,
+    pub texture: RenderTexture,
+    pub shape: RenderShape,
+    pub only_render_owner: bool,
 }
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub enum RenderTexture{
+    Color(f32, f32, f32, f32),
+    Image(String)
+}
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub enum RenderShape{
+    Circle,
+    Rectangle,
+    Text(String)
+}
+
 
 pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, player_entity_id: GlobalEntityID){
     let timer = DT::start("Render");
@@ -26,8 +42,6 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
 
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
     let player_input = ecs.c.get::<InputComp>(player_entity_id).unwrap();
-
-
 
     // Draw arena background.
     for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
@@ -59,12 +73,44 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             }
         }
     }
+    // Draw entities.
+    for (entity_id, position, render, size) in
+    CompIter3::<PositionComp, RenderComp, SizeComp>::new(&ecs.c){
+        let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
+        println!("b");
+        match &render.shape{
+            RenderShape::Circle => {
+                let radius = ecs.c.get_unwrap::<SizeComp>(entity_id).size.x;
+                match &render.texture{
+                    RenderTexture::Color(r,g,b,a) => {
+                        cool_batcher.add_circle(&on_screen_pos, radius, Color::new(*r,*g,*b,*a), render.z);
+                    }
+                    RenderTexture::Image(_) => {panic!("Render image circle isn't supported! (yet loh)")}
+                }
+            }
+            RenderShape::Rectangle => {
+                let size = &ecs.c.get_unwrap::<SizeComp>(entity_id).size;
+                match &render.texture{
+                    RenderTexture::Color(r,g,b,a) => {
+                        cool_batcher.add_rectangle(&on_screen_pos, &on_screen_size,
+                                                   Color::new(*r,*g,*b,*a), 128);
+                        println!("a");
+                    }
+                    RenderTexture::Image(image_name) => {
+                        let mut params = DrawParam::new();
+                        params.dest = mint::Point2::from([on_screen_pos.x, on_screen_pos.y]);
+                        cool_batcher.add_image(image_name.clone(), params, render.z);
+                    }
+                }
+            }
+            RenderShape::Text(text) => {}
+        }
+    }
 
     // Draw units.
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
-        cool_batcher.add_rectangle(&on_screen_pos, &on_screen_size,
-                                   graphics::Color::from(render.colour), 128);
+
         if let Some(life_comp) = ecs.c.get::<LifeComp>(entity_id){
             cool_batcher.add_rectangle(&on_screen_pos, &PointFloat::new(life_comp.max_life, 5.0),
                                        graphics::Color::from_rgb(200,0,0), 150);

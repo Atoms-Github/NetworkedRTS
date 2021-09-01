@@ -69,7 +69,13 @@ impl<'a> Revolver<'a>{
         self.changes.new_entities.push(pending);
     }
     pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, pending: &mut PendingEntity){
-        pending.add_comp(RenderComp{ colour: mould.colour});
+        pending.add_comp(RenderComp{
+            z: 120,
+            texture: RenderTexture::Color(1.0,0.0,0.0,0.0),
+            shape: RenderShape::Circle,
+            only_render_owner: false
+        });
+        // breaking
         pending.add_comp(SizeComp{ size: mould.size.clone()});
     }
 }
