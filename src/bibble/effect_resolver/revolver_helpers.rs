@@ -72,7 +72,7 @@ impl<'a> Revolver<'a>{
         pending.add_comp(RenderComp{
             z: 120,
             texture: RenderTexture::Color(1.0,0.0,0.0,0.0),
-            shape: RenderShape::Circle,
+            shape: RenderShape::Rectangle,
             only_render_owner: false
         });
         // breaking

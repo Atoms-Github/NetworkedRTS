@@ -77,7 +77,6 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     for (entity_id, position, render, size) in
     CompIter3::<PositionComp, RenderComp, SizeComp>::new(&ecs.c){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
-        println!("b");
         match &render.shape{
             RenderShape::Circle => {
                 let radius = ecs.c.get_unwrap::<SizeComp>(entity_id).size.x;
@@ -94,7 +93,6 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                     RenderTexture::Color(r,g,b,a) => {
                         cool_batcher.add_rectangle(&on_screen_pos, &on_screen_size,
                                                    Color::new(*r,*g,*b,*a), 128);
-                        println!("a");
                     }
                     RenderTexture::Image(image_name) => {
                         let mut params = DrawParam::new();
