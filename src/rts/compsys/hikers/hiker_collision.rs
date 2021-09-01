@@ -24,7 +24,23 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
     do_bops(c);
     // Do walls:
     if let Some(arena) = c.find_arena(){
-        for (unit_id, position, life) in CompIter2::<PositionComp, LifeComp>::new(c) {
+        for (unit_id, position, life, hiker_collision) in CompIter3::<PositionComp, LifeComp, HikerCollisionComp>::new(c) {
+            let unit_box_x = (position.pos.x / ARENA_SQUARE_SIZE as f32) as i32;
+            let unit_box_y = (position.pos.y / ARENA_SQUARE_SIZE as f32) as i32;
+            for box_x in unit_box_x - 1..unit_box_x + 2{
+                for box_y in unit_box_y - 1..unit_box_y + 2{
+                    if arena.is_box_wall(box_x, box_y){
+                        let closest_x_to_circle = position.pos.x.clamp((box_x * ARENA_SQUARE_SIZE as i32) as f32, ((box_x + 1) * ARENA_SQUARE_SIZE as i32) as f32);
+                        let closest_y_to_circle = position.pos.y.clamp((box_y * ARENA_SQUARE_SIZE as i32) as f32, ((box_y + 1) * ARENA_SQUARE_SIZE as i32) as f32);
+                        let closest_point_on_box = PointFloat::new(closest_x_to_circle, closest_y_to_circle);
+                        let distance_apart = (closest_point_on_box.clone() - &position.pos).magnitude();
+                        let minimum_distance_apart = hiker_collision.radius;
+                        if distance_apart < minimum_distance_apart{
+                            apply_bop(minimum_distance_apart - distance_apart, &mut position.pos, &closest_point_on_box);
+                        }
+                    }
+                }
+            }
             // First, work out if in wall.
             if arena.in_wall(&position.pos){
                 let position_within_box : PointFloat =
@@ -91,16 +107,16 @@ fn do_bops(c: &mut CompStorage) {
                     };
                     let bop_dist_1 = bop_fraction_for_1 * distance_too_close;
                     let bop_dist_2 = (1.0 - bop_fraction_for_1) * distance_too_close;
-                    apply_bop(bop_dist_1, unsafe { crate::utils::unsafe_const_cheat(position_1) }, position_2);
-                    apply_bop(bop_dist_2, unsafe { crate::utils::unsafe_const_cheat(position_2) }, position_1);
+                    apply_bop(bop_dist_1, unsafe { crate::utils::unsafe_const_cheat(&position_1.pos) }, &position_2.pos);
+                    apply_bop(bop_dist_2, unsafe { crate::utils::unsafe_const_cheat(&position_2.pos) }, &position_1.pos);
                 }
             }
         }
     }
 }
 
-fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
-    let pos_diff = boppee.pos.clone() - &bopper.pos;
+fn apply_bop(bop_dist: f32, boppee: &mut PointFloat, bopper: &PointFloat){
+    let pos_diff = boppee.clone() - bopper;
     let safe_diff = {
         if pos_diff.magnitude_squared() > 0.01{
             pos_diff
@@ -109,7 +125,7 @@ fn apply_bop(bop_dist: f32, boppee: &mut PositionComp, bopper: &PositionComp){
         }
     };
     let move_dist = safe_diff.normalize().mul(bop_dist);
-    boppee.pos += move_dist;
+    *boppee += move_dist;
 }
 
 

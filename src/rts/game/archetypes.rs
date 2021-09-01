@@ -25,7 +25,6 @@ impl PendingEntity{
             InputComp{ is_panning: false, inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0, 0.0) },
             TechTreeComp{ tree: GameData::gen_game_data() },
             ScenePersistent{ keep_alive: true },
-
         )
     }
     pub fn new_scene_manager() -> Self{
