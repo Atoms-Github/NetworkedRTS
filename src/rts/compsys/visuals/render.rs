@@ -92,7 +92,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                 match &render.texture{
                     RenderTexture::Color(r,g,b,a) => {
                         cool_batcher.add_rectangle(&on_screen_pos, &on_screen_size,
-                                                   Color::new(*r,*g,*b,*a), 128);
+                                                   Color::new(*r,*g,*b,*a), render.z);
                     }
                     RenderTexture::Image(image_name) => {
                         let mut params = DrawParam::new();
