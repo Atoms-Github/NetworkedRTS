@@ -15,18 +15,19 @@ use crate::netcode::common::sim_data::superstore_seg::*;
 use crate::netcode::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
 use crate::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
-use crate::pub_types::{FrameIndex, PlayerID};
+use crate::pub_types::{FrameIndex, PlayerID, Shade};
 use ggez::input::gamepad::gamepad;
 use crate::rts::GameState;
 use std::sync::Arc;
 
 pub struct ClientApp{
     player_name: String,
+    color: Shade,
     connection_ip: String,
     preferred_id: i32,
 }
 impl ClientApp{
-    pub fn go(player_name: String, connection_ip: String, preferred_id: i32){
+    pub fn go(player_name: String, color: Shade, connection_ip: String, preferred_id: i32){
         // Steps are:
         // 1. Init connection and download world.
         // 2. Do pre interesting.
@@ -40,6 +41,7 @@ impl ClientApp{
         log::info!("Starting as client.");
         let mut app = ClientApp{
             player_name,
+            color,
             connection_ip,
             preferred_id
         };
@@ -58,7 +60,8 @@ impl ClientApp{
         return ConnectedClient{
             welcome_info,
             seg_connect_net,
-            player_name: self.player_name.to_string()
+            player_name: self.player_name.to_string(),
+            color: self.color
         }
     }
 }
@@ -66,6 +69,7 @@ struct ConnectedClient{
     welcome_info: NetMsgGreetingResponse,
     seg_connect_net: ConnectNetEx,
     player_name: String,
+    color: Shade,
 }
 impl ConnectedClient{
     pub fn start(mut self){
@@ -151,7 +155,8 @@ impl ClientEx{
     }
     fn post_interesting(mut self, mut connected_client: ConnectedClient, my_init_frame: FrameIndex){
         let downloaded_msg = ExternalMsg::WorldDownloaded(WorldDownloadedInfo{
-            player_name: connected_client.player_name.clone()
+            player_name: connected_client.player_name.clone(),
+            color: connected_client.color.clone()
         });
         connected_client.seg_connect_net.net_sink.send((downloaded_msg, true)).unwrap();
 

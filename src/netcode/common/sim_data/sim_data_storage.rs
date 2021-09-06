@@ -15,7 +15,7 @@ use nalgebra::sup;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ServerEvent{
-    JoinPlayer(PlayerID, String),
+    JoinPlayer(PlayerID, String, Shade),
     DisconnectPlayer(PlayerID),
 }
 
@@ -90,7 +90,7 @@ impl SimDataStorage {
                 for (relative_index, event_frame) in data.data.iter().enumerate(){
                     for server_event in event_frame{
                         match server_event{
-                            ServerEvent::JoinPlayer(new_player_id, player_name) => {
+                            ServerEvent::JoinPlayer(new_player_id, player_name, shade) => {
                                 let abs_index = relative_index + data.frame_offset;
                                 self.add_new_player(*new_player_id, abs_index);
                             }

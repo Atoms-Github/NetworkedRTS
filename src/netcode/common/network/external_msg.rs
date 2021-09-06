@@ -15,7 +15,7 @@ use crate::netcode::common::logic::logic_sim_tailer_seg::FramedHash;
 use crossbeam_channel::*;
 use crate::netcode::common::utils::util_functions::gen_fake_address;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
-use crate::pub_types::FrameIndex;
+use crate::pub_types::{FrameIndex, Shade};
 
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum ExternalMsg {
@@ -42,7 +42,8 @@ pub struct LocalCommandInfo{
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WorldDownloadedInfo{
-    pub player_name: String
+    pub player_name: String,
+    pub color: Shade
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

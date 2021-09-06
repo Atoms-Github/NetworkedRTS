@@ -80,7 +80,7 @@ impl GameState {
         }
         assert_eq!(self.ecs.c.create_entity(PendingEntity::new_scene_manager()), SCENE_MAN_ENT_ID)
     }
-    pub fn player_connects(&mut self, player_id: PlayerID, username: String){
+    pub fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade){
         let player_ent_id = player_id as GlobalEntityID;
         let mut race = {
             if username == "QuickToast"{
@@ -90,6 +90,7 @@ impl GameState {
             }
         };
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
+        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){

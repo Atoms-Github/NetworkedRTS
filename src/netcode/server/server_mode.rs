@@ -89,7 +89,7 @@ impl ServerMainStateEx {
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
                     },
                     ExternalMsg::WorldDownloaded(downloaded_info) => {
-                        self.data_store.schedule_server_event(ServerEvent::JoinPlayer(player_id, downloaded_info.player_name));
+                        self.data_store.schedule_server_event(ServerEvent::JoinPlayer(player_id, downloaded_info.player_name, downloaded_info.color));
                     },
                     ExternalMsg::GameUpdate(update_info) => {
                         log::debug!("Server learned: {:?}", update_info);

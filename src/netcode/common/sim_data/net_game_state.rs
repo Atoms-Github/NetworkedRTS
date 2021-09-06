@@ -47,10 +47,9 @@ impl NetGameState {
                     let property = self.get_net_property_mut(player_id);
                     property.waiting_on = false;
                 }
-                ServerEvent::JoinPlayer(player_id, name) => {
+                ServerEvent::JoinPlayer(player_id, name, shade) => {
                     let property = self.get_net_property_mut(player_id);
                     property.waiting_on = true;
-
                 }
             }
         }
@@ -93,9 +92,9 @@ impl NetGameState {
     pub fn simulate_tick(&mut self, sim_info: InfoForSim, quality: SimQuality, delta: f32){
         for server_event in &sim_info.server_events{
             match server_event{
-                ServerEvent::JoinPlayer(player_id, name) => {
+                ServerEvent::JoinPlayer(player_id, name, shade) => {
                     assert!(sim_info.inputs_map.contains_key(player_id), "Player connected, but didn't have input state for that frame. Frame {}", self.get_simmed_frame_index() + 1);
-                    self.game_state.player_connects(*player_id, (*name).clone());
+                    self.game_state.player_connects(*player_id, name.clone(), shade.clone());
                 }
                 ServerEvent::DisconnectPlayer(player_id) => {
                     self.game_state.player_disconnects(*player_id);

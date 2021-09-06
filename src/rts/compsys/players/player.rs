@@ -7,6 +7,7 @@ use crate::pub_types::PointFloat;
 
 use crate::rts::compsys::*;
 use crate::bibble::data::data_types::RaceID;
+use ggez::graphics::Color;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct PlayerComp {
@@ -14,6 +15,7 @@ pub struct PlayerComp {
     pub alive: bool,
     pub connected: bool,
     pub race: RaceID,
+    pub color: Shade,
 }
 
 

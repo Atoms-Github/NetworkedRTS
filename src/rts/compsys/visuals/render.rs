@@ -122,19 +122,36 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(life_comp.life * life_width_modifier, life_bar_height),
                                        graphics::Color::from_rgb(0,200,0), 160);
         }
-        if let Some(selectable_comp) = ecs.c.get::<SelectableComp>(entity_id){
-            if selectable_comp.is_selected{
-                cool_batcher.add_rectangle(&on_screen_top_left, &PointFloat::new(10.0, 10.0),
-                                           graphics::Color::from_rgb(200,200,0), 170);
+
+        if let Some(owned_comp) = ecs.c.get::<OwnedComp>(entity_id){
+            let mut border_width = 3.0;
+            let player_comp = ecs.c.get_unwrap::<PlayerComp>(owned_comp.owner);
+            let mut border_color = player_comp.color.to_color();
+            if let Some(selectable_comp) = ecs.c.get::<SelectableComp>(entity_id){
+                if selectable_comp.is_selected{
+                    border_width = 5.0;
+                    // let push_amount = 0.25;
+                    // let color_push = if border_color.r < 1.0-push_amount || border_color.g > 1.0-push_amount || border_color.b > 1.0-push_amount {
+                    //     push_amount
+                    // }else{
+                    //     -push_amount
+                    // };
+                    // border_color = Color::new(border_color.r + color_push, border_color.g + color_push,
+                    //                           border_color.b + color_push, border_color.a);
+                }
             }
+            let border_top_left = on_screen_top_left.clone() - PointFloat::new(border_width, border_width);
+            let border_size = on_screen_size.clone() + PointFloat::new(border_width * 2.0, border_width * 2.0);
+            cool_batcher.add_rectangle(&border_top_left, &border_size,
+                                       border_color, 100);
         }
     }
-    // Draw names.
-    for (entity_id, owned, position) in CompIter2::<OwnedComp, PositionComp>::new(&ecs.c){
-        let on_screen_pos = player_camera.game_space_to_screen_space(position.pos.clone());
-        let player_name = ecs.c.get::<PlayerComp>(owned.owner).unwrap().name.clone();
-        cool_batcher.add_text(on_screen_pos, player_name, graphics::Color::from((0,153,255)), 150);
-    }
+    // // Draw names.
+    // for (entity_id, owned, position) in CompIter2::<OwnedComp, PositionComp>::new(&ecs.c){
+    //     let on_screen_pos = player_camera.game_space_to_screen_space(position.pos.clone());
+    //     let player_name = ecs.c.get::<PlayerComp>(owned.owner).unwrap().name.clone();
+    //     cool_batcher.add_text(on_screen_pos, player_name, graphics::Color::from((0,153,255)), 150);
+    // }
     // Draw ded.
     let mut y = 100.0;
     for (entity_id, player) in CompIter1::<PlayerComp>::new(&ecs.c){
