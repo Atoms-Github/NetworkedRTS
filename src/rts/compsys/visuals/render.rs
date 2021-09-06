@@ -111,13 +111,15 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         let (on_screen_top_left, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
 
         if let Some(life_comp) = ecs.c.get::<LifeComp>(entity_id){
+            let life_bar_height = 5.0;
             let life_width_modifier = 0.7;
             let total_width = life_comp.max_life * life_width_modifier;
-            let life_start_pos = position.pos.clone() + PointFloat::new(-total_width / 2.0, 10.0);
+            let life_bar_centre = on_screen_top_left.clone() + PointFloat::new(on_screen_size.x / 2.0, -life_bar_height - 2.0);
+            let life_start_pos = life_bar_centre + PointFloat::new(-total_width / 2.0, 0.0);
 
-            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(total_width, 5.0),
+            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(total_width, life_bar_height),
                                        graphics::Color::from_rgb(200,0,0), 150);
-            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(life_comp.life * life_width_modifier, 5.0),
+            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(life_comp.life * life_width_modifier, life_bar_height),
                                        graphics::Color::from_rgb(0,200,0), 160);
         }
         if let Some(selectable_comp) = ecs.c.get::<SelectableComp>(entity_id){
