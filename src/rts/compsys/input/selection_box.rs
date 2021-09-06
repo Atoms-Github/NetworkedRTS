@@ -26,7 +26,6 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
         let box_size_vec = mouse_pos - &sel_box.starting_pos;
         size.set_abs(&box_size_vec);
         position.pos = sel_box.starting_pos.clone() + box_size_vec.div(2.0);
-
     }
 
     let mut revolver = Revolver::new(c);

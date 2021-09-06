@@ -53,7 +53,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                 let mut pending_arena = pending_arena_ent.get_mut::<ArenaComp>().unwrap();
                 let player_ids = c.query(vec![gett::<PlayerComp>()]);
                 for player in player_ids{
-                    spawn_player_ingame(ent_changes, c, player, RaceID::ROBOTS, pending_arena);
+                    spawn_player_ingame(ent_changes, c, player, c.get_unwrap::<PlayerComp>(player).race, pending_arena);
                 }
 
                 ent_changes.new_entities.push(pending_arena_ent);
@@ -66,7 +66,18 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                         5.0
                     }
                 };
+                let player_one : GlobalEntityID = 0;
+                let mut x = 50.0;
+                for (race_id, race_mould) in &player_one.get_player_tech_tree(c).races{
+                    ent_changes.new_entities.push(PendingEntity::new_race_selection_button(*race_id,
+                    PointFloat::new(x, 200.0)));
+                    x += 50.0;
+                }
                 ent_changes.new_entities.push(PendingEntity::new_lobby(game_start_cooldown));
+                // Reset all cameras so you can see the buttons.
+                for (player_id, camera) in CompIter1::<CameraComp>::new(c){
+                    camera.translation = PointFloat::new(0.0, 0.0);
+                }
             }
             SceneType::None => {}
         }

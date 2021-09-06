@@ -69,9 +69,10 @@ impl<'a> Revolver<'a>{
         self.changes.new_entities.push(pending);
     }
     pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, pending: &mut PendingEntity){
+        let (r,g,b) = mould.colour;
         pending.add_comp(RenderComp{
             z: 120,
-            texture: RenderTexture::Color(1.0,0.0,0.0,0.0),
+            texture: RenderTexture::Color(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0, 1.0),
             shape: RenderShape::Rectangle,
             only_render_owner: false
         });

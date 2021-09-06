@@ -29,6 +29,9 @@ pub mod units;
 pub use effects::*;
 pub mod effects;
 
+pub use lobby::*;
+pub mod lobby;
+
 
 pub use crate::rts::game::game_state::*;
 pub use crate::pub_types::*;

@@ -6,12 +6,14 @@ use crate::rts::compsys::RtsKeyEvent::NoKey;
 use crate::pub_types::PointFloat;
 
 use crate::rts::compsys::*;
+use crate::bibble::data::data_types::RaceID;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct PlayerComp {
     pub name: String,
     pub alive: bool,
     pub connected: bool,
+    pub race: RaceID,
 }
 
 

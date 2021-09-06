@@ -3,7 +3,7 @@ use crate::ecs::GlobalEntityID;
 use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT};
-use crate::bibble::data::data_types::{WeaponID, GameData};
+use crate::bibble::data::data_types::{WeaponID, GameData, RaceID};
 
 impl PendingEntity{
     // pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -19,7 +19,7 @@ impl PendingEntity{
     // }
     pub fn new_player(owner: GlobalEntityID) -> Self{
         Self::new6(
-            PlayerComp{ name: "NamelessWonder".to_string(), alive: true, connected: false },
+            PlayerComp{ name: "NamelessWonder".to_string(), alive: true, connected: false, race: RaceID::ROBOTS },
             OwnsResourcesComp{ resources: [0.0; RESOURCES_COUNT] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
             InputComp{ is_panning: false, inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0, 0.0) },
@@ -53,15 +53,30 @@ impl PendingEntity{
     // }
     pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new5(
-            RenderComp{ z: 140, texture: RenderTexture::Color(1.0,1.0,1.0,0.5), shape: RenderShape::Circle,
+            RenderComp{ z: 140, texture: RenderTexture::Color(1.0,1.0,1.0,0.5), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
-            SizeComp{ size: PointFloat::new(100.0, 100.0)},
+            SizeComp{ size: PointFloat::new(40.0, 40.0)},
             SelBoxComp{
                 starting_pos: position
             },
             PositionComp{ pos: position },
             OwnedComp { owner },
+        )
+    }
+    pub fn new_race_selection_button(race: RaceID, position: PointFloat) -> Self{
+        Self::new5(
+            RenderComp{ z: 150, texture: RenderTexture::Color(1.0,1.0,1.0,0.5), shape: RenderShape::Rectangle,
+                only_render_owner: false
+            },
+            SizeComp{ size: PointFloat::new(50.0, 50.0)},
+            PositionComp{ pos: position },
+            ButtonComp{
+                clicking_on: None
+            },
+            RaceButtonComp{
+                race
+            }
         )
     }
     pub fn new_arena() -> Self{
