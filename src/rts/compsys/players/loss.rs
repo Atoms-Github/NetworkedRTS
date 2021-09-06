@@ -46,7 +46,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
             }
         }
     }
-    if alive_players <= 1{
+    if alive_players <= 0{
         scene.completed_rounds += 1;
         scene.next = SceneType::Lobby;
     }

@@ -41,7 +41,7 @@ pub fn abilities(data: &mut GameData){
         cost: 0.0,
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
             actor: ActorMould {
-                colour: (20, 20, 20),
+                image: "robot_spider_projectile.png".to_string(),
                 size: PointFloat::new(10.0,10.0)
             },
             speed: 0.25,

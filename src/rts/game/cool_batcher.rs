@@ -1,4 +1,4 @@
-use ggez::graphics::{Color, DrawParam, Image, DrawMode, Rect, MeshBuilder, Drawable, FilterMode, Text};
+use ggez::graphics::{Color, DrawParam, Image, DrawMode, Rect, MeshBuilder, Drawable, FilterMode, Text, draw};
 use std::collections::HashMap;
 use crate::pub_types::{PointFloat, RenderResourcesPtr};
 use ggez::{Context, graphics};
@@ -60,12 +60,16 @@ impl CoolBatcher{
             .sorted_by(|a, b| Ord::cmp(&a.0, &b.0))
         {
             // Draw images:
-            for (image_name, draw_params) in &render_layer.images {
-                let image = res.images.get(image_name).unwrap().clone();
+            for (image_name, draw_params) in render_layer.images {
+                let image = res.images.get(&image_name).expect(format!("Can't find image {}", image_name).as_str()).clone();
+                let image_dimensions = PointFloat::new(image.dimensions().w, image.dimensions().h);
                 let mut sprite_batch = SpriteBatch::new(image);
 
-                for draw_param in draw_params.iter() {
-                    sprite_batch.add(*draw_param);
+                for mut draw_param in draw_params.into_iter() {
+                    // Work out image scale from size. (which is currently stored in .scale()).
+                    let one_pixel_scale : PointFloat = PointFloat::new(1.0,1.0).component_div(&image_dimensions);
+                    draw_param.scale = mint::Vector2::from([draw_param.scale.x * one_pixel_scale.x, draw_param.scale.y * one_pixel_scale.y]);
+                    sprite_batch.add(draw_param);
                 }
 
                 graphics::draw(ctx, &sprite_batch, graphics::DrawParam::new()).unwrap()

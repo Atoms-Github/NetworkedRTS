@@ -41,7 +41,7 @@ pub fn abilities(data: &mut GameData){
         cost: 0.0,
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
             actor: ActorMould {
-                colour: (10, 100, 20),
+                image: "energy_ball_yellow.png".to_string(),
                 size: PointFloat::new(5.0,5.0)
             },
             speed: 0.50,
@@ -61,7 +61,7 @@ pub fn abilities(data: &mut GameData){
         cost: 0.0,
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
             actor: ActorMould {
-                colour: (200, 0, 0),
+                image: "butter.png".to_string(),
                 size: PointFloat::new(25.0,25.0)
             },
             speed: 2.0,

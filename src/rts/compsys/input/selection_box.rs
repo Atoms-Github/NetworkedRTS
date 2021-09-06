@@ -62,14 +62,14 @@ fn check_delete_box(c: &CompStorage, ent_changes: &mut EntStructureChanges,  pla
 
 fn check_create_box(c: &CompStorage, ent_changes: &mut EntStructureChanges, player_id: GlobalEntityID, input: &mut InputComp) {
     let input = c.get1_unwrap::<InputComp>(player_id);
-    if input.hovered_entity.is_none() {
+    // if input.hovered_entity.is_none() {
         if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Left) {
             ent_changes.new_entities.push(PendingEntity::new_sel_box(player_id, input.mouse_pos_game_world.clone()));
             input.mode = InputMode::SelectionBox;
 
             deselect_all(c, player_id)
         }
-    }
+    // }
 }
 fn get_box(c: &CompStorage, player_id: GlobalEntityID) -> Option<GlobalEntityID>{
     for (box_id, sel, size, position, owner) in CompIter4::<SelBoxComp, SizeComp, PositionComp, OwnedComp>::new(c) {

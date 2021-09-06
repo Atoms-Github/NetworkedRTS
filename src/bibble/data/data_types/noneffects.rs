@@ -64,7 +64,7 @@ pub struct WeaponMould {
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ActorMould {
-    pub colour: (u8, u8, u8),
+    pub image: String,
     pub size: PointFloat,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

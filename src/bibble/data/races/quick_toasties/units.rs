@@ -6,7 +6,7 @@ use crate::pub_types::PointFloat;
 pub fn units(data: &mut GameData){
     data.units.insert(UnitID::DOUGH_LAUNCHER, UnitMould{
         radius: 100.0,
-        actor: ActorMould { colour: (217, 180, 48), size: PointFloat::new(200.0,200.0) },
+        actor: ActorMould { image: "bread_cannon.jpg".to_string(), size: PointFloat::new(200.0,200.0) },
         weapons: vec![AbilityID::WEP_DOUGH_LAUNCHER],
         abilities: vec![AbilityID::WEP_DOUGH_LAUNCHER],
         unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
@@ -18,8 +18,8 @@ pub fn units(data: &mut GameData){
     });
 
     data.units.insert(UnitID::DOUGH, UnitMould{
-        radius: 10.0,
-        actor: ActorMould { colour: (217, 180, 48), size: PointFloat::new(20.0,20.0) },
+        radius: 15.0,
+        actor: ActorMould { image: "dough_ball.jpg".to_string(), size: PointFloat::new(30.0,30.0) },
         weapons: vec![AbilityID::WEP_SCUTTLER],
         abilities: vec![AbilityID::WEP_SCUTTLER, AbilityID::BAKE_BREAD, AbilityID::BAKE_DOUGH, AbilityID::BAKE_DOUGH_LAUNCHER],
         unit_flavour: UnitFlavour::HIKER,
@@ -34,7 +34,7 @@ pub fn units(data: &mut GameData){
         UnitID::BREAD,
         UnitMould{
             radius: 25.0,
-            actor: ActorMould { colour: (217, 107, 48), size: PointFloat::new(50.0,50.0) },
+            actor: ActorMould { image: "bread.png".to_string(), size: PointFloat::new(50.0,50.0) },
             weapons: vec![AbilityID::WEP_BREAD],
             abilities: vec![AbilityID::WEP_BREAD],
             unit_flavour: UnitFlavour::HIKER,

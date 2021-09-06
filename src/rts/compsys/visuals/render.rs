@@ -97,6 +97,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                     RenderTexture::Image(image_name) => {
                         let mut params = DrawParam::new();
                         params.dest = mint::Point2::from([on_screen_pos.x, on_screen_pos.y]);
+                        params.scale = mint::Vector2::from([size.x, size.y]);
                         cool_batcher.add_image(image_name.clone(), params, render.z);
                     }
                 }
@@ -107,17 +108,21 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
 
     // Draw units.
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
-        let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
+        let (on_screen_top_left, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
 
         if let Some(life_comp) = ecs.c.get::<LifeComp>(entity_id){
-            cool_batcher.add_rectangle(&on_screen_pos, &PointFloat::new(life_comp.max_life, 5.0),
+            let life_width_modifier = 0.7;
+            let total_width = life_comp.max_life * life_width_modifier;
+            let life_start_pos = position.pos.clone() + PointFloat::new(-total_width / 2.0, 10.0);
+
+            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(total_width, 5.0),
                                        graphics::Color::from_rgb(200,0,0), 150);
-            cool_batcher.add_rectangle(&on_screen_pos, &PointFloat::new(life_comp.life, 5.0),
+            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(life_comp.life * life_width_modifier, 5.0),
                                        graphics::Color::from_rgb(0,200,0), 160);
         }
         if let Some(selectable_comp) = ecs.c.get::<SelectableComp>(entity_id){
             if selectable_comp.is_selected{
-                cool_batcher.add_rectangle(&on_screen_pos, &PointFloat::new(10.0,10.0),
+                cool_batcher.add_rectangle(&on_screen_top_left, &PointFloat::new(10.0, 10.0),
                                            graphics::Color::from_rgb(200,200,0), 170);
             }
         }
