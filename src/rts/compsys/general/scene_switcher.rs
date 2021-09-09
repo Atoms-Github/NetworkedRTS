@@ -57,6 +57,11 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                 }
 
                 ent_changes.new_entities.push(pending_arena_ent);
+
+                // Reset all cameras so you can see the buttons.
+                for (player_id, resources) in CompIter1::<OwnsResourcesComp>::new(c){
+                    resources.reset();
+                }
             }
             SceneType::Lobby => {
                 let game_start_cooldown = {

@@ -31,7 +31,7 @@ pub fn client_main(player_name: String, connection_ip: String, preferred_id: i32
             Shade(0.258, 0.529, 0.960)
         }
         "quicktoast" => {
-            Shade(0.372, 0.890, 0.541)
+            Shade(0.156, 0.823, 0.372)
         }
         "oberdiah" => {
             Shade(0.882, 0.035, 0.101)

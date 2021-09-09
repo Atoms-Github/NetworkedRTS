@@ -41,6 +41,11 @@ impl OwnsResourcesComp{
         }
         return false;
     }
+    pub fn reset(&mut self){
+        for i in 0..RESOURCES_COUNT{
+            self.resources[i] = 0.0;
+        }
+    }
     pub fn get_count(&mut self, res_type: ResourceType) -> f32{
         return self.resources[res_type as usize];
     }
