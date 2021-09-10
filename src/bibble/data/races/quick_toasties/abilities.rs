@@ -55,7 +55,7 @@ pub fn abilities(data: &mut GameData){
         },
         range: 400.0,
         casting_time: 0.0,
-        cooldown: 4000.0
+        cooldown: 1000.0
     });
     data.abilities.insert(AbilityID::WEP_DOUGH_LAUNCHER, AbilityMould{
         cost: 0.0,
@@ -76,6 +76,6 @@ pub fn abilities(data: &mut GameData){
         },
         range: 3000.0,
         casting_time: 0.0,
-        cooldown: 5000.0
+        cooldown: 100.0
     });
 }

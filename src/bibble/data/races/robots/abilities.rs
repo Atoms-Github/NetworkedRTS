@@ -55,7 +55,7 @@ pub fn abilities(data: &mut GameData){
         },
         range: 200.0,
         casting_time: 0.0,
-        cooldown: 2000.0
+        cooldown: 300.0
     });
 
 }
