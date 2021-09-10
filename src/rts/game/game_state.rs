@@ -17,7 +17,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 
-pub const MAX_PLAYERS : usize = 3;
+pub const MAX_PLAYERS : usize = 8;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingRenderResources = Arc<RenderResources>;
@@ -83,13 +83,7 @@ impl GameState {
     }
     pub fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade){
         let player_ent_id = player_id as GlobalEntityID;
-        let mut race = {
-            if username == "QuickToast"{
-                RaceID::QUICK_TASTERS
-            }else{
-                RaceID::ROBOTS
-            }
-        };
+
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;

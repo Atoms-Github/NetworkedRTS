@@ -36,7 +36,7 @@ pub fn client_main(player_name: String, connection_ip: String, preferred_id: i32
         "oberdiah" => {
             Shade(0.882, 0.035, 0.101)
         }
-        "xuyang" => {
+        "legend" => {
             Shade(1.0, 1.0, 1.0) // White. ?
         }
         "numcake" => {

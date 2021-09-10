@@ -23,7 +23,7 @@ pub fn abilities(data: &mut GameData){
             hotkey: VirtualKeyCode::B
         },
         range: 0.0,
-        casting_time: 500.0,
+        casting_time: 800.0,
         cooldown: 0.0
     });
     data.abilities.insert(AbilityID::BAKE_DOUGH_LAUNCHER, AbilityMould{

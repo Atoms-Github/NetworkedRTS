@@ -54,6 +54,7 @@ impl GameSocketTcp for TcpStream{
                         return; // Kill thread
                     }
                     Result::Ok(bytes_read) => {
+                        println!("Read: {}", bytes_read);
                         let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
                         match result{
                             Ok(msg) => {
@@ -74,6 +75,7 @@ impl GameSocketTcp for TcpStream{
 
     fn send_msg(&mut self, message: &ExternalMsg) {
         let connection_init_bytes = bincode::serialize(message).unwrap();
+        println!("Sent: {}", connection_init_bytes.len());
         self.write_all(&connection_init_bytes).unwrap();
         self.flush().unwrap();
 

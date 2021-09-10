@@ -111,16 +111,27 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         let (on_screen_top_left, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
 
         if let Some(life_comp) = ecs.c.get::<LifeComp>(entity_id){
-            let life_bar_height = 5.0;
-            let life_width_modifier = 0.7;
-            let total_width = life_comp.max_life * life_width_modifier;
-            let life_bar_centre = on_screen_top_left.clone() + PointFloat::new(on_screen_size.x / 2.0, -life_bar_height - 2.0);
-            let life_start_pos = life_bar_centre + PointFloat::new(-total_width / 2.0, 0.0);
+            let bar_centre = on_screen_top_left.clone() + PointFloat::new(on_screen_size.x / 2.0, -7.0);
+            cool_batcher.add_progress_bar(&bar_centre, 5.0, life_comp.life,
+                                          life_comp.max_life, Color::from_rgb(0,200,0),
+                                          Color::from_rgb(255,0,0), 150);
+        }
+        if let Some(orders) = ecs.c.get::<OrdersComp>(entity_id){
+            if let OrderState::CHANNELLING(channel_time) = &orders.state{
+                let tech_tree = entity_id.get_owner_tech_tree(&ecs.c);
+                let executing_order = orders.get_executing_order().unwrap();
+                let ability = tech_tree.get_ability(executing_order.ability);
 
-            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(total_width, life_bar_height),
-                                       graphics::Color::from_rgb(200,0,0), 150);
-            cool_batcher.add_rectangle(&life_start_pos, &PointFloat::new(life_comp.life * life_width_modifier, life_bar_height),
-                                       graphics::Color::from_rgb(0,200,0), 160);
+                let bar_centre = on_screen_top_left.clone() + PointFloat::new(on_screen_size.x / 2.0, -14.0);
+
+                let max_width = 100.0;
+                let current_width = *channel_time / ability.casting_time * max_width;
+
+                cool_batcher.add_progress_bar(&bar_centre, 5.0, current_width,
+                                              max_width, Color::from_rgb(52, 210, 235),
+                                              Color::from_rgb(0,0,0), 150);
+            }
+
         }
 
         if let Some(owned_comp) = ecs.c.get::<OwnedComp>(entity_id){

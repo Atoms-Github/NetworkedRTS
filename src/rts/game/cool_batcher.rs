@@ -35,6 +35,15 @@ impl CoolBatcher{
     pub fn add_rectangle(&mut self, position: &PointFloat, size: &PointFloat, color: Color, z: u8){
         self.add_rectangle_rect(Rect::new(position.x, position.y, size.x, size.y), color, z)
     }
+    pub fn add_progress_bar(&mut self, centre: &PointFloat, height: f32, value: f32, max: f32, color_value: Color, color_max: Color, z: u8){
+        let life_start_pos = centre.clone() + PointFloat::new(-max / 2.0, 0.0);
+
+        self.add_rectangle(&life_start_pos, &PointFloat::new(value, height),
+                           color_value, z + 1);
+        self.add_rectangle(&life_start_pos, &PointFloat::new(max, height),
+                           color_max, z);
+
+    }
     pub fn add_circle(&mut self, position: &PointFloat, size: f32, color: Color, z: u8){
         self.layers
             .entry(z)
