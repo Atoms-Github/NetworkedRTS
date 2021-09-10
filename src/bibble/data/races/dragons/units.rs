@@ -5,7 +5,7 @@ use crate::pub_types::PointFloat;
 pub fn units(data: &mut GameData){
     data.units.insert(UnitID::RED_DRAGON, UnitMould{
         radius: 40.0,
-        actor: ActorMould { image: "red_dragon.jpg".to_string(), size: PointFloat::new(80.0,80.0) },
+        actor: ActorMould { image: "red_dragon.jpg".to_string(), },
         weapons: vec![AbilityID::WEP_RED_DRAGON],
         abilities: vec![AbilityID::WEP_RED_DRAGON],
         unit_flavour: UnitFlavour::HIKER,
@@ -16,7 +16,7 @@ pub fn units(data: &mut GameData){
     });
     data.units.insert(UnitID::RED_DRAGON_EGG, UnitMould{
         radius: 15.0,
-        actor: ActorMould { image: "red_dragon_egg.jpg".to_string(), size: PointFloat::new(30.0, 30.0) },
+        actor: ActorMould { image: "red_dragon_egg.jpg".to_string(), },
         weapons: vec![],
         abilities: vec![],
         unit_flavour: UnitFlavour::HIKER,
@@ -27,7 +27,7 @@ pub fn units(data: &mut GameData){
     });
     data.units.insert(UnitID::SMALL_DRAGON, UnitMould{
         radius: 20.0,
-        actor: ActorMould { image: "small_dragon.jpg".to_string(), size: PointFloat::new(40.0, 40.0) },
+        actor: ActorMould { image: "small_dragon.jpg".to_string(), },
         weapons: vec![AbilityID::WEP_SMALL_DRAGON],
         abilities: vec![AbilityID::WEP_SMALL_DRAGON],
         unit_flavour: UnitFlavour::HIKER,
@@ -40,7 +40,7 @@ pub fn units(data: &mut GameData){
         UnitID::VOLCANO,
         UnitMould{
             radius: 40.0,
-            actor: ActorMould { image: "volcano.jpg".to_string(), size: PointFloat::new(80.0, 80.0) },
+            actor: ActorMould { image: "volcano.jpg".to_string(), },
             weapons: vec![],
             abilities: vec![AbilityID::TRAIN_SMALL_DRAGON, AbilityID::TRAIN_RED_DRAGON_EGG],
             unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{

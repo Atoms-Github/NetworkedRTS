@@ -42,12 +42,12 @@ pub fn abilities(data: &mut GameData){
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
             actor: ActorMould {
                 image: "energy_ball_yellow.png".to_string(),
-                size: PointFloat::new(5.0,5.0)
             },
-            speed: 0.50,
+            speed: 1.0,
             hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
                 amount: 25.0
-            })
+            }),
+            size: 20.0
         })),
         button_info: ButtonMould{
             color: (255, 0, 0),
@@ -62,13 +62,13 @@ pub fn abilities(data: &mut GameData){
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
             actor: ActorMould {
                 image: "butter.png".to_string(),
-                size: PointFloat::new(25.0,25.0)
             },
-            speed: 2.0,
+            speed: 1.5,
             hit_effect: EffectToUnit::EFFECT_TO_POINT(EffectToPoint::EFFECT_NEARBY_UNITS(
                 Box::new(EffectToUnit::DAMAGE(EffectToUnitDamage{
                     amount: 50.0
-                })), 100.0))
+                })), 100.0)),
+            size: 20.0
         })),
         button_info: ButtonMould{
             color: (255, 0, 0),

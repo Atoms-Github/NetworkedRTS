@@ -74,7 +74,6 @@ pub struct WeaponMould {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ActorMould {
     pub image: String,
-    pub size: PointFloat,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RaceMould {

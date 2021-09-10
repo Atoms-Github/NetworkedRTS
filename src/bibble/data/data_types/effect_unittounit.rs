@@ -11,4 +11,5 @@ pub struct SeekingProjectileMould {
     pub actor: ActorMould,
     pub speed: f32,
     pub hit_effect: EffectToUnit,
+    pub size: f32,
 }

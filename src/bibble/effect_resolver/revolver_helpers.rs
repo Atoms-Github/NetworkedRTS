@@ -21,7 +21,7 @@ impl<'a> Revolver<'a>{
                 target
             }
         );
-        self.add_actor(data, &mould.actor, &mut pending);
+        self.add_actor(data, &mould.actor, mould.size, &mut pending);
         self.changes.new_entities.push(pending);
     }
     pub fn spawn_unit(&mut self, data: &GameData, mould: &UnitMould, position: &PointFloat, owner: GlobalEntityID){
@@ -66,17 +66,17 @@ impl<'a> Revolver<'a>{
                 wep_ability_id: *mould.weapons.get(0).unwrap()
             });
         }
-        self.add_actor(data, &mould.actor, &mut pending);
+        self.add_actor(data, &mould.actor, mould.radius, &mut pending);
         self.changes.new_entities.push(pending);
     }
-    pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, pending: &mut PendingEntity){
+    pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, size: f32, pending: &mut PendingEntity){
         pending.add_comp(RenderComp{
             z: 120,
             texture: RenderTexture::Image(mould.image.clone()),
             shape: RenderShape::Rectangle,
             only_render_owner: false
         });
-        pending.add_comp(SizeComp{ size: mould.size.clone()});
+        pending.add_comp(SizeComp{ size: PointFloat::new(size, size) });
     }
 }
 

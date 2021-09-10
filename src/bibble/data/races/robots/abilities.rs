@@ -42,12 +42,12 @@ pub fn abilities(data: &mut GameData){
         targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
             actor: ActorMould {
                 image: "robot_spider_projectile.png".to_string(),
-                size: PointFloat::new(10.0,10.0)
             },
-            speed: 0.25,
+            speed: 0.5,
             hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
                 amount: 10.0
-            })
+            }),
+            size: 20.0
         })),
         button_info: ButtonMould{
             color: (255, 0, 0),
