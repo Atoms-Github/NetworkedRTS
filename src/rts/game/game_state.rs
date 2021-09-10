@@ -55,7 +55,6 @@ pub fn global_get_systems() -> Vec<System>{
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
     ecs: ActiveEcs,
-    player_count: usize,
 }
 
 
@@ -70,7 +69,6 @@ impl GameState {
     pub fn new() -> Self {
         Self{
             ecs: ActiveEcs::new(global_get_systems()),
-            player_count: 0,
         }
     }
     pub fn init(&mut self){

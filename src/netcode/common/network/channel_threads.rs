@@ -40,9 +40,10 @@ impl GameSocketTcp for TcpStream{
             let peer_address = self.peer_addr().unwrap();
 
             loop{
-                let mut message_buffer = vec![0; 65_535];
-                let bytes_read_maybe = self.read(&mut message_buffer);
-                match bytes_read_maybe{
+                // First 4 bytes are content's size.
+                let mut message_size_buffer = vec![0; 4];
+                let message_size_peek_maybe = self.read(&mut message_size_buffer);
+                match message_size_peek_maybe {
                     Result::Err(error) => {
                         log::warn!("Player disconnected. {}", error.to_string());
                         msgs_sink.send(Diconnect(peer_address)).unwrap();
@@ -54,9 +55,16 @@ impl GameSocketTcp for TcpStream{
                         return; // Kill thread
                     }
                     Result::Ok(bytes_read) => {
-                        println!("Tcp read: {}", bytes_read);
-                        let result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
-                        match result{
+                        // Should've read all 4 for size.
+                        assert_eq!(bytes_read, 4);
+                        let content_size = bincode::deserialize::<u32>(&message_size_buffer).unwrap() as usize;
+                        let mut message_buffer = vec![0; content_size];
+                        let content_read_size = self.read(&mut message_buffer).unwrap();
+                        println!("Tcp content size: {}", content_size);
+                        assert_eq!(content_read_size, content_size);
+
+                        let content_deser_result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+                        match content_deser_result {
                             Ok(msg) => {
                                 if crate::DEBUG_MSGS_NET{
                                     log::debug!("<--u {:?}", msg);
@@ -74,14 +82,18 @@ impl GameSocketTcp for TcpStream{
     }
 
     fn send_msg(&mut self, message: &ExternalMsg) {
-        let connection_init_bytes = bincode::serialize(message).unwrap();
-        println!("TCP sent: {}", connection_init_bytes.len());
-        self.write_all(&connection_init_bytes).unwrap();
-        self.flush().unwrap();
-
         if crate::DEBUG_MSGS_NET{
             log::debug!("-->t: {:?}", message);
         }
+
+        let mut message_contents_bytes = bincode::serialize(message).unwrap();
+        let message_size : u32 = message_contents_bytes.len() as u32;
+        println!("TCP sent: {}", message_size);
+        // Prepend message size.
+        let mut message_wire_bytes = bincode::serialize(&message_size).unwrap();
+        message_wire_bytes.append(&mut message_contents_bytes);
+        self.write_all(&message_wire_bytes).unwrap();
+        self.flush().unwrap();
     }
 }
 impl GameSocketUdp for UdpSocket{
