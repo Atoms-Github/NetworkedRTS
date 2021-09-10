@@ -112,7 +112,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
 }
 
 fn spawn_player_ingame(ent_changes: &mut EntStructureChanges, c: &CompStorage, player_id: GlobalEntityID, race: RaceID, arena: &mut ArenaComp){
-    let spawn_point = get_player_spawn(player_id, arena);
+    let spawn_point = get_player_spawn(player_id, arena, c.find_scene().connected_players as f32);
 
     let mut revolver = Revolver::new(c);
 
@@ -125,9 +125,9 @@ fn spawn_player_ingame(ent_changes: &mut EntStructureChanges, c: &CompStorage, p
     c.get_mut::<PlayerComp>(player_id).unwrap().alive = true;
     c.get_mut::<CameraComp>(player_id).unwrap().translation = spawn_point;
 }
-fn get_player_spawn(player_id: GlobalEntityID, arena: &mut ArenaComp) -> PointFloat{
+fn get_player_spawn(player_id: GlobalEntityID, arena: &mut ArenaComp, max_players: f32) -> PointFloat{
     let radians_round_total  = (std::f64::consts::PI * 2.0) as f32;
-    let my_radius_round = (radians_round_total / MAX_PLAYERS as f32) * player_id as f32;
+    let my_radius_round = (radians_round_total / max_players) * player_id as f32;
     let arena_width = arena.get_length();
     let radius = arena_width as f32 / 3.0;
 

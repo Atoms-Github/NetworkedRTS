@@ -17,7 +17,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 
-pub const MAX_PLAYERS : usize = 8;
+pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingRenderResources = Arc<RenderResources>;
