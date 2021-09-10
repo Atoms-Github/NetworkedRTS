@@ -13,5 +13,6 @@ pub fn race(data: &mut GameData){
 
     data.races.insert(RaceID::QUICK_TASTERS, RaceMould{
         spawn_effect: EffectToPoint::COMPOSITE(starting_effects),
+        icon: "bread_icon.jpg".to_string()
     });
 }

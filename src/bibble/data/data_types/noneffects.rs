@@ -70,4 +70,5 @@ pub struct ActorMould {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RaceMould {
     pub spawn_effect: EffectToPoint,
+    pub icon: String,
 }

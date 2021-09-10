@@ -16,5 +16,6 @@ pub fn race(data: &mut GameData){
 
     data.races.insert(RaceID::ROBOTS, RaceMould{
         spawn_effect: EffectToPoint::COMPOSITE(starting_effects),
+        icon: "robot_icon.jpg".to_string()
     });
 }

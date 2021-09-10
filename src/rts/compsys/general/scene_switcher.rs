@@ -74,8 +74,9 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                 let player_one : GlobalEntityID = 0;
                 let mut x = 50.0;
                 for (race_id, race_mould) in &player_one.get_player_tech_tree(c).races{
-                    ent_changes.new_entities.push(PendingEntity::new_race_selection_button(*race_id,
-                    PointFloat::new(x, 200.0)));
+                    let new_button = PendingEntity::new_race_selection_button(
+                        *race_id, PointFloat::new(x, 200.0), race_mould.icon.clone());
+                    ent_changes.new_entities.push(new_button);
                     x += 50.0;
                 }
                 ent_changes.new_entities.push(PendingEntity::new_lobby(game_start_cooldown));

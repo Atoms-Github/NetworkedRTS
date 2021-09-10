@@ -64,9 +64,9 @@ impl PendingEntity{
             OwnedComp { owner },
         )
     }
-    pub fn new_race_selection_button(race: RaceID, position: PointFloat) -> Self{
+    pub fn new_race_selection_button(race: RaceID, position: PointFloat, image: String) -> Self{
         Self::new5(
-            RenderComp{ z: 150, texture: RenderTexture::Color(1.0,1.0,1.0,0.5), shape: RenderShape::Rectangle,
+            RenderComp{ z: 150, texture: RenderTexture::Image(image), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
             SizeComp{ size: PointFloat::new(50.0, 50.0)},
