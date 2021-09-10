@@ -14,7 +14,8 @@ use std::ops::Div;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct HikerCollisionComp {
-    pub radius: f32
+    pub radius: f32,
+    pub fly: bool,
 }
 pub static HIKER_COLLISION_SYS: System = System{
     run,
@@ -24,7 +25,11 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
     do_bops(c);
     // Do walls:
     if let Some(arena) = c.find_arena(){
-        for (unit_id, position, life, hiker_collision) in CompIter3::<PositionComp, LifeComp, HikerCollisionComp>::new(c) {
+        for (unit_id, position, life, hiker_collision) in
+        CompIter3::<PositionComp, LifeComp, HikerCollisionComp>::new(c) {
+            if hiker_collision.fly{
+                continue;
+            }
             let unit_box_x = (position.pos.x / ARENA_SQUARE_SIZE as f32) as i32;
             let unit_box_y = (position.pos.y / ARENA_SQUARE_SIZE as f32) as i32;
             for box_x in unit_box_x - 1..unit_box_x + 2{
@@ -39,33 +44,6 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                             apply_bop(minimum_distance_apart - distance_apart, &mut position.pos, &closest_point_on_box);
                         }
                     }
-                }
-            }
-            // First, work out if in wall.
-            if arena.in_wall(&position.pos){
-                let position_within_box : PointFloat =
-                    PointFloat::new(position.pos.x % ARENA_SQUARE_SIZE as f32,
-                                    position.pos.y % ARENA_SQUARE_SIZE as f32);
-                let position_within_box_normalized : PointFloat =
-                    position_within_box.clone() / ARENA_SQUARE_SIZE as f32;
-                let bottom_right_half = (position_within_box_normalized.x + position_within_box_normalized.y) > 1.0;
-                let top_left_half = !bottom_right_half; // True.
-                let top_right_half = (position_within_box_normalized.x - position_within_box_normalized.y) > 0.0;
-                let bottom_left_half = !top_right_half; // True.
-
-                let top_quad = top_left_half && top_right_half;
-                let bottom_quad = bottom_left_half && bottom_right_half;
-                let left_quad = top_left_half && bottom_left_half;
-                let right_quad = top_right_half && bottom_right_half;
-
-                if top_quad{
-                    position.pos.y -= position_within_box.y;
-                }else if bottom_quad{
-                    position.pos.y += ARENA_SQUARE_SIZE as f32 - position_within_box.y;
-                }else if left_quad{
-                    position.pos.x -= position_within_box.x;
-                }else if right_quad{
-                    position.pos.x += ARENA_SQUARE_SIZE as f32 - position_within_box.x;
                 }
             }
         }

@@ -1,7 +1,5 @@
 use crate::bibble::data::data_types::{GameData, RaceID, RaceMould, EffectToPoint};
 
-mod actors;
-mod effects;
 mod units;
 mod race;
 mod abilities;

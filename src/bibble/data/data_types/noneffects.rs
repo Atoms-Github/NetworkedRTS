@@ -16,9 +16,15 @@ pub enum UnitID {
     SCUTTLER,
     CONSTRUCTOR,
     FOUNDRY,
+
     DOUGH,
     BREAD,
     DOUGH_LAUNCHER,
+
+    RED_DRAGON,
+    RED_DRAGON_EGG,
+    SMALL_DRAGON,
+    VOLCANO,
 }
 
 #[repr(u16)]
@@ -33,7 +39,9 @@ pub enum ActorID {
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum RaceID {
     ROBOTS,
-    QUICK_TASTERS
+    QUICK_TASTERS,
+    DRAGONS,
+    DWARVES,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -44,6 +52,7 @@ pub struct UnitMould {
     pub abilities: Vec<AbilityID>,
     pub unit_flavour: UnitFlavour,
     pub move_speed: f32,
+    pub fly: bool,
     pub periodic_gain: ResourceBlock,
     pub life: f32,
 }

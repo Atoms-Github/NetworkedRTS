@@ -9,7 +9,7 @@ use crate::pub_types::PointFloat;
 
 
 impl<'a> Revolver<'a>{
-    pub fn spawn_seeker_proj(&mut self, data: &GameData, mould: &ProjectileMould, shooter: GlobalEntityID, target: GlobalEntityID){
+    pub fn spawn_seeker_proj(&mut self, data: &GameData, mould: &SeekingProjectileMould, shooter: GlobalEntityID, target: GlobalEntityID){
         let owner = self.c.get_unwrap::<OwnedComp>(shooter).owner;
         let position = self.c.get_unwrap::<PositionComp>(shooter).pos.clone();
         let mut pending = PendingEntity::new3(
@@ -52,7 +52,8 @@ impl<'a> Revolver<'a>{
                 quest_importance: 0
             },
             HikerCollisionComp{
-                radius: mould.radius
+                radius: mould.radius,
+                fly: mould.fly
             },
             WorkerComp{
                 resource_gain_per_ms: mould.periodic_gain.clone()

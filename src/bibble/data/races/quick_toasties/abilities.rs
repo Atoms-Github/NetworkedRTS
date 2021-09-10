@@ -39,7 +39,7 @@ pub fn abilities(data: &mut GameData){
     });
     data.abilities.insert(AbilityID::WEP_BREAD, AbilityMould{
         cost: 0.0,
-        targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
+        targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
             actor: ActorMould {
                 image: "energy_ball_yellow.png".to_string(),
                 size: PointFloat::new(5.0,5.0)
@@ -59,7 +59,7 @@ pub fn abilities(data: &mut GameData){
     });
     data.abilities.insert(AbilityID::WEP_DOUGH_LAUNCHER, AbilityMould{
         cost: 0.0,
-        targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
+        targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
             actor: ActorMould {
                 image: "butter.png".to_string(),
                 size: PointFloat::new(25.0,25.0)

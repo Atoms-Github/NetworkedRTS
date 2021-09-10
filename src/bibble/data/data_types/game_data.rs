@@ -19,6 +19,10 @@ impl GameData{
         return self.races.get(&id).unwrap();
     }
     pub fn get_ability(&self, id: AbilityID) -> &AbilityMould{
-        return self.abilities.get(&id).unwrap();
+        if let Some(ability) = self.abilities.get(&id){
+            return ability;
+        }else{
+            panic!("Can't find ability {:?}", id);
+        }
     }
 }

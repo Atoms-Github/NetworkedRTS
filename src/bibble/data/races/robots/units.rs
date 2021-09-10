@@ -10,6 +10,7 @@ pub fn units(data: &mut GameData){
         abilities: vec![AbilityID::WEP_SCUTTLER],
         unit_flavour: UnitFlavour::HIKER,
         move_speed: 0.15,
+        fly: false,
         periodic_gain: Default::default(),
         life: 100.0
     });
@@ -19,7 +20,8 @@ pub fn units(data: &mut GameData){
         weapons: vec![],
         abilities: vec![AbilityID::BUILD_FOUNDRY],
         unit_flavour: UnitFlavour::HIKER,
-        move_speed: 0.05,
+        move_speed: 0.08,
+        fly: false,
         periodic_gain: Default::default(),
         life: 50.0
     });
@@ -36,6 +38,7 @@ pub fn units(data: &mut GameData){
                 footprint: Point2::new(2,3)
             }),
             move_speed: 0.0,
+            fly: false,
             periodic_gain: ResourceBlock{
                 resource_counts: [0.0, 0.0, 0.003]
             },

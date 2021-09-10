@@ -11,7 +11,7 @@ impl<'a> Revolver<'a> {
             EffectUnitToUnit::INSTA_AFFECT_TARGET(to_unit) => {
                 self.revolve_to_unit(data, to_unit, target);
             }
-            EffectUnitToUnit::LAUNCH_PROJECTILE(proj_mould) =>{
+            EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(proj_mould) =>{
                 self.spawn_seeker_proj(data, proj_mould, source, target);
             }
         }

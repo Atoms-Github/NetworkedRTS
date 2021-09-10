@@ -39,7 +39,7 @@ pub fn abilities(data: &mut GameData){
     });
     data.abilities.insert(AbilityID::WEP_SCUTTLER, AbilityMould{
         cost: 0.0,
-        targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_PROJECTILE(ProjectileMould{
+        targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
             actor: ActorMould {
                 image: "robot_spider_projectile.png".to_string(),
                 size: PointFloat::new(10.0,10.0)
