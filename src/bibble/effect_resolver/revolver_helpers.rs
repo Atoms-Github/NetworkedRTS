@@ -39,6 +39,12 @@ impl<'a> Revolver<'a>{
             id: AbilityID::WALK,
             time_since_use: 0.0
         });
+        let mut fly = false;
+        let mut speed = 0.0;
+        if let UnitFlavour::HIKER(hiker_info) = &mould.unit_flavour{
+            fly = hiker_info.fly;
+            speed = hiker_info.movespeed;
+        }
 
         let mut pending = PendingEntity::new8(
             PositionComp{ pos: position.clone() },
@@ -48,12 +54,12 @@ impl<'a> Revolver<'a>{
             OrdersComp{ orders_queue: vec![], state: OrderState::NONE, order_target_loc: PointFloat::new(0.0,0.0) },
             HikerComp{
                 destination: None,
-                speed: mould.move_speed,
+                speed,
                 quest_importance: 0
             },
             HikerCollisionComp{
                 radius: mould.radius,
-                fly: mould.fly
+                fly
             },
             WorkerComp{
                 resource_gain_per_ms: mould.periodic_gain.clone()
@@ -69,14 +75,14 @@ impl<'a> Revolver<'a>{
         self.add_actor(data, &mould.actor, mould.radius, &mut pending);
         self.changes.new_entities.push(pending);
     }
-    pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, size: f32, pending: &mut PendingEntity){
+    pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, radius: f32, pending: &mut PendingEntity){
         pending.add_comp(RenderComp{
             z: 120,
             texture: RenderTexture::Image(mould.image.clone()),
             shape: RenderShape::Rectangle,
             only_render_owner: false
         });
-        pending.add_comp(SizeComp{ size: PointFloat::new(size, size) });
+        pending.add_comp(SizeComp{ size: PointFloat::new(radius * 2.0, radius * 2.0) });
     }
 }
 

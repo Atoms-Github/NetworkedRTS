@@ -8,9 +8,10 @@ pub fn units(data: &mut GameData){
         actor: ActorMould { image: "red_dragon.jpg".to_string(), },
         weapons: vec![AbilityID::WEP_RED_DRAGON],
         abilities: vec![AbilityID::WEP_RED_DRAGON],
-        unit_flavour: UnitFlavour::HIKER,
-        move_speed: 0.3,
-        fly: true,
+        unit_flavour: UnitFlavour::HIKER(HikerFlavourInfo{
+            movespeed: 0.3,
+            fly: true
+        }),
         periodic_gain: Default::default(),
         life: 300.0
     });
@@ -19,9 +20,10 @@ pub fn units(data: &mut GameData){
         actor: ActorMould { image: "red_dragon_egg.jpg".to_string(), },
         weapons: vec![],
         abilities: vec![],
-        unit_flavour: UnitFlavour::HIKER,
-        move_speed: 0.00,
-        fly: false,
+        unit_flavour: UnitFlavour::HIKER(HikerFlavourInfo{
+            movespeed: 0.0,
+            fly: false
+        }),
         periodic_gain: Default::default(),
         life: 20.0
     });
@@ -30,9 +32,10 @@ pub fn units(data: &mut GameData){
         actor: ActorMould { image: "small_dragon.jpg".to_string(), },
         weapons: vec![AbilityID::WEP_SMALL_DRAGON],
         abilities: vec![AbilityID::WEP_SMALL_DRAGON],
-        unit_flavour: UnitFlavour::HIKER,
-        move_speed: 0.1,
-        fly: true,
+        unit_flavour: UnitFlavour::HIKER(HikerFlavourInfo{
+            movespeed: 0.1,
+            fly: true
+        }),
         periodic_gain: Default::default(),
         life: 50.0
     });
@@ -46,8 +49,6 @@ pub fn units(data: &mut GameData){
             unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
                 footprint: Point2::new(2,2)
             }),
-            move_speed: 0.0,
-            fly: false,
             periodic_gain: ResourceBlock{
                 resource_counts: [0.0, 0.0, 0.005]
             },

@@ -51,15 +51,18 @@ pub struct UnitMould {
     pub weapons: Vec<AbilityID>,
     pub abilities: Vec<AbilityID>,
     pub unit_flavour: UnitFlavour,
-    pub move_speed: f32,
-    pub fly: bool,
     pub periodic_gain: ResourceBlock,
     pub life: f32,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum UnitFlavour{
     STRUCTURE(StructureFlavourInfo),
-    HIKER
+    HIKER(HikerFlavourInfo)
+}
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct HikerFlavourInfo{
+    pub movespeed: f32,
+    pub fly: bool,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct StructureFlavourInfo{
