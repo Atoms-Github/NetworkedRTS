@@ -78,10 +78,11 @@ impl LogicSimHeaderIn {
         let (mut head_sink, mut head_rec) = unbounded();
         thread::spawn(move ||{
             loop{
-                let head_sim_packet = self.head_sim_packets_rec.recv().unwrap();
+                // Skip any we're lagging by - we're only interested in latest.
+                let head_sim_packet = crate::utils::pull_latest(&mut self.head_sim_packets_rec);
                 log::trace!("Head got frame {}", head_sim_packet.game_state.get_simmed_frame_index());
 
-                let new_head = self.calculate_new_head(head_sim_packet);
+                let new_head = calculate_new_head(head_sim_packet);
                 head_sink.send(new_head).unwrap();
 
             }
@@ -92,11 +93,11 @@ impl LogicSimHeaderIn {
             calculated_heads : Some(head_rec)
         }
     }
-    fn calculate_new_head(&mut self, mut sim_packet: HeadSimPacket) -> NetGameState {
-        for sim_info in sim_packet.sim_data{
-            sim_packet.game_state.simulate_tick(sim_info, SimQuality::HEAD, FRAME_DURATION_MILLIS);
-        }
-        return sim_packet.game_state;
+}
+fn calculate_new_head(mut sim_packet: HeadSimPacket) -> NetGameState {
+    for sim_info in sim_packet.sim_data{
+        sim_packet.game_state.simulate_tick(sim_info, SimQuality::HEAD, FRAME_DURATION_MILLIS);
     }
+    return sim_packet.game_state;
 }
 

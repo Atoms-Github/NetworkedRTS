@@ -73,18 +73,6 @@ impl GraphicalIn {
             std::process::exit(0);
         });
     }
-
-    fn pull_newest_usable_state(&mut self) -> NetGameState {
-        // Discards all states in the pipeline until empty, then uses the last one.
-        let mut render_state = self.render_head_rec.recv().unwrap();
-
-        let mut next_state_maybe = self.render_head_rec.try_recv();
-        while next_state_maybe.is_ok(){
-            render_state = next_state_maybe.unwrap();
-            next_state_maybe = self.render_head_rec.try_recv();
-        }
-        render_state
-    }
 }
 
 impl EventHandler for GraphicalIn {
@@ -95,7 +83,7 @@ impl EventHandler for GraphicalIn {
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::BLACK);
 
-        let mut render_state = self.pull_newest_usable_state();
+        let mut render_state = crate::utils::pull_latest(&mut self.render_head_rec);
         render_state.render(ctx, self.my_player_id, self.resources.as_ref().unwrap());
 
         let fps = timer::fps(ctx);

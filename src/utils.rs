@@ -1,4 +1,5 @@
 use std::any::TypeId;
+use crossbeam_channel::Receiver;
 
 pub type TypeIdNum = u64;
 
@@ -45,4 +46,16 @@ pub unsafe fn unsafe_const_cheat<T>(reference: &T) -> &mut T {
     let const_ptr = reference as *const T;
     let mut_ptr = const_ptr as *mut T;
     &mut *mut_ptr
+}
+
+pub fn pull_latest<T>(rx: &mut Receiver<T>) -> T{
+    // Discards all states in the pipeline until empty, then uses the last one.
+    let mut render_state = rx.recv().unwrap();
+
+    let mut next_state_maybe = rx.try_recv();
+    while next_state_maybe.is_ok(){
+        render_state = next_state_maybe.unwrap();
+        next_state_maybe = rx.try_recv();
+    }
+    render_state
 }
