@@ -25,6 +25,7 @@ pub struct SceneManager{
     pub current: SceneType,
     pub next: SceneType,
     pub completed_rounds: usize,
+    pub connected_players: u32,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -40,6 +41,14 @@ pub static SCENE_SWITCHER_SYS: System = System{
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
     let scene = c.get_mut_unwrap::<SceneManager>(SCENE_MAN_ENT_ID);
+    // Update current connected player count:
+    scene.connected_players = 0;
+    for (player_id, player_comp) in CompIter1::<PlayerComp>::new(c){
+        if player_comp.connected{
+            scene.connected_players += 1;
+        }
+    }
+    // Check for change scene.
     if scene.current != scene.next{
         // Delete all entities (that aren't presistent).
         for entity_id in c.query(vec![]){
@@ -54,7 +63,10 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                 let mut pending_arena = pending_arena_ent.get_mut::<ArenaComp>().unwrap();
                 let player_ids = c.query(vec![gett::<PlayerComp>()]);
                 for player in player_ids{
-                    spawn_player_ingame(ent_changes, c, player, c.get_unwrap::<PlayerComp>(player).race, pending_arena);
+                    let player_comp = c.get_unwrap::<PlayerComp>(player);
+                    if player_comp.connected{
+                        spawn_player_ingame(ent_changes, c, player, player_comp.race, pending_arena);
+                    }
                 }
 
                 ent_changes.new_entities.push(pending_arena_ent);

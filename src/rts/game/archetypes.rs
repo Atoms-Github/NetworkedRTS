@@ -29,7 +29,7 @@ impl PendingEntity{
     }
     pub fn new_scene_manager() -> Self{
         Self::new2(
-            SceneManager{ current: SceneType::InGame, next: SceneType::InGame, completed_rounds: 0 },
+            SceneManager{ current: SceneType::InGame, next: SceneType::InGame, completed_rounds: 0, connected_players: 0 },
             ScenePersistent{ keep_alive: true },
         )
     }

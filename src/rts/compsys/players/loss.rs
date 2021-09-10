@@ -46,7 +46,12 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
             }
         }
     }
-    if alive_players <= 1{
+    let min_alive_players = if scene.connected_players == 1{
+        1
+    }else{
+        2
+    };
+    if alive_players < min_alive_players{
         scene.completed_rounds += 1;
         scene.next = SceneType::Lobby;
     }
