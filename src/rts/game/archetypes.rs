@@ -35,7 +35,7 @@ impl PendingEntity{
     }
     pub fn new_lobby(game_start_cooldown: f32) -> Self{
         Self::new1(
-            LobbyManager{ game_start_cooldown },
+            LobbyManager{ game_start_cooldown, selected_map: "No map selected".to_string() },
         )
     }
     // pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{

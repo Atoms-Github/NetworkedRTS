@@ -12,6 +12,7 @@ use std::ops::Div;
 use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::bibble::data::data_types::RaceID;
 use log::logger;
+use walkdir::WalkDir;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -71,14 +72,21 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
                         5.0
                     }
                 };
-                let player_one : GlobalEntityID = 0;
+                // Race picking icons.
                 let mut x = 50.0;
-                for (race_id, race_mould) in &player_one.get_player_tech_tree(c).races{
+                for (race_id, race_mould) in &(0 as GlobalEntityID).get_player_tech_tree(c).races{
                     let new_button = PendingEntity::new_race_selection_button(
                         *race_id, PointFloat::new(x, 200.0), race_mould.icon.clone());
                     ent_changes.new_entities.push(new_button);
                     x += 50.0;
                 }
+                // Map selection buttons.
+                // x = 50.0;
+                for map_entry in std::fs::read_dir("resources/images/maps").unwrap(){
+                    let map_entry = map_entry.unwrap();
+                    
+                }
+                // Spawn lobby.
                 ent_changes.new_entities.push(PendingEntity::new_lobby(game_start_cooldown));
                 // Reset all cameras so you can see the buttons.
                 for (player_id, camera) in CompIter1::<CameraComp>::new(c){
