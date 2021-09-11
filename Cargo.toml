@@ -12,6 +12,7 @@ debug = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+snap = "0.2"
 mint = "*"
 walkdir = "2.3.2"
 itertools = "0.10.1"

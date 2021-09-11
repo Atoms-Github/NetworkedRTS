@@ -58,12 +58,12 @@ impl GameSocketTcp for TcpStream{
                         // Should've read all 4 for size.
                         assert_eq!(bytes_read, 4);
                         let content_size = bincode::deserialize::<u32>(&message_size_buffer).unwrap() as usize;
-                        let mut message_buffer = vec![0; content_size];
-                        let content_read_size = self.read(&mut message_buffer).unwrap();
-                        println!("Tcp content size: {}", content_size);
+                        let mut message_buffer_compressed = vec![0; content_size];
+                        let content_read_size = self.read(&mut message_buffer_compressed).unwrap();
                         assert_eq!(content_read_size, content_size);
+                        let message_decompressed = crate::utils::decompress(message_buffer_compressed);
 
-                        let content_deser_result = bincode::deserialize::<ExternalMsg>(&message_buffer[..]);
+                        let content_deser_result = bincode::deserialize::<ExternalMsg>(&message_decompressed[..]);
                         match content_deser_result {
                             Ok(msg) => {
                                 if crate::DEBUG_MSGS_NET{
@@ -85,17 +85,18 @@ impl GameSocketTcp for TcpStream{
         if crate::DEBUG_MSGS_NET{
             log::debug!("-->t: {:?}", message);
         }
+        let mut compressed_contents_bytes = crate::utils::compress(bincode::serialize(message).unwrap());
 
-        let mut message_contents_bytes = bincode::serialize(message).unwrap();
-        let message_size : u32 = message_contents_bytes.len() as u32;
-        println!("TCP sent: {}", message_size);
+        let message_size : u32 = compressed_contents_bytes.len() as u32;
         // Prepend message size.
         let mut message_wire_bytes = bincode::serialize(&message_size).unwrap();
-        message_wire_bytes.append(&mut message_contents_bytes);
+        message_wire_bytes.append(&mut compressed_contents_bytes);
         self.write_all(&message_wire_bytes).unwrap();
         self.flush().unwrap();
     }
 }
+
+
 impl GameSocketUdp for UdpSocket{
     fn start_listening(self, msgs_sink: Sender<SocketIncEvent>) {
         thread::Builder::new().name("StreamDeserializerUDP".to_string()).spawn(move ||{
