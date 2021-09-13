@@ -39,14 +39,12 @@ impl<'a> Revolver<'a>{
             id: AbilityID::WALK,
             time_since_use: 0.0
         });
-        let mut fly = false;
         let mut speed = 0.0;
         if let UnitFlavour::HIKER(hiker_info) = &mould.unit_flavour{
-            fly = hiker_info.fly;
             speed = hiker_info.movespeed;
         }
 
-        let mut pending = PendingEntity::new8(
+        let mut pending = PendingEntity::new7(
             PositionComp{ pos: position.clone() },
             OwnedComp { owner },
             LifeComp{ life: mould.life, max_life: mould.life },
@@ -57,14 +55,16 @@ impl<'a> Revolver<'a>{
                 speed,
                 quest_importance: 0
             },
-            HikerCollisionComp{
-                radius: mould.radius,
-                fly
-            },
             WorkerComp{
                 resource_gain_per_ms: mould.periodic_gain.clone()
             }
         );
+        if let UnitFlavour::HIKER(hiker_info) = &mould.unit_flavour{
+            pending.add_comp(HikerCollisionComp{
+                radius: mould.radius,
+                fly: hiker_info.fly,
+            });
+        }
         pending.add_comp(abilities_comp);
         if mould.weapons.len() > 0{
             pending.add_comp(WeaponComp{

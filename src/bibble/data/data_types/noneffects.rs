@@ -2,7 +2,7 @@ use super::*;
 use nalgebra::{Point, Point2};
 use serde::*;
 use crate::pub_types::PointFloat;
-use crate::rts::compsys::ResourceBlock;
+use crate::rts::compsys::{ResourceBlock, PlotFlooring};
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -16,6 +16,7 @@ pub enum UnitID {
     ROBO_SPIDER,
     CONSTRUCTOR,
     FACTORY,
+    OIL_WELL,
 
     DOUGH,
     BREAD,
@@ -87,6 +88,7 @@ pub struct HikerFlavourInfo{
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct StructureFlavourInfo{
     pub footprint: Point2<u8>,
+    pub required_under_material: PlotFlooring,
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WeaponMould {

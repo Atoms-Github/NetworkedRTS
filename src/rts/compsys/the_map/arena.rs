@@ -24,6 +24,7 @@ pub type PlotSize = nalgebra::Point2<u8>;
 pub enum PlotFlooring {
     WALL,
     PATH,
+    GREEN_RESOURCE,
     STRUCTURE,
 }
 impl PlotFlooring{
@@ -35,15 +36,22 @@ impl PlotFlooring{
             PlotFlooring::PATH => {
                 Shade(0.2, 0.5, 0.2)
             }
+            PlotFlooring::GREEN_RESOURCE => {
+                Shade(0.2, 0.8, 0.2)
+            }
             PlotFlooring::STRUCTURE => {
                 Shade(0.5,0.2,0.2)
             }
         }
     }
+    pub fn can_walk_over(&self) -> bool{
+        return !(*self == PlotFlooring::WALL || *self == PlotFlooring::STRUCTURE);
+    }
     pub fn from_color(color: Color) -> Self{
         let (r,g,b) = color.to_rgb();
         match (r,g,b){
             (255,255,255) => {Self::PATH}
+            (0,255,0) => {Self::GREEN_RESOURCE}
             (0,0,0) => {Self::WALL}
             (_, _, _) => {Self::PATH}
         }
@@ -99,7 +107,7 @@ impl ArenaComp {
         if x >= 0 && x < self.pathing.len() as i32
             && y >= 0 && y < self.pathing.get(0).unwrap().len() as i32{
             let floor = *self.pathing.get(x as usize).unwrap().get(y as usize).unwrap();
-            return floor == PlotFlooring::PATH;
+            return floor.can_walk_over();
         }else{
             // Out map = in wall.
             return true;
@@ -118,16 +126,16 @@ impl ArenaComp {
             return None;
         }
     }
-    pub fn pos_in_wall(&self, position: &PointFloat) -> bool{
-        if let Some(plot) = self.get_plot(position){
-            return self.plot_in_wall(&plot);
-        }else{ // Off map = in wall.
-            return true;
-        }
-    }
-    pub fn plot_in_wall(&self, plot: &Plot) -> bool{
-        return *self.pathing.get(plot.x).unwrap().get(plot.y).unwrap() == PlotFlooring::WALL;
-    }
+    // pub fn pos_in_wall(&self, position: &PointFloat) -> bool{
+    //     if let Some(plot) = self.get_plot(position){
+    //         return self.plot_in_wall(&plot);
+    //     }else{ // Off map = in wall.
+    //         return true;
+    //     }
+    // }
+    // pub fn plot_in_wall(&self, plot: &Plot) -> bool{
+    //     return *self.pathing.get(plot.x).unwrap().get(plot.y).unwrap() == PlotFlooring::WALL;
+    // }
     fn get_closest_boxes_range(&self, centre: f32, size: u8) -> (i32, i32){
         let centre_coord = (centre / ARENA_PLOT_SIZE).floor() as i32;
         if size % 2 == 0{

@@ -21,10 +21,20 @@ impl<'a> Revolver<'a>{
                 let structure = crate::utils::unwrap!(UnitFlavour::STRUCTURE, &mould.unit_flavour);
                 let arena = self.c.find_arena().unwrap();
                 if let Some(plots) = arena.get_plot_boxes(target.clone(), structure.footprint.clone()){
-                    self.spawn_unit(data, mould, target, owner);
-                    for plot in plots{
-                        arena.set_flooring(&plot, PlotFlooring::STRUCTURE);
+
+                    let mut good_spawn = true;
+                    for plot in &plots{
+                        if arena.get_flooring(plot) != structure.required_under_material{
+                            good_spawn = false;
+                        }
                     }
+                    if good_spawn{
+                        for plot in &plots{
+                            arena.set_flooring(plot, PlotFlooring::STRUCTURE);
+                        }
+                        self.spawn_unit(data, mould, target, owner);
+                    }
+
                 }
             }
             EffectToPoint::COMPOSITE(effects) => {
