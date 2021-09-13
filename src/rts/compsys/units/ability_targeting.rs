@@ -33,8 +33,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
                                         target: AbilityTargetInstance::NO_TARGET
                                     }, !input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LShift));
                                 }
-                                AbilityTargetType::Unit(_) |
-                                AbilityTargetType::Point(_)=> {
+                                AbilityTargetType::SingleTarget(_) => {
                                     input.start_targetting(ability_instance.id);
                                 }
                             }

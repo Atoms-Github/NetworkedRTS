@@ -23,7 +23,7 @@ pub struct OrderInstance{
 pub enum AbilityTargetInstance{
     NO_TARGET,
     UNIT(GlobalEntityID),
-    POINT(PointFloat)
+    POINT(PointFloat),
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

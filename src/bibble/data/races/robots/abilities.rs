@@ -39,16 +39,19 @@ pub fn abilities(data: &mut GameData){
     });
     data.abilities.insert(AbilityID::WEP_SCUTTLER, AbilityMould{
         cost: 0.0,
-        targetting: AbilityTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
-            actor: ActorMould {
-                image: "robot_spider_projectile.png".to_string(),
-            },
-            speed: 0.5,
-            hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
-                amount: 10.0
-            }),
-            size: 20.0
-        })),
+        targetting: AbilityTargetType::SingleTarget(AbilitySingleTarget{
+            target: AbilitySingleTargetType::Unit(EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
+                actor: ActorMould {
+                    image: "robot_spider_projectile.png".to_string(),
+                },
+                speed: 0.5,
+                hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
+                    amount: 10.0
+                }),
+                size: 20.0
+            })),
+            graphic: AbilitySingleTargetGraphic::NOTHING
+        }),
         button_info: ButtonMould{
             color: (255, 0, 0),
             hotkey: VirtualKeyCode::Minus

@@ -1,6 +1,9 @@
 use crate::bibble::data::data_types::*;
 use serde::*;
 use winit::VirtualKeyCode;
+use crate::rts::compsys::{RenderTexture, RenderShape};
+use ggez::graphics::Color;
+use crate::pub_types::Shade;
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -45,9 +48,33 @@ pub struct ButtonMould{
 #[derive(Serialize, Deserialize, Clone)]
 pub enum AbilityTargetType{
     NoTarget(EffectToUnit),
+    SingleTarget(AbilitySingleTarget),
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct AbilitySingleTarget{
+    pub target: AbilitySingleTargetType,
+    pub graphic: AbilitySingleTargetGraphic,
+}
+#[derive(Serialize, Deserialize, Clone)]
+pub enum AbilitySingleTargetGraphic{
+    NOTHING,
+    SMALL_RETICLE(f32, Shade),
+}
+#[derive(Serialize, Deserialize, Clone)]
+pub enum AbilitySingleTargetType {
     Unit(EffectUnitToUnit),
     Point(EffectUnitToPoint),
-
-    // Can add Points (two points) if I need it.
+    Plot(EffectUnitToPoint)
 }
+
+
+
+
+
+
+
+
+
+
 
