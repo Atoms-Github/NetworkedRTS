@@ -3,7 +3,7 @@ use std::thread;
 
 use ggez::*;
 use ggez::{ContextBuilder, event};
-use ggez::event::{EventHandler, KeyMods, MouseButton};
+use ggez::event::{EventHandler, KeyMods, MouseButton, EventLoop};
 use ggez::input::keyboard::KeyCode;
 
 use crate::netcode::netcode_types::*;
@@ -33,9 +33,10 @@ pub struct GraphicalIn {
 }
 pub struct GraphicalEx {
     pub input_rec: Receiver<InputChange>,
+    pub graphical_in: GraphicalIn,
 }
 impl GraphicalEx{
-    pub fn start(head_render_handle: Receiver<NetGameState>, my_player_id: PlayerID) -> GraphicalEx{
+    pub fn new(head_render_handle: Receiver<NetGameState>, my_player_id: PlayerID) -> GraphicalEx{
         let (input_sink, input_rec) = unbounded();
 
 
@@ -48,50 +49,44 @@ impl GraphicalEx{
         let mut window_mode = WindowMode::default();
 
         window_mode = window_mode.dimensions(1440.0, 810.0);
-        // window_mode.resizable = true;
-        window_mode.maximized = true;
-        GraphicalIn{
-            render_head_rec: head_render_handle,
-            my_player_id,
-            input_sink,
-            texts,
-            resources: None,
-            fullscreen: false,
-            window_mode
-        }.start();
+        window_mode.resizable = true;
+        // window_mode.maximized = true;
 
         GraphicalEx{
-            input_rec
+            input_rec,
+            graphical_in: GraphicalIn{
+                render_head_rec: head_render_handle,
+                my_player_id,
+                input_sink,
+                texts,
+                resources: None,
+                fullscreen: false,
+                window_mode
+            }
         }
     }
 }
+use winit::platform::windows::EventLoopExtWindows;
 impl GraphicalIn {
-    pub fn start(mut self){
+    pub fn start(mut self) -> !{
         let cb = ContextBuilder::new("Oh my literal pogger", "Atoms")
             .window_setup(conf::WindowSetup::default().title("LiteralPoggyness")).window_mode(self.window_mode.clone())
             .add_resource_path("");
 
-        thread::spawn(move ||{
-            let (ctx, events_loop) = &mut cb.build().unwrap();
-            self.resources = Some(GameState::gen_render_resources(ctx));
-            event::run(ctx, events_loop, &mut self).unwrap();
+        let (mut ctx, events_loop) = cb.build().unwrap();
 
-            log::info!("Shutting down.");
-            println!("------------- ------------- -------------     ------------- ------------- -------------");
-            println!("------------- ------------- Graphics closed. Shutting down. ------------- -------------");
-            println!("------------- ------------- -------------     ------------- ------------- -------------");
-            std::process::exit(0);
-        });
+        self.resources = Some(GameState::gen_render_resources(&mut ctx));
+        event::run(ctx, events_loop, self);
     }
 }
 
-impl EventHandler for GraphicalIn {
+impl EventHandler<GameError> for GraphicalIn {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        graphics::clear(ctx, graphics::BLACK);
+        graphics::clear(ctx, graphics::Color::from_rgb(50,50,50));
 
         let mut render_state = crate::utils::pull_latest(&mut self.render_head_rec);
         render_state.render(ctx, self.my_player_id, self.resources.as_ref().unwrap());
@@ -102,7 +97,7 @@ impl EventHandler for GraphicalIn {
         graphics::draw(
             ctx,
             &fps_display,
-            (Point2::new(200.0, 0.0), graphics::WHITE),
+            (Point2::new(200.0, 0.0), graphics::Color::WHITE),
         )?;
 
 
@@ -112,30 +107,15 @@ impl EventHandler for GraphicalIn {
         Ok(())
     }
 
-    fn key_down_event(&mut self, ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods, repeat: bool) {
-        if !repeat{
-            if keycode == KeyCode::F11{
-                self.fullscreen = !self.fullscreen;
-                let window = graphics::window(ctx);
-                if self.fullscreen{
-                    // self.window_mode.fullscreen_type = FullscreenType::Desktop;
-                    // self.window_mode.maximized = true;
-                }else{
-                    // self.window_mode.fullscreen_type = FullscreenType::Windowed;
-                    // self.window_mode.maximized = false;
-                }
-
-                self.window_mode.borderless = self.fullscreen;
-                graphics::set_mode(ctx, self.window_mode.clone()).unwrap();
-            }
-
-
-            let send_result = self.input_sink.send(InputChange::KeyDownUp(keycode, true));
-            assert!(send_result.is_ok(), "Failed to take input: {:?}", send_result);
-        }
-    }
-    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: MouseButton,
+        x: f32,
+        y: f32,
+    ) {
         self.input_sink.send(InputChange::NewMousePosition(x, y)).unwrap();
+        self.input_sink.send(InputChange::MouseUpDown(button, true)).unwrap();
     }
     fn mouse_button_up_event(
         &mut self,
@@ -147,15 +127,29 @@ impl EventHandler for GraphicalIn {
         self.input_sink.send(InputChange::NewMousePosition(x, y)).unwrap();
         self.input_sink.send(InputChange::MouseUpDown(button, false)).unwrap();
     }
-    fn mouse_button_down_event(
-        &mut self,
-        _ctx: &mut Context,
-        button: MouseButton,
-        x: f32,
-        y: f32,
-    ) {
+    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
         self.input_sink.send(InputChange::NewMousePosition(x, y)).unwrap();
-        self.input_sink.send(InputChange::MouseUpDown(button, true)).unwrap();
+    }
+    fn key_down_event(&mut self, ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods, repeat: bool) {
+        if !repeat{
+            if keycode == KeyCode::F11{
+                self.fullscreen = !self.fullscreen;
+                let window = graphics::window(ctx);
+                if self.fullscreen{
+                    self.window_mode.fullscreen_type = FullscreenType::Desktop;
+                }else{
+                    self.window_mode.fullscreen_type = FullscreenType::Windowed;
+                }
+
+                self.window_mode.maximized = self.fullscreen;
+                self.window_mode.borderless = self.fullscreen;
+                graphics::set_mode(ctx, self.window_mode.clone()).unwrap();
+            }
+
+
+            let send_result = self.input_sink.send(InputChange::KeyDownUp(keycode, true));
+            assert!(send_result.is_ok(), "Failed to take input: {:?}", send_result);
+        }
     }
 
     fn key_up_event(&mut self, _ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods) {

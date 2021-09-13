@@ -8,7 +8,7 @@ use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 use crate::bibble::data::data_types::AbilityID;
 use std::collections::BTreeMap;
-use winit::VirtualKeyCode;
+use winit::event::VirtualKeyCode;
 use std::fmt;
 use crate::netcode::common::time::timekeeping::DT;
 use rand::Rng;
@@ -90,9 +90,8 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                     }
                     RenderTexture::Image(image_name) => {
                         let mut params = DrawParam::new();
-                        params.dest = mint::Point2::from([on_screen_pos.x, on_screen_pos.y]);
-                        params.scale = mint::Vector2::from([size.x, size.y]);
-                        cool_batcher.add_image(image_name.clone(), params, render.z);
+                        params = params.dest(mint::Point2::from([on_screen_pos.x, on_screen_pos.y]));
+                        cool_batcher.add_image(image_name.clone(), params, size.clone(), render.z);
                     }
                 }
             }
@@ -212,7 +211,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             }
         }
     }
-    
+
     let mut test_param = DrawParam::new();
     // cool_batcher.add_image("factory.jpg".to_string(), test_param, 5);
     cool_batcher.gogo_draw(ctx, res);

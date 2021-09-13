@@ -97,7 +97,7 @@ impl ConnectedClient{
         let mut seg_logic_tailer = LogicSimTailer::new(welcome_info.game_state, welcome_info.known_frame.clone());
 
         let mut seg_logic_header = LogicSimHeaderEx::start(welcome_info.known_frame.clone());
-        let seg_graphical = GraphicalEx::start(seg_logic_header.calculated_heads.take().unwrap(), welcome_info.assigned_player_id);
+        let seg_graphical = GraphicalEx::new(seg_logic_header.calculated_heads.take().unwrap(), welcome_info.assigned_player_id);
         let seg_input_handler = InputHandler::new(
              welcome_info.assigned_player_id,
              seg_graphical.input_rec,
@@ -109,6 +109,7 @@ impl ConnectedClient{
             seg_data_storage,
             seg_logic_tailer,
             seg_logic_header,
+            seg_graphical_in: Some(seg_graphical.graphical_in),
         }
     }
 
@@ -118,7 +119,8 @@ struct ClientEx{
     seg_data_storage: SimDataStorage,
     seg_logic_tailer: LogicSimTailer,
     seg_logic_header: LogicSimHeaderEx,
-    seg_input_handler: InputHandler
+    seg_input_handler: InputHandler,
+    seg_graphical_in: Option<GraphicalIn>,
 }
 impl ClientEx{
     fn update_net_rec(&mut self, connected_client : &mut ConnectedClient){
@@ -163,40 +165,43 @@ impl ClientEx{
         let known_frame = connected_client.welcome_info.known_frame.clone();
 
         let time_syncer = known_frame.start_frame_stream_from_now();
-        loop{
-            // Shouldn't need to use this.
-            let _ = time_syncer.recv().unwrap();
+        let graphical_in = self.seg_graphical_in.take().unwrap();
+        thread::spawn(move ||{
+            loop{
+                // Shouldn't need to use this.
+                let _ = time_syncer.recv().unwrap();
 
-            let mut tail_progress_made = false;
+                let mut tail_progress_made = false;
 
-            self.update_net_rec(&mut connected_client);
+                self.update_net_rec(&mut connected_client);
 
-            let tail_attempt_start = self.seg_logic_tailer.game_state.get_simmed_frame_index() + 1;
-            let tail_attempt_end = (known_frame.get_intended_current_frame()).min(tail_attempt_start + 5);
-            for tail_frame_attempt in tail_attempt_start..tail_attempt_end{ // TODO2: A number depending on processing time.
-                self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
-                // log::info!("Client to sim {}.", tail_frame_attempt);
-                match self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, tail_frame_attempt){
-                    Some(missing_datas) => {
-                        for missing_data in missing_datas{
-                            // TODO1 - save up a bit, jees.
-                            log::info!("Client missing data: {:?}", missing_data);
-                            connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
+                let tail_attempt_start = self.seg_logic_tailer.game_state.get_simmed_frame_index() + 1;
+                let tail_attempt_end = (known_frame.get_intended_current_frame()).min(tail_attempt_start + 5);
+                for tail_frame_attempt in tail_attempt_start..tail_attempt_end{ // TODO2: A number depending on processing time.
+                    self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
+                    // log::info!("Client to sim {}.", tail_frame_attempt);
+                    match self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, tail_frame_attempt){
+                        Some(missing_datas) => {
+                            for missing_data in missing_datas{
+                                // TODO1 - save up a bit, jees.
+                                log::info!("Client missing data: {:?}", missing_data);
+                                connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
+                            }
+                            break; // No more chance of stuff.
                         }
-                        break; // No more chance of stuff.
-                    }
-                    None => {
-                        // Tail sim successful.
-                        tail_progress_made = true;
+                        None => {
+                            // Tail sim successful.
+                            tail_progress_made = true;
 
+                        }
                     }
                 }
+                if tail_progress_made{
+                    self.seg_logic_header.send_head_state(self.seg_logic_tailer.game_state.clone(), &self.seg_data_storage);
+                }
             }
-            if tail_progress_made{
-                self.seg_logic_header.send_head_state(self.seg_logic_tailer.game_state.clone(), &self.seg_data_storage);
-            }
-        }
-
+        });
+        graphical_in.start();
 
     }
 }

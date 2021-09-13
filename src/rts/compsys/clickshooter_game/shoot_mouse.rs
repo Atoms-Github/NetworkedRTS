@@ -4,7 +4,7 @@ use crate::pub_types::{PointFloat, RenderResourcesPtr};
 use crate::ecs::superb_ecs::*;
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::pending_entity::PendingEntity;
-use winit::MouseButton;
+use winit::event::MouseButton;
 use std::ops::Mul;
 use serde_closure::internal::std::borrow::Cow::Owned;
 use crate::ecs::ecs_macros::CompIter3;

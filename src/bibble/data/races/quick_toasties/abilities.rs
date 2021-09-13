@@ -1,6 +1,6 @@
 use crate::bibble::data::data_types::*;
 use nalgebra::Point2;
-use winit::VirtualKeyCode;
+use winit::event::VirtualKeyCode;
 use crate::pub_types::PointFloat;
 
 pub fn abilities(data: &mut GameData){

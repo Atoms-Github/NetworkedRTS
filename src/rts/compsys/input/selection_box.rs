@@ -7,7 +7,7 @@ use crate::pub_types::{PointFloat, PlayerID};
 use crate::rts::compsys::*;
 use ggez::graphics::Rect;
 use std::ops::Div;
-use winit::VirtualKeyCode;
+use winit::event::VirtualKeyCode;
 use std::future::Pending;
 use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::bibble::data::data_types::{EffectToPoint, UnitID};

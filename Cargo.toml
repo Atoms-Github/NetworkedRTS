@@ -20,7 +20,7 @@ criterion = "0.3"
 chrono = "*"
 metatype = "0.2.1"
 anymap = "*"
-ggez = {version = "0.5.1"}#, features = ["serde"] }
+ggez = {version = "0.6.0"}
 nalgebra = {version = "*", features = ["mint", "serde-serialize"] }
 bincode = "*"
 log = { version = "*", features = ["max_level_debug", "release_max_level_info"] }
@@ -46,8 +46,7 @@ crossbeam-channel = "0.5.0"
 serde-big-array = {path = "C:\\_C_\\Home\\Produce\\Code\\Projects\\Rust\\OtherPeeps\\serde-big-array"}
 
 [dependencies.winit]
-version = "0.19" # To match ggez.
-default-features = false # do not include the default features, and optionally
+version = "0.24" # To match ggez.
 # cherry-pick individual features
 features = ["serde"]
 

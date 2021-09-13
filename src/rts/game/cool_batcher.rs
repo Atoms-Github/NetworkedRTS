@@ -16,7 +16,7 @@ pub struct CoolBatcher{
 }
 #[derive(Default)]
 pub struct RenderLayer{
-    images: HashMap<String, Vec<DrawParam>>,
+    images: HashMap<String, Vec<(DrawParam, PointFloat)>>,
     rectangles: Vec<(Rect, Color)>,
     circles: Vec<(PointFloat, f32, Color)>,
     texts: Vec<(PointFloat, String, Color)>,
@@ -49,13 +49,13 @@ impl CoolBatcher{
             .entry(z)
             .or_default().circles.push((position.clone(), size, color));
     }
-    pub fn add_image(&mut self, filename: String, draw_param: DrawParam, z: u8){
+    pub fn add_image(&mut self, filename: String, draw_param: DrawParam, size_pixels: PointFloat, z: u8){
         self.layers
             .entry(z)
             .or_default().images
             .entry(filename)
             .or_default()
-            .push(draw_param);
+            .push((draw_param, size_pixels));
     }
     pub fn add_text(&mut self, position: PointFloat, text: String, color: Color, z: u8){
         self.layers
@@ -74,10 +74,10 @@ impl CoolBatcher{
                 let image_dimensions = PointFloat::new(image.dimensions().w, image.dimensions().h);
                 let mut sprite_batch = SpriteBatch::new(image);
 
-                for mut draw_param in draw_params.into_iter() {
-                    // Work out image scale from size. (which is currently stored in .scale()).
+                for (mut draw_param, scale_pixels) in draw_params.into_iter() {
+                    // Work out image scale from size.
                     let one_pixel_scale : PointFloat = PointFloat::new(1.0,1.0).component_div(&image_dimensions);
-                    draw_param.scale = mint::Vector2::from([draw_param.scale.x * one_pixel_scale.x, draw_param.scale.y * one_pixel_scale.y]);
+                    draw_param = draw_param.scale(one_pixel_scale.component_mul(&scale_pixels));
                     sprite_batch.add(draw_param);
                 }
 
@@ -87,7 +87,7 @@ impl CoolBatcher{
             if render_layer.rectangles.len() > 0{
                 let mut builder = MeshBuilder::new();
                 for (rect, color) in render_layer.rectangles.into_iter() {
-                    builder.rectangle(graphics::DrawMode::fill(), rect, color);
+                    builder.rectangle(graphics::DrawMode::fill(), rect, color).unwrap();
                 }
                 builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
             }

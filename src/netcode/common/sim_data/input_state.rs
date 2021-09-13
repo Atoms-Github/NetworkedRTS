@@ -110,7 +110,7 @@ impl InputState{
             2 => MouseButton::Middle,
             other => {
                 let bonus = other - 3;
-                MouseButton::Other(bonus as u8)
+                MouseButton::Other(bonus as u16)
             }
         }
     }
