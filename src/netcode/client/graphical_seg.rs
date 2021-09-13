@@ -50,7 +50,7 @@ impl GraphicalEx{
 
         window_mode = window_mode.dimensions(1440.0, 810.0);
         window_mode.resizable = true;
-        // window_mode.maximized = true;
+        // window_mode.resize_on_scale_factor_change = true;
 
         GraphicalEx{
             input_rec,
@@ -75,6 +75,7 @@ impl GraphicalIn {
 
         let (mut ctx, events_loop) = cb.build().unwrap();
 
+
         self.resources = Some(GameState::gen_render_resources(&mut ctx));
         event::run(ctx, events_loop, self);
     }
@@ -87,7 +88,6 @@ impl EventHandler<GameError> for GraphicalIn {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::Color::from_rgb(50,50,50));
-
         let mut render_state = crate::utils::pull_latest(&mut self.render_head_rec);
         render_state.render(ctx, self.my_player_id, self.resources.as_ref().unwrap());
 
@@ -130,6 +130,15 @@ impl EventHandler<GameError> for GraphicalIn {
     fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, _dx: f32, _dy: f32) {
         self.input_sink.send(InputChange::NewMousePosition(x, y)).unwrap();
     }
+    fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
+        let new_rect = graphics::Rect::new(
+            0.0,
+            0.0,
+            width as f32,
+            height as f32,
+        );
+        graphics::set_screen_coordinates(ctx, new_rect).unwrap();
+    }
     fn key_down_event(&mut self, ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods, repeat: bool) {
         if !repeat{
             if keycode == KeyCode::F11{
@@ -143,6 +152,7 @@ impl EventHandler<GameError> for GraphicalIn {
 
                 self.window_mode.maximized = self.fullscreen;
                 self.window_mode.borderless = self.fullscreen;
+
                 graphics::set_mode(ctx, self.window_mode.clone()).unwrap();
             }
 
