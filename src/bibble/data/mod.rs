@@ -7,7 +7,6 @@ impl GameData{
     pub fn gen_game_data() -> Self{
         let mut game_data = GameData{
             units: Default::default(),
-            weapons: Default::default(),
             races: Default::default(),
             abilities: Default::default()
         };

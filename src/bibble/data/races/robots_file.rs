@@ -17,7 +17,7 @@ pub fn gather(data: &mut GameData){
             starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_SPIDER));
         }
         for _ in 0..1{
-            starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::FOUNDRY));
+            starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::FACTORY));
         }
 
         data.races.insert(RaceID::ROBOTS, RaceMould{
@@ -26,7 +26,7 @@ pub fn gather(data: &mut GameData){
         });
     }
     {
-        let mut robo_spider = UnitMould{
+        let unit = data.add_unit(UnitID::ROBO_SPIDER, UnitMould{
             radius: 20.0,
             actor: ActorMould { image: "robot_spider.png".to_string(), },
             weapons: vec![],
@@ -37,8 +37,8 @@ pub fn gather(data: &mut GameData){
             }),
             periodic_gain: Default::default(),
             life: 100.0
-        };
-        robo_spider.add_weapon(data, AbilityID::WEP_ROBO_SPIDER, EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
+        });
+        data.add_weapon(unit, AbilityID::WEP_ROBO_SPIDER, EffectUnitToUnit::LAUNCH_SEEKING_PROJECTILE(SeekingProjectileMould {
             actor: ActorMould {
                 image: "robot_spider_projectile.png".to_string(),
             },
@@ -48,10 +48,9 @@ pub fn gather(data: &mut GameData){
             }),
             size: 20.0
         }), 200.0, 300.0);
-        data.units.insert(UnitID::ROBO_SPIDER, robo_spider);
     }
     {
-        let mut constructor = UnitMould{
+        let mut unit = data.add_unit(UnitID::CONSTRUCTOR, UnitMould{
             radius: 15.0,
             actor: ActorMould { image: "robot_worker.jpg".to_string(), },
             weapons: vec![],
@@ -62,10 +61,10 @@ pub fn gather(data: &mut GameData){
             }),
             periodic_gain: Default::default(),
             life: 50.0
-        };
+        });
         data.abilities.insert(AbilityID::BUILD_FOUNDRY, AbilityMould{
             cost: 60.0,
-            targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::FOUNDRY))),
+            targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::FACTORY))),
             button_info: ButtonMould{
                 color: (150, 120, 200),
                 hotkey: VirtualKeyCode::F
@@ -74,10 +73,9 @@ pub fn gather(data: &mut GameData){
             casting_time: 2000.0,
             cooldown: 0.0
         });
-        data.units.insert(UnitID::CONSTRUCTOR, constructor);
     }
     {
-        let mut factory = UnitMould{
+        let mut unit = data.add_unit(UnitID::FACTORY, UnitMould{
             radius: 35.0,
             actor: ActorMould { image: "factory.jpg".to_string(), },
             weapons: vec![],
@@ -89,7 +87,7 @@ pub fn gather(data: &mut GameData){
                 resource_counts: [0.0, 0.0, 0.003]
             },
             life: 200.0
-        };
+        });
         data.abilities.insert(AbilityID::TRAIN_SCUTTLER, AbilityMould{
             cost: 30.0,
             targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_SPIDER))),
@@ -112,7 +110,6 @@ pub fn gather(data: &mut GameData){
             casting_time: 500.0,
             cooldown: 0.0
         });
-        data.units.insert(UnitID::FOUNDRY, factory);
     }
 
 }

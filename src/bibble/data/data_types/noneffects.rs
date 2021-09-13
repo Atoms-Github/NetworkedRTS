@@ -15,7 +15,7 @@ pub enum WeaponID {
 pub enum UnitID {
     ROBO_SPIDER,
     CONSTRUCTOR,
-    FOUNDRY,
+    FACTORY,
 
     DOUGH,
     BREAD,
