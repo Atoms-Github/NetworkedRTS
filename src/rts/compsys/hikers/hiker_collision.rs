@@ -30,13 +30,13 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
             if hiker_collision.fly{
                 continue;
             }
-            let unit_box_x = (position.pos.x / ARENA_SQUARE_SIZE as f32) as i32;
-            let unit_box_y = (position.pos.y / ARENA_SQUARE_SIZE as f32) as i32;
+            let unit_box_x = (position.pos.x / ARENA_PLOT_SIZE) as i32;
+            let unit_box_y = (position.pos.y / ARENA_PLOT_SIZE) as i32;
             for box_x in unit_box_x - 1..unit_box_x + 2{
                 for box_y in unit_box_y - 1..unit_box_y + 2{
-                    if arena.is_box_wall(box_x, box_y){
-                        let closest_x_to_circle = position.pos.x.clamp((box_x * ARENA_SQUARE_SIZE as i32) as f32, ((box_x + 1) * ARENA_SQUARE_SIZE as i32) as f32);
-                        let closest_y_to_circle = position.pos.y.clamp((box_y * ARENA_SQUARE_SIZE as i32) as f32, ((box_y + 1) * ARENA_SQUARE_SIZE as i32) as f32);
+                    if !arena.is_box_walkable(box_x, box_y){
+                        let closest_x_to_circle = position.pos.x.clamp((box_x * ARENA_PLOT_SIZE as i32) as f32, ((box_x + 1) * ARENA_PLOT_SIZE as i32) as f32);
+                        let closest_y_to_circle = position.pos.y.clamp((box_y * ARENA_PLOT_SIZE as i32) as f32, ((box_y + 1) * ARENA_PLOT_SIZE as i32) as f32);
                         let closest_point_on_box = PointFloat::new(closest_x_to_circle, closest_y_to_circle);
                         let distance_apart = (closest_point_on_box.clone() - &position.pos).magnitude();
                         let minimum_distance_apart = hiker_collision.radius;

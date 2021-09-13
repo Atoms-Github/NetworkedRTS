@@ -10,7 +10,6 @@ impl GameData{
             races: Default::default(),
             abilities: Default::default()
         };
-
         races::gather_races(&mut game_data);
 
 

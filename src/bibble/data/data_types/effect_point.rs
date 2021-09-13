@@ -6,6 +6,7 @@ use serde::*;
 pub enum EffectToPoint{
     DETONATE,
     SPAWN_UNIT(UnitID),
+    BUILD_BUILDING(UnitID),
     COMPOSITE(Vec<EffectToPoint>),
-    EFFECT_NEARBY_UNITS(Box<EffectToUnit>, f32)
+    EFFECT_NEARBY_UNITS(Box<EffectToUnit>, f32),
 }

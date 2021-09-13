@@ -3,6 +3,7 @@ use crossbeam_channel::Receiver;
 
 pub type TypeIdNum = u64;
 
+
 struct CrackerTypeId {
     t: TypeIdNum,
 }
@@ -76,3 +77,15 @@ pub fn decompress(compressed: Vec<u8>) -> Vec<u8>{
     println!("Decompressed {} from {}", uncompressed.len(), compressed.len());
     return uncompressed;
 }
+#[macro_export]
+macro_rules! unwrap {
+        ($enum:path, $expr:expr) => {{
+            if let $enum(item) = $expr {
+                item
+            } else {
+                panic!("Wrong match type!!")
+            }
+        }};
+    }
+
+pub use unwrap;

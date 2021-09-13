@@ -58,16 +58,10 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         );
         for x in 0..arena_comp.pathing.len(){
             for y in 0..arena_comp.pathing[x].len(){
-                let small_top_left_game = PointFloat::new((x * arena_comp.get_box_length()) as f32,
-                                                     (y * arena_comp.get_box_length()) as f32) + &base_pos_game;
+                let small_top_left_game = PointFloat::new(x as f32 * arena_comp.get_box_length(),
+                                                     y as f32 * arena_comp.get_box_length()) + &base_pos_game;
                 let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
-                let color = {
-                    if arena_comp.pathing[x][y]{
-                        graphics::Color::from_rgba(100,180,100, 100)
-                    }else{
-                        graphics::Color::from_rgba(180,100,100, 100)
-                    }
-                };
+                let color = arena_comp.pathing[x][y].get_color().to_color();
                 let rect = graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y);
                 cool_batcher.add_rectangle_rect(rect, color, 50);
             }

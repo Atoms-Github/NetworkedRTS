@@ -54,7 +54,7 @@ pub fn gather(data: &mut GameData){
             radius: 15.0,
             actor: ActorMould { image: "robot_worker.jpg".to_string(), },
             weapons: vec![],
-            abilities: vec![AbilityID::BUILD_FOUNDRY],
+            abilities: vec![AbilityID::BUILD_FACTORY],
             unit_flavour: UnitFlavour::HIKER(HikerFlavourInfo{
                 movespeed: 0.08,
                 fly: false
@@ -62,9 +62,12 @@ pub fn gather(data: &mut GameData){
             periodic_gain: Default::default(),
             life: 50.0
         });
-        data.abilities.insert(AbilityID::BUILD_FOUNDRY, AbilityMould{
+        data.abilities.insert(AbilityID::BUILD_FACTORY, AbilityMould{
             cost: 60.0,
-            targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::FACTORY))),
+            targetting: AbilityTargetType::SingleTarget(AbilitySingleTarget{
+                target: AbilitySingleTargetType::Plot(EffectUnitToPoint::TO_POINT(EffectToPoint::BUILD_BUILDING(UnitID::FACTORY))),
+                graphic: AbilitySingleTargetGraphic::NOTHING
+            }),
             button_info: ButtonMould{
                 color: (150, 120, 200),
                 hotkey: VirtualKeyCode::F
@@ -81,10 +84,10 @@ pub fn gather(data: &mut GameData){
             weapons: vec![],
             abilities: vec![AbilityID::TRAIN_SCUTTLER, AbilityID::TRAIN_CONSTRUCTOR],
             unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
-                footprint: Point2::new(2,3)
+                footprint: Point2::new(5,5)
             }),
             periodic_gain: ResourceBlock{
-                resource_counts: [0.0, 0.0, 0.003]
+                resource_counts: [0.0, 0.0, 10.003]
             },
             life: 200.0
         });

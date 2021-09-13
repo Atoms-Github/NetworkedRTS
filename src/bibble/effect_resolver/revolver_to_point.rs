@@ -2,11 +2,12 @@ pub use crate::bibble::data::data_types::*;
 use crate::rts::GameState;
 use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
-use crate::rts::compsys::{LifeComp, PositionComp};
+use crate::rts::compsys::{LifeComp, PositionComp, MyCompStorage};
 use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::pub_types::PointFloat;
 use crate::ecs::ecs_macros::{CompIter3, CompIter2};
-
+use crate::utils;
+use crate::rts::compsys::the_map::arena::PlotFlooring;
 
 impl<'a> Revolver<'a>{
     pub fn revolve_to_point(&mut self, data: &GameData, effect: &EffectToPoint, target: &PointFloat, owner: GlobalEntityID){
@@ -14,6 +15,17 @@ impl<'a> Revolver<'a>{
             EffectToPoint::SPAWN_UNIT(unit_id) => {
                 let mould = data.units.get(&unit_id).unwrap();
                 self.spawn_unit(data, mould, target, owner);
+            }
+            EffectToPoint::BUILD_BUILDING(unit_id) => {
+                let mould = data.units.get(&unit_id).unwrap();
+                let structure = crate::utils::unwrap!(UnitFlavour::STRUCTURE, &mould.unit_flavour);
+                let arena = self.c.find_arena().unwrap();
+                if let Some(plots) = arena.get_plot_boxes(target.clone(), structure.footprint.clone()){
+                    self.spawn_unit(data, mould, target, owner);
+                    for plot in plots{
+                        arena.set_flooring(&plot, PlotFlooring::STRUCTURE);
+                    }
+                }
             }
             EffectToPoint::COMPOSITE(effects) => {
                 for sub_effect in effects{

@@ -8,14 +8,55 @@ use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use ggez::event::MouseButton;
 use image::Pixel;
 use mopa::Any;
+use serde::*;
+use ggez::graphics::Color;
 
-pub const ARENA_SQUARE_SIZE: usize = 50;
+pub const ARENA_PLOT_SIZE: f32 = 50.0;
 pub const PERFORMANCE_MAP_BOX_SIZE: f32 = 100.0;
-pub type PathingMap = Vec<Vec<bool>>;
+pub type PathingMap = Vec<Vec<PlotFlooring>>;
 pub type PerformanceMap = Vec<Vec<Vec<GlobalEntityID>>>;
 
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub type Plot = nalgebra::Point2<usize>; // A Plot is a valid box on the map.
+pub type PlotSize = nalgebra::Point2<u8>;
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+pub enum PlotFlooring {
+    WALL,
+    PATH,
+    STRUCTURE,
+}
+impl PlotFlooring{
+    pub fn get_color(&self) -> Shade{
+        match self {
+            PlotFlooring::WALL => {
+                Shade(0.2, 0.2, 0.2)
+            }
+            PlotFlooring::PATH => {
+                Shade(0.2, 0.5, 0.2)
+            }
+            PlotFlooring::STRUCTURE => {
+                Shade(0.5,0.2,0.2)
+            }
+        }
+    }
+    pub fn from_color(color: Color) -> Self{
+        let (r,g,b) = color.to_rgb();
+        match (r,g,b){
+            (255,255,255) => {Self::PATH}
+            (0,0,0) => {Self::WALL}
+            (_, _, _) => {Self::PATH}
+        }
+    }
+}
+impl Default for PlotFlooring {
+    fn default() -> Self {
+        return Self::PATH;
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ArenaComp {
     pub pathing: PathingMap,
     pub performance_map: PerformanceMap,
@@ -54,31 +95,87 @@ impl ArenaComp {
         let y = (position.y / PERFORMANCE_MAP_BOX_SIZE) as usize;
         self.performance_map.get_mut(x).unwrap().get_mut(y).unwrap().push(entity);
     }
-    pub fn is_box_wall(&self, x: i32, y: i32) -> bool{
+    pub fn is_box_walkable(&self, x: i32, y: i32) -> bool{ // This could be replaced by a more plotty sort.
         if x >= 0 && x < self.pathing.len() as i32
             && y >= 0 && y < self.pathing.get(0).unwrap().len() as i32{
-            return !*self.pathing.get(x as usize).unwrap().get(y as usize).unwrap();
+            let floor = *self.pathing.get(x as usize).unwrap().get(y as usize).unwrap();
+            return floor == PlotFlooring::PATH;
         }else{
             // Out map = in wall.
             return true;
         }
     }
-    pub fn in_wall(&self, position: &PointFloat) -> bool{
-        let square_coords_x = position.x / ARENA_SQUARE_SIZE as f32;
-        let square_coords_y = position.y / ARENA_SQUARE_SIZE as f32;
-        if square_coords_x >= 0.0 && square_coords_x < self.pathing.len() as f32
-        && square_coords_y >= 0.0 && square_coords_y < self.pathing.get(0).unwrap().len() as f32{
-            return !*self.pathing.get(square_coords_x as usize).unwrap().get(square_coords_y as usize).unwrap();
+    pub fn get_plot(&self, position: &PointFloat) -> Option<Plot>{
+        let square_coords_x = (position.x / ARENA_PLOT_SIZE).floor() as i32;
+        let square_coords_y = (position.y / ARENA_PLOT_SIZE).floor() as i32;
+        self.get_ploti(square_coords_x, square_coords_x)
+    }
+    pub fn get_ploti(&self, posx: i32, posy: i32) -> Option<Plot>{
+        if posx >= 0 && posx < self.pathing.len() as i32
+            && posy >= 0 && posy < self.pathing.get(0).unwrap().len() as i32{
+            return Some(Plot::new(posx as usize, posy as usize));
         }else{
-            // Out map = in wall.
+            return None;
+        }
+    }
+    pub fn pos_in_wall(&self, position: &PointFloat) -> bool{
+        if let Some(plot) = self.get_plot(position){
+            return self.plot_in_wall(&plot);
+        }else{ // Off map = in wall.
             return true;
         }
+    }
+    pub fn plot_in_wall(&self, plot: &Plot) -> bool{
+        return *self.pathing.get(plot.x).unwrap().get(plot.y).unwrap() == PlotFlooring::WALL;
+    }
+    fn get_closest_boxes_range(&self, centre: f32, size: u8) -> (i32, i32){
+        let centre_coord = (centre / ARENA_PLOT_SIZE).floor() as i32;
+        if size % 2 == 0{
+            if size == 0{
+                return (centre_coord, centre_coord);
+            }
+            let in_shortest_direction = ((size / 2) - 1) as i32;
+            if centre % ARENA_PLOT_SIZE > ARENA_PLOT_SIZE / 2.0{
+                // Include 1 extra on right.
+                return (centre_coord - in_shortest_direction, centre_coord + in_shortest_direction + 1 + 1 /*Top exclusive*/)
+            }else{
+                // Include 1 extra on left.
+                return (centre_coord - in_shortest_direction - 1, centre_coord + in_shortest_direction + 1 /*Top exclusive*/)
+            }
+        }else{
+            // Odd. Easy case. Just do floor(x/2) in each direction.
+            let in_each_direction = (size / 2) as i32;
+            return (centre_coord - in_each_direction, centre_coord + in_each_direction + 1 /*Top exclusive*/)
+        }
+    }
+    pub fn set_flooring(&mut self, coords: &Plot, floor: PlotFlooring){
+        let flooring = self.pathing.get_mut(coords.x).unwrap().get_mut(coords.y).unwrap();
+        *flooring = floor;
+    }
+    pub fn get_flooring(&self, coords: &Plot) -> PlotFlooring {
+        return *self.pathing.get(coords.x).unwrap().get(coords.y).unwrap();
+    }
+    pub fn get_plot_boxes(&self, centre: PointFloat, plot_size: PlotSize) -> Option<Vec<Plot>>{
+        let mut plots = vec![];
+        let (minx, maxx) = self.get_closest_boxes_range(centre.x, plot_size.x);
+        let (miny, maxy) = self.get_closest_boxes_range(centre.y, plot_size.y);
+        for x in minx..maxx{
+            for y in miny..maxy{
+                let plot = self.get_ploti(x, y);
+                if let Some(plot) = plot{
+                    plots.push(plot);
+                }else{
+                    return None;
+                }
+            }
+        }
+        return Some(plots);
     }
     pub fn get_blank_performance_map(pathing: &PathingMap) -> PerformanceMap{
-        let width_pixels = ARENA_SQUARE_SIZE * pathing.len();
-        let height_pixels = ARENA_SQUARE_SIZE * pathing.get(0).unwrap().len();
-        let required_performance_boxes_width = (width_pixels as f32 / PERFORMANCE_MAP_BOX_SIZE) as usize + 1;
-        let required_performance_boxes_height = (height_pixels as f32 / PERFORMANCE_MAP_BOX_SIZE) as usize + 1;
+        let width_pixels = ARENA_PLOT_SIZE * pathing.len() as f32;
+        let height_pixels = ARENA_PLOT_SIZE * pathing.get(0).unwrap().len() as f32;
+        let required_performance_boxes_width = (width_pixels / PERFORMANCE_MAP_BOX_SIZE) as usize + 1;
+        let required_performance_boxes_height = (height_pixels / PERFORMANCE_MAP_BOX_SIZE) as usize + 1;
         let mut performance_map = vec![vec![vec![]; required_performance_boxes_height]; required_performance_boxes_width]; // TODO: Real values.
         return performance_map;
     }
@@ -91,7 +188,8 @@ impl ArenaComp {
             pathing.push(vec![]);
             for y in 0..image.height(){
                 let (r,g,b,a) = image.get_pixel(x as u32, y as u32).channels4();
-                pathing.get_mut(x as usize).unwrap().push(r == 255);
+                let color = ggez::graphics::Color::from_rgba(r,g,b,a);
+                pathing.get_mut(x as usize).unwrap().push(PlotFlooring::from_color(color));
             }
         }
         let performance_map = Self::get_blank_performance_map(&pathing);
@@ -101,14 +199,14 @@ impl ArenaComp {
         }
     }
 
-    pub fn get_box_length(&self) -> usize{
-        ARENA_SQUARE_SIZE
+    pub fn get_box_length(&self) -> f32{
+        ARENA_PLOT_SIZE
     }
     pub fn get_box_size(&self) -> PointFloat{
-        PointFloat::new(ARENA_SQUARE_SIZE as f32, ARENA_SQUARE_SIZE as f32)
+        PointFloat::new(ARENA_PLOT_SIZE as f32, ARENA_PLOT_SIZE as f32)
     }
-    pub fn get_length(&self) -> usize{
-        ARENA_SQUARE_SIZE * self.pathing.len()
+    pub fn get_length(&self) -> f32{
+        ARENA_PLOT_SIZE * self.pathing.len() as f32
     }
     pub fn get_size(&self) -> PointFloat{
         PointFloat::new(self.get_length() as f32, self.get_length() as f32)
