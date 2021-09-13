@@ -20,13 +20,16 @@ use crate::rts::game::render_resources::RenderResources;
 use crate::rts::GameState;
 use std::path::Path;
 use std::borrow::Borrow;
+use ggez::conf::{WindowMode, FullscreenType};
 
 pub struct GraphicalIn {
     render_head_rec: Receiver<NetGameState>,
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
     texts: BTreeMap<&'static str, Text>,
-    resources: Option<RenderResourcesPtr> // Yes, this can be refactored.
+    resources: Option<RenderResourcesPtr>, // Yes, this can be refactored.
+    fullscreen: bool,
+    window_mode: conf::WindowMode,
 }
 pub struct GraphicalEx {
     pub input_rec: Receiver<InputChange>,
@@ -42,12 +45,19 @@ impl GraphicalEx{
         texts.insert("0_hello", text);
 
 
+        let mut window_mode = WindowMode::default();
+
+        window_mode = window_mode.dimensions(1440.0, 810.0);
+        // window_mode.resizable = true;
+        window_mode.maximized = true;
         GraphicalIn{
             render_head_rec: head_render_handle,
             my_player_id,
             input_sink,
             texts,
-            resources: None
+            resources: None,
+            fullscreen: false,
+            window_mode
         }.start();
 
         GraphicalEx{
@@ -58,8 +68,8 @@ impl GraphicalEx{
 impl GraphicalIn {
     pub fn start(mut self){
         let cb = ContextBuilder::new("Oh my literal pogger", "Atoms")
-            .window_setup(conf::WindowSetup::default().title("LiteralPoggyness"))
-            .window_mode(conf::WindowMode::default().dimensions(1440.0, 810.0)).add_resource_path("");
+            .window_setup(conf::WindowSetup::default().title("LiteralPoggyness")).window_mode(self.window_mode.clone())
+            .add_resource_path("");
 
         thread::spawn(move ||{
             let (ctx, events_loop) = &mut cb.build().unwrap();
@@ -104,6 +114,22 @@ impl EventHandler for GraphicalIn {
 
     fn key_down_event(&mut self, ctx: &mut Context, keycode: KeyCode, _keymod: KeyMods, repeat: bool) {
         if !repeat{
+            if keycode == KeyCode::F11{
+                self.fullscreen = !self.fullscreen;
+                let window = graphics::window(ctx);
+                if self.fullscreen{
+                    // self.window_mode.fullscreen_type = FullscreenType::Desktop;
+                    // self.window_mode.maximized = true;
+                }else{
+                    // self.window_mode.fullscreen_type = FullscreenType::Windowed;
+                    // self.window_mode.maximized = false;
+                }
+
+                self.window_mode.borderless = self.fullscreen;
+                graphics::set_mode(ctx, self.window_mode.clone()).unwrap();
+            }
+
+
             let send_result = self.input_sink.send(InputChange::KeyDownUp(keycode, true));
             assert!(send_result.is_ok(), "Failed to take input: {:?}", send_result);
         }

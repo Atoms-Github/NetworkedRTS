@@ -212,7 +212,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             }
         }
     }
-
+    
     let mut test_param = DrawParam::new();
     // cool_batcher.add_image("factory.jpg".to_string(), test_param, 5);
     cool_batcher.gogo_draw(ctx, res);
@@ -220,6 +220,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     if rand::thread_rng().gen_bool(1.0){
         // println!("{}", timer.stop_fmt());
     }
+
 }
 
 
