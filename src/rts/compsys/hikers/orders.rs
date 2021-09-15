@@ -144,7 +144,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
         if orders.state == OrderState::MOVING{
-            hiker.destination = Some(orders.order_target_loc.clone());
+            hiker.set_destination(orders.order_target_loc.clone());
         }
     }
     // Increment channelling timers.

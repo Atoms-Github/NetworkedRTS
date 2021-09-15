@@ -66,14 +66,14 @@ impl Default for PlotFlooring {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ArenaComp {
-    pub pathing: PathingMap,
+    pub flooring: PathingMap,
     pub performance_map: PerformanceMap,
 }
 
 
 impl ArenaComp {
     pub fn clear_performance_map(&mut self){
-        self.performance_map = Self::get_blank_performance_map(&self.pathing);
+        self.performance_map = Self::get_blank_performance_map(&self.flooring);
     }
     pub fn get_nearby_performance_map_entities(&self, position: &PointFloat, radius: f32) -> impl Iterator<Item = &GlobalEntityID>{
         // Steps:
@@ -104,9 +104,9 @@ impl ArenaComp {
         self.performance_map.get_mut(x).unwrap().get_mut(y).unwrap().push(entity);
     }
     pub fn is_box_walkable(&self, x: i32, y: i32) -> bool{ // This could be replaced by a more plotty sort.
-        if x >= 0 && x < self.pathing.len() as i32
-            && y >= 0 && y < self.pathing.get(0).unwrap().len() as i32{
-            let floor = *self.pathing.get(x as usize).unwrap().get(y as usize).unwrap();
+        if x >= 0 && x < self.flooring.len() as i32
+            && y >= 0 && y < self.flooring.get(0).unwrap().len() as i32{
+            let floor = *self.flooring.get(x as usize).unwrap().get(y as usize).unwrap();
             return floor.can_walk_over();
         }else{
             // Out map = in wall.
@@ -119,8 +119,8 @@ impl ArenaComp {
         self.get_ploti(square_coords_x, square_coords_x)
     }
     pub fn get_ploti(&self, posx: i32, posy: i32) -> Option<Plot>{
-        if posx >= 0 && posx < self.pathing.len() as i32
-            && posy >= 0 && posy < self.pathing.get(0).unwrap().len() as i32{
+        if posx >= 0 && posx < self.flooring.len() as i32
+            && posy >= 0 && posy < self.flooring.get(0).unwrap().len() as i32{
             return Some(Plot::new(posx as usize, posy as usize));
         }else{
             return None;
@@ -157,11 +157,14 @@ impl ArenaComp {
         }
     }
     pub fn set_flooring(&mut self, coords: &Plot, floor: PlotFlooring){
-        let flooring = self.pathing.get_mut(coords.x).unwrap().get_mut(coords.y).unwrap();
+        let flooring = self.flooring.get_mut(coords.x).unwrap().get_mut(coords.y).unwrap();
         *flooring = floor;
     }
     pub fn get_flooring(&self, coords: &Plot) -> PlotFlooring {
-        return *self.pathing.get(coords.x).unwrap().get(coords.y).unwrap();
+        return *self.flooring.get(coords.x).unwrap().get(coords.y).unwrap();
+    }
+    pub fn pathfind(&mut self, start: PointFloat, end: PointFloat) -> Vec<PointFloat>{
+        return vec![PointFloat::new(0.0,0.0)];
     }
     pub fn get_plot_boxes(&self, centre: PointFloat, plot_size: PlotSize) -> Option<Vec<Plot>>{
         let mut plots = vec![];
@@ -202,7 +205,7 @@ impl ArenaComp {
         }
         let performance_map = Self::get_blank_performance_map(&pathing);
         Self{
-            pathing,
+            flooring: pathing,
             performance_map,
         }
     }
@@ -214,7 +217,7 @@ impl ArenaComp {
         PointFloat::new(ARENA_PLOT_SIZE as f32, ARENA_PLOT_SIZE as f32)
     }
     pub fn get_length(&self) -> f32{
-        ARENA_PLOT_SIZE * self.pathing.len() as f32
+        ARENA_PLOT_SIZE * self.flooring.len() as f32
     }
     pub fn get_size(&self) -> PointFloat{
         PointFloat::new(self.get_length() as f32, self.get_length() as f32)

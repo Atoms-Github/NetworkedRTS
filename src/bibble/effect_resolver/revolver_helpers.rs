@@ -51,7 +51,8 @@ impl<'a> Revolver<'a>{
             SelectableComp{ is_selected: false },
             OrdersComp{ orders_queue: vec![], state: OrderState::NONE, order_target_loc: PointFloat::new(0.0,0.0) },
             HikerComp{
-                destination: None,
+                waypoints: vec![],
+                route_calc_cooldown: 0,
                 speed,
                 quest_importance: 0
             },
