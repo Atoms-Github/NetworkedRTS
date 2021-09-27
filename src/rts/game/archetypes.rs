@@ -81,7 +81,7 @@ impl PendingEntity{
     }
     pub fn new_arena() -> Self{
         Self::new1(
-            ArenaComp::load("maps/64x64_circle_arena.png".to_string()),
+            ArenaComp::load("maps/map_32x32.png".to_string()),
         )
     }
 }

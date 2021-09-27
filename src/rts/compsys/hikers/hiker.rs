@@ -40,8 +40,8 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
                 hiker.route_calc_cooldown -= 1;
                 if hiker.route_calc_cooldown == 0{
                     assert_eq!(hiker.waypoints.len(), 1);
-                    hiker.waypoints = arena.pathfind(position.pos.clone(), hiker.waypoints.get(0).unwrap().clone());
-                    // TODO: Populate waypoints.
+                    // breaking. Hardcoded berth.
+                    hiker.waypoints = arena.pathfind(position.pos.clone(), hiker.waypoints.get(0).unwrap().clone(), 10.0);
                 }
             }
         }

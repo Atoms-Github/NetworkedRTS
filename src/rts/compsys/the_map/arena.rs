@@ -10,11 +10,13 @@ use image::Pixel;
 use mopa::Any;
 use serde::*;
 use ggez::graphics::Color;
+use crate::rts::game::pathgrinder::PathGrinder;
+use crate::rts::game::scaled_grid::ScaledGrid;
 
 pub const ARENA_PLOT_SIZE: f32 = 50.0;
 pub const PERFORMANCE_MAP_BOX_SIZE: f32 = 100.0;
-pub type PathingMap = Vec<Vec<PlotFlooring>>;
-pub type PerformanceMap = Vec<Vec<Vec<GlobalEntityID>>>;
+pub type PathingMap = ScaledGrid<PlotFlooring>;
+pub type PerformanceMap = ScaledGrid<Vec<GlobalEntityID>>;
 
 
 pub type Plot = nalgebra::Point2<usize>; // A Plot is a valid box on the map.
@@ -68,6 +70,7 @@ impl Default for PlotFlooring {
 pub struct ArenaComp {
     pub flooring: PathingMap,
     pub performance_map: PerformanceMap,
+    pub pathgrinder: PathGrinder,
 }
 
 
@@ -163,7 +166,9 @@ impl ArenaComp {
     pub fn get_flooring(&self, coords: &Plot) -> PlotFlooring {
         return *self.flooring.get(coords.x).unwrap().get(coords.y).unwrap();
     }
-    pub fn pathfind(&mut self, start: PointFloat, end: PointFloat) -> Vec<PointFloat>{
+    pub fn pathfind(&mut self, start: PointFloat, end: PointFloat, unit_berth: f32) -> Vec<PointFloat>{
+
+        let results = self.pathgrinder.pathfind(, start, end, unit_berth);
         return vec![PointFloat::new(0.0,0.0)];
     }
     pub fn get_plot_boxes(&self, centre: PointFloat, plot_size: PlotSize) -> Option<Vec<Plot>>{
@@ -207,6 +212,7 @@ impl ArenaComp {
         Self{
             flooring: pathing,
             performance_map,
+            pathgrinder: PathGrinder {}
         }
     }
 
