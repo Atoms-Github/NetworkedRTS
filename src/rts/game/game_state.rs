@@ -89,13 +89,13 @@ impl GameState {
     pub fn player_disconnects(&mut self, player_id: PlayerID){
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;
     }
-    pub fn simulate_tick(&mut self, inputs: PlayerInputs, sim_quality: SimQuality, delta: f32, frame_index: FrameIndex){
+    pub fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata){
         for (player_id, input_state) in inputs{
             if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(player_id as GlobalEntityID){
                 existing_player.inputs.update_input_state(input_state);
             }
         }
-        self.ecs.sim_systems(sim_quality);
+        self.ecs.sim_systems(sim_meta);
     }
     pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
         crate::rts::compsys::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);

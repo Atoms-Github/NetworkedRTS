@@ -96,7 +96,12 @@ impl LogicSimTailer{
             log::info!("Tail simming frame {} with server events: {:?} and {} player inputs",self.game_state.get_simmed_frame_index() + 1, sim_data.server_events, sim_data.inputs_map.len());
         }
         let timer = DT::start("Tail sim time");
-        self.game_state.simulate_tick(sim_data, SimQuality::DETERMA, FRAME_DURATION_MILLIS);
+        let metadata = SimMetadata{
+            delta: FRAME_DURATION_MILLIS,
+            quality: SimQuality::DETERMA,
+            frame_index: self.game_state.get_simmed_frame_index() + 1,
+        };
+        self.game_state.simulate_tick(sim_data, &metadata);
         log::debug!("TSimSuc: {}", self.game_state.get_simmed_frame_index());
         timer.stop_warn(2000);
         self.update_hash();

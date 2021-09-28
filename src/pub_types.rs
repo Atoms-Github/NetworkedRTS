@@ -15,6 +15,11 @@ pub type FrameIndex = usize;
 pub type RenderResourcesPtr = Arc<RenderResources>;
 pub type GridBox = nalgebra::Vector2<i32>;
 
+pub struct SimMetadata{
+    pub delta: f32,
+    pub quality: SimQuality,
+    pub frame_index: FrameIndex,
+}
 
 #[derive(PartialEq)]
 pub enum SimQuality{

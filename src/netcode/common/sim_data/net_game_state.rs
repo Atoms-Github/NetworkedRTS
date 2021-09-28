@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use crate::rts::GameState;
-use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQuality};
+use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQuality, SimMetadata};
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
@@ -89,7 +89,7 @@ impl NetGameState {
         net_state.game_state.init();
         return net_state;
     }
-    pub fn simulate_tick(&mut self, sim_info: InfoForSim, quality: SimQuality, delta: f32){
+    pub fn simulate_tick(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
         for server_event in &sim_info.server_events{
             match server_event{
                 ServerEvent::JoinPlayer(player_id, name, shade) => {
@@ -101,7 +101,7 @@ impl NetGameState {
                 }
             }
         }
-        self.game_state.simulate_tick(sim_info.inputs_map, quality, delta, self.simmed_frame_index);
+        self.game_state.simulate_tick(sim_info.inputs_map, sim_meta);
         self.simmed_frame_index += 1;
 
 

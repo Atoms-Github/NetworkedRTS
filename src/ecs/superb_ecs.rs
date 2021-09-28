@@ -24,25 +24,25 @@ impl SuperbEcs{
     pub fn set_systems(&mut self, systems: Vec<System>){
         self.systems = systems;
     }
-    pub fn sim_systems(&mut self, quality: SimQuality){
+    pub fn sim_systems(&mut self, meta: &SimMetadata){
         let mut pending_changes = EntStructureChanges{
             new_entities: vec![],
             deleted_entities: vec![]
         };
 
         for system in &self.systems{
-            if quality == SimQuality::DETERMA{
+            if meta.quality == SimQuality::DETERMA{
                 self.debug_times.start_timer(String::from(system.name));
             }
             (system.run)(&mut self.c, &mut pending_changes);
 
-            if quality == SimQuality::DETERMA{
+            if meta.quality == SimQuality::DETERMA{
                 self.debug_times.stop_timer(String::from(system.name));
             }
         }
         pending_changes.apply(&mut self.c);
 
-        if quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.1){
+        if meta.quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.1){
             // self.debug_times.print_all();
             // println!("Entities: {}", self.c.get_entity_count());
         }
@@ -163,7 +163,7 @@ use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
 use crate::ecs::pending_entity::PendingEntity;
-use crate::pub_types::SimQuality;
+use crate::pub_types::{SimMetadata, SimQuality};
 use crate::ecs::ecs_debug_timer::EcsDebugTimer;
 use rand::Rng;
 

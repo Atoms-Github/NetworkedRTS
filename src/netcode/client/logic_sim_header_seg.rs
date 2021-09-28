@@ -96,7 +96,12 @@ impl LogicSimHeaderIn {
 }
 fn calculate_new_head(mut sim_packet: HeadSimPacket) -> NetGameState {
     for sim_info in sim_packet.sim_data{
-        sim_packet.game_state.simulate_tick(sim_info, SimQuality::HEAD, FRAME_DURATION_MILLIS);
+        let metadata = SimMetadata{
+            delta: FRAME_DURATION_MILLIS,
+            quality: SimQuality::HEAD,
+            frame_index: sim_packet.game_state.get_simmed_frame_index() + 1,
+        };
+        sim_packet.game_state.simulate_tick(sim_info, &metadata );
     }
     return sim_packet.game_state;
 }
