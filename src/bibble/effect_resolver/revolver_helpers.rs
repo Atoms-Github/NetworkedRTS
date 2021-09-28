@@ -31,17 +31,18 @@ impl<'a> Revolver<'a>{
                 time_since_use: 0.0
             }}).collect(),
         };
-        abilities_comp.abilities.push(AbilityInstance{
-            id: AbilityID::ATTACK_GROUND,
-            time_since_use: 0.0
-        });
-        abilities_comp.abilities.push(AbilityInstance{
-            id: AbilityID::WALK,
-            time_since_use: 0.0
-        });
+
         let mut speed = 0.0;
         if let UnitFlavour::HIKER(hiker_info) = &mould.unit_flavour{
             speed = hiker_info.movespeed;
+            abilities_comp.abilities.push(AbilityInstance{
+                id: AbilityID::ATTACK_GROUND,
+                time_since_use: 0.0
+            });
+            abilities_comp.abilities.push(AbilityInstance{
+                id: AbilityID::WALK,
+                time_since_use: 0.0
+            });
         }
 
         let mut pending = PendingEntity::new7(
