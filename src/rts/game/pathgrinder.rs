@@ -49,6 +49,9 @@ impl PathGrinder{
 
         let start = grid.get_grid_coord(&start_pos);
         let end = grid.get_grid_coord(&end_pos);
+        if start == end{
+            return vec![end_pos];
+        }
 
         // Includes source box too.
         let mut visited_boxes : HashMap<GridBox, GridBox> = HashMap::new();
@@ -68,9 +71,7 @@ impl PathGrinder{
                     // Now reconstruct the path.
                     let mut path = backtrack_path(end, grid, visited_boxes);
                     path.push(end_pos);
-                    if path.len() > 1{ // TODO: Messyish.
-                        path.remove(0); // Remove the first box. Don't need to go to centre.
-                    }
+                    path.remove(0); // Remove the first box. Don't need to go to centre.
                     return path;
                 }
             }
