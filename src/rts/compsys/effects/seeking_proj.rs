@@ -23,7 +23,7 @@ pub static SEEKING_PROJECTILES_COMP: System = System{
     run,
     name: "seeking_projectiles"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     let mut revolver = Revolver::new(c);
     for (proj_id, seeking_proj, position, owner) in
     CompIter3::<SeekingProjComp, PositionComp, OwnedComp>::new(c){

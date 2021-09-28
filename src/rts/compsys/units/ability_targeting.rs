@@ -15,7 +15,7 @@ pub static ABILITY_TARGETING: System = System{
     run,
     name: "ability_targeting"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     // Check for starting ability targetting:
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         if let RtsKeyEvent::KeyDown(down_key) = input.inputs.key_event{

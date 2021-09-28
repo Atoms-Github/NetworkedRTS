@@ -52,7 +52,7 @@ pub static ABILITIES_SYS: System = System{
     run,
     name: "abilities"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     // Increment time since use timers.
     for (unit_id, abilities)
     in CompIter1::<AbilitiesComp>::new(c) {

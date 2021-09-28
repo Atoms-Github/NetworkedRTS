@@ -72,7 +72,7 @@ pub static ORDERS_SYS: System = System{
     run,
     name: "orders"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
 
     // Check for dead target.
     for (unit_id, owned, orders, position, hiker)
@@ -142,15 +142,18 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
         if orders.state == OrderState::MOVING{
-            // TODO: If frame count % 10 == 0 too.
-            // Only set new destination if target has moved (since pathfinding is expensive).
-            let mut should_update = true;
+            let is_rare_frame = meta.frame_index % 10 == 0;
+            let already_has_destination = hiker.get_destination().is_some();
+            let mut destination_matches = false;
             if let Some(existing_destination) = hiker.get_destination(){
                 if existing_destination == orders.executing_order_target_loc{
-                    should_update = false;
+                    destination_matches = true;
                 }
             }
-            if should_update{
+            // What we want:
+            // If no destination set, or (10th frame and target moved),
+            // then update destination. Pathfindng is expensive.
+            if !already_has_destination || (is_rare_frame && !destination_matches){
                 hiker.set_destination(orders.executing_order_target_loc.clone(), 128);
             }
         }

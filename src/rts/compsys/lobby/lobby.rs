@@ -23,7 +23,7 @@ pub static LOBBY_SYS: System = System{
     run,
     name: "lobby"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     let scene = c.find_scene();
     for (lobby_id, lobby) in CompIter1::<LobbyManager>::new(c){
         lobby.game_start_cooldown -= crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;

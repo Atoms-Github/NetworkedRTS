@@ -21,7 +21,7 @@ pub static SHOOT_MOUSE_SYS: System = System{
 // Macros: eget!(); to get variable nubmer of compoentns.
 // query_id!();
 // query!();
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     // for (id, shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
     //     let input_state = &c.get::<InputComp>(owned.owner).unwrap().inputs.primitive;
     //

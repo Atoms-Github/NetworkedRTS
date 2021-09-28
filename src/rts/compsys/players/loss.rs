@@ -15,7 +15,7 @@ pub static LOSS_SYS: System = System{
     run,
     name: "loss"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     let scene = c.find_scene();
 
     let mut alive_players = 0;

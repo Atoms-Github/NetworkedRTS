@@ -20,7 +20,7 @@ pub static RACE_BUTTON_SYS: System = System{
     run,
     name: "race_button_sys"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     for (button_id, button, race_button) in CompIter2::<ButtonComp, RaceButtonComp>::new(c){
         if let Some(player_id) = button.clicking_on{
             c.get_mut_unwrap::<PlayerComp>(player_id).race = race_button.race;

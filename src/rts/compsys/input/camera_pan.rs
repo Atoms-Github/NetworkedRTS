@@ -37,7 +37,7 @@ pub static CAMERA_PAN_SYS: System = System{
     run,
     name: "camera_pan"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
         if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
             input.is_panning = true;

@@ -12,7 +12,7 @@ pub static INPUT_PREPROC: System = System{
     run,
     name: "input_preproc"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
         input.mouse_pos_game_world = camera.screen_space_to_game_space(input.inputs.primitive.get_mouse_loc().clone());
         input.hovered_entity = None;

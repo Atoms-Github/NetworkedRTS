@@ -12,7 +12,7 @@ pub static VELOCITY_SYS: System = System{
     run,
     name: "velocity"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     for (entity_id, velocity, position) in CompIter2::<VelocityComp, PositionComp>::new(c){
         position.pos += &velocity.vel;
     }

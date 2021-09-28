@@ -14,7 +14,7 @@ pub static BUTTON_SYS: System = System{
     run,
     name: "button"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     // Clear all clicking ons.
     for (button_id, button) in CompIter1::<ButtonComp>::new(c){
         button.clicking_on = None;

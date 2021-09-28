@@ -22,7 +22,7 @@ pub static WEAPON_SYS: System = System{
     run,
     name: "weapon"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
 
     // Check for move commands.
     for (player_id, inputs) in CompIter1::<InputComp>::new(c) {

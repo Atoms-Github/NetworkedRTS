@@ -20,7 +20,7 @@ pub static LIFE_SYS: System = System{
     run,
     name: "life"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     for (unit_id, life) in CompIter1::<LifeComp>::new(c) {
         if life.life <= 0.0{
             ent_changes.deleted_entities.push(unit_id);

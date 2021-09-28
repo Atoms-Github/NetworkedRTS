@@ -39,7 +39,7 @@ pub static SCENE_SWITCHER_SYS: System = System{
     run,
     name: "scene_switcher"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges) {
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     let scene = c.get_mut_unwrap::<SceneManager>(SCENE_MAN_ENT_ID);
     // Update current connected player count:
     scene.connected_players = 0;

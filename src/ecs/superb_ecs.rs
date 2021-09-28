@@ -34,7 +34,7 @@ impl SuperbEcs{
             if meta.quality == SimQuality::DETERMA{
                 self.debug_times.start_timer(String::from(system.name));
             }
-            (system.run)(&mut self.c, &mut pending_changes);
+            (system.run)(&mut self.c, &mut pending_changes, meta);
 
             if meta.quality == SimQuality::DETERMA{
                 self.debug_times.stop_timer(String::from(system.name));
@@ -60,7 +60,7 @@ impl Clone for SuperbEcs{
 }
 
 pub struct System{
-    pub run: fn(&mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges),
+    pub run: fn(&mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges, &SimMetadata),
     pub name: &'static str,
 }
 pub struct EntStructureChanges{

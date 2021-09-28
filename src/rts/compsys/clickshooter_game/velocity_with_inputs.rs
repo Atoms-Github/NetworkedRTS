@@ -13,7 +13,7 @@ pub static VELOCITY_WITH_INPUTS_SYS: System = System{
     run,
     name: "velocity_with_inputs"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     for (ent, velocity, velocity_with_inputs, owned) in
     CompIter3::<VelocityComp, VelocityWithInputsComp, OwnedComp>::new(c){
         let my_inputs = &c.get::<InputComp>(owned.owner).unwrap().inputs.primitive;

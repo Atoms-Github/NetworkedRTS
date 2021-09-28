@@ -19,7 +19,7 @@ pub static PERFORMANCE_MAP: System = System{
     run,
     name: "orders"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
+fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     if let Some(arena) = c.find_arena(){
         arena.clear_performance_map();
         for (unit_id, position, owned, life)
