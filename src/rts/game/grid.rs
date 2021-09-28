@@ -1,7 +1,7 @@
 use serde::*;
 use serde::de::DeserializeOwned;
 
-pub type GridBox = nalgebra::Vector2<i32>;
+use crate::pub_types::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Grid<T>{
@@ -26,13 +26,43 @@ impl<T: Serialize + DeserializeOwned + Clone + Default> Grid<T>{
     pub fn get_unwrap(&self, target: &GridBox) -> &T{
         return self.data.get(target.x as usize).unwrap().get(target.y as usize).unwrap();
     }
+    pub fn get(&self, target: &GridBox) -> Option<&T>{
+        // Could be simplified?
+        if let Some(item) = self.data.get(target.x as usize){
+            return item.get(target.y as usize);
+        }
+        return None;
+    }
+    pub fn get_mut(&mut self, target: &GridBox) -> Option<&mut T>{
+        // Could be simplified?
+        if let Some(column) = self.data.get_mut(target.x as usize){
+            return column.get_mut(target.y as usize);
+        }
+        return None;
+    }
     pub fn set(&mut self, target: &GridBox, value: T){
         if self.is_valid(target){
             *self.data.get_mut(target.x as usize).unwrap().get_mut(target.y as usize).unwrap() = value;
         }
     }
-    pub fn iter_square(){
+    pub fn iter_square(&self, top_left: GridBox, bottom_right: GridBox) -> GridIter<T>{
+        return GridIter::new(self, top_left, bottom_right);
+    }
+    pub fn iter_all(&self) -> GridIter<T>{
+        self.iter_square(GridBox::new(0,0), GridBox::new(self.len_x() as i32 - 1, self.len_y() as i32 - 1))
+    }
 
+    pub fn raw(&self) -> &Vec<Vec<T>>{
+        return &self.data;
+    }
+    pub fn raw_mut(&mut self) -> &mut Vec<Vec<T>>{
+        return &mut self.data;
+    }
+    pub fn resize_to_fit(&mut self, bottom_right: &GridBox){
+        self.data.resize(bottom_right.x as usize + 1, vec![]);
+        for column in &mut self.data{
+            column.resize(bottom_right.y as usize + 1, T::default());
+        }
     }
 }
 pub struct GridIter<'a, T>{
@@ -69,3 +99,6 @@ impl<'a, T : 'static> Iterator for GridIter<'a, T> {
         }
     }
 }
+
+
+

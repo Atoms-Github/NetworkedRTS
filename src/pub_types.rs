@@ -13,6 +13,8 @@ pub type PointFloat = nalgebra::VectorN<f32, U2>;
 pub type HashType = u64;
 pub type FrameIndex = usize;
 pub type RenderResourcesPtr = Arc<RenderResources>;
+pub type GridBox = nalgebra::Vector2<i32>;
+
 
 #[derive(PartialEq)]
 pub enum SimQuality{

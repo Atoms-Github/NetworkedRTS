@@ -56,15 +56,13 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         let small_size =  player_camera.game_size_to_screen_size(
             PointFloat::new(arena_comp.get_box_length() as f32 - 1.0, arena_comp.get_box_length() as f32 - 1.0)
         );
-        for x in 0..arena_comp.flooring.len(){
-            for y in 0..arena_comp.flooring[x].len(){
-                let small_top_left_game = PointFloat::new(x as f32 * arena_comp.get_box_length(),
-                                                     y as f32 * arena_comp.get_box_length()) + &base_pos_game;
-                let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
-                let color = arena_comp.flooring[x][y].get_color().to_color();
-                let rect = graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y);
-                cool_batcher.add_rectangle_rect(rect, color, 50);
-            }
+        for (grid_box, floor) in arena_comp.flooring.grid.iter_all(){
+            let small_top_left_game = PointFloat::new(grid_box.x as f32 * arena_comp.get_box_length(),
+                                                      grid_box.y as f32 * arena_comp.get_box_length()) + &base_pos_game;
+            let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
+            let color = floor.get_color().to_color();
+            let rect = graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y);
+            cool_batcher.add_rectangle_rect(rect, color, 50);
         }
     }
     // Draw entities.

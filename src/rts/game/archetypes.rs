@@ -80,8 +80,10 @@ impl PendingEntity{
         )
     }
     pub fn new_arena() -> Self{
+        let mut arena = ArenaComp::new();
+        arena.load_map("maps/map_32x32.png".to_string());
         Self::new1(
-            ArenaComp::load("maps/map_32x32.png".to_string()),
+            arena,
         )
     }
 }

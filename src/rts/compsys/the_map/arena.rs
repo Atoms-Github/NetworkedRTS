@@ -12,14 +12,12 @@ use serde::*;
 use ggez::graphics::Color;
 use crate::rts::game::pathgrinder::PathGrinder;
 use crate::rts::game::scaled_grid::ScaledGrid;
+use crate::rts::game::grid::{Grid};
 
 pub const ARENA_PLOT_SIZE: f32 = 50.0;
 pub const PERFORMANCE_MAP_BOX_SIZE: f32 = 100.0;
-pub type PathingMap = ScaledGrid<PlotFlooring>;
-pub type PerformanceMap = ScaledGrid<Vec<GlobalEntityID>>;
 
 
-pub type Plot = nalgebra::Point2<usize>; // A Plot is a valid box on the map.
 pub type PlotSize = nalgebra::Point2<u8>;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
@@ -68,15 +66,20 @@ impl Default for PlotFlooring {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ArenaComp {
-    pub flooring: PathingMap,
-    pub performance_map: PerformanceMap,
+    pub flooring: ScaledGrid<PlotFlooring>,
+    pub pathing: ScaledGrid<bool>,
+    pub performance_map: ScaledGrid<Vec<GlobalEntityID>>,
     pub pathgrinder: PathGrinder,
 }
 
 
 impl ArenaComp {
     pub fn clear_performance_map(&mut self){
-        self.performance_map = Self::get_blank_performance_map(&self.flooring);
+        for column in self.performance_map.grid.raw_mut(){
+            for square in column{
+                square.clear();
+            }
+        }
     }
     pub fn get_nearby_performance_map_entities(&self, position: &PointFloat, radius: f32) -> impl Iterator<Item = &GlobalEntityID>{
         // Steps:
@@ -89,8 +92,8 @@ impl ArenaComp {
             for y_offset in -out_in_each_direction..out_in_each_direction + 1{
                 let box_x = (position.x / PERFORMANCE_MAP_BOX_SIZE) as i32 + x_offset;
                 let box_y = (position.y / PERFORMANCE_MAP_BOX_SIZE) as i32 + y_offset;
-                if box_x >= 0 && box_x < self.performance_map.len() as i32{
-                    let column = self.performance_map.get(box_x as usize).unwrap();
+                if box_x >= 0 && box_x < self.performance_map.grid.len_x() as i32{
+                    let column = self.performance_map.grid.raw().get(box_x as usize).unwrap();
                     if box_y >= 0 && box_y < column.len() as i32{
                         let mut square = column.get(box_y as usize).unwrap();
                         matching_boxes.push(square);
@@ -102,32 +105,16 @@ impl ArenaComp {
         return iter;
     }
     pub fn register_performance_map_entity(&mut self, entity: GlobalEntityID, position: &PointFloat){
-        let x = (position.x / PERFORMANCE_MAP_BOX_SIZE) as usize;
-        let y = (position.y / PERFORMANCE_MAP_BOX_SIZE) as usize;
-        self.performance_map.get_mut(x).unwrap().get_mut(y).unwrap().push(entity);
+        self.performance_map.get_by_point_mut(position).unwrap().push(entity);
     }
-    pub fn is_box_walkable(&self, x: i32, y: i32) -> bool{ // This could be replaced by a more plotty sort.
-        if x >= 0 && x < self.flooring.len() as i32
-            && y >= 0 && y < self.flooring.get(0).unwrap().len() as i32{
-            let floor = *self.flooring.get(x as usize).unwrap().get(y as usize).unwrap();
-            return floor.can_walk_over();
-        }else{
-            // Out map = in wall.
-            return true;
-        }
+    pub fn is_point_walkable(&self, loc: &PointFloat) -> bool{
+        return *self.pathing.get_by_point(loc).unwrap_or(&false);
     }
-    pub fn get_plot(&self, position: &PointFloat) -> Option<Plot>{
-        let square_coords_x = (position.x / ARENA_PLOT_SIZE).floor() as i32;
-        let square_coords_y = (position.y / ARENA_PLOT_SIZE).floor() as i32;
-        self.get_ploti(square_coords_x, square_coords_x)
+    pub fn is_box_walkable(&self, loc: &GridBox) -> bool{
+        return *self.pathing.get(loc).unwrap_or(&false);
     }
-    pub fn get_ploti(&self, posx: i32, posy: i32) -> Option<Plot>{
-        if posx >= 0 && posx < self.flooring.len() as i32
-            && posy >= 0 && posy < self.flooring.get(0).unwrap().len() as i32{
-            return Some(Plot::new(posx as usize, posy as usize));
-        }else{
-            return None;
-        }
+    pub fn get_plot(&self, position: &PointFloat) -> Option<GridBox>{
+        return self.flooring.get_grid_coord_maybe(position);
     }
     // pub fn pos_in_wall(&self, position: &PointFloat) -> bool{
     //     if let Some(plot) = self.get_plot(position){
@@ -140,6 +127,7 @@ impl ArenaComp {
     //     return *self.pathing.get(plot.x).unwrap().get(plot.y).unwrap() == PlotFlooring::WALL;
     // }
     fn get_closest_boxes_range(&self, centre: f32, size: u8) -> (i32, i32){
+        // TODO: There's probably a 1 liner much easier way of doing this.
         let centre_coord = (centre / ARENA_PLOT_SIZE).floor() as i32;
         if size % 2 == 0{
             if size == 0{
@@ -159,61 +147,61 @@ impl ArenaComp {
             return (centre_coord - in_each_direction, centre_coord + in_each_direction + 1 /*Top exclusive*/)
         }
     }
-    pub fn set_flooring(&mut self, coords: &Plot, floor: PlotFlooring){
-        let flooring = self.flooring.get_mut(coords.x).unwrap().get_mut(coords.y).unwrap();
-        *flooring = floor;
+    pub fn set_flooring(&mut self, coords: &GridBox, floor: PlotFlooring){
+        self.pathing.grid.set(&coords, floor.can_walk_over());
+        self.flooring.grid.set(&coords, floor);
     }
-    pub fn get_flooring(&self, coords: &Plot) -> PlotFlooring {
-        return *self.flooring.get(coords.x).unwrap().get(coords.y).unwrap();
+    pub fn get_flooring(&self, coords: &GridBox) -> PlotFlooring {
+        return self.flooring.get_unwrap(coords).clone();
     }
     pub fn pathfind(&mut self, start: PointFloat, end: PointFloat, unit_berth: f32) -> Vec<PointFloat>{
-
-        let results = self.pathgrinder.pathfind(, start, end, unit_berth);
-        return vec![PointFloat::new(0.0,0.0)];
+        let results = self.pathgrinder.pathfind(&self.pathing, start, end, unit_berth);
+        return results;
     }
-    pub fn get_plot_boxes(&self, centre: PointFloat, plot_size: PlotSize) -> Option<Vec<Plot>>{
-        let mut plots = vec![];
+    pub fn get_plot_boxes(&self, centre: PointFloat, plot_size: PlotSize) -> Option<Vec<GridBox>>{
+        let mut boxes = vec![];
         let (minx, maxx) = self.get_closest_boxes_range(centre.x, plot_size.x);
         let (miny, maxy) = self.get_closest_boxes_range(centre.y, plot_size.y);
-        for x in minx..maxx{
-            for y in miny..maxy{
-                let plot = self.get_ploti(x, y);
-                if let Some(plot) = plot{
-                    plots.push(plot);
-                }else{
-                    return None;
-                }
+
+        let top_left = GridBox::new(minx, miny);
+        let bottom_right = GridBox::new(maxx, maxy);
+        if self.flooring.grid.is_valid(&top_left) && self.flooring.grid.is_valid(&bottom_right){
+            for (gridbox, flooring) in
+            self.flooring.grid.iter_square(top_left, bottom_right){
+                boxes.push(gridbox);
             }
+        }else{
+            return None;
         }
-        return Some(plots);
+        return Some(boxes);
     }
-    pub fn get_blank_performance_map(pathing: &PathingMap) -> PerformanceMap{
-        let width_pixels = ARENA_PLOT_SIZE * pathing.len() as f32;
-        let height_pixels = ARENA_PLOT_SIZE * pathing.get(0).unwrap().len() as f32;
-        let required_performance_boxes_width = (width_pixels / PERFORMANCE_MAP_BOX_SIZE) as usize + 1;
-        let required_performance_boxes_height = (height_pixels / PERFORMANCE_MAP_BOX_SIZE) as usize + 1;
-        let mut performance_map = vec![vec![vec![]; required_performance_boxes_height]; required_performance_boxes_width]; // TODO: Real values.
-        return performance_map;
+    pub fn new() -> Self{
+        Self{
+            flooring: ScaledGrid::new(ARENA_PLOT_SIZE),
+            pathing: ScaledGrid::new(ARENA_PLOT_SIZE),
+            performance_map: ScaledGrid::new( PERFORMANCE_MAP_BOX_SIZE),
+            pathgrinder: PathGrinder {}
+        }
     }
-    pub fn load(filepath: String) -> Self{
+    pub fn load_map(&mut self, filepath: String){
         let mut lock = crate::rts::game::game_resources::GAME_RESOURCES.lock().unwrap();
         let image = lock.get_image(filepath);
-        let mut pathing = vec![];
-        assert_eq!(image.height(), image.width(), "Not supported! (yet maybe)");
+
+        let bottom_right_corner = GridBox::new(image.width() as i32 - 1, image.height() as i32 - 1);
+        self.flooring.grid.resize_to_fit(&bottom_right_corner);
+        self.pathing.grid.resize_to_fit(&bottom_right_corner);
         for x in 0..image.width(){
-            pathing.push(vec![]);
             for y in 0..image.height(){
                 let (r,g,b,a) = image.get_pixel(x as u32, y as u32).channels4();
                 let color = ggez::graphics::Color::from_rgba(r,g,b,a);
-                pathing.get_mut(x as usize).unwrap().push(PlotFlooring::from_color(color));
+                let flooring = PlotFlooring::from_color(color);
+                self.set_flooring(&GridBox::new(x as i32, y as i32), flooring);
             }
         }
-        let performance_map = Self::get_blank_performance_map(&pathing);
-        Self{
-            flooring: pathing,
-            performance_map,
-            pathgrinder: PathGrinder {}
-        }
+        self.performance_map.grid.resize_to_fit(&GridBox::new(
+            (self.pathing.get_scaled_width() / PERFORMANCE_MAP_BOX_SIZE) as i32,
+            (self.pathing.get_scaled_height() / PERFORMANCE_MAP_BOX_SIZE) as i32
+        ));
     }
 
     pub fn get_box_length(&self) -> f32{
@@ -223,7 +211,7 @@ impl ArenaComp {
         PointFloat::new(ARENA_PLOT_SIZE as f32, ARENA_PLOT_SIZE as f32)
     }
     pub fn get_length(&self) -> f32{
-        ARENA_PLOT_SIZE * self.flooring.len() as f32
+        return self.flooring.get_scaled_width();
     }
     pub fn get_size(&self) -> PointFloat{
         PointFloat::new(self.get_length() as f32, self.get_length() as f32)

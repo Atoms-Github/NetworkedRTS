@@ -13,16 +13,27 @@ use mopa::Any;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct HikerComp { // Walks comp, but includes fliers and sailers too.
-    pub waypoints: Vec<PointFloat>,
-    pub route_calc_cooldown: i32, // To stutter units performing pathfinding across multiple frames.
+    state: HikerPathState,
     pub speed: f32,
     pub quest_importance: u8,
 }
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+enum HikerPathState{
+    PENDING_PATHFIND{route_calc_cooldown: i32, destination: PointFloat},
+    GOT_PATH{path: Vec<PointFloat>},
+    STATIONARY,
+}
 impl HikerComp{
-    pub fn set_destination(&mut self, target: PointFloat){
-        self.waypoints.clear();
-        self.waypoints.push(target);
-        self.route_calc_cooldown = 1;
+    pub fn new(speed: f32) -> Self{
+        Self{
+            state: HikerPathState::STATIONARY,
+            speed,
+            quest_importance: 0
+        }
+    }
+    pub fn set_destination(&mut self, target: PointFloat, quest_importance: u8){
+        self.state = HikerPathState::PENDING_PATHFIND { route_calc_cooldown: 1, destination: target };
+        self.quest_importance = quest_importance;
     }
 }
 
@@ -36,33 +47,36 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
         // Calculating waypoints.
         for (unit_id, hiker, position, order) in
         CompIter3::<HikerComp, PositionComp, OrdersComp>::new(c) {
-            if order.state == OrderState::MOVING{
-                hiker.route_calc_cooldown -= 1;
-                if hiker.route_calc_cooldown == 0{
-                    assert_eq!(hiker.waypoints.len(), 1);
+            if let HikerPathState::PENDING_PATHFIND { route_calc_cooldown, destination } = &mut hiker.state{
+                *route_calc_cooldown -= 1;
+            }
+            if let HikerPathState::PENDING_PATHFIND { route_calc_cooldown, destination } = hiker.state.clone(){
+                if route_calc_cooldown == 0{
                     // breaking. Hardcoded berth.
-                    hiker.waypoints = arena.pathfind(position.pos.clone(), hiker.waypoints.get(0).unwrap().clone(), 10.0);
+                    let path = arena.pathfind(position.pos.clone(), destination.clone(), 10.0);
+                    hiker.state = HikerPathState::GOT_PATH { path }
                 }
             }
         }
         // Move units towards their target.
         for (unit_id, hiker, position, order) in
         CompIter3::<HikerComp, PositionComp, OrdersComp>::new(c) {
-            if order.state == OrderState::MOVING{
-                let mut made_destination = false;
-                if let Some(destination) = hiker.waypoints.first(){
-                    let dist_can_move = hiker.speed * crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
-                    if (destination.clone() - &position.pos).magnitude() < dist_can_move{
-                        position.pos = destination.clone();
-                        made_destination = true;
-                    }else{
-                        position.pos += (destination.clone() - &position.pos).normalize().mul(dist_can_move);
-                    }
+            let mut straight_towards : Option<PointFloat> = match &hiker.state{
+                HikerPathState::PENDING_PATHFIND {  destination , ..} => {
+                    let point : PointFloat = destination.clone();
+                    Some(point)
                 }
-                if made_destination{
-                    hiker.waypoints.remove(0);
+                HikerPathState::GOT_PATH { path } => {Some(path.get(0).unwrap().clone() as PointFloat)}
+                HikerPathState::STATIONARY => {None}
+            };
+            if let Some(target) = straight_towards{
+                let dist_can_move = hiker.speed * crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
+                if (target.clone() - &position.pos).magnitude() < dist_can_move{
+                    position.pos = target;
+                    hiker.state = HikerPathState::STATIONARY;
+                }else{
+                    position.pos += (target.clone() - &position.pos).normalize().mul(dist_can_move);
                 }
-
             }
         }
     }
