@@ -79,8 +79,9 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
             }
             if let HikerPathState::PENDING_PATHFIND { route_calc_cooldown, destination } = hiker.state.clone(){
                 if route_calc_cooldown == 0{
-                    // breaking. Hardcoded berth.
+                    println!("StartPathfind");
                     let path = arena.pathfind(position.pos.clone(), destination.clone(), 10.0);
+                    println!("EndPathfind");
                     hiker.state = HikerPathState::GOT_PATH { path }
                 }
             }

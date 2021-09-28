@@ -53,36 +53,27 @@ impl PathGrinder{
         // Includes source box too.
         let mut visited_boxes : HashMap<GridBox, GridBox> = HashMap::new();
         let mut open_boxes : VecDeque<(GridBox, GridBox)> = VecDeque::new();
-        let mut open_boxes_set : HashSet<GridBox> = HashSet::new();
         open_boxes.push_back((start.clone() as GridBox, start));
-        open_boxes_set.insert(start.clone() as GridBox);
+        visited_boxes.insert(start.clone() as GridBox, start.clone() as GridBox);
 
         while open_boxes.len() > 0{
-            println!("Open: {}", open_boxes.len());
             let (expanding_box, from_box) = open_boxes.pop_front().unwrap();
-            open_boxes_set.remove(&expanding_box);
-
-            if !visited_boxes.contains_key(&expanding_box){
-                visited_boxes.insert(expanding_box.clone() as GridBox, from_box);
-            }
 
             for neighbour in expanding_box.get_pathable_neighbours(&grid.grid){
+                if !visited_boxes.contains_key(&neighbour){
+                    open_boxes.push_back((neighbour.clone(), expanding_box.clone() as GridBox));
+                    visited_boxes.insert(neighbour.clone() as GridBox, expanding_box.clone() as GridBox);
+                }
                 if neighbour == end{
-                    visited_boxes.insert(neighbour as GridBox, expanding_box);
                     // Now reconstruct the path.
                     let mut path = backtrack_path(end, grid, visited_boxes);
                     path.push(end_pos);
-                    path.remove(0); // Remove the first box. Don't need to go to centre.
+                    if path.len() > 1{ // TODO: Messyish.
+                        path.remove(0); // Remove the first box. Don't need to go to centre.
+                    }
                     return path;
                 }
-                if !visited_boxes.contains_key(&neighbour){
-                    if !open_boxes_set.contains(&neighbour){
-                        open_boxes.push_back((neighbour.clone(), expanding_box.clone() as GridBox));
-                        open_boxes_set.insert(neighbour);
-                    }
-                }
             }
-
         }
         println!("NoPath");
         return vec![end_pos];
@@ -92,6 +83,7 @@ fn backtrack_path(end: GridBox, grid: &ScaledGrid<bool>, visited_boxes : HashMap
     let mut path_grid = vec![];
     let mut end = end;
     loop{
+        println!("{:?} ----- {:?}", end, visited_boxes);
         let one_step_back = visited_boxes.get(&end).expect("How did we get to a point which couldn't be traced back?");
         if *one_step_back == end{ // Reached the start. No where else to go.
             break;
