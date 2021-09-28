@@ -2,17 +2,26 @@ use serde::*;
 use serde::de::DeserializeOwned;
 
 use crate::pub_types::*;
+use itertools::Itertools;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Grid<T>{
     data: Vec<Vec<T>>
 }
-impl<T: Serialize + DeserializeOwned + Clone + Default> Grid<T>{
+impl<T: Clone + Default> Grid<T>{
+    pub fn resize_to_fit(&mut self, bottom_right: &GridBox){
+        self.data.resize(bottom_right.x as usize + 1, vec![]);
+        for column in &mut self.data{
+            column.resize(bottom_right.y as usize + 1, T::default());
+        }
+    }
     pub fn new(sizex: usize, sizey: usize) -> Self{
         Self{
             data: vec![vec![T::default(); sizey]; sizex]
         }
     }
+}
+impl<T> Grid<T>{
     pub fn len_x(&self) -> usize{
         return self.data.len();
     }
@@ -58,12 +67,6 @@ impl<T: Serialize + DeserializeOwned + Clone + Default> Grid<T>{
     pub fn raw_mut(&mut self) -> &mut Vec<Vec<T>>{
         return &mut self.data;
     }
-    pub fn resize_to_fit(&mut self, bottom_right: &GridBox){
-        self.data.resize(bottom_right.x as usize + 1, vec![]);
-        for column in &mut self.data{
-            column.resize(bottom_right.y as usize + 1, T::default());
-        }
-    }
 }
 pub struct GridIter<'a, T>{
     top_left: GridBox,
@@ -94,8 +97,12 @@ impl<'a, T : 'static> Iterator for GridIter<'a, T> {
         return if self.current.y > self.bottom_right.y {
             None
         } else {
-            let value = self.grid.data.get(self.current.x as usize).unwrap().get(self.current.y as usize).unwrap();
-            Some((self.current.clone(), value))
+            if self.grid.is_valid(&self.current){
+                let value = self.grid.data.get(self.current.x as usize).unwrap().get(self.current.y as usize).unwrap();
+                Some((self.current.clone(), value))
+            }else{
+                self.next()
+            }
         }
     }
 }

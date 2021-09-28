@@ -17,6 +17,26 @@ pub struct HikerComp { // Walks comp, but includes fliers and sailers too.
     pub speed: f32,
     pub quest_importance: u8,
 }
+impl HikerComp{
+    pub fn remove_waypoint(&mut self){
+        let mut set_to_stationary = false;
+        match &mut self.state{
+            HikerPathState::PENDING_PATHFIND { .. } => {
+                set_to_stationary = true;
+            }
+            HikerPathState::GOT_PATH { path } => {
+                path.remove(0);
+                if path.len() == 0{
+                    set_to_stationary = true;
+                }
+            }
+            HikerPathState::STATIONARY => {}
+        };
+        if set_to_stationary{
+            self.state = HikerPathState::STATIONARY;
+        }
+    }
+}
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 enum HikerPathState{
     PENDING_PATHFIND{route_calc_cooldown: i32, destination: PointFloat},
@@ -79,15 +99,15 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
             if let Some(target) = straight_towards{
                 let dist_can_move = hiker.speed * crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
                 if (target.clone() - &position.pos).magnitude() < dist_can_move{
+                    // We've made it to the target.
                     position.pos = target;
-                    hiker.state = HikerPathState::STATIONARY;
+                    hiker.remove_waypoint();
                 }else{
                     position.pos += (target.clone() - &position.pos).normalize().mul(dist_can_move);
                 }
             }
         }
     }
-
 }
 
 

@@ -48,6 +48,10 @@ impl<T: Serialize + DeserializeOwned + Clone + Default> ScaledGrid<T>{
         let b = loc.clone().map(|value|{(value / self.scale) as i32});
         return b;
     }
+    pub fn get_box_centre(&self, gridbox: &GridBox) -> PointFloat{
+        return PointFloat::new((gridbox.x as f32 + 0.5) * self.scale,
+                               (gridbox.y as f32 + 0.5) * self.scale);
+    }
     pub fn get_grid_coord_maybe(&self, loc: &PointFloat) -> Option<GridBox>{
         let b = loc.clone().map(|value|{(value / self.scale) as i32});
         if self.grid.is_valid(&b){
