@@ -38,7 +38,7 @@ pub enum OrderState {
 pub struct OrdersComp {
     pub orders_queue: Vec<OrderInstance>,
     pub state: OrderState,
-    pub order_target_loc: PointFloat,
+    pub executing_order_target_loc: PointFloat,
 }
 impl OrdersComp{
     pub fn enqueue(&mut self, order: OrderInstance, before: bool){
@@ -93,8 +93,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
         if let Some(current_order) = orders.get_executing_order(){
-            let ability = unit_id.get_owner_tech_tree(c).get_ability(current_order.ability);
-            let target_pos = match &current_order.target{
+            orders.executing_order_target_loc = match &current_order.target{
                 AbilityTargetInstance::NO_TARGET => {
                     position.pos.clone()
                 }
@@ -104,8 +103,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
                 AbilityTargetInstance::POINT(target) => {
                     target.clone()
                 }
-            };
-            orders.order_target_loc = target_pos;
+            } as PointFloat;
         }
     }
     // Check for in-range.
@@ -115,7 +113,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
         if orders.state == OrderState::MOVING || orders.state == OrderState::WAITING_FOR_COOLDOWN{
             if let Some(current_order) = orders.get_executing_order(){
                 let ability = unit_id.get_owner_tech_tree(c).get_ability(current_order.ability);
-                let target_pos = &orders.order_target_loc;
+                let target_pos = &orders.executing_order_target_loc;
                 let in_range = (position.pos.clone() - target_pos).magnitude_squared() <= ability.range.powf(2.0);
                 if in_range{
                     // Start channelling/waiting.
@@ -144,7 +142,17 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges){
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
         if orders.state == OrderState::MOVING{
-            hiker.set_destination(orders.order_target_loc.clone(), 128);
+            // TODO: If frame count % 10 == 0 too.
+            // Only set new destination if target has moved (since pathfinding is expensive).
+            let mut should_update = true;
+            if let Some(existing_destination) = hiker.get_destination(){
+                if existing_destination == orders.executing_order_target_loc{
+                    should_update = false;
+                }
+            }
+            if should_update{
+                hiker.set_destination(orders.executing_order_target_loc.clone(), 128);
+            }
         }
     }
     // Increment channelling timers.

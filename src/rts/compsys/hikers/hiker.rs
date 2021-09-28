@@ -31,6 +31,13 @@ impl HikerComp{
             quest_importance: 0
         }
     }
+    pub fn get_destination(&self) -> Option<PointFloat>{
+        match &self.state{
+            HikerPathState::PENDING_PATHFIND { route_calc_cooldown, destination } => {Some(destination.clone() as PointFloat)}
+            HikerPathState::GOT_PATH { path } => {path.last().cloned()}
+            HikerPathState::STATIONARY => {None}
+        }
+    }
     pub fn set_destination(&mut self, target: PointFloat, quest_importance: u8){
         self.state = HikerPathState::PENDING_PATHFIND { route_calc_cooldown: 1, destination: target };
         self.quest_importance = quest_importance;
