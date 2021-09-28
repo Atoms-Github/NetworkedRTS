@@ -49,3 +49,24 @@ impl MyPoint for PointFloat{
         return e;
     }
 }
+
+pub trait MyGridBox{
+    fn left(&self) -> GridBox;
+    fn right(&self) -> GridBox;
+    fn up(&self) -> GridBox;
+    fn down(&self) -> GridBox;
+}
+impl MyGridBox for GridBox{
+    fn left(&self) -> GridBox{
+        return GridBox::new(self.x - 1, self.y);
+    }
+    fn right(&self) -> GridBox{
+        return GridBox::new(self.x + 1, self.y);
+    }
+    fn up(&self) -> GridBox{
+        return GridBox::new(self.x, self.y - 1);
+    }
+    fn down(&self) -> GridBox{
+        return GridBox::new(self.x, self.y + 1);
+    }
+}

@@ -1,25 +1,35 @@
 use crate::rts::game::grid::*;
-use crate::pub_types::{PointFloat, GridBox};
+use crate::pub_types::*;
 use crate::rts::game::scaled_grid::ScaledGrid;
 use serde::*;
 
 use std::collections::{VecDeque, HashSet, HashMap};
 use std::ops::Div;
 
-trait MyGridBox{
+
+trait MyGridBoxNeighbours{
     fn get_pathable_neighbours(&self, grid: &Grid<bool>) -> Vec<GridBox>;
 }
-impl MyGridBox for GridBox{
+impl MyGridBoxNeighbours for GridBox{
     fn get_pathable_neighbours(&self, grid: &Grid<bool>) -> Vec<GridBox>{
-        let top_left = GridBox::new(self.x - 1, self.y - 1);
-        let bottom_right = GridBox::new(self.x + 1, self.y + 1);
+        let potential_neighbours = vec![self.left(), self.right(), self.up(), self.down()];
         let mut neighbours = vec![];
-        for (potential_neighbour, value) in grid.iter_square(top_left, bottom_right){
-            if *value && potential_neighbour != *self{
-                neighbours.push(potential_neighbour);
+        for neighbour in potential_neighbours{
+            let value = grid.get(&neighbour);
+            if value == Some(&true){
+                neighbours.push(neighbour);
             }
         }
         return neighbours;
+        // let top_left = GridBox::new(self.x - 1, self.y - 1);
+        // let bottom_right = GridBox::new(self.x + 1, self.y + 1);
+        // let mut neighbours = vec![];
+        // for (potential_neighbour, value) in grid.iter_square(top_left, bottom_right){
+        //     if *value && potential_neighbour != *self{
+        //         neighbours.push(potential_neighbour);
+        //     }
+        // }
+        // return neighbours;
     }
 }
 
@@ -43,25 +53,36 @@ impl PathGrinder{
         // Includes source box too.
         let mut visited_boxes : HashMap<GridBox, GridBox> = HashMap::new();
         let mut open_boxes : VecDeque<(GridBox, GridBox)> = VecDeque::new();
+        let mut open_boxes_set : HashSet<GridBox> = HashSet::new();
         open_boxes.push_back((start.clone() as GridBox, start));
+        open_boxes_set.insert(start.clone() as GridBox);
 
         while open_boxes.len() > 0{
+            println!("Open: {}", open_boxes.len());
             let (expanding_box, from_box) = open_boxes.pop_front().unwrap();
+            open_boxes_set.remove(&expanding_box);
+
             if !visited_boxes.contains_key(&expanding_box){
                 visited_boxes.insert(expanding_box.clone() as GridBox, from_box);
             }
+
             for neighbour in expanding_box.get_pathable_neighbours(&grid.grid){
                 if neighbour == end{
                     visited_boxes.insert(neighbour as GridBox, expanding_box);
                     // Now reconstruct the path.
                     let mut path = backtrack_path(end, grid, visited_boxes);
                     path.push(end_pos);
+                    path.remove(0); // Remove the first box. Don't need to go to centre.
                     return path;
                 }
                 if !visited_boxes.contains_key(&neighbour){
-                    open_boxes.push_back((neighbour, expanding_box.clone() as GridBox));
+                    if !open_boxes_set.contains(&neighbour){
+                        open_boxes.push_back((neighbour.clone(), expanding_box.clone() as GridBox));
+                        open_boxes_set.insert(neighbour);
+                    }
                 }
             }
+
         }
         println!("NoPath");
         return vec![end_pos];
