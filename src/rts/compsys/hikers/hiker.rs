@@ -78,10 +78,8 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 *route_calc_cooldown -= 1;
             }
             if let HikerPathState::PENDING_PATHFIND { route_calc_cooldown, destination } = hiker.state.clone(){
-                if route_calc_cooldown == 0{
-                    println!("StartPathfind");
+                if route_calc_cooldown == 0 && meta.quality == SimQuality::DETERMA{ // On head, just never resolve.
                     let path = arena.pathfind(position.pos.clone(), destination.clone(), 10.0);
-                    println!("EndPathfind");
                     hiker.state = HikerPathState::GOT_PATH { path }
                 }
             }

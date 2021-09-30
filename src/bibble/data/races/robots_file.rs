@@ -14,7 +14,7 @@ pub fn gather(data: &mut GameData){
         for _ in 0..1{
             starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR));
         }
-        for _ in 0..1{
+        for _ in 0..100{
             starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_SPIDER));
         }
         for _ in 0..1{
@@ -141,7 +141,7 @@ pub fn gather(data: &mut GameData){
                 required_under_material: PlotFlooring::GREEN_RESOURCE,
             }),
             periodic_gain: ResourceBlock{
-                resource_counts: [0.0, 0.0, 0.003]
+                resource_counts: [0.0, 0.0, 1.003]
             },
             life: 100.0
         });

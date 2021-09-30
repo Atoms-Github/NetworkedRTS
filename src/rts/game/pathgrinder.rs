@@ -49,42 +49,54 @@ impl PathGrinder{
 
         let start = grid.get_grid_coord(&start_pos);
         let end = grid.get_grid_coord(&end_pos);
-        if start == end{
-            return vec![end_pos];
+        let path = PathGrinder::grid_pathfind(&grid, &end_pos, start, end);
+
+        path.push(end_pos);
+        path.remove(0); // Remove the first box. Don't need to go to centre.
+
+        // Now convert vec of grid boxes into positions.
+        let mut path_points = vec![];
+        for gridbox in path_grid{
+            path_points.push(grid.get_box_centre(&gridbox));
+        }
+        path_points.reverse();
+
+        return vec![end_pos];
+    }
+
+    fn grid_pathfind(grid: &&ScaledGrid<bool>, start: GridBox, end: GridBox) -> Vec<GridBox> {
+        if start == end {
+            return vec![end];
         }
 
         // Includes source box too.
-        let mut visited_boxes : HashMap<GridBox, GridBox> = HashMap::new();
-        let mut open_boxes : VecDeque<(GridBox, GridBox)> = VecDeque::new();
+        let mut visited_boxes: HashMap<GridBox, GridBox> = HashMap::new();
+        let mut open_boxes: VecDeque<(GridBox, GridBox)> = VecDeque::new();
         open_boxes.push_back((start.clone() as GridBox, start));
         visited_boxes.insert(start.clone() as GridBox, start.clone() as GridBox);
 
-        while open_boxes.len() > 0{
+        while open_boxes.len() > 0 {
             let (expanding_box, from_box) = open_boxes.pop_front().unwrap();
 
-            for neighbour in expanding_box.get_pathable_neighbours(&grid.grid){
-                if !visited_boxes.contains_key(&neighbour){
+            for neighbour in expanding_box.get_pathable_neighbours(&grid.grid) {
+                if !visited_boxes.contains_key(&neighbour) {
                     open_boxes.push_back((neighbour.clone(), expanding_box.clone() as GridBox));
                     visited_boxes.insert(neighbour.clone() as GridBox, expanding_box.clone() as GridBox);
                 }
-                if neighbour == end{
+                if neighbour == end {
                     // Now reconstruct the path.
                     let mut path = backtrack_path(end, grid, visited_boxes);
-                    path.push(end_pos);
-                    path.remove(0); // Remove the first box. Don't need to go to centre.
                     return path;
                 }
             }
         }
-        println!("NoPath");
-        return vec![end_pos];
+        return vec![];
     }
 }
-fn backtrack_path(end: GridBox, grid: &ScaledGrid<bool>, visited_boxes : HashMap<GridBox, GridBox>) -> Vec<PointFloat>{
+fn backtrack_path(end: GridBox, grid: &ScaledGrid<bool>, visited_boxes : HashMap<GridBox, GridBox>) -> Vec<GridBox>{
     let mut path_grid = vec![];
     let mut end = end;
     loop{
-        println!("{:?} ----- {:?}", end, visited_boxes);
         let one_step_back = visited_boxes.get(&end).expect("How did we get to a point which couldn't be traced back?");
         if *one_step_back == end{ // Reached the start. No where else to go.
             break;
@@ -92,12 +104,5 @@ fn backtrack_path(end: GridBox, grid: &ScaledGrid<bool>, visited_boxes : HashMap
         path_grid.push(one_step_back.clone() as GridBox);
         end = one_step_back.clone() as GridBox;
     }
-
-    // Now convert vec of grid boxes into positions.
-    let mut path_points = vec![];
-    for gridbox in path_grid{
-        path_points.push(grid.get_box_centre(&gridbox));
-    }
-    path_points.reverse();
-    return path_points;
+    return path_grid;
 }
