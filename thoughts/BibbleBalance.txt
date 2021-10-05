@@ -1,0 +1,14 @@
+Fix factories with move commands.
+
+Run wellish for many units.
+Fix orders factories weird.
+
+Queueing from multiple.
+Factories less than workers.
+No leaving map.
+Less dough.
+More damage.
+
+
+
+

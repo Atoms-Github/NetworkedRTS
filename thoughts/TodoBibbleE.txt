@@ -1,0 +1,17 @@
+Unit should be next to its abilities.
+Can have nice function macro for add weapon to guy.
+
+Could put nice functions on the structs of these things?
+
+Gotta use the fancy enums with structs in.
+
+s
+
+
+Robots:
+	Themes:
+		Slow.
+		Uses 'power' resource.
+		
+		
+Each race has separate special resource?

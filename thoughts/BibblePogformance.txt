@@ -1,0 +1,16 @@
+
+Its cloning many vecs!
+
+There are 3 ways I will optimise:
+	Weapons - Don't clone performance map vector.
+	Orders - Direct iter through components.
+	Hiker - Use performance map.
+	
+Inner loop:
+4 us per.
+1ms total.
+Too much.
+
+1ish us per outer.
+
+500 units.
