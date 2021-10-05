@@ -52,12 +52,34 @@ impl<T: Serialize + DeserializeOwned + Clone + Default> ScaledGrid<T>{
         return PointFloat::new((gridbox.x as f32 + 0.5) * self.scale,
                                (gridbox.y as f32 + 0.5) * self.scale);
     }
-    pub fn get_grid_coord_maybe(&self, loc: &PointFloat) -> Option<GridBox>{
-        let b = loc.clone().map(|value|{(value / self.scale) as i32});
-        if self.grid.is_valid(&b){
+    pub fn get_grid_coord_maybe(&self, loc: &PointFloat) -> Option<GridBox> {
+        let b = loc.clone().map(|value| { (value / self.scale) as i32 });
+        if self.grid.is_valid(&b) {
             return Some(b);
-        }else{
+        } else {
             return None;
         }
+    }
+}
+impl ScaledGrid<bool>{
+    pub fn line_all_true(&self, line_start: &PointFloat, line_end: &PointFloat) -> bool{
+        let start = line_start.map(|c|{ (c / self.scale) as isize });
+        let end = line_end.map(|c|{ (c / self.scale) as isize });
+        for (x, y) in bresenham::Bresenham::new((start.x, start.y), (end.x, end.y)) {
+            let gridbox = GridBox::new(x as i32, y as i32);
+            if let Some(can_path) = self.get(&gridbox){
+                if !can_path{
+                    return false;
+                }
+            }
+        }
+        // This Bresenham doesn't do end, so manually add end.
+        let gridbox_end = GridBox::new(end.x as i32, end.y as i32);
+        if let Some(can_path) = self.get(&gridbox_end){
+            if !can_path{
+                return false;
+            }
+        }
+        return true;
     }
 }

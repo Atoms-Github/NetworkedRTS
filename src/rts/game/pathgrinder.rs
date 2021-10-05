@@ -5,6 +5,7 @@ use serde::*;
 
 use std::collections::{VecDeque, HashSet, HashMap};
 use std::ops::Div;
+use bresenham::Bresenham;
 
 
 trait MyGridBoxNeighbours{
@@ -49,24 +50,47 @@ impl PathGrinder{
 
         let start = grid.get_grid_coord(&start_pos);
         let end = grid.get_grid_coord(&end_pos);
-        let path = PathGrinder::grid_pathfind(&grid, &end_pos, start, end);
+        let mut path = PathGrinder::grid_pathfind(grid, start, end);
 
-        path.push(end_pos);
-        path.remove(0); // Remove the first box. Don't need to go to centre.
-
-        // Now convert vec of grid boxes into positions.
-        let mut path_points = vec![];
-        for gridbox in path_grid{
-            path_points.push(grid.get_box_centre(&gridbox));
+        match path{
+            Some(mut path) => {
+                path.insert(0, start_pos);
+                path.push(end_pos);
+                PathGrinder::take_shortcuts(&mut path, grid);
+                path.remove(0);
+                return path;
+            }
+            None => { // No route.
+                println!("No path");
+                return vec![end_pos];
+            }
         }
-        path_points.reverse();
-
-        return vec![end_pos];
     }
-
-    fn grid_pathfind(grid: &&ScaledGrid<bool>, start: GridBox, end: GridBox) -> Vec<GridBox> {
+    pub fn take_shortcuts(path: &mut Vec<PointFloat>, grid: &ScaledGrid<bool>) {
+        let mut start_index = 0;
+        loop{
+            if let Some(startpos) = path.get(start_index){
+                let end_index = start_index + 2;
+                if let Some(endpos) = path.get(end_index){
+                    if grid.line_all_true(startpos, endpos){
+                        // Can do shortcut. Remove useless node, and go again from where you are.
+                        path.remove(start_index + 1);
+                    }else{
+                        // Can't do shortcut. Try next one along.
+                        start_index += 1;
+                    }
+                }else{
+                    return;
+                }
+            }else{
+                return;
+            }
+        }
+    }
+        /// Returns a list of all the places you need to step to get from start to end. (So includes start and end).
+    fn grid_pathfind(grid: &ScaledGrid<bool>, start: GridBox, end: GridBox) -> Option<Vec<PointFloat>> {
         if start == end {
-            return vec![end];
+            return Some(vec![grid.get_box_centre(&end)]);
         }
 
         // Includes source box too.
@@ -86,14 +110,15 @@ impl PathGrinder{
                 if neighbour == end {
                     // Now reconstruct the path.
                     let mut path = backtrack_path(end, grid, visited_boxes);
-                    return path;
+                    return Some(path);
                 }
             }
         }
-        return vec![];
+        return None;
     }
 }
-fn backtrack_path(end: GridBox, grid: &ScaledGrid<bool>, visited_boxes : HashMap<GridBox, GridBox>) -> Vec<GridBox>{
+
+fn backtrack_path(end: GridBox, grid: &ScaledGrid<bool>, visited_boxes : HashMap<GridBox, GridBox>) -> Vec<PointFloat>{
     let mut path_grid = vec![];
     let mut end = end;
     loop{
@@ -101,8 +126,16 @@ fn backtrack_path(end: GridBox, grid: &ScaledGrid<bool>, visited_boxes : HashMap
         if *one_step_back == end{ // Reached the start. No where else to go.
             break;
         }
-        path_grid.push(one_step_back.clone() as GridBox);
+        path_grid.push( grid.get_box_centre(one_step_back));
         end = one_step_back.clone() as GridBox;
     }
+    path_grid.reverse();
     return path_grid;
+}
+#[test]
+fn test_inverse_wp() {
+    let bi = Bresenham::new((0, 1), (0, 2));
+    let res: Vec<_> = bi.collect();
+
+    assert_eq!(res, [(0,1)])
 }
