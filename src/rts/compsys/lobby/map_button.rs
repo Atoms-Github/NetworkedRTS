@@ -24,9 +24,10 @@ pub static MAP_BUTTON_SYS: System = System{
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     for (button_id, button, map_button) in CompIter2::<ButtonComp, MapButtonComp>::new(c){
         if let Some(player_id) = button.clicking_on{
-            for (lobby_id, lobby_man) in CompIter1::<LobbyManager>::new(c){
-                lobby_man.selected_map = map_button.map.clone();
+            for (map_button_id, map_button) in CompIter1::<MapButtonComp>::new(c){
+                map_button.selected = false;
             }
+            map_button.selected = true;
         }
     }
 }

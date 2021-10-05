@@ -16,7 +16,6 @@ use crate::bibble::data::data_types::{RaceID, VirtualKeyCode};
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct LobbyManager{ // Means keep when scene changes.
     pub game_start_cooldown: f32,
-    pub selected_map: String,
 }
 
 pub static LOBBY_SYS: System = System{

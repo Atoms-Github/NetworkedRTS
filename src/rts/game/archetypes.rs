@@ -35,7 +35,7 @@ impl PendingEntity{
     }
     pub fn new_lobby(game_start_cooldown: f32) -> Self{
         Self::new1(
-            LobbyManager{ game_start_cooldown, selected_map: "No map selected".to_string() },
+            LobbyManager{ game_start_cooldown },
         )
     }
     // pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -79,9 +79,25 @@ impl PendingEntity{
             }
         )
     }
-    pub fn new_arena() -> Self{
+    pub fn new_map_selection_button(map: String, position: PointFloat, already_selected: bool) -> Self{
+        Self::new5(
+            RenderComp{ z: 150, texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
+                only_render_owner: false
+            },
+            SizeComp{ size: PointFloat::new(100.0, 100.0)},
+            PositionComp{ pos: position },
+            ButtonComp{
+                clicking_on: None
+            },
+            MapButtonComp{
+                selected: already_selected,
+                map
+            }
+        )
+    }
+    pub fn new_arena(map_name: String) -> Self{
         let mut arena = ArenaComp::new();
-        arena.load_map("maps/map_32x32.png".to_string());
+        arena.load_map((format!("maps/{}", map_name)).to_string());
         Self::new1(
             arena,
         )

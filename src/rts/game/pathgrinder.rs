@@ -61,7 +61,6 @@ impl PathGrinder{
                 return path;
             }
             None => { // No route.
-                println!("No path");
                 return vec![end_pos];
             }
         }
