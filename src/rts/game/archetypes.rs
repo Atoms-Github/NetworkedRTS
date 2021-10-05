@@ -84,7 +84,7 @@ impl PendingEntity{
             RenderComp{ z: 150, texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
-            SizeComp{ size: PointFloat::new(100.0, 100.0)},
+            SizeComp{ size: PointFloat::new(250.0, 250.0)},
             PositionComp{ pos: position },
             ButtonComp{
                 clicking_on: None

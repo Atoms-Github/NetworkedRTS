@@ -59,7 +59,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         }
         match scene.next{
             SceneType::InGame => {
-                let mut mapname = "".to_string();
+                let mut mapname = "NoMapSelected".to_string();
                 for (ent_id, map_button_comp) in CompIter1::<MapButtonComp>::new(c){
                     if map_button_comp.selected{
                         mapname = map_button_comp.map.clone();
@@ -99,14 +99,19 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     x += 50.0;
                 }
                 // Map selection buttons.
-                x = 50.0;
+                x = 150.0;
+                let mut y = 400.0;
                 for map_entry in std::fs::read_dir("resources/images/maps").unwrap(){
                     let map_entry = map_entry.unwrap();
                     let new_map_pending = PendingEntity::new_map_selection_button(
                         map_entry.file_name().to_str().unwrap().to_string().clone(),
-                    PointFloat::new(x, 400.0), x == 50.0);
+                    PointFloat::new(x, y), x == 150.0 && y == 400.0);
                     ent_changes.new_entities.push(new_map_pending);
-                    x += 100.0;
+                    x += 250.0;
+                    if x > 1500.0{
+                        x = 150.0;
+                        y += 250.0;
+                    }
                 }
                 // Spawn lobby.
                 ent_changes.new_entities.push(PendingEntity::new_lobby(game_start_cooldown));
