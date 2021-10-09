@@ -109,7 +109,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     ent_changes.new_entities.push(new_map_pending);
                     x += 250.0;
                     if x > 1500.0{
-                        x = 150.0;
+                        x = 50.0;
                         y += 250.0;
                     }
                 }

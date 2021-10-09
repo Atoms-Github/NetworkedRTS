@@ -14,7 +14,7 @@ pub fn gather(data: &mut GameData){
         for _ in 0..1{
             starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR));
         }
-        for _ in 0..100{
+        for _ in 0..1{
             starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_SPIDER));
         }
         for _ in 0..1{

@@ -48,7 +48,7 @@ pub fn client_main(player_name: String, connection_ip: String, preferred_id: i32
         "connorhs" => {
             Shade(0.917, 0.956, 0.145) // Yellow. ?
         }
-        "guest1" => {
+        "lain" => {
             Shade(0.145, 0.956, 0.607) // Turquoise.
         }
         "guest2" => {

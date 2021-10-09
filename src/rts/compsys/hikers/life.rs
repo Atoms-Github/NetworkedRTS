@@ -25,7 +25,6 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         if life.life <= 0.0{
             ent_changes.deleted_entities.push(unit_id);
         }
-
     }
 }
 
