@@ -80,7 +80,7 @@ impl PendingEntity{
         )
     }
     pub fn new_map_selection_button(map: String, position: PointFloat, already_selected: bool) -> Self{
-        Self::new5(
+        Self::new6(
             RenderComp{ z: 150, texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
@@ -92,6 +92,9 @@ impl PendingEntity{
             MapButtonComp{
                 selected: already_selected,
                 map
+            },
+            UIComp{
+                useless: false
             }
         )
     }

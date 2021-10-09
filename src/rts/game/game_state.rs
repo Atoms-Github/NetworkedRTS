@@ -47,6 +47,7 @@ pub fn global_get_systems() -> Vec<System>{
         LOSS_SYS.clone(),
         NO_LEAVE_MAP.clone(),
         LOBBY_SYS.clone(),
+        UI_SYS.clone(),
         SCENE_SWITCHER_SYS.clone(),
     ]
 }
