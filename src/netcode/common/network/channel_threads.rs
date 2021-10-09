@@ -81,7 +81,7 @@ impl GameSocketTcp for TcpStream{
         }).unwrap();
     }
 
-    fn send_msg(&mut self, message: &ExternalMsg) {
+    fn send_msg(&mut self, message: &ExternalMsg){
         if crate::DEBUG_MSGS_NET{
             log::debug!("-->t: {:?}", message);
         }

@@ -83,7 +83,7 @@ impl ServerMainStateEx {
                         let msg = NetMsgGreetingResponse {
                             assigned_player_id: player_id,
                             known_frame: self.known_frame_zero.clone(),
-                            game_state
+                            game_state,
                         };
                         let response = ExternalMsg::ConnectionInitResponse(msg);
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
