@@ -42,25 +42,18 @@ impl GameSocketTcp for TcpStream{
             loop{
                 // First 4 bytes are content's size.
                 let mut message_size_buffer = vec![0; 4];
-                let message_size_peek_maybe = self.read(&mut message_size_buffer);
+                let message_size_peek_maybe = self.read_exact(&mut message_size_buffer);
                 match message_size_peek_maybe {
                     Result::Err(error) => {
                         log::warn!("Player disconnected. {}", error.to_string());
                         msgs_sink.send(Diconnect(peer_address)).unwrap();
                         return; // Kill thread.
                     }
-                    Result::Ok(0) => {
-                        log::warn!("Player disconnected. No tcp bytes read.");
-                        msgs_sink.send(Diconnect(peer_address)).unwrap();
-                        return; // Kill thread
-                    }
-                    Result::Ok(bytes_read) => {
+                    Result::Ok(()) => {
                         // Should've read all 4 for size.
-                        assert_eq!(bytes_read, 4);
                         let content_size = bincode::deserialize::<u32>(&message_size_buffer).unwrap() as usize;
                         let mut message_buffer_compressed = vec![0; content_size];
-                        let content_read_size = self.read(&mut message_buffer_compressed).unwrap();
-                        assert_eq!(content_read_size, content_size);
+                        let content_read_size = self.read_exact(&mut message_buffer_compressed).unwrap();
                         let message_decompressed = crate::utils::decompress(message_buffer_compressed);
 
                         let content_deser_result = bincode::deserialize::<ExternalMsg>(&message_decompressed[..]);
