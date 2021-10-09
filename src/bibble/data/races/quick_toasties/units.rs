@@ -10,7 +10,8 @@ pub fn units(data: &mut GameData){
         weapons: vec![AbilityID::WEP_DOUGH_LAUNCHER],
         abilities: vec![AbilityID::WEP_DOUGH_LAUNCHER],
         unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
-            footprint: Point2::new(3,3)
+            footprint: Point2::new(4,4),
+            required_under_material: Default::default()
         }),
         periodic_gain: ResourceBlock::default(),
         life: 500.0,
@@ -20,13 +21,13 @@ pub fn units(data: &mut GameData){
         radius: 15.0,
         actor: ActorMould { image: "dough_ball.jpg".to_string(), },
         weapons: vec![],
-        abilities: vec![AbilityID::WEP_SCUTTLER, AbilityID::BAKE_BREAD, AbilityID::BAKE_DOUGH, AbilityID::BAKE_DOUGH_LAUNCHER],
+        abilities: vec![AbilityID::BAKE_BREAD, AbilityID::BAKE_DOUGH, AbilityID::BAKE_DOUGH_LAUNCHER],
         unit_flavour: UnitFlavour::HIKER(HikerFlavourInfo{
             movespeed: 0.3,
             fly: false
         }),
         periodic_gain: ResourceBlock{
-            resource_counts: [0.0, 0.0, 0.0005]
+            resource_counts: [0.0, 0.0, 0.0002]
         },
         life: 30.0,
     });

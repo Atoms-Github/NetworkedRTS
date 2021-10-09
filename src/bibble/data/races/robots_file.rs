@@ -17,7 +17,7 @@ pub fn gather(data: &mut GameData){
         for _ in 0..1{
             starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_SPIDER));
         }
-        for _ in 0..1{
+        for _ in 0..2{
             starting_effects.push(EffectToPoint::SPAWN_UNIT(UnitID::OIL_WELL));
         }
 
@@ -99,7 +99,7 @@ pub fn gather(data: &mut GameData){
             weapons: vec![],
             abilities: vec![AbilityID::TRAIN_SCUTTLER, AbilityID::TRAIN_CONSTRUCTOR],
             unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
-                footprint: Point2::new(2,2),
+                footprint: Point2::new(1,1),
                 required_under_material: PlotFlooring::PATH,
             }),
             periodic_gain: ResourceBlock{
@@ -137,11 +137,11 @@ pub fn gather(data: &mut GameData){
             weapons: vec![],
             abilities: vec![],
             unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
-                footprint: Point2::new(1,1),
+                footprint: Point2::new(0,0),
                 required_under_material: PlotFlooring::GREEN_RESOURCE,
             }),
             periodic_gain: ResourceBlock{
-                resource_counts: [0.0, 0.0, 1.003]
+                resource_counts: [0.0, 0.0, 0.0015]
             },
             life: 100.0
         });
