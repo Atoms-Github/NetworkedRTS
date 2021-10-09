@@ -17,13 +17,13 @@ impl CameraComp{
         let size_comp  = &ecs.get::<SizeComp>(entity_id).unwrap();
 
         if let Some(ui_comp) = ecs.get::<UIComp>(entity_id){
+            return (position_comp.pos.clone(), size_comp.size.clone());
+        }else{
             let pos_game = size_comp.get_corner_top_left(position_comp);
 
             let pos_screen = self.game_space_to_screen_space(pos_game);
             let size_screen = self.game_size_to_screen_size(size_comp.size.clone());
             return (pos_screen, size_screen);
-        }else{
-            return (position_comp.pos.clone(), size_comp.size.clone());
         }
 
 

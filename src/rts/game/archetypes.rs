@@ -65,7 +65,7 @@ impl PendingEntity{
         )
     }
     pub fn new_race_selection_button(race: RaceID, position: PointFloat, image: String) -> Self{
-        Self::new5(
+        Self::new6(
             RenderComp{ z: 150, texture: RenderTexture::Image(image), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
@@ -76,6 +76,9 @@ impl PendingEntity{
             },
             RaceButtonComp{
                 race
+            },
+            UIComp{
+                useless: false
             }
         )
     }

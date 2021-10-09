@@ -99,13 +99,13 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     x += 50.0;
                 }
                 // Map selection buttons.
-                x = 150.0;
+                x = 50.0;
                 let mut y = 400.0;
                 for map_entry in std::fs::read_dir("resources/images/maps").unwrap(){
                     let map_entry = map_entry.unwrap();
                     let new_map_pending = PendingEntity::new_map_selection_button(
                         map_entry.file_name().to_str().unwrap().to_string().clone(),
-                    PointFloat::new(x, y), x == 150.0 && y == 400.0);
+                    PointFloat::new(x, y), x == 50.0 && y == 400.0);
                     ent_changes.new_entities.push(new_map_pending);
                     x += 250.0;
                     if x > 1500.0{
