@@ -63,6 +63,7 @@ lazy_static! {
         map.register_type::<RaceButtonComp>();
         map.register_type::<MapButtonComp>();
         map.register_type::<UIComp>();
+        map.register_type::<UnitStructureComp>();
         // map.register_type::<BenchStruct>();
 
         map

@@ -8,6 +8,9 @@ pub mod clickshooter_game;
 pub use general::*;
 pub mod general;
 
+pub use structures::*;
+pub mod structures;
+
 pub use hikers::*;
 pub mod hikers;
 

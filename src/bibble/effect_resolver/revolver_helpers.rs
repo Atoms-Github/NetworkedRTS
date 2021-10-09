@@ -45,6 +45,7 @@ impl<'a> Revolver<'a>{
             });
         }
 
+
         let mut pending = PendingEntity::new7(
             PositionComp{ pos: position.clone() },
             OwnedComp { owner },
@@ -60,6 +61,11 @@ impl<'a> Revolver<'a>{
             pending.add_comp(HikerCollisionComp{
                 radius: mould.radius,
                 fly: hiker_info.fly,
+            });
+        }
+        if let UnitFlavour::STRUCTURE(structure) = &mould.unit_flavour{
+            pending.add_comp(UnitStructureComp{
+                structure_info: structure.clone(),
             });
         }
         pending.add_comp(abilities_comp);
