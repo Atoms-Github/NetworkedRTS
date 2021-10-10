@@ -52,7 +52,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                         let data = player_id.get_player_tech_tree(c);
                         for (unit_id , owned, selectable, abilities, orders)
                         in CompIter4::<OwnedComp, SelectableComp, AbilitiesComp, OrdersComp>::new(c) {
-                            if selectable.is_selected{
+                            if selectable.is_selected && owned.owner == player_id{
                                 for ability_id in &abilities.abilities{
                                     if ability_id.id == using_ability_id{
                                         orders.enqueue(OrderInstance{
