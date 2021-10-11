@@ -42,11 +42,15 @@ impl Shade{
 
 pub trait MyPoint{
     fn to_point(&self) -> Point2<f32>;
+    fn to_ggez_rect(&self, size: &PointFloat) -> ggez::graphics::Rect;
 }
 impl MyPoint for PointFloat{
     fn to_point(&self) -> Point2<f32> {
         let e : Point2<f32> = Point2::from([self.x, self.y]);
         return e;
+    }
+    fn to_ggez_rect(&self, size: &PointFloat) -> ggez::graphics::Rect{
+        return ggez::graphics::Rect::new(self.x, self.y, size.x, size.y);
     }
 }
 
