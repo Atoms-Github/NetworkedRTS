@@ -19,6 +19,7 @@ pub struct InputState {
     mouse_loc: PointFloat,
     #[serde(with = "BigArray")]
     keys_pressed: [bool; KEY_COUNT],
+    pub total_scroll_dist: f32,
     mouse_btns_pressed: [bool; MOUSE_BUTTONS_COUNT] // NOT SUPPORTING NON-DEFAULT MOUSE BUTTONS.
 }
 
@@ -35,6 +36,7 @@ pub enum ConnStatusChangeType {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum InputChange {
     KeyDownUp(KeyCode, bool),
+    MouseWheelEvent(f32),
     NewMousePosition(f32, f32),
     MouseUpDown(MouseButton, bool),
     MouseMove(PointFloat)
@@ -54,6 +56,9 @@ impl InputChange{ // TODO2: Swap round. Should be state.apply_change(InputChange
             }
             InputChange::MouseUpDown(button, is_down) => {
                 state.set_mouse_pressed(*button, *is_down);
+            }
+            InputChange::MouseWheelEvent(scroll_dist) => {
+                state.total_scroll_dist += *scroll_dist;
             }
         }
     }
@@ -75,6 +80,7 @@ impl InputState{
         InputState{
             mouse_loc: PointFloat::new(0.0, 0.0),
             keys_pressed: [false; KEY_COUNT],
+            total_scroll_dist: 0.0,
             mouse_btns_pressed: [false; MOUSE_BUTTONS_COUNT],
         }
     }

@@ -107,6 +107,11 @@ impl EventHandler<GameError> for GraphicalIn {
         Ok(())
     }
 
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, y: f32) {
+        self.input_sink.send(InputChange::MouseWheelEvent(y)).unwrap();
+    }
+
+
     fn mouse_button_down_event(
         &mut self,
         _ctx: &mut Context,

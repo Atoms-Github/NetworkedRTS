@@ -36,6 +36,7 @@ pub struct RtsInputState{
     pub mouse_event: RtsMouseEvent,
     pub key_event: RtsKeyEvent,
     pub mouse_moved: PointFloat,
+    pub mouse_scrolled: f32,
     mouse_btn_held: Option<usize>,
     key_held: Option<usize>,
 }
@@ -54,6 +55,7 @@ pub enum RtsKeyEvent {
 impl RtsInputState{
     pub fn update_input_state(&mut self, new_input: InputState){
         self.mouse_moved = new_input.get_mouse_loc().clone() - self.primitive.get_mouse_loc();
+        self.mouse_scrolled = new_input.total_scroll_dist - self.primitive.total_scroll_dist;
 
         self.mouse_event = RtsMouseEvent::NoMouse;
         self.key_event = RtsKeyEvent::NoKey;
@@ -93,6 +95,7 @@ impl RtsInputState{
             }
         }
 
+
         self.primitive = new_input;
     }
 }
@@ -103,6 +106,7 @@ impl Default for RtsInputState{
             mouse_event: RtsMouseEvent::NoMouse,
             key_event: RtsKeyEvent::NoKey,
             mouse_moved: PointFloat::new(0.0,0.0),
+            mouse_scrolled: 0.0,
             mouse_btn_held: None,
             key_held: None
         }

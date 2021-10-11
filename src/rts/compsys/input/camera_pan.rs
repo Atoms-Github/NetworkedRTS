@@ -3,6 +3,7 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
 use crate::rts::compsys::*;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
+use std::ops::Div;
 
 use ggez::event::MouseButton;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -25,10 +26,10 @@ impl CameraComp{
         }
     }
     pub fn game_space_to_screen_space(&self, coords: PointFloat) -> PointFloat{
-        return coords - &self.translation;
+        return (coords - &self.translation) * self.zoom;
     }
     pub fn screen_space_to_game_space(&self, coords: PointFloat) -> PointFloat{
-        return coords + &self.translation;
+        return (coords + &self.translation) / self.zoom;
     }
     pub fn game_size_to_screen_size(&self, coords: PointFloat) -> PointFloat{
         return coords * self.zoom;
@@ -48,8 +49,10 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
             if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
                 input.is_panning = false;
             }
-            camera.translation -= &input.inputs.mouse_moved;
+            camera.translation -= input.inputs.mouse_moved.clone().div(camera.zoom);
         }
+        camera.zoom += input.inputs.mouse_scrolled / 4.0;
+        camera.zoom = camera.zoom.clamp(0.25, 4.0);
     }
 }
 
