@@ -68,9 +68,9 @@ pub fn abilities(data: &mut GameData){
                     image: "butter.png".to_string(),
                 },
                 speed: 1.5,
-                hit_effect: EffectToUnit::DAMAGE(EffectToUnitDamage{
-                    amount: 50.0
-                }),
+                hit_effect: EffectToUnit::EFFECT_TO_POINT(EffectToPoint::EFFECT_NEARBY_UNITS(Box::new(
+                    EffectToUnit::DAMAGE(EffectToUnitDamage{amount:50.0})
+                ), 20.0)),
                 size: 20.0
             })),
             graphic: AbilitySingleTargetGraphic::NOTHING

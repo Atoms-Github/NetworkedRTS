@@ -51,6 +51,37 @@ pub fn gather(data: &mut GameData){
         }), 200.0, 300.0);
     }
     {
+        let unit = data.add_unit(UnitID::ROBO_LOBBER, UnitMould{
+            radius: 20.0,
+            actor: ActorMould { image: "robot_artillery.jpg".to_string(), },
+            weapons: vec![],
+            abilities: vec![AbilityID::ROBO_ARTILLERY_LOB],
+            unit_flavour: UnitFlavour::HIKER(HikerFlavourInfo{
+                movespeed: 0.10,
+                fly: false
+            }),
+            periodic_gain: Default::default(),
+            life: 70.0
+        });
+        data.abilities.insert(AbilityID::ROBO_ARTILLERY_LOB, AbilityMould{
+            cost: 0.0,
+            targetting: AbilityTargetType::SingleTarget(AbilitySingleTarget{
+                target: AbilitySingleTargetType::Point(EffectUnitToPoint::TO_POINT(EffectToPoint::EFFECT_NEARBY_UNITS(
+                    Box::new(EffectToUnit::DAMAGE(EffectToUnitDamage{
+                        amount: 50.0
+                    })),
+                    100.0
+                ))),
+                graphic: AbilitySingleTargetGraphic::NOTHING
+            }),
+            button_info: ButtonMould { color: (200, 0, 150), hotkey: VirtualKeyCode::H },
+            range: 400.0,
+            casting_time: 1500.0,
+            cooldown: 10000.0
+        });
+
+    }
+    {
         let mut unit = data.add_unit(UnitID::CONSTRUCTOR, UnitMould{
             radius: 15.0,
             actor: ActorMould { image: "robot_worker.jpg".to_string(), },
@@ -97,7 +128,7 @@ pub fn gather(data: &mut GameData){
             radius: 35.0,
             actor: ActorMould { image: "factory.jpg".to_string(), },
             weapons: vec![],
-            abilities: vec![AbilityID::TRAIN_SCUTTLER, AbilityID::TRAIN_CONSTRUCTOR],
+            abilities: vec![AbilityID::TRAIN_SCUTTLER, AbilityID::TRAIN_CONSTRUCTOR, AbilityID::TRAIN_LOBBER],
             unit_flavour: UnitFlavour::STRUCTURE(StructureFlavourInfo{
                 footprint: Point2::new(1,1),
                 required_under_material: PlotFlooring::PATH,
@@ -116,6 +147,17 @@ pub fn gather(data: &mut GameData){
             },
             range: 0.0,
             casting_time: 1000.0,
+            cooldown: 0.0
+        });
+        data.abilities.insert(AbilityID::TRAIN_LOBBER, AbilityMould{
+            cost: 60.0,
+            targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_LOBBER))),
+            button_info: ButtonMould{
+                color: (150, 200, 200),
+                hotkey: VirtualKeyCode::L
+            },
+            range: 0.0,
+            casting_time: 2000.0,
             cooldown: 0.0
         });
         data.abilities.insert(AbilityID::TRAIN_CONSTRUCTOR, AbilityMould{

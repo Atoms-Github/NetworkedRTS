@@ -14,6 +14,7 @@ pub enum WeaponID {
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UnitID {
     ROBO_SPIDER,
+    ROBO_LOBBER,
     CONSTRUCTOR,
     FACTORY,
     OIL_WELL,

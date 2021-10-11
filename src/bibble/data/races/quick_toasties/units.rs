@@ -27,7 +27,7 @@ pub fn units(data: &mut GameData){
             fly: false
         }),
         periodic_gain: ResourceBlock{
-            resource_counts: [0.0, 0.0, 0.0002]
+            resource_counts: [0.0, 0.0, 0.0003]
         },
         life: 30.0,
     });
