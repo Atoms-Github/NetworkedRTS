@@ -29,7 +29,7 @@ impl CameraComp{
         return (coords - &self.translation) * self.zoom;
     }
     pub fn screen_space_to_game_space(&self, coords: PointFloat) -> PointFloat{
-        return (coords + &self.translation) / self.zoom;
+        return coords / self.zoom + &self.translation;
     }
     pub fn game_size_to_screen_size(&self, coords: PointFloat) -> PointFloat{
         return coords * self.zoom;
