@@ -12,7 +12,7 @@ use winit::event::VirtualKeyCode;
 use std::fmt;
 use crate::netcode::common::time::timekeeping::DT;
 use rand::Rng;
-use crate::rts::game::cool_batcher::CoolBatcher;
+use crate::rts::game::cool_batcher::{CoolBatcher, MyDrawParams};
 use crate::ecs::comp_store::CompStorage;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -61,8 +61,10 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                                                       grid_box.y as f32 * arena_comp.get_box_length()) + &base_pos_game;
             let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
             let color = floor.get_color().to_color();
-            let rect = graphics::Rect::new(small_top_left_screen.x, small_top_left_screen.y, small_size.x, small_size.y);
-            cool_batcher.add_rectangle_rect(rect, color, 50);
+            cool_batcher.add_rectangle_rect(MyDrawParams{
+                pos: small_top_left_screen,
+                size: small_size.clone(),
+            }, color, 50);
         }
     }
     // Draw entities.
@@ -87,9 +89,11 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                                                    Color::new(*r,*g,*b,*a), render.z);
                     }
                     RenderTexture::Image(image_name) => {
-                        let mut params = DrawParam::new();
-                        params = params.dest(mint::Point2::from([on_screen_pos.x, on_screen_pos.y]));
-                        cool_batcher.add_image(image_name.clone(), params, size.clone(), render.z);
+                        let my_draw_params = MyDrawParams{
+                            pos: on_screen_pos.clone(),
+                            size: size.clone(),
+                        };
+                        cool_batcher.add_image(image_name.clone(), my_draw_params, render.z);
                     }
                 }
             }
@@ -187,7 +191,11 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
         let screen_pos = PointFloat::new(50.0 + i as f32 * 100.0, 100.0);
         if let InputMode::TargettingAbility(targetting_ability_id) = player_input.mode{
             if targetting_ability_id == *ability_id{
-                cool_batcher.add_rectangle_rect(graphics::Rect::new(screen_pos.x - 5.0, screen_pos.y - 5.0, 40.0,40.0),
+                let my_params = MyDrawParams{
+                    pos: PointFloat::new(screen_pos.x - 5.0, screen_pos.y - 5.0),
+                    size: PointFloat::new(40.0,40.0),
+                };
+                cool_batcher.add_rectangle_rect(my_params,
                 graphics::Color::from_rgb(255,204,0), 190);
             }
         }

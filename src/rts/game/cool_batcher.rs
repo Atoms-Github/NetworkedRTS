@@ -4,6 +4,9 @@ use crate::pub_types::{PointFloat, RenderResourcesPtr};
 use ggez::{Context, graphics};
 use ggez::graphics::spritebatch::SpriteBatch;
 use itertools::Itertools;
+use mint::Point2;
+use crate::pub_types::*;
+use std::ops::Div;
 
 struct BatcherImage{
     path: String,
@@ -14,10 +17,21 @@ struct BatcherImage{
 pub struct CoolBatcher{
     layers: HashMap<u8, RenderLayer>,
 }
+
+pub struct MyDrawParams{
+    pub pos: PointFloat,
+    pub size: PointFloat,
+}
+// impl MyDrawParams{
+//     pub fn to_their_draw_params(self) -> DrawParam{
+//         let mut params = DrawParam::new();
+//         return params;
+//     }
+// }
 #[derive(Default)]
 pub struct RenderLayer{
-    images: HashMap<String, Vec<(DrawParam, PointFloat)>>,
-    rectangles: Vec<(Rect, Color)>,
+    images: HashMap<String, Vec<MyDrawParams>>,
+    rectangles: Vec<(MyDrawParams, Color)>,
     circles: Vec<(PointFloat, f32, Color)>,
     texts: Vec<(PointFloat, String, Color)>,
 }
@@ -27,13 +41,16 @@ impl CoolBatcher{
     pub fn new() -> Self{
         return Self::default()
     }
-    pub fn add_rectangle_rect(&mut self, rect: ggez::graphics::Rect, color: Color, z: u8){
+    pub fn add_rectangle_rect(&mut self, rect: MyDrawParams, color: Color, z: u8){
         self.layers
             .entry(z)
             .or_default().rectangles.push((rect, color));
     }
     pub fn add_rectangle(&mut self, position: &PointFloat, size: &PointFloat, color: Color, z: u8){
-        self.add_rectangle_rect(Rect::new(position.x, position.y, size.x, size.y), color, z)
+        self.add_rectangle_rect(MyDrawParams{
+            pos: position.clone(),
+            size: size.clone()
+        }, color, z)
     }
     pub fn add_progress_bar(&mut self, centre: &PointFloat, height: f32, value: f32, max: f32, color_value: Color, color_max: Color, z: u8){
         let life_start_pos = centre.clone() + PointFloat::new(-max / 2.0, 0.0);
@@ -49,13 +66,13 @@ impl CoolBatcher{
             .entry(z)
             .or_default().circles.push((position.clone(), size, color));
     }
-    pub fn add_image(&mut self, filename: String, draw_param: DrawParam, size_pixels: PointFloat, z: u8){
+    pub fn add_image(&mut self, filename: String, draw_param: MyDrawParams, z: u8){
         self.layers
             .entry(z)
             .or_default().images
             .entry(filename)
             .or_default()
-            .push((draw_param, size_pixels));
+            .push(draw_param);
     }
     pub fn add_text(&mut self, position: PointFloat, text: String, color: Color, z: u8){
         self.layers
@@ -74,11 +91,17 @@ impl CoolBatcher{
                 let image_dimensions = PointFloat::new(image.dimensions().w, image.dimensions().h);
                 let mut sprite_batch = SpriteBatch::new(image);
 
-                for (mut draw_param, scale_pixels) in draw_params.into_iter() {
+                for my_draw_params in draw_params {
                     // Work out image scale from size.
                     let one_pixel_scale : PointFloat = PointFloat::new(1.0,1.0).component_div(&image_dimensions);
-                    draw_param = draw_param.scale(one_pixel_scale.component_mul(&scale_pixels));
-                    sprite_batch.add(draw_param);
+
+                    let mut draw_params = DrawParam::new();
+                    let top_left_corner = (my_draw_params.pos - (my_draw_params.size.clone().div(2.0))).to_point();
+                    println!("Corner:{:?}", top_left_corner);
+                    println!("Scale:{:?}", one_pixel_scale.clone().component_mul(&my_draw_params.size));
+                    draw_params = draw_params.offset(top_left_corner);
+                    draw_params = draw_params.scale(one_pixel_scale.component_mul(&my_draw_params.size));
+                    sprite_batch.add(draw_params);
                 }
 
                 graphics::draw(ctx, &sprite_batch, graphics::DrawParam::new()).unwrap()
@@ -86,7 +109,9 @@ impl CoolBatcher{
             // Draw rectangles:
             if render_layer.rectangles.len() > 0{
                 let mut builder = MeshBuilder::new();
-                for (rect, color) in render_layer.rectangles.into_iter() {
+                for (my_draw_params, color) in render_layer.rectangles.into_iter() {
+                    let top_left_corner = (my_draw_params.pos - (my_draw_params.size.clone().div(2.0))).to_point();
+                    let rect = ggez::graphics::Rect::new(top_left_corner.x, top_left_corner.y, my_draw_params.size.x, my_draw_params.size.y);
                     builder.rectangle(graphics::DrawMode::fill(), rect, color).unwrap();
                 }
                 builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
