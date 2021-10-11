@@ -52,7 +52,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
             camera.translation -= input.inputs.mouse_moved.clone().div(camera.zoom);
         }
         camera.zoom += input.inputs.mouse_scrolled / 4.0;
-        camera.zoom = camera.zoom.clamp(0.25, 4.0);
+        camera.zoom = camera.zoom.clamp(0.5, 2.0);
     }
 }
 
