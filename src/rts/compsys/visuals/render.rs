@@ -70,7 +70,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     // Draw entities.
     for (entity_id, position, render, size) in
     CompIter3::<PositionComp, RenderComp, SizeComp>::new(&ecs.c){
-        let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
+        let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_transform(&ecs.c, entity_id);
         match &render.shape{
             RenderShape::Circle => {
                 let radius = ecs.c.get_unwrap::<SizeComp>(entity_id).size.x;
@@ -82,31 +82,33 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                 }
             }
             RenderShape::Rectangle => {
-                let size = &ecs.c.get_unwrap::<SizeComp>(entity_id).size;
                 match &render.texture{
                     RenderTexture::Color(r,g,b,a) => {
-                        cool_batcher.add_rectangle(&on_screen_pos, &on_screen_size,
-                                                   Color::new(*r,*g,*b,*a), render.z);
+                        cool_batcher.add_rectangle_rect(MyDrawParams{
+                            pos: on_screen_pos.clone(),
+                            size: on_screen_size.clone()
+                        },
+                                                        Color::new(*r,*g,*b,*a), render.z);
                     }
                     RenderTexture::Image(image_name) => {
                         let my_draw_params = MyDrawParams{
                             pos: on_screen_pos.clone(),
-                            size: size.clone(),
+                            size: on_screen_size.clone(),
                         };
                         cool_batcher.add_image(image_name.clone(), my_draw_params, render.z);
                     }
                 }
             }
-            RenderShape::Text(text) => {}
+            RenderShape::Text(text) => {unimplemented!()}
         }
     }
 
     // Draw units.
     for (entity_id, position, render) in CompIter2::<PositionComp, RenderComp>::new(&ecs.c){
-        let (on_screen_top_left, on_screen_size) = player_camera.get_as_screen_coords(&ecs.c, entity_id);
+        let (screen_pos, on_screen_size) = player_camera.get_as_screen_transform(&ecs.c, entity_id);
 
         if let Some(life_comp) = ecs.c.get::<LifeComp>(entity_id){
-            let bar_centre = on_screen_top_left.clone() + PointFloat::new(on_screen_size.x / 2.0, -7.0);
+            let bar_centre = screen_pos.clone() + PointFloat::new(0.0, -7.0);
             cool_batcher.add_progress_bar(&bar_centre, 5.0, life_comp.life,
                                           life_comp.max_life, Color::from_rgb(0,200,0),
                                           Color::from_rgb(255,0,0), 150);
@@ -117,7 +119,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                 let executing_order = orders.get_executing_order().unwrap();
                 let ability = tech_tree.get_ability(executing_order.ability);
 
-                let bar_centre = on_screen_top_left.clone() + PointFloat::new(on_screen_size.x / 2.0, -14.0);
+                let bar_centre = screen_pos.clone() + PointFloat::new(0.0, -14.0);
 
                 let max_width = 100.0;
                 let current_width = *channel_time / ability.casting_time * max_width;
@@ -126,13 +128,11 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                                               max_width, Color::from_rgb(52, 210, 235),
                                               Color::from_rgb(0,0,0), 150);
             }
-
         }
 
         if let Some(owned_comp) = ecs.c.get::<OwnedComp>(entity_id){
             let mut border_width = 3.0;
-            let player_comp = ecs.c.get_unwrap::<PlayerComp>(owned_comp.owner);
-            let mut border_color = player_comp.color.to_color();
+            let mut border_color = ecs.c.get_unwrap::<PlayerComp>(owned_comp.owner).color.to_color();
             if let Some(selectable_comp) = ecs.c.get::<SelectableComp>(entity_id){
                 if selectable_comp.is_selected{
                     border_width = 5.0;
@@ -146,10 +146,11 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                     //                           border_color.b + color_push, border_color.a);
                 }
             }
-            let border_top_left = on_screen_top_left.clone() - PointFloat::new(border_width, border_width);
             let border_size = on_screen_size.clone() + PointFloat::new(border_width * 2.0, border_width * 2.0);
-            cool_batcher.add_rectangle(&border_top_left, &border_size,
-                                       border_color, 100);
+            cool_batcher.add_rectangle_rect(MyDrawParams{
+                pos: screen_pos.clone(),
+                size: border_size
+            }, border_color, 100);
         }
     }
     // // Draw names.
