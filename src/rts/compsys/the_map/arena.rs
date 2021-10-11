@@ -231,6 +231,9 @@ impl ArenaComp {
     pub fn get_top_left(&self) -> PointFloat{
         PointFloat::new(self.get_left() as f32, self.get_top() as f32)
     }
+    pub fn get_centre(&self) -> PointFloat{
+        PointFloat::new((self.get_left()  + self.get_right()) as f32 / 2.0, (self.get_top()  + self.get_bottom()) as f32 / 2.0,)
+    }
     pub fn get_bottom_right(&self) -> PointFloat{
         PointFloat::new(self.get_right() as f32, self.get_bottom() as f32)
     }

@@ -45,7 +45,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
 
     // Draw arena background.
     for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
-        let screen_pos = player_camera.game_space_to_screen_space(arena_comp.get_top_left());
+        let screen_pos = player_camera.game_space_to_screen_space(arena_comp.get_centre());
         let screen_size = player_camera.game_size_to_screen_size(arena_comp.get_size());
         cool_batcher.add_rectangle(&screen_pos, &screen_size, graphics::Color::from_rgb(200,200,200), 20);
     }
@@ -57,9 +57,9 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             PointFloat::new(arena_comp.get_box_length() as f32 - 1.0, arena_comp.get_box_length() as f32 - 1.0)
         );
         for (grid_box, floor) in arena_comp.flooring.grid.iter_all(){
-            let small_top_left_game = PointFloat::new(grid_box.x as f32 * arena_comp.get_box_length(),
-                                                      grid_box.y as f32 * arena_comp.get_box_length()) + &base_pos_game;
-            let small_top_left_screen = player_camera.game_space_to_screen_space(small_top_left_game);
+            let small_center_game = PointFloat::new((grid_box.x as f32 + 0.5) * arena_comp.get_box_length(),
+                                                    (grid_box.y as f32 + 0.5) * arena_comp.get_box_length()) + &base_pos_game;
+            let small_top_left_screen = player_camera.game_space_to_screen_space(small_center_game);
             let color = floor.get_color().to_color();
             cool_batcher.add_rectangle_rect(MyDrawParams{
                 pos: small_top_left_screen,
