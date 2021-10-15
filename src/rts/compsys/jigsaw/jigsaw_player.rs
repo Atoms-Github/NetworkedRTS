@@ -29,6 +29,21 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 let actual_place = c.get_mut_unwrap:: <PositionComp>(held_piece);
                 if actual_place.pos.dist(&correct_place) < JIGSAW_PIECE_SIZE / 2.0{
                     actual_place.pos = correct_place;
+                }else{
+                    // Try for teleport both pieces to correct place.
+                    for (piece_id, matched_to_piece, matched_pos) in CompIter2::<JigsawPieceComp, PositionComp>::new(c){
+                        if piece_id != held_piece{
+                            let real_dist = (matched_pos.clone().pos - &actual_place.pos) as PointFloat;
+                            let coords_diff = (matched_to_piece.coords.clone() - &piece_comp.coords) as PointInt;
+                            let actual_coords_place_diff = coords_diff.clone().map(|i| {i as f32 * JIGSAW_PIECE_SIZE}) as PointFloat;
+                            println!("{:?}, {:?}, {:?}", real_dist, coords_diff, actual_coords_place_diff);
+                            if actual_coords_place_diff.dist(&real_dist) < JIGSAW_PIECE_SIZE / 10.0{
+                                // Teleport both to correct place.
+                                matched_pos.pos = matched_to_piece.get_correct_pos();
+                                actual_place.pos = correct_place.clone();
+                            }
+                        }
+                    }
                 }
 
                 jigsaw_player.held_item = None;
