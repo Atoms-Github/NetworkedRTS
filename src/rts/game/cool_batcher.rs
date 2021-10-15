@@ -8,6 +8,7 @@ use mint::Point2;
 use crate::pub_types::*;
 use std::ops::Div;
 
+
 struct BatcherImage{
     path: String,
     top_left: PointFloat,
@@ -22,15 +23,17 @@ pub struct MyDrawParams{
     pub pos: PointFloat,
     pub size: PointFloat,
 }
-// impl MyDrawParams{
-//     pub fn to_their_draw_params(self) -> DrawParam{
-//         let mut params = DrawParam::new();
-//         return params;
-//     }
-// }
+impl Default for MyDrawParams{
+    fn default() -> Self {
+        Self{
+            pos: PointFloat::new(30.0,30.0),
+            size: PointFloat::new(50.0,50.0),
+        }
+    }
+}
 #[derive(Default)]
 pub struct RenderLayer{
-    images: HashMap<String, Vec<MyDrawParams>>,
+    images: HashMap<String, Vec<(MyDrawParams, Option<Rect>)>>,
     rectangles: Vec<(MyDrawParams, Color)>,
     circles: Vec<(PointFloat, f32, Color)>,
     texts: Vec<(PointFloat, String, Color)>,
@@ -74,7 +77,15 @@ impl CoolBatcher{
             .or_default().images
             .entry(filename)
             .or_default()
-            .push(draw_param);
+            .push((draw_param, None));
+    }
+    pub fn add_image_part(&mut self, filename: String, draw_param: MyDrawParams, part: Rect, z: u8){
+        self.layers
+            .entry(z)
+            .or_default().images
+            .entry(filename)
+            .or_default()
+            .push((draw_param, Some(part)));
     }
     pub fn add_text(&mut self, position: PointFloat, text: String, color: Color, z: u8){
         self.layers
@@ -93,14 +104,21 @@ impl CoolBatcher{
                 let image_dimensions = PointFloat::new(image.dimensions().w, image.dimensions().h);
                 let mut sprite_batch = SpriteBatch::new(image);
 
-                for my_draw_params in draw_params {
+                for (my_draw_params, draw_part_rect) in draw_params {
                     // Work out image scale from size.
                     let one_pixel_scale : PointFloat = PointFloat::new(1.0,1.0).component_div(&image_dimensions);
 
                     let mut draw_params = DrawParam::new();
                     let top_left_corner = (my_draw_params.pos - (my_draw_params.size.clone().div(2.0))).to_point();
                     draw_params = draw_params.dest(top_left_corner);
-                    draw_params = draw_params.scale(one_pixel_scale.component_mul(&my_draw_params.size));
+                    if let Some(draw_part) = draw_part_rect{
+                        draw_params.src = Rect::new(draw_part.x / image_dimensions.x,
+                                                    draw_part.y / image_dimensions.y,
+                                                    draw_part.w / image_dimensions.x,
+                                                    draw_part.h / image_dimensions.y);
+                    }
+                    draw_params = draw_params.scale(one_pixel_scale.component_mul(&my_draw_params.size)
+                        .component_mul(&PointFloat::new(1.0/ draw_params.src.w, 1.0/ draw_params.src.h)));
                     sprite_batch.add(draw_params);
                 }
 

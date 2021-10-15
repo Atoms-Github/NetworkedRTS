@@ -1,5 +1,5 @@
 use ggez::{graphics, Context};
-use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable};
+use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
 use crate::utils::gett;
 use crate::rts::compsys::*;
 use crate::ecs::{ActiveEcs, GlobalEntityID};
@@ -100,10 +100,12 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                         cool_batcher.add_image(image_name.clone(), my_draw_params, render.z);
                     }
                     RenderTexture::Jigsaw(landscape_name, piece_coords) => {
-                        cool_batcher.add_image(landscape_name.clone(), MyDrawParams{
+                        let mut their_params = DrawParam::new();
+                        cool_batcher.add_image_part(landscape_name.clone(), MyDrawParams{
                             pos: on_screen_pos.clone(),
                             size: on_screen_size.clone(),
-                        }, render.z);
+                        }, Rect::new(piece_coords.x as f32 * JIGSAW_PIECE_SIZE,
+                                     piece_coords.y as f32 * JIGSAW_PIECE_SIZE, 50.0, 50.0), render.z);
                     }
                 }
             }
