@@ -18,12 +18,15 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         input.hovered_entity = None;
         for (ent_id, position, size, render)
         in CompIter3::<PositionComp, SizeComp, RenderComp>::new(c){ // TODO: Could do some sorting.
-            let (screenpos, screensize) = camera.get_as_screen_transform(c, ent_id);
-            let screen_rect = screenpos.to_ggez_rect(&screensize);
-            if screen_rect.contains(input.inputs.primitive.get_mouse_loc().to_point()){
-                input.hovered_entity = Some(ent_id);
-                break;
+            if c.get::<IgnoreHoverComp>(ent_id).is_none(){
+                let (screenpos, screensize) = camera.get_as_screen_transform(c, ent_id);
+                let screen_rect = screenpos.to_ggez_rect(&screensize);
+                if screen_rect.contains(input.inputs.primitive.get_mouse_loc().to_point()){
+                    input.hovered_entity = Some(ent_id);
+                    break;
+                }
             }
+
         }
     }
 }

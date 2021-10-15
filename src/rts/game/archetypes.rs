@@ -41,9 +41,12 @@ impl PendingEntity{
         )
     }
     pub fn new_cursor(player: GlobalEntityID, shade: Shade) -> Self{
-        Self::new5(
+        Self::new6(
             CursorComp{
                 player,
+            },
+            IgnoreHoverComp{
+                useless: false
             },
             SizeComp{
                 size: PointFloat::new(10.0,10.0),
