@@ -90,6 +90,7 @@ impl GameState {
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
+
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;

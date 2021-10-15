@@ -12,7 +12,11 @@ pub struct JigsawPieceComp{
     pub coords: PointInt,
     pub image: String,
 }
-
+impl JigsawPieceComp{
+    pub fn get_nearby_connected(&self, c: CompStorage) -> Vec<GlobalEntityID>{
+        vec![]
+    }
+}
 
 pub static JIGSAW_PIECE_SYS: System = System{
     run,

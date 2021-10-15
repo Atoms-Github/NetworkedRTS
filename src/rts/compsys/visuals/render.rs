@@ -105,7 +105,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                             pos: on_screen_pos.clone(),
                             size: on_screen_size.clone(),
                         }, Rect::new(piece_coords.x as f32 * JIGSAW_PIECE_SIZE,
-                                     piece_coords.y as f32 * JIGSAW_PIECE_SIZE, 50.0, 50.0), render.z);
+                                     piece_coords.y as f32 * JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE), render.z);
                     }
                 }
             }
