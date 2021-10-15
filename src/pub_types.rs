@@ -56,7 +56,7 @@ impl MyPoint for PointFloat{
     }
 
     fn dist(&self, other: &PointFloat) -> f32 {
-        return ((other.x - self.x).powf(2.0) + (other.x - self.x).powf(2.0)).sqrt();
+        return ((other.x - self.x).powf(2.0) + (other.y - self.y).powf(2.0)).sqrt();
     }
 }
 

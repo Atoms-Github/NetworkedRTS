@@ -13,6 +13,8 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::bibble::data::data_types::RaceID;
 use log::logger;
 use walkdir::WalkDir;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -126,11 +128,27 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 let mut lock = crate::rts::game::game_resources::GAME_RESOURCES.lock().unwrap();
                 let image = lock.get_image(filepath);
 
+                let last_x = ((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32) - 1;
+                let last_y = ((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32) - 1;
+                let mut r = StdRng::seed_from_u64(222);
+
                 for x in 0..((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32){
                     for y in 0..((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32){
                         let coords = PointInt::new(x,y);
+                        let mut pos = PointFloat::new(x as f32 * JIGSAW_PIECE_SIZE, y as f32 * JIGSAW_PIECE_SIZE);
+                        let mut edges = 0;
+                        if x == 0 || x == last_x{
+                            edges += 1;
+                        }
+                        if y == 0 || y == last_y{
+                            edges += 1;
+                        }
+                        if edges != 2{ // If not a corner.
+                            pos.x = r.gen_range(0.0,image.width() as f32 * 1.0);
+                            pos.y = r.gen_range(0.0,image.width() as f32 * 1.0) + JIGSAW_PIECE_SIZE + image.height() as f32;
+                        }
                         let pending_piece = PendingEntity::new_jigsaw_piece("trees.jpg".to_string(), coords,
-                        PointFloat::new(x as f32 * JIGSAW_PIECE_SIZE, y as f32 * JIGSAW_PIECE_SIZE));
+                        pos);
 
                         ent_changes.new_entities.push(pending_piece);
 

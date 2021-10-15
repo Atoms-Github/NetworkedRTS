@@ -6,7 +6,7 @@ use crate::rts::compsys::*;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use std::ops::Div;
 
-pub const JIGSAW_PIECE_SIZE : f32 = 200.0;
+pub const JIGSAW_PIECE_SIZE : f32 = 100.0;
 
 use ggez::event::MouseButton;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
