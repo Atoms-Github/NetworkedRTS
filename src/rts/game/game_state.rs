@@ -48,6 +48,10 @@ pub fn global_get_systems() -> Vec<System>{
         NO_LEAVE_MAP.clone(),
         LOBBY_SYS.clone(),
         UI_SYS.clone(),
+        JIGSAW_PIECE_SYS.clone(),
+        JIGSAW_MAT_SYS.clone(),
+        JIGSAW_PLAYER_SYS.clone(),
+        UI_SYS.clone(),
         SCENE_SWITCHER_SYS.clone(),
     ]
 }

@@ -14,11 +14,11 @@ pub struct JigsawPieceComp{
 }
 
 
-pub static JIGSAW_SYS: System = System{
+pub static JIGSAW_PIECE_SYS: System = System{
     run,
     name: "jigsaw_piece"
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
-    
+
 }
 

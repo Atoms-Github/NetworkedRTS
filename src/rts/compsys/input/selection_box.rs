@@ -21,6 +21,10 @@ pub static SELECTION_BOX_SYS: System = System{
     name: "selection_box"
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+    let scene = c.find_scene();
+    if scene.current == SceneType::InJigsaw{
+        return;
+    }
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {
         let mouse_pos = c.get::<InputComp>(owned.owner).unwrap().mouse_pos_game_world.clone();
         let box_size_vec = mouse_pos - &sel_box.starting_pos;
