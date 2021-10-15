@@ -27,7 +27,7 @@ pub enum SimQuality{
     DETERMA,
     HEAD
 }
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Copy)]
 pub struct Shade(pub f32, pub f32, pub f32);
 
 impl Shade{

@@ -4,6 +4,7 @@ use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT};
 use crate::bibble::data::data_types::{WeaponID, GameData, RaceID};
+use ggez::graphics::Color;
 
 impl PendingEntity{
     // pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -37,6 +38,29 @@ impl PendingEntity{
     pub fn new_lobby(game_start_cooldown: f32) -> Self{
         Self::new1(
             LobbyManager{ game_start_cooldown },
+        )
+    }
+    pub fn new_cursor(player: GlobalEntityID, shade: Shade) -> Self{
+        Self::new5(
+            CursorComp{
+                player,
+            },
+            SizeComp{
+                size: PointFloat::new(10.0,10.0),
+            },
+            PositionComp{
+                pos: PointFloat::new(0.0,0.0),
+            },
+            ScenePersistent{
+                keep_alive: true
+            },
+            RenderComp{
+                z: 255,
+                texture: RenderTexture::Color(shade.0, shade.1, shade.2, 1.0),
+                shape: RenderShape::Rectangle,
+                only_render_owner: false
+            }
+
         )
     }
     pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -> Self{

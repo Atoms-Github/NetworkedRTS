@@ -67,6 +67,7 @@ lazy_static! {
         map.register_type::<JigsawPieceComp>();
         map.register_type::<JigsawPlayerComp>();
         map.register_type::<JigsawMatComp>();
+        map.register_type::<CursorComp>();
         // map.register_type::<BenchStruct>();
 
         map

@@ -50,6 +50,7 @@ pub fn global_get_systems() -> Vec<System>{
         UI_SYS.clone(),
         JIGSAW_PIECE_SYS.clone(),
         JIGSAW_MAT_SYS.clone(),
+        CURSOR_SYS.clone(),
         JIGSAW_PLAYER_SYS.clone(),
         UI_SYS.clone(),
         SCENE_SWITCHER_SYS.clone(),
@@ -91,9 +92,21 @@ impl GameState {
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
 
+
+        let cursor = PendingEntity::new_cursor(player_ent_id, color);
+        self.ecs.c.create_entity(cursor);
     }
     pub fn player_disconnects(&mut self, player_id: PlayerID){
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;
+        let mut my_cursor = None;
+        for (cursor_id, cursor_comp, position) in CompIter2::<CursorComp, PositionComp>::new(&self.ecs.c){
+            if cursor_comp.player == player_id as GlobalEntityID{
+                my_cursor = Some(cursor_id);
+            }
+        }
+        if let Some(cursor) = my_cursor{
+            self.ecs.c.delete_entity(cursor);
+        }
     }
     pub fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata){
         for (player_id, input_state) in inputs{
