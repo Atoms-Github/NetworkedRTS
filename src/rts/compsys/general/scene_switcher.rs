@@ -104,7 +104,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 // Map selection buttons.
                 x = 250.0;
                 let mut y = 400.0;
-                for map_entry in std::fs::read_dir("resources/images/maps").unwrap(){
+                for map_entry in std::fs::read_dir("resources/images/jigsaws").unwrap(){
                     let map_entry = map_entry.unwrap();
                     let new_map_pending = PendingEntity::new_map_selection_button(
                         map_entry.file_name().to_str().unwrap().to_string().clone(),
@@ -124,7 +124,13 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 }
             }
             SceneType::InJigsaw => {
-                let mut filepath = "jigsaws/trees.jpg".to_string();
+                let mut mapname = "trees.jpg".to_string();
+                for (ent_id, map_button_comp) in CompIter1::<MapButtonComp>::new(c){
+                    if map_button_comp.selected{
+                        mapname = map_button_comp.map.clone();
+                    }
+                }
+                let mut filepath = format!("jigsaws/{}", mapname);
                 let mut lock = crate::rts::game::game_resources::GAME_RESOURCES.lock().unwrap();
                 let image = lock.get_image(filepath);
 
@@ -147,13 +153,14 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                             pos.x = r.gen_range(0.0,image.width() as f32 * 1.0);
                             pos.y = r.gen_range(0.0,image.width() as f32 * 1.0) + JIGSAW_PIECE_SIZE + image.height() as f32;
                         }
-                        let pending_piece = PendingEntity::new_jigsaw_piece("trees.jpg".to_string(), coords,
+                        let pending_piece = PendingEntity::new_jigsaw_piece(mapname.clone(), coords,
                         pos);
 
                         ent_changes.new_entities.push(pending_piece);
 
                     }
                 }
+                ent_changes.new_entities.push(PendingEntity::new_jigsaw_mat(mapname));
 
 
             }

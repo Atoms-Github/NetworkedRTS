@@ -29,11 +29,9 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         // Check for game start on F1.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F1){
-                scene.next = SceneType::InGame;
+                // scene.next = SceneType::InGame;
             }else if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F2){
                 scene.next = SceneType::InJigsaw;
-            }else if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F8){
-                scene.next = SceneType::Lobby;
             }
         }
     }

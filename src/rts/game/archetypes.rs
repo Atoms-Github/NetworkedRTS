@@ -66,6 +66,14 @@ impl PendingEntity{
 
         )
     }
+    pub fn new_jigsaw_mat(jigsaw_name: String) -> Self{
+        Self::new1(
+            JigsawMatComp{
+                jigsaw_name
+            },
+
+        )
+    }
     pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -> Self{
         Self::new5(
             SizeComp{
