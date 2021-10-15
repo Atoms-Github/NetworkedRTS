@@ -102,7 +102,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     x += 50.0;
                 }
                 // Map selection buttons.
-                x = 50.0;
+                x = 250.0;
                 let mut y = 400.0;
                 for map_entry in std::fs::read_dir("resources/images/maps").unwrap(){
                     let map_entry = map_entry.unwrap();
@@ -112,7 +112,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     ent_changes.new_entities.push(new_map_pending);
                     x += 250.0;
                     if x > 1500.0{
-                        x = 50.0;
+                        x = 250.0;
                         y += 250.0;
                     }
                 }
