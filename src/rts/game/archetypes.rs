@@ -18,13 +18,14 @@ impl PendingEntity{
     //     )
     // }
     pub fn new_player(owner: GlobalEntityID) -> Self{
-        Self::new6(
+        Self::new7(
             PlayerComp{ name: "NamelessWonder".to_string(), alive: true, connected: false, race: RaceID::ROBOTS, color: Shade(1.0,0.5,1.0) },
             OwnsResourcesComp{ resources: [0.0; RESOURCES_COUNT] },
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
             InputComp{ is_panning: false, inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0, 0.0) },
             TechTreeComp{ tree: GameData::gen_game_data() },
             ScenePersistent{ keep_alive: true },
+            JigsawPlayerComp{ held_item: None },
         )
     }
     pub fn new_scene_manager() -> Self{
@@ -36,6 +37,29 @@ impl PendingEntity{
     pub fn new_lobby(game_start_cooldown: f32) -> Self{
         Self::new1(
             LobbyManager{ game_start_cooldown },
+        )
+    }
+    pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -> Self{
+        Self::new5(
+            SizeComp{
+                size: PointFloat::new(JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE),
+            },
+            RenderComp{
+                z: 100,
+                texture: RenderTexture::Jigsaw(image.clone(), coords.clone()),
+                shape: RenderShape::Rectangle,
+                only_render_owner: false
+            },
+            PositionComp{
+                pos: position,
+            },
+            ClickableComp{
+                clicking_on: None
+            },
+            JigsawPieceComp{
+                coords,
+                image
+            },
         )
     }
     // pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -71,7 +95,7 @@ impl PendingEntity{
             },
             SizeComp{ size: PointFloat::new(50.0, 50.0)},
             PositionComp{ pos: position },
-            ButtonComp{
+            ClickableComp {
                 clicking_on: None
             },
             RaceButtonComp{
@@ -89,7 +113,7 @@ impl PendingEntity{
             },
             SizeComp{ size: PointFloat::new(250.0, 250.0)},
             PositionComp{ pos: position },
-            ButtonComp{
+            ClickableComp {
                 clicking_on: None
             },
             MapButtonComp{

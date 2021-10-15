@@ -31,6 +31,7 @@ pub struct SceneManager{
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum SceneType{
     InGame,
+    InJigsaw,
     Lobby,
     None,
 }
@@ -119,6 +120,24 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 for (player_id, camera) in CompIter1::<CameraComp>::new(c){
                     camera.translation = PointFloat::new(0.0, 0.0);
                 }
+            }
+            SceneType::InJigsaw => {
+                let mut filepath = "jigsaws/trees.jpg".to_string();
+                let mut lock = crate::rts::game::game_resources::GAME_RESOURCES.lock().unwrap();
+                let image = lock.get_image(filepath);
+
+                for x in 0..((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32){
+                    for y in 0..((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32){
+                        let coords = PointInt::new(x,y);
+                        let pending_piece = PendingEntity::new_jigsaw_piece("trees.jpg".to_string(), coords,
+                        PointFloat::new(x as f32 * JIGSAW_PIECE_SIZE, y as f32 * JIGSAW_PIECE_SIZE));
+
+                        ent_changes.new_entities.push(pending_piece);
+
+                    }
+                }
+
+
             }
             SceneType::None => {}
         }

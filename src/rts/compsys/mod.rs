@@ -20,6 +20,9 @@ pub mod input;
 pub use players::*;
 pub mod players;
 
+pub use jigsaw::*;
+pub mod jigsaw;
+
 pub use the_map::*;
 pub mod the_map;
 

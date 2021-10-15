@@ -25,7 +25,8 @@ pub struct RenderComp{
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum RenderTexture{
     Color(f32, f32, f32, f32),
-    Image(String)
+    Image(String),
+    Jigsaw(String, PointInt),
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum RenderShape{
@@ -79,6 +80,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                         cool_batcher.add_circle(&on_screen_pos, radius, Color::new(*r,*g,*b,*a), render.z);
                     }
                     RenderTexture::Image(_) => {panic!("Render image circle isn't supported! (yet loh)")}
+                    RenderTexture::Jigsaw(_, _) => {panic!("Render jigsaw circle isn't supported! (yet loh)")}
                 }
             }
             RenderShape::Rectangle => {
@@ -96,6 +98,12 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                             size: on_screen_size.clone(),
                         };
                         cool_batcher.add_image(image_name.clone(), my_draw_params, render.z);
+                    }
+                    RenderTexture::Jigsaw(landscape_name, piece_coords) => {
+                        cool_batcher.add_image(landscape_name.clone(), MyDrawParams{
+                            pos: on_screen_pos.clone(),
+                            size: on_screen_size.clone(),
+                        }, render.z);
                     }
                 }
             }
