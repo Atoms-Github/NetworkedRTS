@@ -13,6 +13,12 @@ pub struct JigsawPieceComp{
     pub image: String,
 }
 impl JigsawPieceComp{
+    pub fn get_correct_pos(&self) -> PointFloat{
+        return PointFloat::new(self.coords.x as f32 * JIGSAW_PIECE_SIZE,
+                               self.coords.y as f32 * JIGSAW_PIECE_SIZE);
+    }
+}
+impl JigsawPieceComp{
     pub fn get_nearby_connected(&self, c: CompStorage) -> Vec<GlobalEntityID>{
         vec![]
     }

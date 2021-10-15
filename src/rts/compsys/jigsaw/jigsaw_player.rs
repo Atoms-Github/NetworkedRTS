@@ -6,7 +6,7 @@ use crate::rts::compsys::*;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use std::ops::Div;
 
-pub const JIGSAW_PIECE_SIZE : f32 = 100.0;
+pub const JIGSAW_PIECE_SIZE : f32 = 75.0;
 
 use ggez::event::MouseButton;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -25,8 +25,8 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
 
             if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
                 let piece_comp = c.get_unwrap::<JigsawPieceComp>(held_piece);
-                let correct_place = piece_comp.coords.map(|i|{i as f32 * JIGSAW_PIECE_SIZE});
-                let actual_place = c.get_mut_unwrap::<PositionComp>(held_piece);
+                let correct_place = piece_comp.get_correct_pos();
+                let actual_place = c.get_mut_unwrap:: <PositionComp>(held_piece);
                 if actual_place.pos.dist(&correct_place) < JIGSAW_PIECE_SIZE / 2.0{
                     actual_place.pos = correct_place;
                 }
@@ -35,8 +35,10 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
 
             }
         }else{
-            for (piece_id, jigsaw_piece, clickable) in CompIter2::<JigsawPieceComp, ClickableComp>::new(c){
-                if Some(player_id) == clickable.clicking_on{
+            for (piece_id, jigsaw_piece, clickable, pos) in
+            CompIter3::<JigsawPieceComp, ClickableComp, PositionComp>::new(c){
+                if Some(player_id) == clickable.clicking_on
+                && jigsaw_piece.get_correct_pos() != pos.pos.clone(){
                     jigsaw_player.held_item  = Some(piece_id);
                 }
             }
