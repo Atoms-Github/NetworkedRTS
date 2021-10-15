@@ -50,7 +50,7 @@ impl MyPoint for PointFloat{
         return e;
     }
     fn to_ggez_rect(&self, size: &PointFloat) -> ggez::graphics::Rect{
-        return ggez::graphics::Rect::new(self.x, self.y, size.x, size.y);
+        return ggez::graphics::Rect::new(self.x - size.x / 2.0, self.y - size.y / 2.0, size.x, size.y);
     }
 }
 
