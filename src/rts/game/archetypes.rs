@@ -66,11 +66,26 @@ impl PendingEntity{
 
         )
     }
-    pub fn new_jigsaw_mat(jigsaw_name: String) -> Self{
-        Self::new1(
+    pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat) -> Self{
+        Self::new5(
             JigsawMatComp{
                 jigsaw_name
             },
+            IgnoreHoverComp{
+                useless: false
+            },
+            SizeComp{
+                size: size.clone(),
+            },
+            PositionComp {
+                pos: PointFloat::new(size.x / 2.0 - JIGSAW_PIECE_SIZE / 2.0, size.y / 2.0 - JIGSAW_PIECE_SIZE / 2.0),
+            },
+            RenderComp{
+                z: 5,
+                texture: RenderTexture::Color(0.05,0.05,0.05,0.2),
+                shape: RenderShape::Rectangle,
+                only_render_owner: false
+            }
 
         )
     }

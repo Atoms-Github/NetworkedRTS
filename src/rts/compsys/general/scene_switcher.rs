@@ -160,7 +160,10 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
 
                     }
                 }
-                ent_changes.new_entities.push(PendingEntity::new_jigsaw_mat(mapname));
+                ent_changes.new_entities.push(
+                    PendingEntity::new_jigsaw_mat(mapname,
+                                                  PointFloat::new((last_x + 1) as f32 * JIGSAW_PIECE_SIZE,
+                                                                  (last_y + 1) as f32 * JIGSAW_PIECE_SIZE)));
 
 
             }
