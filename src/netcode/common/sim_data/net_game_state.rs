@@ -18,7 +18,7 @@ pub struct NetPlayerProperty{
     pub waiting_on: bool,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Hash)]
 pub struct NetGameState {
     pub game_state: GameState,
     players: BTreeMap<PlayerID, NetPlayerProperty>,
@@ -74,7 +74,7 @@ impl NetGameState {
     }
     pub fn get_hash(&self) -> HashType{
         let mut s = DefaultHasher::new();
-        // TODO1: self.hash(&mut s);
+        self.hash(&mut s);
         s.finish()
     }
     pub fn get_simmed_frame_index(&self) -> FrameIndex{

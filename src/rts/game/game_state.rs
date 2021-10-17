@@ -58,7 +58,7 @@ pub fn global_get_systems() -> Vec<System>{
 }
 
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Hash)]
 pub struct GameState {
     ecs: ActiveEcs,
 }

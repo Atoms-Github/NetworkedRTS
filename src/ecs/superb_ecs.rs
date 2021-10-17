@@ -49,6 +49,11 @@ impl SuperbEcs{
     }
 
 }
+impl Hash for SuperbEcs{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.c.hash(state);
+    }
+}
 impl Clone for SuperbEcs{
     fn clone(&self) -> Self {
         Self{
@@ -166,6 +171,7 @@ use crate::ecs::pending_entity::PendingEntity;
 use crate::pub_types::{SimMetadata, SimQuality};
 use crate::ecs::ecs_debug_timer::EcsDebugTimer;
 use rand::Rng;
+use std::hash::{Hash, Hasher};
 
 impl ECSVisitor {
     fn new() -> Self {

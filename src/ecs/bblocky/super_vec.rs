@@ -17,7 +17,7 @@ use std::clone::Clone;
 use crate::unsafe_utils::very_bad_function;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Hash)]
 pub struct SuperVec {
     item_size: usize,
     data: Vec<u8>,
