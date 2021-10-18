@@ -15,9 +15,11 @@ use super::comp_registration::*;
 use crate::ecs::bblocky::super_any::SuperAny;
 use std::clone::Clone;
 use crate::unsafe_utils::very_bad_function;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
 
 
-#[derive(Debug, PartialEq, Hash)]
+#[derive(Debug, PartialEq)]
 pub struct SuperVec {
     item_size: usize,
     data: Vec<u8>,
@@ -111,6 +113,18 @@ impl Clone for SuperVec {
             data,
             item_type: self.item_type,
         }
+    }
+}
+impl Hash for SuperVec{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let mut hasher = DefaultHasher::new();
+        let functions = FUNCTION_MAP.get(self.item_type);
+        for i in 0..self.len(){
+            (functions.hash)(&self.data[i * self.item_size..(i + 1) * self.item_size],
+            &mut hasher);
+        }
+        let total_hash = hasher.finish();
+        total_hash.hash(state);
     }
 }
 impl Drop for SuperVec{
