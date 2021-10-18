@@ -67,14 +67,21 @@ impl SuperVec {
     pub fn swap_remove(&mut self, index: usize){
         // If we can simply just normal remove off the end.
         if index == self.len() - 1{
+            self.drop_items_refs(index);
             self.data.drain((self.data.len() - self.item_size)..);
         }else{
+            self.drop_items_refs(index);
             let swap_source_index = self.data.len() - self.item_size;
             let swap_target_index = index * self.item_size;
             let my_data : Vec<u8> = self.data.drain(swap_source_index..swap_source_index + self.item_size).collect();
             // Splice if in middle, otherwise just remove from end.
             self.data.splice(swap_target_index..swap_target_index + self.item_size, my_data);
         }
+    }
+    /// Properly deallocates all data referenced to by the item in position INDEX.
+    pub fn drop_items_refs(&self, index: usize){
+        let functions = FUNCTION_MAP.get(self.item_type);
+        (functions.deallocate_refed_mem)(&self.data[index * self.item_size..(index + 1) * self.item_size]);
     }
 
     pub fn get<T : 'static>(&self, index: usize) -> Option<&T>{
@@ -108,7 +115,10 @@ impl Clone for SuperVec {
 }
 impl Drop for SuperVec{
     fn drop(&mut self) {
-        // TODO. Note to self. Don't put a todo!() inside a drop function. Don't put any panic inside todo.
+        // Dealocate all memory referenced.
+        for i in 0..self.len(){
+            self.drop_items_refs(i);
+        }
     }
 }
 #[derive(Serialize, Clone, Deserialize)]

@@ -19,6 +19,7 @@ use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use std::fmt::Write;
 use std::fmt;
+use std::mem::MaybeUninit;
 // use super::my_benchmark::BenchStruct;
 
 
@@ -113,12 +114,30 @@ impl FunctionMap{
                 std::mem::forget(item); // TODO: Confirm this.
                 return to_return;
             },
-            meme_clone_and_forget: |item|{
-                let as_type :&T = unsafe{crate::unsafe_utils::u8_slice_to_ref(item)};
+            meme_clone_and_forget: |original_bytes|{
+                let as_type :&T = unsafe{crate::unsafe_utils::u8_slice_to_ref(original_bytes)};
                 let cloned = as_type.clone();
                 let back_to_bytes = unsafe{crate::unsafe_utils::struct_as_u8_slice(&cloned)}.to_vec();
                 std::mem::forget(cloned);
                 return back_to_bytes;
+            },
+            deallocate_refed_mem: |bytes|{
+                // What we want to do:
+                // 1. Turn bytes into an object.
+                // 2. Run forget or drop or similar (the one that keeps the object but drops refed mem).
+                // We should be safe, as we're unable to modify source bytes. Hmm. Since we're going unsafe, maybe not.
+                let as_type :&T = unsafe{crate::unsafe_utils::u8_slice_to_ref(bytes)};
+                unsafe{
+                    let mut e = MaybeUninit::<T>::zeroed().assume_init();
+                    let target_bytes = crate::unsafe_utils::struct_as_u8_slice_mut(&mut e);
+                    // Load e up with values.
+                    target_bytes.clone_from_slice(bytes);
+                    // Now drop e, deleting all refed values.
+                    std::mem::drop(e);
+                }
+
+
+
             },
             item_size: size,
         });
@@ -138,6 +157,8 @@ pub struct SuperbFunctions {
     pub meme_ser: fn(&[u8]) -> Vec<u8>,
     pub meme_deser_and_forget: fn(&Vec<u8>) -> Vec<u8>,
     pub meme_clone_and_forget: fn(&[u8]) -> Vec<u8>,
+
+    pub deallocate_refed_mem: fn(&[u8]),
 
     pub item_size: usize,
 }

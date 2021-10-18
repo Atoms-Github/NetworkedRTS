@@ -78,22 +78,22 @@ fn test_swap_remove() {
     assert_eq!(first, original3);
 }
 
-//
-// #[test]
-// fn test_mem_leak() {
-//     loop{
-//         let original = TestStructB{
-//             integer: 0,
-//             vec: vec![vec![TestStructA{
-//                 integer: 0,
-//                 float: 0.0,
-//                 vec: vec![]
-//             }]],
-//             float: 0.0
-//         };
-//         let mut my_vec = SuperVec::new_and_push(original.clone());
-//         my_vec.push(original.clone());
-//         my_vec.swap_remove(0);
-//         println!("OneIteration");
-//     }
-// }
+
+#[test]
+fn test_mem_leak() {
+    loop{
+        let original = TestStructB{
+            integer: 0,
+            vec: vec![vec![TestStructA{
+                integer: 0,
+                float: 0.0,
+                vec: vec![]
+            }]],
+            float: 0.0
+        };
+        let mut my_vec = SuperVec::new_and_push(original.clone());
+        my_vec.push(original.clone());
+        my_vec.swap_remove(0);
+        println!("OneIteration");
+    }
+}

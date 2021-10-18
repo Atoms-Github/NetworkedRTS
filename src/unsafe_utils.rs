@@ -5,6 +5,12 @@ pub unsafe fn struct_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
         ::std::mem::size_of::<T>(),
     )
 }
+pub unsafe fn struct_as_u8_slice_mut<T: Sized>(p: &mut T) -> &mut [u8] {
+    ::std::slice::from_raw_parts_mut(
+        (p as *mut T) as *mut u8,
+        ::std::mem::size_of::<T>(),
+    )
+}
 pub unsafe fn u8_slice_to_ref<T>(bytes: &[u8]) -> &T {
     let bytes_ptr = bytes.as_ptr();
     let test : *const T = unsafe{ std::mem::transmute(bytes_ptr) };
