@@ -33,7 +33,7 @@ fn test_ser_de() {
     assert_eq!(original, new_version);
 }
 // #[test]
-// fn test_ser_de_mem_leak() {
+// fn test_super_any_ser_de_mem_leak() {
 //     loop{
 //         let original = TestStructB{
 //             integer: 3,
