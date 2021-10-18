@@ -32,6 +32,27 @@ fn test_ser_de() {
     let new_version = reser.get::<TestStructB>().clone();
     assert_eq!(original, new_version);
 }
+// #[test]
+// fn test_ser_de_mem_leak() {
+//     loop{
+//         let original = TestStructB{
+//             integer: 3,
+//             vec: vec![vec![], vec![TestStructA{
+//                 integer: 0,
+//                 float: 3.7,
+//                 vec: vec![8,5]
+//             }]],
+//             float: 100.2
+//         };
+//         let strb = SuperAny::new(original.clone());
+//         let bytes = bincode::serialize(&strb).unwrap();
+//         let reser = bincode::deserialize::<SuperAny>(bytes.as_slice()).unwrap();
+//
+//         let new_version = reser.get::<TestStructB>().clone();
+//         assert_eq!(original, new_version);
+//         println!("{:?}", new_version);
+//     }
+// }
 
 #[test]
 fn test_clone() {
