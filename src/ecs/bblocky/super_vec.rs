@@ -83,7 +83,7 @@ impl SuperVec {
     /// Properly deallocates all data referenced to by the item in position INDEX.
     pub fn drop_items_refs(&self, index: usize){
         let functions = FUNCTION_MAP.get(self.item_type);
-        (functions.deallocate_refed_mem)(&self.data[index * self.item_size..(index + 1) * self.item_size]);
+        (functions.deallocate_refed_mem)(self.get_as_bytes(index));
     }
 
     pub fn get<T : 'static>(&self, index: usize) -> Option<&T>{
@@ -117,14 +117,12 @@ impl Clone for SuperVec {
 }
 impl Hash for SuperVec{
     fn hash<H: Hasher>(&self, state: &mut H) {
-        let mut hasher = DefaultHasher::new();
         let functions = FUNCTION_MAP.get(self.item_type);
         for i in 0..self.len(){
-            (functions.hash)(&self.data[i * self.item_size..(i + 1) * self.item_size],
-            &mut hasher);
+            let bytes = self.get_as_bytes(i);
+            let serialized_bytes = (functions.meme_ser)(bytes);
+            serialized_bytes.hash(state);
         }
-        let total_hash = hasher.finish();
-        total_hash.hash(state);
     }
 }
 impl Drop for SuperVec{

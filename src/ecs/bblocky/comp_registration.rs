@@ -89,7 +89,7 @@ struct MyData{
     numc: u8,
 }
 impl FunctionMap{
-    pub fn register_type<T : 'static + Serialize + Clone + DeserializeOwned + Send + Hash>(&mut self){
+    pub fn register_type<T : 'static + Serialize + Clone + DeserializeOwned + Send>(&mut self){
         let size = std::mem::size_of::<T>();
         assert!(size > 0, "Components with size of 0 are disallowed.");
         self.map.insert(gett::<T>(), SuperbFunctions {
@@ -137,13 +137,6 @@ impl FunctionMap{
                     // Now drop e, deleting all refed values.
                     std::mem::drop(e);
                 }
-
-
-
-            },
-            hash: |bytes, hasher|{
-                let as_type :&T = unsafe{crate::unsafe_utils::u8_slice_to_ref(bytes)};
-                as_type.hash(hasher);
             },
             item_size: size,
         });
@@ -165,7 +158,6 @@ pub struct SuperbFunctions {
     pub meme_clone_and_forget: fn(&[u8]) -> Vec<u8>,
 
     pub deallocate_refed_mem: fn(&[u8]),
-    pub hash: fn(&[u8], &mut DefaultHasher),
 
     pub item_size: usize,
 }
