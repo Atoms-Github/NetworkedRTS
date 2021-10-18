@@ -94,6 +94,5 @@ fn test_mem_leak() {
         let mut my_vec = SuperVec::new_and_push(original.clone());
         my_vec.push(original.clone());
         my_vec.swap_remove(0);
-        println!("OneIteration");
     }
 }
