@@ -7,6 +7,7 @@ use ggez::event::{MouseButton, KeyCode};
 use crate::netcode::InputState;
 use crate::pub_types::PointFloat;
 use nalgebra::Point2;
+use rand::Rng;
 
 pub static INPUT_PREPROC: System = System{
     run,

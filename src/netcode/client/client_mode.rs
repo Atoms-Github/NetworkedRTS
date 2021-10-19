@@ -147,7 +147,7 @@ impl ClientEx{
                     // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
                 }
                 ExternalMsg::NewHash(framed_hash) => {
-                    self.seg_logic_tailer.check_hash(framed_hash);
+                    self.seg_logic_tailer.add_hash(framed_hash);
                 },
                 _ => {
                     panic!("Client shouldn't be getting a message of this type (or at this time)!")

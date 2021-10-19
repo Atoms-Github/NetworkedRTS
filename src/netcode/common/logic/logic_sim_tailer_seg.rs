@@ -114,7 +114,6 @@ impl LogicSimTailer{
         let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP - 1);
 
         for frame_to_sim in first_frame_to_sim..(last_frame_to_sim + 1){
-
             match self.simulate_tick(data_store){
                 Some(problems) => {
                     return Some(problems);
@@ -127,17 +126,14 @@ impl LogicSimTailer{
         return None;
     }
     fn update_hash(&mut self){
-        self.hashes.insert(self.game_state.get_simmed_frame_index(), self.game_state.get_hash());
+        self.add_hash(FramedHash{
+            frame: self.game_state.get_simmed_frame_index(),
+            hash: self.game_state.get_hash()
+        });
     }
-    pub fn check_hash(&mut self, framed_hash: FramedHash){
-        match self.hashes.get(&framed_hash.frame){
-            None => {
-
-            }
-            Some(existing_hash) => {
-                let msg = format!("Out of sync! Frame index {}", framed_hash.frame);
-                assert_eq!(*existing_hash, framed_hash.hash, "Out of sync! Frame index {}", framed_hash.frame);
-            }
+    pub fn add_hash(&mut self, framed_hash: FramedHash){
+        if let Some(existing_hash) = self.hashes.insert(framed_hash.frame, framed_hash.hash){
+            assert_eq!(existing_hash, framed_hash.hash, "Out of sync! Frame index {}", framed_hash.frame);
         }
     }
 }

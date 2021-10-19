@@ -74,7 +74,7 @@ impl NetGameState {
     }
     pub fn get_hash(&self) -> HashType{
         let mut s = DefaultHasher::new();
-        // self.hash(&mut s);
+        self.hash(&mut s);
         s.finish()
     }
     pub fn get_simmed_frame_index(&self) -> FrameIndex{
