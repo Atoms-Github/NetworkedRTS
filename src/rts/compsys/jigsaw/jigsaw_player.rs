@@ -26,19 +26,23 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         }
         if let Some(held_piece) = jigsaw_player.held_item.clone(){
             if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
+                let held_render_comp = c.get_mut_unwrap::<RenderComp>(held_piece);
+                held_render_comp.z = 100;
                 let piece_comp = c.get_unwrap::<JigsawPieceComp>(held_piece);
                 let correct_place = piece_comp.get_correct_pos();
                 let actual_place = c.get_mut_unwrap:: <PositionComp>(held_piece);
                 if actual_place.pos.dist(&correct_place) < JIGSAW_PIECE_SIZE / 2.0{
                     actual_place.pos = correct_place;
+                    held_render_comp.z = 99;
                 }else{
                     // Try for teleport both pieces to correct place.
-                    for (piece_id, matched_to_piece, matched_pos) in CompIter2::<JigsawPieceComp, PositionComp>::new(c){
+                    for (piece_id, matched_to_piece, matched_pos, render) in CompIter3::<JigsawPieceComp, PositionComp, RenderComp>::new(c){
                         if piece_id != held_piece{
                             let real_dist = (matched_pos.clone().pos - &actual_place.pos) as PointFloat;
                             let coords_diff = (matched_to_piece.coords.clone() - &piece_comp.coords) as PointInt;
                             let actual_coords_place_diff = coords_diff.clone().map(|i| {i as f32 * JIGSAW_PIECE_SIZE}) as PointFloat;
                             if actual_coords_place_diff.dist(&real_dist) < JIGSAW_PIECE_SIZE / 10.0{
+                                render.z = 99;
                                 // Teleport both to correct place.
                                 matched_pos.pos = matched_to_piece.get_correct_pos();
                                 actual_place.pos = correct_place.clone();
@@ -47,15 +51,18 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     }
                 }
 
+
+
                 jigsaw_player.held_item = None;
 
             }
         }else{
-            for (piece_id, jigsaw_piece, clickable, pos) in
-            CompIter3::<JigsawPieceComp, ClickableComp, PositionComp>::new(c){
+            for (piece_id, jigsaw_piece, clickable, pos, render) in
+            CompIter4::<JigsawPieceComp, ClickableComp, PositionComp, RenderComp>::new(c){
                 if Some(player_id) == clickable.clicking_on
                 && jigsaw_piece.get_correct_pos() != pos.pos.clone(){
                     jigsaw_player.held_item  = Some(piece_id);
+                    render.z = 101;
                 }
             }
         }

@@ -164,7 +164,7 @@ impl CompStorage{
     pub fn query_sorted(&self, must_include: Vec<TypeIdNum>,
                         sort_by: fn(&CompStorage, GlobalEntityID) -> u8) -> Vec<GlobalEntityID>{
         let mut unsorted = self.query(must_include);
-        let mut radix = vec![vec![]; 255];
+        let mut radix = vec![vec![]; 256];
         for ent_id in unsorted{
             let result = (sort_by)(self, ent_id);
             radix[result as usize].push(ent_id);
