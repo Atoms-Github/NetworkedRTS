@@ -161,6 +161,16 @@ impl CompStorage{
         }
         return found_entities;
     }
+    pub fn query_sorted(&self, must_include: Vec<TypeIdNum>,
+                        sort_by: fn(&CompStorage, GlobalEntityID) -> u8) -> Vec<GlobalEntityID>{
+        let mut unsorted = self.query(must_include);
+        let mut radix = vec![vec![]; 255];
+        for ent_id in unsorted{
+            let result = (sort_by)(self, ent_id);
+            radix[result as usize].push(ent_id);
+        }
+        return radix.concat();
+    }
     fn save_global_entity_id(&mut self, composition_id: CompositionID, global_id: GlobalEntityID){
         for new_block_index in self.global_ids_as_comps.len()..(composition_id + 1){
             self.global_ids_as_comps.push(vec![]);
