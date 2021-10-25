@@ -141,7 +141,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 for x in 0..((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32){
                     for y in 0..((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32){
                         let coords = PointInt::new(x,y);
-                        let mut pos = PointFloat::new(0.5,0.5);
+                        let mut pos = PointFloat::new(x as f32 * JIGSAW_PIECE_SIZE,y as f32 * JIGSAW_PIECE_SIZE);
                         let mut edges = 0;
                         if x == 0 || x == last_x{
                             edges += 1;
