@@ -20,9 +20,11 @@ pub static JIGSAW_PLAYER_SYS: System = System{
     name: "jigsaw_player"
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
-    for (player_id, jigsaw_player, input, camera) in CompIter3::<JigsawPlayerComp, InputComp, CameraComp>::new(c){
+    for (player_id, player, jigsaw_player, input, camera) in CompIter4::<PlayerComp, JigsawPlayerComp, InputComp, CameraComp>::new(c){
+        if !player.connected{
+            continue;
+        }
         if let Some(held_piece) = jigsaw_player.held_item.clone(){
-
             if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
                 let piece_comp = c.get_unwrap::<JigsawPieceComp>(held_piece);
                 let correct_place = piece_comp.get_correct_pos();

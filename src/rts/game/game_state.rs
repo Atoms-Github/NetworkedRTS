@@ -16,6 +16,8 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
+use crate::netcode::common::time::timekeeping::DT;
+use rand::Rng;
 
 pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
@@ -117,7 +119,11 @@ impl GameState {
         self.ecs.sim_systems(sim_meta);
     }
     pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
+        let timer = DT::start("RenderTime");
         crate::rts::compsys::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
+        if crate::DEBUG_MSGS_ITS_LAGGING && rand::thread_rng().gen_bool(0.1){
+            timer.stop();
+        }
     }
     pub fn gen_render_resources(ctx: &mut Context) -> RenderResourcesPtr {
         let mut resources = RenderResources::load(ctx);

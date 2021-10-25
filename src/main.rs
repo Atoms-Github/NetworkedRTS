@@ -33,6 +33,7 @@ pub mod args;
 
 
 pub const DEBUG_MSGS_ALL: bool = false;
+pub const DEBUG_MSGS_ITS_LAGGING: bool = false;
 pub const DEBUG_MSGS_MAIN: bool = DEBUG_MSGS_ALL || false;
 pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || true;
 // pub const DEBUG_MSGS_NET: bool = DEBUG_MSGS_ALL || false;

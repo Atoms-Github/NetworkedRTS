@@ -42,9 +42,9 @@ impl SuperbEcs{
         }
         pending_changes.apply(&mut self.c);
 
-        if meta.quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.1){
-            // self.debug_times.print_all();
-            // println!("Entities: {}", self.c.get_entity_count());
+        if meta.quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.1) && crate::DEBUG_MSGS_ITS_LAGGING{
+            self.debug_times.print_all();
+            println!("Entities: {}", self.c.get_entity_count());
         }
     }
 
