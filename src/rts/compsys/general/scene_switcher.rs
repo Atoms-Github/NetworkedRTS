@@ -141,7 +141,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 for x in 0..((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32){
                     for y in 0..((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32){
                         let coords = PointInt::new(x,y);
-                        let mut pos = PointFloat::new(x as f32 * JIGSAW_PIECE_SIZE,y as f32 * JIGSAW_PIECE_SIZE);
+                        let mut pos ;//= PointFloat::new(x as f32 * JIGSAW_PIECE_SIZE,y as f32 * JIGSAW_PIECE_SIZE);
                         let border_width = 0.3;
                         let mut attempted_location = PointFloat::new(r.gen_range(image.width() as f32 * -border_width,image.width() as f32 * (1.0 + border_width)),
                                                                      r.gen_range(image.height() as f32 * -border_width,image.height() as f32 * (1.0 + border_width)));
