@@ -63,7 +63,7 @@ fn main() {
     log::info!("Starting!");
 
     let args = crate::args::Args::gather();
-    let address = args.ip + ":1414";
+    let address = args.ip + ":1616";
 
 
     match args.launch_type{

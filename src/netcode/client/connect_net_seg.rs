@@ -82,6 +82,9 @@ impl ConnectNetEx {
         while ping_results.len() < TIME_SAMPLES_REQUIRED || opt_greetings.is_none(){
             let inc_msg = self.net_rec.as_ref().unwrap().recv().unwrap();
             let c_receive_time = SystemTime::now();
+            if let ExternalMsg::ConnectionInitResponse(resp) = &inc_msg{
+                println!("Found! Nice.");
+            }
             match inc_msg {
                 ExternalMsg::PingTestResponse(response) => {
                     let full_sample = FullPingSample{

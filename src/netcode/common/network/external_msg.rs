@@ -27,6 +27,7 @@ pub enum ExternalMsg {
     InputQuery(SimDataQuery),
     PingTestQuery(SystemTime),
     PingTestResponse(NetMsgPingTestResponse),
+    HelloDebug(),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
