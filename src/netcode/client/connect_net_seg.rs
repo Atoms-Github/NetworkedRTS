@@ -170,7 +170,6 @@ impl ConnectNetIn {
 
         udp_socket.try_clone().unwrap().start_listening(up_sink.clone());
         tcp_stream.try_clone().unwrap().start_listening(up_sink);
-
         thread::spawn(move ||{
             loop{
                 let (msg, reliable) = down_rec.recv().unwrap();

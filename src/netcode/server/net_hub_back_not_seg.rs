@@ -96,7 +96,7 @@ impl NetHubBackIn {
                             SocketIncEvent::Diconnect(address) => {
                                 assert!(connections_map.remove(&address).is_some(), "TCP disconnected player twice. May happen super rare on mad rapid connect spam.");
                                 above_out_sink.send(NetHubBackMsgOut::PlayerDiscon(address)).unwrap();
-                                log::debug!("Net back disconnecting {}", address);
+                                log::debug!("Net back player disconnecting {}", address);
 
                             }
                         }
