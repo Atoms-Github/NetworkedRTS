@@ -53,7 +53,10 @@ use log4rs::append::file::FileAppender;
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::config::{Appender, Config, Root};
 
+
 fn main() {
+    let args = crate::args::Args::gather();
+    let address = args.ip + ":1616";
     // Builder::new()
     //     .format(|buf, record| {
     //         if record.target().contains("poggy"){
@@ -62,23 +65,23 @@ fn main() {
     //         return std::io::Result::Ok(());
     //     }).filter(None, LevelFilter::Info).init();
 
+    let mut args_str: Vec<String> = env::args().collect();
     let logfile = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
-        .build("log/output.log").unwrap();
+        .build(format!("log/output{}.log", args_str[1])).unwrap();
 
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
         .build(Root::builder()
             .appender("logfile")
-            .build(LevelFilter::Info)).unwrap();
+            .build(LevelFilter::Warn)).unwrap();
 
     log4rs::init_config(config).unwrap();
 
 
     log::info!("Starting!");
 
-    let args = crate::args::Args::gather();
-    let address = args.ip + ":1616";
+
 
 
     match args.launch_type{

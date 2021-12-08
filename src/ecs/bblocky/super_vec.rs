@@ -29,7 +29,18 @@ pub struct SuperVec {
 }
 impl Debug for SuperVec{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        todo!()
+        let functions = FUNCTION_MAP.get(self.item_type);
+        let mut items = vec![];
+        for i in 0..self.len(){
+            let bytes = self.get_as_bytes(i);
+            let mut debug_string = (functions.debug_fmt)(bytes);
+            items.push(debug_string);
+        }
+        f.debug_struct(format!("SuperVec of {}", &self.debug_name).as_str())
+            .field("item_size", &self.item_size)
+            .field("item_type", &self.item_type)
+            .field("data", &items.join(", "))
+            .finish()
     }
 }
 

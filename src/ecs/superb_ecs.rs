@@ -7,7 +7,7 @@ use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use crate::netcode::common::time::timekeeping::*;
 
-// TODO: Implement ser and de manually.
+#[derive(Debug)]
 pub struct SuperbEcs{
     systems: Vec<System>,
     pub c: CompStorage,
@@ -63,10 +63,14 @@ impl Clone for SuperbEcs{
         }
     }
 }
-
 pub struct System{
     pub run: fn(&mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges, &SimMetadata),
     pub name: &'static str,
+}
+impl Debug for System{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("System").field("Name: ", &self.name).finish()
+    }
 }
 pub struct EntStructureChanges{
     pub new_entities: Vec<PendingEntity>,
@@ -160,7 +164,7 @@ impl Serialize for SuperbEcs{
 struct ECSVisitor {
 }
 
-use std::fmt::Write;
+use std::fmt::{Write, Debug};
 use std::fmt;
 use crate::utils::{TypeIdNum, gett};
 use crate::rts::game::game_state::UsingRenderResources;
@@ -172,6 +176,7 @@ use crate::pub_types::{SimMetadata, SimQuality};
 use crate::ecs::ecs_debug_timer::EcsDebugTimer;
 use rand::Rng;
 use std::hash::{Hash, Hasher};
+use crate::bibble::data::data_types::__private::Formatter;
 
 impl ECSVisitor {
     fn new() -> Self {

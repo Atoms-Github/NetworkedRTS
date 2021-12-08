@@ -98,7 +98,7 @@ impl SpeedTimer{
         self.item = None;
     }
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DT{ // Debug Timer.
     time: SystemTime,
     pub name: String

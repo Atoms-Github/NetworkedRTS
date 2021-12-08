@@ -26,7 +26,7 @@ pub struct InternalEntity {
     internal_index: InternalIndex,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, Hash)]
+#[derive(Clone, Default, Serialize, Deserialize, Hash, Debug)]
 pub struct CompStorage {
     columns: BTreeMap<TypeIdNum, Column>,
     internal_entities: Box<GlorifiedHashMap>, // Box to avoid stack overflow.

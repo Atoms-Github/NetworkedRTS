@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use crate::netcode::common::time::timekeeping::DT;
 use std::time::Duration;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct EcsDebugTimer{
     entries: HashMap<String, Entry>,
     running_timers: HashMap<String, DT>,
 }
 
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 struct Entry{
     total: Duration,
     entries: u32

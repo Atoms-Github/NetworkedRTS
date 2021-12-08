@@ -11,7 +11,8 @@ use crate::netcode::common::sim_data::sim_data_storage::ServerEvent;
 use std::sync::Arc;
 use std::fmt::Debug;
 use serde::__private::Formatter;
-use std::fmt;
+use std::{fmt, fs, env};
+use std::path::Path;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct NetPlayerProperty{
@@ -73,6 +74,14 @@ impl NetGameState {
         return players;
     }
     pub fn get_hash(&self) -> HashType{
+        let mut args_str: Vec<String> = env::args().collect();
+        let mode = args_str[1].clone();
+        let filename = format!("/states/{}/{}.txt",mode, self.simmed_frame_index);
+        if !Path::new(filename.as_str()).exists(){
+            let data = format!("Hash: Frame {} state {:?}", self.simmed_frame_index, self.game_state);
+            fs::write(filename, data).expect("Unable to write file");
+        }
+
         let mut s = DefaultHasher::new();
         self.hash(&mut s);
         s.finish()
