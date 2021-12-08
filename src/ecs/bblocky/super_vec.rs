@@ -9,7 +9,7 @@ use serde::de::DeserializeOwned;
 use crate::ecs::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
-use std::fmt::Write;
+use std::fmt::{Write, Debug};
 use std::fmt;
 use super::comp_registration::*;
 use crate::ecs::bblocky::super_any::SuperAny;
@@ -17,6 +17,7 @@ use std::clone::Clone;
 use crate::unsafe_utils::very_bad_function;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
+use crate::bibble::data::data_types::__private::Formatter;
 
 
 #[derive(Debug, PartialEq)]
@@ -24,6 +25,12 @@ pub struct SuperVec {
     item_size: usize,
     data: Vec<u8>,
     item_type: TypeIdNum,
+    debug_name: String,
+}
+impl Debug for SuperVec{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
 }
 
 
@@ -33,7 +40,8 @@ impl SuperVec {
         Self{
             item_size: functions.item_size,
             data: vec![],
-            item_type
+            item_type,
+            debug_name: functions.debug_name.clone()
         }
     }
     pub fn new_and_push<T : 'static + Send>(item: T) -> Self{
@@ -112,6 +120,7 @@ impl Clone for SuperVec {
             item_size: self.item_size,
             data,
             item_type: self.item_type,
+            debug_name: self.debug_name.clone(),
         }
     }
 }
@@ -179,6 +188,7 @@ impl<'de> Deserialize<'de> for SuperVec
             item_size: portable.item_size_when_deser,
             data,
             item_type: portable.item_type_when_deser,
+            debug_name: functions.debug_name.clone(),
         });
     }
 }

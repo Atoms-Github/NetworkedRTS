@@ -47,19 +47,34 @@ use crossbeam_channel::{unbounded, Select};
 use std::io::Write;
 use chrono::Local;
 use env_logger::Builder;
-use log::LevelFilter;
 use std::time::Duration;
-
-
+use log::LevelFilter;
+use log4rs::append::file::FileAppender;
+use log4rs::encode::pattern::PatternEncoder;
+use log4rs::config::{Appender, Config, Root};
 
 fn main() {
-    Builder::new()
-        .format(|buf, record| {
-            if record.target().contains("poggy"){
-                return writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args());
-            }
-            return std::io::Result::Ok(());
-        }).filter(None, LevelFilter::Info).init();
+    // Builder::new()
+    //     .format(|buf, record| {
+    //         if record.target().contains("poggy"){
+    //             return writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args());
+    //         }
+    //         return std::io::Result::Ok(());
+    //     }).filter(None, LevelFilter::Info).init();
+
+    let logfile = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+        .build("log/output.log").unwrap();
+
+    let config = Config::builder()
+        .appender(Appender::builder().build("logfile", Box::new(logfile)))
+        .build(Root::builder()
+            .appender("logfile")
+            .build(LevelFilter::Info)).unwrap();
+
+    log4rs::init_config(config).unwrap();
+
+
     log::info!("Starting!");
 
     let args = crate::args::Args::gather();

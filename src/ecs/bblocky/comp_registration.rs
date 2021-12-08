@@ -139,6 +139,7 @@ impl FunctionMap{
                 }
             },
             item_size: size,
+            debug_name: std::any::type_name::<T>().to_string(),
         });
     }
     pub fn get_from_type_id(&self, type_id: TypeId) -> &SuperbFunctions {
@@ -160,4 +161,5 @@ pub struct SuperbFunctions {
     pub deallocate_refed_mem: fn(&[u8]),
 
     pub item_size: usize,
+    pub debug_name: String,
 }

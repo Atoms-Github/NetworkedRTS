@@ -8,6 +8,7 @@ use std::ops::Div;
 
 use ggez::event::MouseButton;
 use crate::bibble::data::data_types::VirtualKeyCode;
+use rand::Rng;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct JigsawMatComp{
@@ -30,4 +31,6 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         }
     }
 }
+
+
 
