@@ -33,7 +33,7 @@ pub enum AbilityID{
 /// Ain't work with cost, but rest fine.
 ///
 /// Hmm. Or maybe better to just use trainer attribute of buildings, since then we can set rally points.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AbilityMould{
     pub cost: f32,
     pub targetting: AbilityTargetType,
@@ -48,23 +48,23 @@ pub struct ButtonMould{
     pub color: (u8, u8, u8),
     pub hotkey: VirtualKeyCode,
 }
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum AbilityTargetType{
     NoTarget(EffectToUnit),
     SingleTarget(AbilitySingleTarget),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AbilitySingleTarget{
     pub target: AbilitySingleTargetType,
     pub graphic: AbilitySingleTargetGraphic,
 }
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum AbilitySingleTargetGraphic{
     NOTHING,
     SMALL_RETICLE(f32, Shade),
 }
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum AbilitySingleTargetType {
     Unit(EffectUnitToUnit),
     Point(EffectUnitToPoint),

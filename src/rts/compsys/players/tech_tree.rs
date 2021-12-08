@@ -9,7 +9,7 @@ use crate::rts::compsys::*;
 use crate::bibble::data::data_types::GameData;
 use crate::ecs::comp_store::CompStorage;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TechTreeComp {
     pub tree: GameData,
 }

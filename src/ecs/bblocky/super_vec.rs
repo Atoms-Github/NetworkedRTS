@@ -20,7 +20,7 @@ use std::collections::hash_map::DefaultHasher;
 use crate::bibble::data::data_types::__private::Formatter;
 
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub struct SuperVec {
     item_size: usize,
     data: Vec<u8>,

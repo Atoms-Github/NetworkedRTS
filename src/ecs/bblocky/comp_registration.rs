@@ -17,7 +17,7 @@ use serde::de::DeserializeOwned;
 use crate::ecs::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
-use std::fmt::Write;
+use std::fmt::{Write, Debug};
 use std::fmt;
 use std::mem::MaybeUninit;
 use std::hash::{Hasher, Hash};
@@ -89,8 +89,9 @@ struct MyData{
     numc: u8,
 }
 impl FunctionMap{
-    pub fn register_type<T : 'static + Serialize + Clone + DeserializeOwned + Send>(&mut self){
+    pub fn register_type<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>(&mut self){
         let size = std::mem::size_of::<T>();
+
         assert!(size > 0, "Components with size of 0 are disallowed.");
         self.map.insert(gett::<T>(), SuperbFunctions {
             do_clone: |item| {
@@ -140,6 +141,10 @@ impl FunctionMap{
             },
             item_size: size,
             debug_name: std::any::type_name::<T>().to_string(),
+            debug_fmt: |item|{
+                let as_type :&T = unsafe{crate::unsafe_utils::u8_slice_to_ref(item)};
+                return format!("{:?}", as_type);
+            }
         });
     }
     pub fn get_from_type_id(&self, type_id: TypeId) -> &SuperbFunctions {
@@ -162,4 +167,5 @@ pub struct SuperbFunctions {
 
     pub item_size: usize,
     pub debug_name: String,
+    pub debug_fmt: fn(&[u8]) -> String,
 }
