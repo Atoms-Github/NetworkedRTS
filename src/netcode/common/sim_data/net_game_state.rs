@@ -13,6 +13,9 @@ use std::fmt::Debug;
 use serde::__private::Formatter;
 use std::{fmt, fs, env};
 use std::path::Path;
+use std::fs::File;
+use std::io::Write;
+use zip::write::FileOptions;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct NetPlayerProperty{
@@ -76,10 +79,26 @@ impl NetGameState {
     pub fn get_hash(&self) -> HashType{
         let mut args_str: Vec<String> = env::args().collect();
         let mode = args_str[1].clone();
-        let filename = format!("/states/{}/{}.txt",mode, self.simmed_frame_index);
+        let filename = format!("/states/{}/{}.zip",mode, self.simmed_frame_index);
         if !Path::new(filename.as_str()).exists(){
+            let path = std::path::Path::new(filename.as_str());
+            let prefix = path.parent().unwrap();
+            std::fs::create_dir_all(prefix).unwrap();
             let data = format!("Hash: Frame {} state {:?}", self.simmed_frame_index, self.game_state);
-            fs::write(filename, data).expect("Unable to write file");
+            let mut file = File::create(filename.as_str()).expect("Unable to create file");
+            // f.write_all(data.as_bytes()).expect("Unable to write data");
+            let mut zip = zip::ZipWriter::new(file);
+
+            zip.add_directory("test/", Default::default()).unwrap();
+
+            let options = FileOptions::default()
+                .compression_method(zip::CompressionMethod::Deflated)
+                .unix_permissions(0o755);
+            zip.start_file("test/e.txt", options).unwrap();
+            zip.write_all(data.as_bytes()).unwrap();
+
+            zip.finish().unwrap();
+
         }
 
         let mut s = DefaultHasher::new();

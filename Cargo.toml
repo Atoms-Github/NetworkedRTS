@@ -44,6 +44,7 @@ serde-big-array = {path = "C:\\_C_\\Home\\Produce\\Code\\Projects\\Rust\\OtherPe
 bibble_tokio = {path = "C:\\_C_\\Home\\Produce\\Code\\Projects\\Rust\\BigYoshis\\BibbleTokio"}
 simple-logging = "*"
 log4rs = "*"
+zip = "0.5.13"
 
 [dependencies.winit]
 version = "0.24" # To match ggez.

@@ -57,26 +57,26 @@ use log4rs::config::{Appender, Config, Root};
 fn main() {
     let args = crate::args::Args::gather();
     let address = args.ip + ":1616";
-    // Builder::new()
-    //     .format(|buf, record| {
-    //         if record.target().contains("poggy"){
-    //             return writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args());
-    //         }
-    //         return std::io::Result::Ok(());
-    //     }).filter(None, LevelFilter::Info).init();
+    Builder::new()
+        .format(|buf, record| {
+            if record.target().contains("poggy"){
+                return writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args());
+            }
+            return std::io::Result::Ok(());
+        }).filter(None, LevelFilter::Info).init();
 
-    let mut args_str: Vec<String> = env::args().collect();
-    let logfile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
-        .build(format!("log/output{}.log", args_str[1])).unwrap();
-
-    let config = Config::builder()
-        .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(Root::builder()
-            .appender("logfile")
-            .build(LevelFilter::Warn)).unwrap();
-
-    log4rs::init_config(config).unwrap();
+    // let mut args_str: Vec<String> = env::args().collect();
+    // let logfile = FileAppender::builder()
+    //     .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+    //     .build(format!("log/output{}.log", args_str[1])).unwrap();
+    //
+    // let config = Config::builder()
+    //     .appender(Appender::builder().build("logfile", Box::new(logfile)))
+    //     .build(Root::builder()
+    //         .appender("logfile")
+    //         .build(LevelFilter::Warn)).unwrap();
+    //
+    // log4rs::init_config(config).unwrap();
 
 
     log::info!("Starting!");

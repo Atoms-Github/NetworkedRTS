@@ -6,6 +6,8 @@ use std::convert::TryInto;
 use crate::ecs::comp_store::{InternalEntity};
 
 use serde_big_array::*;
+use std::fmt::Debug;
+use crate::bibble::data::data_types::__private::Formatter;
 
 pub type GlobalEntityID = usize;
 pub const MAX_ENTITIES :usize = 4096;
@@ -15,7 +17,7 @@ pub const MAX_ENTITIES :usize = 4096;
 // big_array! { BigArray; }
 
 
-#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
+#[derive(Clone, Serialize, Deserialize, Hash)]
 pub struct GlorifiedHashMap {
     #[serde(with = "BigArray")]
     alive: [bool; MAX_ENTITIES],
@@ -23,6 +25,11 @@ pub struct GlorifiedHashMap {
     entity_ids: [GlobalEntityID; MAX_ENTITIES],
     #[serde(with = "BigArray")]
     internal_details: [InternalEntity; MAX_ENTITIES],
+}
+impl Debug for GlorifiedHashMap{
+    fn fmt(&self, f: &mut Formatter<'_>) -> __private::fmt::Result {
+        f.debug_struct("GlorifiedHashMap").finish()
+    }
 }
 impl Default for GlorifiedHashMap{
     fn default() -> Self {
