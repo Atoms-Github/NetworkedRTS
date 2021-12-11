@@ -14,7 +14,7 @@ use std::intrinsics::add_with_overflow;
 use crate::netcode::common::logic::logic_sim_tailer_seg::FramedHash;
 use crossbeam_channel::*;
 use crate::netcode::common::utils::util_functions::gen_fake_address;
-use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
+use crate::netcode::common::sim_data::net_game_state::{ConnectedPlayerProperty, NetGameState};
 use crate::pub_types::{FrameIndex, Shade};
 
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
@@ -23,7 +23,10 @@ pub enum ExternalMsg {
     ConnectionInitResponse(NetMsgGreetingResponse),
     NewHash(FramedHash),
     GameUpdate(SimDataPackage),
-    WorldDownloaded(WorldDownloadedInfo),
+    WorldDownloaded{
+        player_name: String,
+        color: Shade
+    },
     InputQuery(SimDataQuery),
     PingTestQuery(SystemTime),
     PingTestResponse(NetMsgPingTestResponse),
@@ -33,17 +36,6 @@ pub enum ExternalMsg {
 pub struct NetMsgPingTestResponse{
     pub client_time: SystemTime,
     pub server_time: SystemTime,
-}
-
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct LocalCommandInfo{
-    pub command: String
-}
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct WorldDownloadedInfo{
-    pub player_name: String,
-    pub color: Shade
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

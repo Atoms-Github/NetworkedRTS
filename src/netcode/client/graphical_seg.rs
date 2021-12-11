@@ -14,7 +14,7 @@ use std::time::SystemTime;
 use ggez::graphics::Text;
 use std::collections::BTreeMap;
 use nalgebra::Point2;
-use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
+use crate::netcode::common::sim_data::net_game_state::{ConnectedPlayerProperty, NetGameState};
 use std::sync::Arc;
 use crate::rts::game::render_resources::RenderResources;
 use crate::rts::GameState;

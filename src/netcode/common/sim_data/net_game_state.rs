@@ -6,7 +6,7 @@ use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
 use crate::netcode::{InfoForSim, ConnStatusChangeType};
 use std::hash::{Hash, Hasher};
-use crate::netcode::common::sim_data::confirmed_data::ServerEvent;
+use crate::netcode::common::sim_data::confirmed_data::{ServerEvent, JoinType};
 
 use std::sync::Arc;
 use std::fmt::Debug;
@@ -16,16 +16,20 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use zip::write::FileOptions;
+use crate::netcode::common::sim_data::superstore_seg::Cap;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
-pub struct NetPlayerProperty{
+pub struct ConnectedPlayerProperty {
     pub waiting_on: bool,
+    pub last_connected_on: FrameIndex,
+    pub last_connected_type: JoinType,
 }
 
 #[derive(Clone, Serialize, Deserialize, Hash)]
 pub struct NetGameState {
     pub game_state: GameState,
-    players: BTreeMap<PlayerID, NetPlayerProperty>,
+    // players: BTreeMap<PlayerID, NetPlayerProperty>,
+    connected_players: BTreeMap<PlayerID, ConnectedPlayerProperty>, // I.e Those who's connect events has already been simmed.
     simmed_frame_index: FrameIndex,
 }
 impl Debug for NetGameState{
@@ -36,9 +40,9 @@ impl Debug for NetGameState{
 }
 
 impl NetGameState {
-    fn get_net_property_mut(&mut self, player_id: &PlayerID) -> &mut NetPlayerProperty{
+    fn get_net_property_mut(&mut self, player_id: &PlayerID) -> &mut ConnectedPlayerProperty {
         if !self.players.contains_key(player_id){
-            self.players.insert(*player_id, NetPlayerProperty{
+            self.players.insert(*player_id, ConnectedPlayerProperty {
                 waiting_on: false,
             });
         }

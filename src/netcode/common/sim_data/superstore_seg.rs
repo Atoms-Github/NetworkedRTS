@@ -1,5 +1,5 @@
 use std::net::{SocketAddr, TcpStream};
-use std::ops::Add;
+use std::ops::{Add, RangeFrom};
 use std::str::FromStr;
 use crossbeam_channel::*;
 use std::thread;
@@ -15,6 +15,11 @@ use crate::netcode::client::input_handler_seg::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use crate::netcode::common::utils::util_functions::vec_replace_or_end;
+use std::collections::BTreeMap;
+use crate::netcode::common::sim_data::superstore_seg::Cap::Pioneer;
+use std::collections::btree_map::Range;
+use std::fmt::Debug;
+use crate::netcode::common::sim_data::confirmed_data::JoinType;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -23,34 +28,46 @@ pub struct SuperstoreData<T> {
     pub frame_offset: FrameIndex
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Superstore<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static>{
-    frame_offset: usize,
-    data: Vec<T>,
-    waiting_data: Vec<SuperstoreData<T>>, // All the future data which would make a hole. This is held until the hole is filled.
+pub struct Superstore<T :Clone + Default + Send + Debug + Sync + 'static>{
+    confirmed_data: bool,
+    data: BTreeMap<FrameIndex, Vec<T>>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
+pub enum StoreItem<T :Clone + Default + Send + Debug + Sync + 'static>{
+    Data(T),
+    Cap(Cap)
+}
+#[derive(Clone, Serialize, Deserialize, Debug, Hash)]
+pub enum Cap{
+    Connect(JoinType), // Replaces first input. I.e. first input is blank.
+    Disconnect, // Frame after last input.
+}
+enum Direc{
+    Forwards,
+    Backwards,
 }
 
 
-
-
 impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>{
-    pub fn new(first_frame_to_store: FrameIndex) -> Self{
+    pub fn new(confirmed_data: bool) -> Self{
         Self{
-            frame_offset: first_frame_to_store,
-            data: vec![],
-            waiting_data: vec![]
+            confirmed_data,
+            data: Default::default()
         }
     }
-    pub fn get(&self, abs_index: FrameIndex) -> Option<&T>{
-        if abs_index < self.frame_offset{
-            return None;
+    pub fn get(&self, index: FrameIndex) -> Option<&T>{
+        // If direct hit:
+        if let Some(my_data) = self.data.get(&index){
+            return my_data.first();
         }
-        return self.data.get(abs_index - self.frame_offset);
-    }
-    pub fn get_last(&self) -> Option<&T>{
-        return self.data.last();
-    }
-    pub fn get_next_empty_frame(&self) -> FrameIndex{
-        return self.data.len() + self.frame_offset;
+        let previous_maybe = self.get_closest(index, Direc::Backwards)?;
+
+
+        let (frame, data) = self.data.range(..index).next().unwrap();
+
+        // Breaking.
+        return None;
     }
     pub fn clone_block(&self, first_frame_index_abs: FrameIndex, block_size: usize) -> Vec<T>{
         let mut query_response = vec![];
@@ -68,42 +85,21 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
         };
         return query_response;
     }
-    pub fn write_data(&mut self, new_data: SuperstoreData<T>){
-        // If future data. (So far ahead it would leave a gap.
-        if new_data.frame_offset > self.get_next_empty_frame() {
-            // Save future data for later.
-            self.waiting_data.push(new_data);
-            //panic!("Received player data for the future, so distant we can't handle it. Incoming data first frame: {}. We're waiting on frame {}", new_data.frame_offset, self.get_next_empty_frame());
-        }
-        // If new's first frame is in existing data, or the next new frame.
-        else if new_data.frame_offset >= self.frame_offset && new_data.frame_offset <= self.get_next_empty_frame(){
-            for (new_relative_index, new_item) in new_data.data.into_iter().enumerate(){
-                let existing_relative_index = new_data.frame_offset + new_relative_index - self.frame_offset;
-                vec_replace_or_end(&mut self.data, existing_relative_index, new_item);
+    fn get_closest(&self, frame_index: FrameIndex, direction: Direc) -> Option<(&FrameIndex, &Vec<T>)>{
+        match direction{
+            Direc::Forwards => {
+                self.data.range(frame_index..).next() // breaking +1 / -1? https://stackoverflow.com/questions/49599833/how-to-find-next-smaller-key-in-btreemap-btreeset
             }
-            // pointless_optimum don't need to move out.
-            // TODO3: Find a nicer way of writing this.
-            let mut items = vec![];
-            let waiting_items = self.waiting_data.drain(..).for_each(|item|{items.push(item)});
-            for waiting_item in items{
-                self.write_data(waiting_item);
+            Direc::Backwards => {
+                self.data.range(..frame_index).next()
             }
         }
 
-        // Need if statement here!
-        // If new data is behind existing data, but no gap.
-        // else if new_data.frame_offset + new_data.data.len() >= self.frame_offset{
-        //     let number_behind_count = self.frame_offset - new_data.frame_offset;
-        //     let overlap_count = new_data.frame_offset + new_data.data.len() - self.frame_offset;
-        //
-        //     println!("Shifting backwards! -- {}, {}, {}", new_data.frame_offset, new_data.data.len(), self.frame_offset);
-        //     self.frame_offset = new_data.frame_offset;
-        //
-        //     self.data.drain(0..overlap_count);
-        /*}*/else{
-            // log::info!("Got some early data. We couldn't care less about this data. We start {}, we have {} items Data is {:?}", self.frame_offset, self.data.len(), new_data);
-            // panic!("Known issue #1. Somehow recieved late player data, then early player data which would leave a hole. Can be fixed by using a hashmap to store all inputs. As of now, we're trusting clients to send inputs in a reasonable order.");
-        }
+    }
+    pub fn write_data(&mut self, new_data: SuperstoreData<T>){
+        // If can just plonk with no overlap:
+        // breaking.
+
     }
 
 }

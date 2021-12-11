@@ -7,7 +7,7 @@ use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
-use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
+use crate::netcode::common::sim_data::net_game_state::{ConnectedPlayerProperty, NetGameState};
 use std::sync::mpsc::channel;
 
 
@@ -27,7 +27,7 @@ pub struct LogicSimHeaderEx {
 }
 impl LogicSimHeaderEx{
     // TODO: Start the graphics somewhere in here.
-    pub fn start(new_heads: Receiver<HeadSimPacket>) -> Self {
+    pub fn start_loop(new_heads: Receiver<HeadSimPacket>) -> Self {
         let (head_sim_packets_tx, head_sim_packets_rec) = unbounded();
         LogicSimHeaderIn {
             head_sim_packets_rec,

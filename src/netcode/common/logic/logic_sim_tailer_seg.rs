@@ -9,7 +9,7 @@ use serde::__private::de::missing_field;
 
 use crate::netcode::*;
 use crate::netcode::common::sim_data::input_state::*;
-use crate::netcode::common::sim_data::net_game_state::{NetGameState, NetPlayerProperty};
+use crate::netcode::common::sim_data::net_game_state::{NetGameState, ConnectedPlayerProperty};
 use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::sim_data::superstore_seg::*;
 use crate::netcode::common::time::timekeeping::*;

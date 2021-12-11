@@ -15,8 +15,13 @@ use nalgebra::sup;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ServerEvent{
-    JoinPlayer(PlayerID, String, Shade),
+    JoinPlayer(PlayerID, String, Shade, JoinType),
     DisconnectPlayer(PlayerID),
+}
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq)]
+pub enum JoinType{
+    Pioneer,
+    Reconnect,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -51,10 +56,10 @@ pub struct ConfirmedData {
     server_events: Superstore<ServerEvents>,
 }
 impl ConfirmedData {
-    pub fn new(first_frame_to_store: FrameIndex) -> Self {
+    pub fn new() -> Self {
         let mut storage = Self {
             player_inputs: Default::default(),
-            server_events: Superstore::new(first_frame_to_store),
+            server_events: Superstore::new(true),
         };
         storage
     }

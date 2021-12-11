@@ -13,7 +13,7 @@ use crate::netcode::common::time::timekeeping::*;
 
 use crate::netcode::server::net_hub_front_seg::*;
 use crate::netcode::*;
-use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
+use crate::netcode::common::sim_data::net_game_state::{ConnectedPlayerProperty, NetGameState};
 use crate::netcode::common::sim_data::confirmed_data::SimDataOwner::Player;
 use crate::netcode::server::logic_req_handler::SeverMissingDataHandler;
 use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
