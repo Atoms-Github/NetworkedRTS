@@ -50,6 +50,7 @@ impl EcsDebugTimer{
 
         let mut total_duration = Duration::from_secs(0);
         let mut sorted: Vec<(&String, &Entry)> = self.entries.iter().collect();
+
         sorted.sort_by(|(name1, entry1), (name2, entry2)| {
             entry1.total.cmp(&entry2.total).reverse()
         });

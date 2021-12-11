@@ -26,23 +26,23 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         }
         if let Some(held_piece) = jigsaw_player.held_item.clone(){
             if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
+
+
                 let held_render_comp = c.get_mut_unwrap::<RenderComp>(held_piece);
                 held_render_comp.z = 100;
                 let piece_comp = c.get_unwrap::<JigsawPieceComp>(held_piece);
                 let correct_place = piece_comp.get_correct_pos();
                 let actual_place = c.get_mut_unwrap:: <PositionComp>(held_piece);
-                if actual_place.pos.dist(&correct_place) < JIGSAW_PIECE_SIZE / 2.0{
-                    actual_place.pos = correct_place;
-                    held_render_comp.z = 99;
-                }else{
-                    // Try for teleport both pieces to correct place.
-                    for (piece_id, matched_to_piece, matched_pos, render) in CompIter3::<JigsawPieceComp, PositionComp, RenderComp>::new(c){
-                        if piece_id != held_piece{
-                            let real_dist = (matched_pos.clone().pos - &actual_place.pos) as PointFloat;
-                            let coords_diff = (matched_to_piece.coords.clone() - &piece_comp.coords) as PointInt;
+                // Try for teleport both pieces to correct place.
+                for (piece_id, matched_to_piece, matched_pos, render) in CompIter3::<JigsawPieceComp, PositionComp, RenderComp>::new(c){
+                    if piece_id != held_piece{
+                        let real_dist = (matched_pos.clone().pos - &actual_place.pos) as PointFloat;
+                        let coords_diff = (matched_to_piece.coords.clone() - &piece_comp.coords) as PointInt;
+                        if coords_diff.x.abs() + coords_diff.y.abs() <= 1{
                             let actual_coords_place_diff = coords_diff.clone().map(|i| {i as f32 * JIGSAW_PIECE_SIZE}) as PointFloat;
-                            if actual_coords_place_diff.dist(&real_dist) < JIGSAW_PIECE_SIZE / 10.0{
+                            if actual_coords_place_diff.dist(&real_dist) < JIGSAW_PIECE_SIZE / 3.0{
                                 render.z = 99;
+                                held_render_comp.z = 99;
                                 // Teleport both to correct place.
                                 matched_pos.pos = matched_to_piece.get_correct_pos();
                                 actual_place.pos = correct_place.clone();
@@ -50,8 +50,6 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                         }
                     }
                 }
-
-
 
                 jigsaw_player.held_item = None;
 
