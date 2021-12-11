@@ -12,15 +12,10 @@ use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use crate::netcode::common::time::timekeeping::KnownFrameInfo;
 use crate::netcode::common::network::channel_threads::*;
+use bibble_tokio::NetClientTop;
 
-pub struct ConnectNetIn {
-    conn_address_str: String,
-
-}
-pub struct ConnectNetEx {
-    pub net_sink: Sender<(ExternalMsg, bool)>,
-    pub net_rec: Option<Receiver<ExternalMsg>>,
-    pub udp_port: u16,
+pub struct ClientNet {
+    pub client: NetClientTop<ExternalMsg>,
 }
 struct FullPingSample{
     c_send_time: SystemTime,
@@ -28,9 +23,14 @@ struct FullPingSample{
     c_receive_time: SystemTime
 }
 pub const TIME_SAMPLES_REQUIRED : usize = 2;
-impl ConnectNetEx {
+impl ClientNet {
+    pub fn start(conn_address: String) -> Self{
+        Self{
+            client: bibble_tokio::start_client::<ExternalMsg>(conn_address)
+        }
+    }
     fn start_ping_sender_thread(&self) -> Sender<ThreadCloser>{
-        let my_sender = self.net_sink.clone();
+        let my_sender = self.client.down.clone();
         let (stop_sink, stop_rec) = unbounded();
         thread::spawn(move ||{
             loop{
@@ -73,18 +73,17 @@ impl ConnectNetEx {
             // If server is fast, then we need to pull it back to convert it into local client time.
     }
     // This is the data gathering step.
-    fn gather_ping_and_init_data(&self, my_details: NetMsgGreetingQuery) -> (Vec<FullPingSample>, NetMsgGreetingResponse){
+    fn gather_ping_and_init_data(&mut self) -> (Vec<FullPingSample>, NetMsgGreetingResponse){
         let mut ping_request_stopper = self.start_ping_sender_thread(); // Asks for ping samples.
-        self.send_greeting(my_details); // Asks for greetings.
+
+        self.client.send_msg(ExternalMsg::ConnectionInitQuery, true);
 
         let mut opt_greetings = None;
         let mut ping_results = vec![];
         while ping_results.len() < TIME_SAMPLES_REQUIRED || opt_greetings.is_none(){
-            let inc_msg = self.net_rec.as_ref().unwrap().recv().unwrap();
+            let inc_msg = self.client.recv();
             let c_receive_time = SystemTime::now();
-            if let ExternalMsg::ConnectionInitResponse(resp) = &inc_msg{
-                println!("Found! Nice.");
-            }
+
             match inc_msg {
                 ExternalMsg::PingTestResponse(response) => {
                     let full_sample = FullPingSample{
@@ -108,115 +107,16 @@ impl ConnectNetEx {
                 }
             }
         }
+        // Close ping sender thread.
         ping_request_stopper.send(()).unwrap();
         (ping_results, opt_greetings.unwrap())
     }
-    fn send_greeting(&self, my_details: NetMsgGreetingQuery){
-        let connection_init_query = ExternalMsg::ConnectionInitQuery(
-            my_details
-        );
-        self.net_sink.send((connection_init_query, true)).unwrap();
-    }
-    pub fn get_synced_greeting(&self, my_details: NetMsgGreetingQuery) -> NetMsgGreetingResponse {
-        let (ping_data, mut greeting) = self.gather_ping_and_init_data(my_details);
+    pub fn get_synced_greeting(&mut self) -> NetMsgGreetingResponse {
+        let (ping_data, mut greeting) = self.gather_ping_and_init_data();
 
         greeting.known_frame = self.calculate_local_time(ping_data, greeting.known_frame);
         log::info!("I'm player {}", greeting.assigned_player_id);
 
         greeting
     }
-    pub fn start(conn_address_str :String) -> Self{
-        ConnectNetIn{
-            conn_address_str
-        }.start_net()
-    }
 }
-
-impl ConnectNetIn {
-    fn bind_sockets(&self) -> (UdpSocket, TcpStream){
-        let target_tcp_address = SocketAddr::from_str(&self.conn_address_str).expect("Ill formed ip");
-
-        let mut target_udp_address = target_tcp_address.clone();
-        target_udp_address.set_port(target_tcp_address.port() + 1);
-
-        loop{
-            let tcp_stream;
-            log::info!("Attempting to connect to {}", target_tcp_address.to_string());
-            match TcpStream::connect(target_tcp_address){
-                Err(error) => {
-                    log::warn!("Failed to connect to server. Retrying ... ({})", error.to_string());
-                    thread::sleep(Duration::from_millis(1000));
-                    continue;
-                }
-                Ok(stream) => {
-                    tcp_stream = stream;
-                }
-            }
-            let udp_socket = UdpSocket::bind(tcp_stream.local_addr().unwrap()).expect("Client couldn't bind to socket.");
-
-            udp_socket.connect(target_udp_address).expect("Client failed to connect UDP.");
-            log::info!("Client using udp {:?}" , udp_socket.local_addr());
-            log::info!("Connected to server on on tcp {} and udp on port +1", target_tcp_address);
-            log::info!("");
-            return (udp_socket, tcp_stream);
-        }
-
-    }
-    pub fn start_net(self) -> ConnectNetEx {
-        let (down_sink, down_rec) = unbounded();
-        let (up_sink, up_rec) = unbounded();
-
-        let (udp_socket, mut tcp_stream) = self.bind_sockets();
-
-        udp_socket.try_clone().unwrap().start_listening(up_sink.clone());
-        tcp_stream.try_clone().unwrap().start_listening(up_sink);
-        thread::spawn(move ||{
-            loop{
-                let (msg, reliable) = down_rec.recv().unwrap();
-                if reliable{
-                    tcp_stream.send_msg(&msg);
-                }else{
-                    udp_socket.send_msg_to_connected(&msg);
-                }
-            }
-        });
-
-        ConnectNetEx {
-            net_sink: down_sink,
-            net_rec: Some(up_rec.filter_address(None)),
-            udp_port: 0,//udp_socket.local_addr().unwrap().port(),
-        }
-    }
-}
-
-
-
-//#[cfg(test)]
-pub mod connect_tests {
-    use std::net::SocketAddr;
-    use crate::netcode::client::connect_net_seg::*;
-    use crate::netcode::common::network::external_msg::NetMsgGreetingQuery;
-
-    fn init_connection() -> ConnectNetEx{
-        let mut seg_connect_net = ConnectNetEx::start("127.0.0.1:1414".to_string());
-        return seg_connect_net;
-    }
-    //#[test]
-    pub fn crash_on_connect() {
-        let connect = init_connection();
-        thread::sleep(Duration::from_millis(300));
-        panic!();
-    }
-    //#[test]
-    pub fn wait_on_connect() {
-        let connect = init_connection();
-
-        loop{
-            thread::sleep(Duration::from_millis(10000));
-        }
-    }
-}
-
-
-
-

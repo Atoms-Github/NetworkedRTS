@@ -8,13 +8,13 @@ use crate::pub_types::*;
 use crate::netcode::*;
 use crate::netcode::common::logic::logic_sim_tailer_seg::*;
 use crate::netcode::common::network::external_msg::*;
-use crate::netcode::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::time::timekeeping::*;
 
 use crate::netcode::server::net_hub_front_seg::*;
 use crate::netcode::*;
 use crate::netcode::common::sim_data::net_game_state::{NetPlayerProperty, NetGameState};
-use crate::netcode::common::sim_data::sim_data_storage::SimDataOwner::Player;
+use crate::netcode::common::sim_data::confirmed_data::SimDataOwner::Player;
 use crate::netcode::server::logic_req_handler::SeverMissingDataHandler;
 use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
 use crate::rts::GameState;
@@ -23,7 +23,7 @@ use crate::netcode::server::server_event_distributor::ServerEventDistributor;
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,
-    data_store: SimDataStorage,
+    data_store: ConfirmedData,
     seg_logic_tail: LogicSimTailer,
     known_frame_zero: KnownFrameInfo,
     missing_data_handler: SeverMissingDataHandler,
@@ -48,7 +48,7 @@ impl ServerMainStateIn {
     }
     pub fn start_segments(self) -> ServerMainStateEx {
         let seg_net_hub = NetworkingHubEx::start(self.hosting_ip.clone());
-        let seg_data_store = SimDataStorage::new(0);
+        let seg_data_store = ConfirmedData::new(0);
         let mut seg_logic_tail = LogicSimTailer::new(self.init_state(), self.known_frame.clone());
         let missing_data_kick_msg_tx = seg_net_hub.down_sink.clone();
 
@@ -111,6 +111,7 @@ impl ServerMainStateEx {
                 }
             }
         }
+
     }
     fn distrubute_state_hash(&mut self){
         let game_state = &self.seg_logic_tail.game_state;

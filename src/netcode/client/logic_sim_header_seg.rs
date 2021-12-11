@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 use crossbeam_channel::*;
 
 use crate::netcode::*;
-use crate::netcode::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
@@ -19,7 +19,6 @@ pub struct HeadSimPacket{
 }
 
 pub struct LogicSimHeaderIn {
-    known_frame_info: KnownFrameInfo,
     head_sim_packets_rec: Receiver<HeadSimPacket>,
 }
 pub struct LogicSimHeaderEx {
@@ -27,14 +26,15 @@ pub struct LogicSimHeaderEx {
     pub calculated_heads: Option<Receiver<NetGameState>>
 }
 impl LogicSimHeaderEx{
-    pub fn start(known_frame_info: KnownFrameInfo) -> Self {
+    // TODO: Start the graphics somewhere in here.
+    pub fn start(new_heads: Receiver<HeadSimPacket>) -> Self {
         let (head_sim_packets_tx, head_sim_packets_rec) = unbounded();
         LogicSimHeaderIn {
-            known_frame_info,
             head_sim_packets_rec,
-        }.start(head_sim_packets_tx)
+        }.start(head_sim_packets_tx);
+        GraphicalEx::new(seg_logic_header.calculated_heads.take().unwrap(), welcome_info.assigned_player_id);
     }
-    pub fn get_head_sim_data(&self, data_store: &SimDataStorage, first_frame_to_include : FrameIndex) -> Vec<InfoForSim>{
+    pub fn get_head_sim_data(&self, data_store: &ConfirmedData, first_frame_to_include : FrameIndex) -> Vec<InfoForSim>{
         let mut sim_infos = vec![];
         for frame_index in (first_frame_to_include)..(first_frame_to_include + HEAD_AHEAD_FRAME_COUNT){
             let mut sim_info = InfoForSim{
@@ -63,7 +63,7 @@ impl LogicSimHeaderEx{
         }
         return sim_infos;
     }
-    pub fn send_head_state(&mut self, gamestate: NetGameState, data_store: &SimDataStorage){
+    pub fn send_head_state(&mut self, gamestate: NetGameState, data_store: &ConfirmedData){
         let sim_data = self.get_head_sim_data(data_store, gamestate.get_simmed_frame_index() + 1);
         let head_packet = HeadSimPacket{
             game_state: gamestate,

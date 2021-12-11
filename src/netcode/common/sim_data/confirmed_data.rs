@@ -46,11 +46,11 @@ impl SimDataPackage{
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct SimDataStorage {
+pub struct ConfirmedData {
     player_inputs: HashMap<PlayerID, Superstore<InputState>>,
     server_events: Superstore<ServerEvents>,
 }
-impl SimDataStorage {
+impl ConfirmedData {
     pub fn new(first_frame_to_store: FrameIndex) -> Self {
         let mut storage = Self {
             player_inputs: Default::default(),

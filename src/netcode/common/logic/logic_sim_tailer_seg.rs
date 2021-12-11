@@ -10,7 +10,7 @@ use serde::__private::de::missing_field;
 use crate::netcode::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::sim_data::net_game_state::{NetGameState, NetPlayerProperty};
-use crate::netcode::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::sim_data::superstore_seg::*;
 use crate::netcode::common::time::timekeeping::*;
 use crate::netcode::netcode_types::*;
@@ -18,18 +18,16 @@ use crate::pub_types::*;
 
 pub struct LogicSimTailer {
     pub game_state: NetGameState,
-    pub known_frame: KnownFrameInfo,
-    pub hashes: HashMap<FrameIndex, HashType>, // pointless_optimum Could use vec, but easier to use hashmap.
+     // pointless_optimum Could use vec, but easier to use hashmap.
 }
 impl LogicSimTailer{
-    pub fn new(game_state: NetGameState, known_frame: KnownFrameInfo) -> Self{
+    pub fn new(game_state: NetGameState) -> Self{
         Self{
             game_state,
-            known_frame,
             hashes: Default::default(),
         }
     }
-    fn get_server_events(&self, data_store: &SimDataStorage) -> Result<ServerEvents, Vec<SimDataQuery>>{
+    fn get_server_events(&self, data_store: &ConfirmedData) -> Result<ServerEvents, Vec<SimDataQuery>>{
         let frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
         let server_events = match data_store.get_server_events(frame_to_sim) {
             Some(events) => {
@@ -44,7 +42,7 @@ impl LogicSimTailer{
             }
         };
     }
-    fn get_player_inputs(&self, data_store: &SimDataStorage) -> Result<HashMap<PlayerID, InputState>, Vec<SimDataQuery>>{
+    fn get_player_inputs(&self, data_store: &ConfirmedData) -> Result<HashMap<PlayerID, InputState>, Vec<SimDataQuery>>{
         let frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
 
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
@@ -69,7 +67,7 @@ impl LogicSimTailer{
             return Ok(player_inputs);
         }
     }
-    fn simulate_tick(&mut self, data_store: &SimDataStorage) -> Option<Vec<SimDataQuery>>{
+    fn simulate_tick(&mut self, data_store: &ConfirmedData) -> Option<Vec<SimDataQuery>>{
         let server_events = match self.get_server_events(data_store){
             Ok(events) => {
                 events
@@ -108,7 +106,7 @@ impl LogicSimTailer{
         return None;
     }
 
-    pub fn catchup_simulation(&mut self, data_store: &SimDataStorage, sim_frame_up_to_and_including: FrameIndex) -> Option<Vec<SimDataQuery>>{
+    pub fn catchup_simulation(&mut self, data_store: &ConfirmedData, sim_frame_up_to_and_including: FrameIndex) -> Option<Vec<SimDataQuery>>{
         const MAX_FRAMES_CATCHUP : usize = 1; // modival. TODO1: Not really needed since where its called in client, and how it should be called in server.
         let first_frame_to_sim = self.game_state.get_simmed_frame_index() + 1;
         let last_frame_to_sim = sim_frame_up_to_and_including.min(first_frame_to_sim + MAX_FRAMES_CATCHUP - 1);

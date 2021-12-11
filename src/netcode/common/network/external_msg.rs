@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::netcode::*;
 use crate::netcode::common::logic::logic_sim_tailer_seg::*;
 use crate::netcode::common::time::timekeeping::*;
-use crate::netcode::common::sim_data::sim_data_storage::*;
+use crate::netcode::common::sim_data::confirmed_data::*;
 use std::intrinsics::add_with_overflow;
 use crate::netcode::common::logic::logic_sim_tailer_seg::FramedHash;
 use crossbeam_channel::*;
@@ -19,7 +19,7 @@ use crate::pub_types::{FrameIndex, Shade};
 
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum ExternalMsg {
-    ConnectionInitQuery(NetMsgGreetingQuery),
+    ConnectionInitQuery,
     ConnectionInitResponse(NetMsgGreetingResponse),
     NewHash(FramedHash),
     GameUpdate(SimDataPackage),
@@ -27,7 +27,6 @@ pub enum ExternalMsg {
     InputQuery(SimDataQuery),
     PingTestQuery(SystemTime),
     PingTestResponse(NetMsgPingTestResponse),
-    HelloDebug(),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

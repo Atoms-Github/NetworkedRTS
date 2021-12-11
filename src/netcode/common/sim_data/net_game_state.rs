@@ -6,7 +6,7 @@ use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
 use crate::netcode::{InfoForSim, ConnStatusChangeType};
 use std::hash::{Hash, Hasher};
-use crate::netcode::common::sim_data::sim_data_storage::ServerEvent;
+use crate::netcode::common::sim_data::confirmed_data::ServerEvent;
 
 use std::sync::Arc;
 use std::fmt::Debug;

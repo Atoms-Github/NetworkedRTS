@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 use crossbeam_channel::{Receiver, Sender};
-use crate::netcode::common::sim_data::sim_data_storage::{SimDataQuery, SimDataOwner};
+use crate::netcode::common::sim_data::confirmed_data::{SimDataQuery, SimDataOwner};
 use crate::netcode::server::net_hub_front_seg::NetHubFrontMsgIn;
 use std::thread;
 use crate::netcode::common::network::external_msg::ExternalMsg;
@@ -8,7 +8,7 @@ use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use std::ptr::read_unaligned;
 
-// TODO1: Implement
+// TODOops: Implement
 pub struct SeverMissingDataHandler {
     waiting_on: PlayerID,
     waiting_since: SystemTime,
