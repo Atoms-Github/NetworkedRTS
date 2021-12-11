@@ -51,8 +51,21 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
             }
             camera.translation -= input.inputs.mouse_moved.clone().div(camera.zoom);
         }
-        camera.zoom += input.inputs.mouse_scrolled / 4.0;
-        camera.zoom = camera.zoom.clamp(0.5, 2.0);
+
+        let amount = 1.2;
+        let zoom_move = 0.2;
+        if input.inputs.mouse_scrolled > 0.0 && camera.zoom  < 2.0{
+            camera.zoom *= amount;
+            let mouse_game_new =  camera.screen_space_to_game_space(input.inputs.primitive.get_mouse_loc().clone());
+            let mouse_xy = mouse_game_new - &camera.translation;
+            camera.translation += mouse_xy * zoom_move;
+        }else if input.inputs.mouse_scrolled < 0.0 && camera.zoom > 0.5{
+            let mouse_game_new =  camera.screen_space_to_game_space(input.inputs.primitive.get_mouse_loc().clone());
+            camera.zoom /= amount;
+            let mouse_xy = mouse_game_new - &camera.translation;
+            camera.translation -= mouse_xy * zoom_move;
+        }
+
     }
 }
 

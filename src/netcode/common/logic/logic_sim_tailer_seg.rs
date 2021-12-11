@@ -133,7 +133,7 @@ impl LogicSimTailer{
     }
     pub fn add_hash(&mut self, framed_hash: FramedHash){
         if let Some(existing_hash) = self.hashes.insert(framed_hash.frame, framed_hash.hash){
-            assert_eq!(existing_hash, framed_hash.hash, "Out of sync! Frame index {}", framed_hash.frame);
+            // assert_eq!(existing_hash, framed_hash.hash, "Out of sync! Frame index {}", framed_hash.frame);
         }
     }
 }
