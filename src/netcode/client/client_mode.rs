@@ -5,7 +5,6 @@ use std::time::{Duration};
 use crate::netcode::client::connect_net_seg::*;
 use crate::netcode::client::graphical_seg::*;
 use crate::netcode::client::logic_sim_header_seg::*;
-use crate::netcode::common::logic::logic_sim_tailer_seg::*;
 use crate::netcode::common::network::external_msg::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::sim_data::confirmed_data::*;
@@ -20,9 +19,9 @@ use crate::rts::GameState;
 use std::sync::Arc;
 use crate::netcode::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
-use crate::netcode::common::simulation::logic_sim_tailer_seg::LogicSimTailer;
-use crate::netcode::common::simulation::logic_sim_header_seg::{HeadSimPacket, HEAD_AHEAD_FRAME_COUNT};
+use crate::netcode::common::simulation::logic_sim_header_seg::{HeadSimPacket, HEAD_AHEAD_FRAME_COUNT, LogicSimHeaderEx};
 use crate::netcode::common::simulation::net_game_state::NetGameState;
+use crate::netcode::common::sim_data::client_hasher::ClientHasher;
 
 
 struct Client {
@@ -31,7 +30,7 @@ struct Client {
     player_name: String,
     color: Shade,
     data: ClientDataStore,
-    hashes: HashMap<FrameIndex, HashType>,
+    hasher: ClientHasher,
     game_state: NetGameState,
     head_handle: Sender<HeadSimPacket>,
     curret_input: InputState,
@@ -49,9 +48,6 @@ impl Client {
 
         let mut data = ClientDataStore::new();
 
-        // Init storage for all existing players. (they won't get inited by a ServerEvent.)
-        data.glean_connected_players(&welcome_info.game_state);
-
         let (tx_head, rx_head) = unbounded();
         let (tx_input, rx_input) = unbounded();
 
@@ -62,7 +58,7 @@ impl Client {
             player_name,
             color,
             data,
-            hashes: Default::default(),
+            hasher: ClientHasher::new(),
             game_state: welcome_info.game_state,
             head_handle: tx_head,
             curret_input: Default::default(),
@@ -76,7 +72,7 @@ impl Client {
     fn on_new_head_frame(&mut self, head_frame: FrameIndex){
         let old_tail_frame = self.game_state.get_simmed_frame_index();
 
-        let issue = self.game_state.sim_far_as_pos(&self.data.confirmed_data);
+        let issue = self.game_state.sim_tail_far_as_pos(&self.data.confirmed_data);
         let new_tail_frame = self.game_state.get_simmed_frame_index();
         let did_trail_progress = new_tail_frame != old_tail_frame;
 
@@ -86,36 +82,33 @@ impl Client {
         if new_tail_frame < intended_tail{
             self.net.client.send_msg(ExternalMsg::InputQuery(issue), false);
         }
-
         if did_trail_progress{
-            self.send_head_state(self.game_state.clone());
+            // Send head state:
+            let gamestate = self.game_state.clone();
+            let sim_data = self.data.get_head_sim_data(
+                gamestate.get_simmed_frame_index() + 1, head_frame,);
+            let head_packet = HeadSimPacket{
+                game_state: gamestate,
+                sim_data
+            };
+            self.head_handle.send(head_packet).unwrap();
         }
+        self.hasher.add_state(&self.game_state);
 
-    }
-    pub fn send_head_state(&mut self, gamestate: NetGameState){
-        let sim_data = self.get_head_sim_data(data_store, gamestate.get_simmed_frame_index() + 1);
-        let head_packet = HeadSimPacket{
-            game_state: gamestate,
-            sim_data
-        };
-        self.head_handle.send(head_packet).unwrap();
+        // TODO: Query and send last 20 of mine: self.net.client.send_msg(ExternalMsg::Inpu)
     }
     fn on_new_net_msg(&mut self, message: ExternalMsg){
         match message{
             ExternalMsg::GameUpdate(update) => {
-                if crate::DEBUG_MSGS_MAIN {
-                    log::debug!("Net rec message: {:?}", update);
-                }
-                // log::info!("Client Leart: {:?}", update);
-                self.seg_data_storage.write_data(update);
+                self.data.confirmed_data.write_data(update);
             },
             ExternalMsg::InputQuery(query) => {
-                let owned_data = self.seg_data_storage.fulfill_query(&query, 20);
+                let owned_data = self.data.fulfill_query(&query, 20);
                 if owned_data.get_size() == 0{
                     log::info!("Failed to fulfil query {:?}", query);
                 }else{
                     log::info!("Responded to server req for {:?} with {:?} items", query, owned_data);
-                    connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
+                    self.net.client.send_msg(ExternalMsg::GameUpdate(owned_data), false);
 
                 }
             },
@@ -123,7 +116,7 @@ impl Client {
                 // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
             }
             ExternalMsg::NewHash(framed_hash) => {
-                self.seg_logic_tailer.add_hash(framed_hash);
+                self.hasher.add_framed(framed_hash);
             },
             _ => {
                 panic!("Client shouldn't be getting a message of this type (or at this time)!")
@@ -131,51 +124,23 @@ impl Client {
         }
     }
     fn on_new_input(&mut self, input: InputChange){
-        self.apply_input_changes();
-
-        if let Some(my_next_empty) = data_store.get_next_empty(self.player_id) {
-            let mut my_inputs_vec = vec![];
-            for abs_frame_index in my_next_empty..(inputs_arriving_for_frame + 1) {
-                my_inputs_vec.push(self.curret_input.clone());
-            }
-            data_store.write_input_data_single(self.player_id, self.curret_input.clone(), inputs_arriving_for_frame);
-
-            let data_package = SimDataPackage::PlayerInputs(SuperstoreData {
-                data: my_inputs_vec,
-                frame_offset: my_next_empty
-            }, self.player_id);
-            //println!("Self input for frame: {} till {} excl second", my_next_empty, inputs_arriving_for_frame);
-            data_store.write_data(data_package.clone());
-            self.to_net.send((ExternalMsg::GameUpdate(data_package), false)).unwrap();
-        }
+        input.apply_to_state(&mut self.curret_input);
     }
-    fn apply_input_changes(&mut self){
-        loop{
-            let mut next_input = self.inputs_stream.try_recv();
-            match next_input{
-                Ok(input_change) => {
-                    input_change.apply_to_state(&mut self.curret_input);
-                }
-                Err(e) => {
-                    return;
-                }
-            }
-        }
-    }
+
     pub fn core_loop(mut self, inputs: Receiver<InputChange>){
         let head_frames = self.known_frame.start_frame_stream_from_now();
         loop{
             crossbeam_channel::select! {
-                recv(self.net.client.up) -> msg ==>{
-                    self.on_new_net_msg(msg);
+                recv(self.net.client.up) -> msg =>{
+                    self.on_new_net_msg(msg.unwrap());
                 },
-                recv(head_frames) -> new_frame ==>{
-                    self.on_new_head_frame(new_frame);
+                recv(head_frames) -> new_frame =>{
+                    self.on_new_head_frame(new_frame.unwrap());
                 },
-                recv(inputs) -> new_input ==>{
-                    self.on_new_input(new_input);
+                recv(inputs) -> new_input =>{
+                    self.on_new_input(new_input.unwrap());
                 }
-            }
+            };
         }
     }
 

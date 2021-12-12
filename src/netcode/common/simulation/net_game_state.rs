@@ -77,9 +77,8 @@ impl NetGameState {
         net_state.game_state.init();
         return net_state;
     }
-    pub fn simulate(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
+    pub fn simulate_any(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
         self.game_state.simulate_tick(sim_info.inputs_map, sim_meta);
-        self.simmed_frame_index += 1;
 
         // Update this at the end of the frame, because players have no inputs the frame they connect.
         for server_event in &sim_info.server_events{
@@ -96,12 +95,17 @@ impl NetGameState {
                 }
             }
         }
+        self.simmed_frame_index = sim_meta.frame_index;
+    }
+    pub fn simulate(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
+        assert_eq!(sim_meta.frame_index, self.simmed_frame_index + 1);
+        self.simulate_any(sim_info, sim_meta);
     }
     pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
         self.game_state.render(ctx, player_id, res)
     }
 
-    pub fn sim_far_as_pos(&mut self, data: &ConfirmedData) -> SimDataQuery{
+    pub fn sim_tail_far_as_pos(&mut self, data: &ConfirmedData) -> SimDataQuery{
         loop{
             let frame = self.simmed_frame_index + 1;
             let metadata = SimMetadata{
@@ -133,5 +137,31 @@ impl NetGameState {
                 };
             }
         }
+    }
+    pub fn sim_head(&mut self, data: &ConfirmedData, my_inputs: Superstore<InputState>, my_id: PlayerID,
+    frame: FrameIndex, delta: f32){
+        let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
+
+        for player in self.connected_players.keys() {
+            if let Some(input_state) = data.get_input(frame, *player){
+                player_inputs.insert(*player, input_state.clone());
+            }
+            else{
+                player_inputs.insert(*player, data.get_last_input(*player).cloned().unwrap_or_default());
+            }
+        }
+        // Overwrite my own:
+        if let Some(input_state) = my_inputs.get(frame){
+            player_inputs.insert(my_id, input_state.clone());
+        }
+        self.simulate_any(InfoForSim{
+            inputs_map: player_inputs,
+            server_events: data.get_server_events_or_empty(frame),
+        },
+      &SimMetadata{
+                  delta,
+                  quality: SimQuality::HEAD,
+                  frame_index: frame
+                      });
     }
 }

@@ -70,6 +70,12 @@ impl ConfirmedData {
         }
         return None;
     }
+    pub fn get_last_input(&self, player_id: PlayerID) -> Option<&InputState>{
+        if let Some(superstore) = self.player_inputs.get(&player_id){
+            return superstore.last();
+        }
+        return None;
+    }
     pub fn get_next_empty(&self, player_id: PlayerID) -> Option<FrameIndex>{
         return Some(self.player_inputs.get(&player_id)?.get_next_empty_frame());
     }
