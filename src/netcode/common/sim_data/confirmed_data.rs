@@ -63,6 +63,7 @@ impl ConfirmedData {
         };
         storage
     }
+    
     pub fn get_input(&self, frame_index: FrameIndex, player_id: PlayerID) -> Option<&InputState>{
         if let Some(superstore) = self.player_inputs.get(&player_id){
             return superstore.get(frame_index);

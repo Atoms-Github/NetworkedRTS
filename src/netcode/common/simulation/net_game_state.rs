@@ -4,9 +4,9 @@ use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQu
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
-use crate::netcode::{InfoForSim, ConnStatusChangeType};
+use crate::netcode::{InfoForSim, ConnStatusChangeType, InputState};
 use std::hash::{Hash, Hasher};
-use crate::netcode::common::sim_data::confirmed_data::{ServerEvent, JoinType};
+use crate::netcode::common::sim_data::confirmed_data::{ServerEvent, JoinType, ConfirmedData, SimDataQuery, SimDataOwner};
 
 use std::sync::Arc;
 use std::fmt::Debug;
@@ -16,13 +16,11 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use zip::write::FileOptions;
-use crate::netcode::common::sim_data::superstore_seg::Cap;
+use crate::netcode::common::sim_data::superstore_seg::{Cap, Superstore};
+use crate::ecs::bblocky::super_vec::SuperVec;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
-    pub waiting_on: bool,
-    pub last_connected_on: FrameIndex,
-    pub last_connected_type: JoinType,
 }
 
 #[derive(Clone, Serialize, Deserialize, Hash)]
@@ -40,46 +38,6 @@ impl Debug for NetGameState{
 }
 
 impl NetGameState {
-    fn get_net_property_mut(&mut self, player_id: &PlayerID) -> &mut ConnectedPlayerProperty {
-        if !self.players.contains_key(player_id){
-            self.players.insert(*player_id, ConnectedPlayerProperty {
-                waiting_on: false,
-            });
-        }
-        return self.players.get_mut(&player_id).unwrap();
-    }
-    pub fn update_connected_players(&mut self, events: &Vec<ServerEvent>){
-        for event in events{
-            match event{
-                ServerEvent::DisconnectPlayer(player_id) => {
-                    let property = self.get_net_property_mut(player_id);
-                    property.waiting_on = false;
-                }
-                ServerEvent::JoinPlayer(player_id, name, shade) => {
-                    let property = self.get_net_property_mut(player_id);
-                    property.waiting_on = true;
-                }
-            }
-        }
-    }
-    pub fn get_connected_players(&self) -> Vec<PlayerID>{
-        let mut players = vec![];
-        for (player_id, player_property) in self.players.iter(){
-            if player_property.waiting_on{
-                players.push(*player_id);
-            }
-        }
-        return players;
-    }
-    pub fn get_disconnected_players(&self) -> Vec<PlayerID>{
-        let mut players = vec![];
-        for (player_id, player_property) in self.players.iter(){
-            if !player_property.waiting_on{
-                players.push(*player_id);
-            }
-        }
-        return players;
-    }
     pub fn get_hash(&self) -> HashType{
         let mut args_str: Vec<String> = env::args().collect();
         let mode = args_str[1].clone();
@@ -102,9 +60,7 @@ impl NetGameState {
             zip.write_all(data.as_bytes()).unwrap();
 
             zip.finish().unwrap();
-
         }
-
         let mut s = DefaultHasher::new();
         self.hash(&mut s);
         s.finish()
@@ -115,30 +71,67 @@ impl NetGameState {
     pub fn new() -> Self {
         let mut net_state = Self {
             game_state: GameState::new(),
+            connected_players: Default::default(),
             simmed_frame_index: 0,
-            players: Default::default()
         };
         net_state.game_state.init();
         return net_state;
     }
-    pub fn simulate_tick(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
+    pub fn simulate(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
+        self.game_state.simulate_tick(sim_info.inputs_map, sim_meta);
+        self.simmed_frame_index += 1;
+
+        // Update this at the end of the frame, because players have no inputs the frame they connect.
         for server_event in &sim_info.server_events{
             match server_event{
-                ServerEvent::JoinPlayer(player_id, name, shade) => {
+                ServerEvent::JoinPlayer(player_id, name, shade, reconnecting) => {
+                    self.connected_players.insert(*player_id, ConnectedPlayerProperty{});
                     assert!(sim_info.inputs_map.contains_key(player_id), "Player connected, but didn't have input state for that frame. Frame {}", self.get_simmed_frame_index() + 1);
                     self.game_state.player_connects(*player_id, name.clone(), shade.clone());
                 }
                 ServerEvent::DisconnectPlayer(player_id) => {
                     self.game_state.player_disconnects(*player_id);
+                    let existing = self.connected_players.remove(player_id);
+                    assert!(existing.is_some());
                 }
             }
         }
-        self.game_state.simulate_tick(sim_info.inputs_map, sim_meta);
-        self.simmed_frame_index += 1;
-
-
     }
     pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
         self.game_state.render(ctx, player_id, res)
+    }
+
+    pub fn sim_far_as_pos(&mut self, data: &ConfirmedData) -> SimDataQuery{
+        loop{
+            let frame = self.simmed_frame_index + 1;
+            let metadata = SimMetadata{
+                delta: crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS,
+                quality: SimQuality::DETERMA,
+                frame_index: frame
+            };
+            if let Some(events) = data.get_server_events(frame){
+                let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
+
+                for (player, properties) in self.connected_players {
+                    if let Some(input_state) = data.get_input(frame, player){
+                        player_inputs.insert(player, input_state.clone());
+                    }else{
+                        return SimDataQuery {
+                            query_type: SimDataOwner::Player(player),
+                            frame_offset: frame,
+                        };
+                    }
+                }
+                self.simulate(InfoForSim{
+                    inputs_map: player_inputs,
+                    server_events: events.clone()
+                }, &metadata);
+            }else{
+                return SimDataQuery{
+                    query_type : SimDataOwner::Server,
+                    frame_offset : frame,
+                };
+            }
+        }
     }
 }

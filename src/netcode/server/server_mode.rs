@@ -20,6 +20,7 @@ use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
 use crate::rts::GameState;
 use crate::netcode::client::logic_sim_header_seg::HEAD_AHEAD_FRAME_COUNT;
 use crate::netcode::server::server_event_distributor::ServerEventDistributor;
+use crate::netcode::common::simulation::logic_sim_tailer_seg::LogicSimTailer;
 
 pub struct ServerMainStateEx {
     seg_net_hub: NetworkingHubEx,

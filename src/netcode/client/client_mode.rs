@@ -20,7 +20,9 @@ use crate::rts::GameState;
 use std::sync::Arc;
 use crate::netcode::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
-
+use crate::netcode::common::simulation::logic_sim_tailer_seg::LogicSimTailer;
+use crate::netcode::common::simulation::logic_sim_header_seg::{HeadSimPacket, HEAD_AHEAD_FRAME_COUNT};
+use crate::netcode::common::simulation::net_game_state::NetGameState;
 
 
 struct Client {
@@ -30,7 +32,7 @@ struct Client {
     color: Shade,
     data: ClientDataStore,
     hashes: HashMap<FrameIndex, HashType>,
-    seg_logic_tailer: LogicSimTailer,
+    game_state: NetGameState,
     head_handle: Sender<HeadSimPacket>,
     curret_input: InputState,
     known_frame: KnownFrameInfo,
@@ -61,7 +63,7 @@ impl Client {
             color,
             data,
             hashes: Default::default(),
-            seg_logic_tailer: LogicSimTailer::new(welcome_info.game_state),
+            game_state: welcome_info.game_state,
             head_handle: tx_head,
             curret_input: Default::default(),
             known_frame
@@ -71,80 +73,60 @@ impl Client {
         });
         LogicSimHeaderEx::start_loop(rx_head);
     }
+    fn on_new_head_frame(&mut self, head_frame: FrameIndex){
+        let old_tail_frame = self.game_state.get_simmed_frame_index();
 
-    /*
-    enum ClientMsg{
-    NewHeadFrame(FrameIndex),
-    NewNetMsg(ExternalMsg),
-    NewInput,
-}
-     */
-    fn on_new_head_frame(&mut self, new_frame: FrameIndex){
-        thread::spawn(move ||{
-            loop{
-                // Shouldn't need to use this.
-                let _ = time_syncer.recv().unwrap();
+        let issue = self.game_state.sim_far_as_pos(&self.data.confirmed_data);
+        let new_tail_frame = self.game_state.get_simmed_frame_index();
+        let did_trail_progress = new_tail_frame != old_tail_frame;
 
-                let mut tail_progress_made = false;
+        // I.e. we'll request data if we can't even make it to here.
+        // The lower this is, the more work we're happy to do before complaining.
+        let intended_tail = head_frame - HEAD_AHEAD_FRAME_COUNT;
+        if new_tail_frame < intended_tail{
+            self.net.client.send_msg(ExternalMsg::InputQuery(issue), false);
+        }
 
-                self.update_net_rec(&mut connected_client);
+        if did_trail_progress{
+            self.send_head_state(self.game_state.clone());
+        }
 
-                let tail_attempt_start = self.seg_logic_tailer.game_state.get_simmed_frame_index() + 1;
-                let tail_attempt_end = (known_frame.get_intended_current_frame()).min(tail_attempt_start + 5);
-                for tail_frame_attempt in tail_attempt_start..tail_attempt_end{ // TODO2: A number depending on processing time.
-                    self.seg_input_handler.update(&mut self.seg_data_storage, self.seg_logic_tailer.game_state.get_simmed_frame_index() + HEAD_AHEAD_FRAME_COUNT);
-                    // log::info!("Client to sim {}.", tail_frame_attempt);
-                    match self.seg_logic_tailer.catchup_simulation(&self.seg_data_storage, tail_frame_attempt){
-                        Some(missing_datas) => {
-                            for missing_data in missing_datas{
-                                // TODO1 - save up a bit, jees.
-                                log::info!("Client missing data: {:?}", missing_data);
-                                connected_client.seg_connect_net.net_sink.send((ExternalMsg::InputQuery(missing_data), false)).unwrap();
-                            }
-                            break; // No more chance of stuff.
-                        }
-                        None => {
-                            // Tail sim successful.
-                            tail_progress_made = true;
-
-                        }
-                    }
-                }
-                if tail_progress_made{
-                    self.seg_logic_header.send_head_state(self.seg_logic_tailer.game_state.clone(), &self.seg_data_storage);
-                }
-            }
-        });
+    }
+    pub fn send_head_state(&mut self, gamestate: NetGameState){
+        let sim_data = self.get_head_sim_data(data_store, gamestate.get_simmed_frame_index() + 1);
+        let head_packet = HeadSimPacket{
+            game_state: gamestate,
+            sim_data
+        };
+        self.head_handle.send(head_packet).unwrap();
     }
     fn on_new_net_msg(&mut self, message: ExternalMsg){
-        while let Ok(item) = connected_client.seg_connect_net.net_rec.as_ref().unwrap().try_recv(){
-            match item{
-                ExternalMsg::GameUpdate(update) => {
-                    if crate::DEBUG_MSGS_MAIN {
-                        log::debug!("Net rec message: {:?}", update);
-                    }
-                    // log::info!("Client Leart: {:?}", update);
-                    self.seg_data_storage.write_data(update);
-                },
-                ExternalMsg::InputQuery(query) => {
-                    let owned_data = self.seg_data_storage.fulfill_query(&query, 20);
-                    if owned_data.get_size() == 0{
-                        log::info!("Failed to fulfil query {:?}", query);
-                    }else{
-                        log::info!("Responded to server req for {:?} with {:?} items", query, owned_data);
-                        connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
+        match message{
+            ExternalMsg::GameUpdate(update) => {
+                if crate::DEBUG_MSGS_MAIN {
+                    log::debug!("Net rec message: {:?}", update);
+                }
+                // log::info!("Client Leart: {:?}", update);
+                self.seg_data_storage.write_data(update);
+            },
+            ExternalMsg::InputQuery(query) => {
+                let owned_data = self.seg_data_storage.fulfill_query(&query, 20);
+                if owned_data.get_size() == 0{
+                    log::info!("Failed to fulfil query {:?}", query);
+                }else{
+                    log::info!("Responded to server req for {:?} with {:?} items", query, owned_data);
+                    connected_client.seg_connect_net.net_sink.send((ExternalMsg::GameUpdate(owned_data), false)).unwrap();
 
-                    }
-                },
-                ExternalMsg::PingTestResponse(_) => {
-                    // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
                 }
-                ExternalMsg::NewHash(framed_hash) => {
-                    self.seg_logic_tailer.add_hash(framed_hash);
-                },
-                _ => {
-                    panic!("Client shouldn't be getting a message of this type (or at this time)!")
-                }
+            },
+            ExternalMsg::PingTestResponse(_) => {
+                // Do nothing. Doesn't matter that intro stuff is still floating when we move on.
+            }
+            ExternalMsg::NewHash(framed_hash) => {
+                self.seg_logic_tailer.add_hash(framed_hash);
+            },
+            _ => {
+                panic!("Client shouldn't be getting a message of this type (or at this time)!")
             }
         }
     }
