@@ -17,46 +17,75 @@ use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
 use crate::rts::GameState;
 use crate::netcode::common::simulation::net_game_state::NetGameState;
 
-pub struct ServerMainStateEx {
+pub struct Server {
     seg_net_hub: NetworkingHubEx,
     data_store: ConfirmedData,
     seg_logic_tail: LogicSimTailer,
     known_frame_zero: KnownFrameInfo,
-    missing_data_handler: SeverMissingDataHandler,
-    event_distributor: ServerEventDistributor
 }
 
 
-pub struct ServerMainStateIn {
-    known_frame: KnownFrameInfo,
-    hosting_ip: String,
-}
-impl ServerMainStateIn {
-    pub fn new(hosting_ip: String) -> ServerMainStateIn {
-        ServerMainStateIn {
-            known_frame: KnownFrameInfo::new_from_args(0, SystemTime::now()),
-            hosting_ip
-        }
-    }
-    fn init_state(&self) -> NetGameState {
-        let mut game_state = NetGameState::new();
-        game_state
-    }
-    pub fn start_segments(self) -> ServerMainStateEx {
-        let seg_net_hub = NetworkingHubEx::start(self.hosting_ip.clone());
-        let seg_data_store = ConfirmedData::new(0);
-        let mut seg_logic_tail = LogicSimTailer::new(self.init_state(), self.known_frame.clone());
-        let missing_data_kick_msg_tx = seg_net_hub.down_sink.clone();
+impl Server {
+    pub fn start(hosting_ip: String){
+        let seg_net_hub = bibble_tokio::start_server(hosting_ip.clone());
+        let game_state = NetGameState::new();
 
         let event_distributor = ServerEventDistributor::new(seg_net_hub.down_sink.clone());
 
-        ServerMainStateEx {
+        let mut server = ServerMainStateEx {
             seg_net_hub,
-            data_store: seg_data_store,
+            data_store: ConfirmedData::new(),
             seg_logic_tail,
             known_frame_zero: self.known_frame,
             missing_data_handler: SeverMissingDataHandler::new(missing_data_kick_msg_tx),
             event_distributor
+        };
+        server.main_loop();
+    }
+    fn main_loop(mut self){
+        let frame_timer = self.known_frame_zero.start_frame_stream_from_now();
+        loop{
+            let current_sim_frame = frame_timer.recv().unwrap();
+
+            while let Ok(net_event) = self.seg_net_hub.up_rec.try_recv(){
+                self.handle_net_msg(net_event);
+            }
+
+            if let Some(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data_store, current_sim_frame){
+                self.missing_data_handler.handle_requests(missing_datas);
+            }
+            self.distrubute_state_hash();
+
+        }
+    }
+    fn distrubute_state_hash(&mut self){
+        let game_state = &self.seg_logic_tail.game_state;
+        self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAll(ExternalMsg::NewHash(FramedHash{
+            frame: game_state.get_simmed_frame_index(),
+            hash: game_state.get_hash()
+        }), false)).unwrap();
+    }
+    fn on_new_net_msg(&mut self, message: ExternalMsg){
+
+    }
+    fn on_new_head_frame(&mut self, input: InputChange){
+        input.apply_to_state(&mut self.curret_input);
+    }
+
+    pub fn core_loop(mut self, inputs: Receiver<InputChange>){
+        let head_frames = self.known_frame.start_frame_stream_from_now();
+        loop{
+            crossbeam_channel::select! {
+                recv(self.net.client.up) -> msg =>{
+                    self.on_new_net_msg(msg.unwrap());
+                },
+                recv(head_frames) -> new_frame =>{
+                    self.on_new_head_frame(new_frame.unwrap());
+                },
+                recv(inputs) -> new_input =>{
+                    self.on_new_input(new_input.unwrap());
+                }
+            };
         }
     }
 }
@@ -109,31 +138,8 @@ impl ServerMainStateEx {
         }
 
     }
-    fn distrubute_state_hash(&mut self){
-        let game_state = &self.seg_logic_tail.game_state;
-        self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAll(ExternalMsg::NewHash(FramedHash{
-            frame: game_state.get_simmed_frame_index(),
-            hash: game_state.get_hash()
-        }), false)).unwrap();
-    }
-    pub fn main_loop(mut self){
-        let frame_timer = self.known_frame_zero.start_frame_stream_from_now();
-        loop{
-            let current_sim_frame = frame_timer.recv().unwrap();
 
-            while let Ok(net_event) = self.seg_net_hub.up_rec.try_recv(){
-                self.handle_net_msg(net_event);
-            }
 
-            self.event_distributor.update(&mut self.data_store, self.seg_logic_tail.game_state.get_simmed_frame_index());
-            // println!("Server to sim {}", self.seg_logic_tail.game_state.get_simmed_frame_index() + 1);
-            if let Some(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data_store, current_sim_frame){
-                self.missing_data_handler.handle_requests(missing_datas);
-            }
-            self.distrubute_state_hash();
-
-        }
-    }
 }
 
 

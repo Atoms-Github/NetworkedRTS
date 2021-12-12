@@ -69,12 +69,10 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + 'static> Superstore<T>
         // Breaking.
         return None;
     }
-    pub fn clone_block(&self, first_frame_index_abs: FrameIndex, block_size: usize) -> Vec<T>{
+    pub fn clone_block(&self, first_frame: FrameIndex, block_size: usize) -> Vec<T>{
         let mut query_response = vec![];
-
-        let first_frame_index_rel = first_frame_index_abs - self.frame_offset;
-        for target_index_relative in first_frame_index_rel..(first_frame_index_rel + block_size){
-            match self.data.get(target_index_relative){
+        for target_index in first_frame..(first_frame + block_size){
+            match self.get(target_index){
                 Some(input) => {
                     query_response.push(input.clone());
                 }

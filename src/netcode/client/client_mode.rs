@@ -86,7 +86,7 @@ impl Client {
             // Send head state:
             let gamestate = self.game_state.clone();
             let sim_data = self.data.get_head_sim_data(
-                gamestate.get_simmed_frame_index() + 1, head_frame,);
+                gamestate.get_simmed_frame_index() + 1, head_frame /* Try and go all the way */);
             let head_packet = HeadSimPacket{
                 game_state: gamestate,
                 sim_data
@@ -95,7 +95,15 @@ impl Client {
         }
         self.hasher.add_state(&self.game_state);
 
-        // TODO: Query and send last 20 of mine: self.net.client.send_msg(ExternalMsg::Inpu)
+        self.data.predicted_local.write_data(SuperstoreData{
+            data: vec![self.curret_input.clone()],
+            frame_offset: head_frame - 1
+        });
+        let my_last_20 = self.data.fulfill_query(&SimDataQuery{
+            query_type: SimDataOwner::Player(self.player_id),
+            frame_offset: head_frame - HEAD_AHEAD_FRAME_COUNT
+        }, 20);
+        self.net.client.send_msg(ExternalMsg::GameUpdate(my_last_20));
     }
     fn on_new_net_msg(&mut self, message: ExternalMsg){
         match message{

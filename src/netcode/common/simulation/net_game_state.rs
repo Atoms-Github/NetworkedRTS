@@ -138,7 +138,7 @@ impl NetGameState {
             }
         }
     }
-    pub fn sim_head(&mut self, data: &ConfirmedData, my_inputs: Superstore<InputState>, my_id: PlayerID,
+    pub fn unused_sim_head(&mut self, data: &ConfirmedData, my_inputs: Superstore<InputState>, my_id: PlayerID,
     frame: FrameIndex, delta: f32){
         let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
 
