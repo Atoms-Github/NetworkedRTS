@@ -190,9 +190,9 @@ impl ConfirmedData {
 
         let mut dummy_inputs = vec![];
         // Now to fill up that player's inputs with garbo.
-        for frame_index in frame_to_fill_from..(kick_event.get_frame()){
+        for frame_index in from_frame..(kick_event.get_frame()){
             if let Some(input) = self.get_last_input(player_id){
-                dummy_inputs.add(input);
+                dummy_inputs.push(input);
             }
         }
         let empty_messages = SimDataPackage::PlayerInputs(SuperstoreData{

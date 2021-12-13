@@ -77,9 +77,16 @@ impl Server {
                         }
                     },
                     ExternalMsg::GameUpdate(update_info) => {
-                        log::debug!("Server learned: {:?}", update_info);
-                        self.data.write_data(update_info.clone()); // TODO:.
-                        self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
+                        if let SimDataPackage::PlayerInputs(data, player) = update_info{
+                            let last_confirmed_input_maybe = self.data.get_last_input_frame(player);
+                            let mut last_allowed_input = self.game_state.get_simmed_frame_index() + 1;
+                            // Delete everything that's already been simulated.
+                            // We'll still have overlap with existing data, but that's good, since we can check it.
+                            let trimmed = data.trim_earlier(last_allowed_input);
+                            self.add_confirmed_data(SimDataPackage::PlayerInputs(trimmed, player_id));
+                        }else{
+                            panic!("Server recced from server?");
+                        }
                     },
                     ExternalMsg::InputQuery(query) => {
                         let owned_data = self.data.fulfill_query(&query, 20);

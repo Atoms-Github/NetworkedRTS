@@ -1,5 +1,4 @@
 
-use crate::netcode::InputState;
 use ggez::event::{KeyCode, MouseButton};
 use crate::rts::compsys::RtsMouseEvent::{NoMouse, MouseUp};
 use crate::rts::compsys::RtsKeyEvent::NoKey;

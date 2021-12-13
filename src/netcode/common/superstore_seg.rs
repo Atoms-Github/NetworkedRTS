@@ -14,7 +14,6 @@ use crate::netcode::common::external_msg::*;
 use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 use std::collections::vec_deque::*;
 use std::io::Seek;
-use crate::netcode::client::input_handler_seg::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use std::collections::{BTreeMap, HashMap};
@@ -27,6 +26,22 @@ use mopa::Any;
 pub struct SuperstoreData<T> {
     pub data: Vec<T>,
     pub frame_offset: FrameIndex
+}
+impl<T> SuperstoreData<T>{
+    pub fn trim_earlier(&self, earliest_frame: FrameIndex) -> SuperstoreData<T>{
+        // Yes, this could be optimised.
+        let mut output = vec![];
+        for (relative, item) in self.data.into_iter().enumerate(){
+            let abs_index = relative + self.frame_offset;
+            if abs_index >= earliest_frame{
+                output.push(item)
+            }
+        }
+        SuperstoreData{
+            data: output,
+            frame_offset: earliest_frame.max(self.frame_offset)
+        }
+    }
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Superstore<T :Clone + Default + Send + Debug + Sync + PartialEq + 'static>{

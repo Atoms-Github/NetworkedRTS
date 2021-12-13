@@ -22,10 +22,6 @@ pub struct InputState {
     pub total_scroll_dist: f32,
     mouse_btns_pressed: [bool; MOUSE_BUTTONS_COUNT] // NOT SUPPORTING NON-DEFAULT MOUSE BUTTONS.
 }
-
-impl Eq for InputState{
-
-}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ConnStatusChangeType {
     Nothing,

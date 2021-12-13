@@ -9,7 +9,6 @@ use ggez::input::keyboard::KeyCode;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use crate::netcode::*;
-use crate::netcode::common::sim_data::input_state::*;
 use std::time::SystemTime;
 use ggez::graphics::Text;
 use std::collections::BTreeMap;

@@ -18,7 +18,7 @@ use zip::write::FileOptions;
 use crate::ecs::bblocky::super_vec::SuperVec;
 use crate::netcode::client::client_hasher::FramedHash;
 use crate::netcode::common::confirmed_data::{ServerEvent, ConfirmedData, SimDataOwner, SimDataQuery};
-use crate::netcode::common::input_state::InputState;
+use crate::netcode::common::superstore_seg::Superstore;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
@@ -88,7 +88,7 @@ impl NetGameState {
         // Update this at the end of the frame, because players have no inputs the frame they connect.
         for server_event in &sim_info.server_events{
             match server_event{
-                ServerEvent::JoinPlayer(player_id, name, shade, reconnecting) => {
+                ServerEvent::JoinPlayer(player_id, name, shade) => {
                     self.connected_players.insert(*player_id, ConnectedPlayerProperty{});
                     assert!(sim_info.inputs_map.contains_key(player_id), "Player connected, but didn't have input state for that frame. Frame {}", self.get_simmed_frame_index() + 1);
                     self.game_state.player_connects(*player_id, name.clone(), shade.clone());

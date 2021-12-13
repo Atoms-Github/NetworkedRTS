@@ -40,7 +40,7 @@ pub mod lobby;
 
 
 pub use crate::rts::game::game_state::*;
-// pub use crate::pub_types::*; TODO
+pub use crate::pub_types::*;
 pub use crate::ecs::ecs_macros::*;
 pub use crate::ecs::pending_entity::*;
 pub use crate::rts::game::shortcuts::*;

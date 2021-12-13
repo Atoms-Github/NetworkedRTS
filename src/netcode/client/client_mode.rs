@@ -21,7 +21,7 @@ use crate::netcode::common::superstore_seg::SuperstoreData;
 use crate::netcode::common::confirmed_data::{SimDataQuery, SimDataOwner};
 
 
-struct Client {
+pub struct Client {
     player_id: PlayerID,
     net: ClientNet,
     player_name: String,

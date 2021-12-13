@@ -4,7 +4,6 @@ use crate::ecs::superb_ecs::{System, EntStructureChanges};
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::GlobalEntityID;
 use ggez::event::{MouseButton, KeyCode};
-use crate::netcode::InputState;
 use crate::pub_types::PointFloat;
 use nalgebra::Point2;
 use rand::Rng;
