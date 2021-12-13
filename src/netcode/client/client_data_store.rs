@@ -33,8 +33,17 @@ impl ClientDataStore{
     pub fn get_head_sim_data(&self, frame_from: FrameIndex, frame_to : FrameIndex) -> Vec<InfoForSim> {
         return (frame_from..(frame_to + 1)).map(|frame|{self.get_head_sim_data_single(frame)}).collect();
     }
-    pub fn fulfill_query(&self, query: &SimDataQuery, item_count: i32) -> SimDataPackage {
-        todo!()
+    pub fn fulfill_query(&self, query: &SimDataQuery, item_count: usize) -> SimDataPackage {
+        let mut results = self.confirmed_data.fulfill_query(query, item_count);
+        // Now modify results with self, if required.
+        if let SimDataPackage::PlayerInputs(data, player) = &mut results{
+            if player == self.my_player_id{
+                let predicted_block = self.predicted_local.clone_block(query.frame_offset, item_count);
+                data.data = predicted_block;
+            }
+        }
+
+        return results;
     }
     pub fn new(my_player_id: PlayerID) -> Self{
         Self{

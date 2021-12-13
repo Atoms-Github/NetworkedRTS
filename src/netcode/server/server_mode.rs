@@ -120,7 +120,7 @@ impl Server {
                 // Actually, why are we bothering asking? The train goes on.
                 // Lets just make it up.
                 // The 'tail' frame doesn't exist. All it is is literally the cutoff point.
-                let frames_to_get_input_in = HEAD_AHEAD_FRAME_COUNT; // Modival.
+                let frames_to_get_input_in = HEAD_AHEAD_FRAME_COUNT;
                 // If someone is too slow:
                 if data_query.frame_offset < self.known_frame_zero.get_intended_current_frame() - frames_to_get_input_in{
                     if let SimDataOwner::Player(player) = data_query.query_type{

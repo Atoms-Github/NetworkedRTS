@@ -35,7 +35,7 @@ impl ClientNet {
         thread::spawn(move ||{
             loop{
                 my_sender.send((ExternalMsg::PingTestQuery(SystemTime::now()),false)).unwrap();
-                thread::sleep(Duration::from_millis(100)); // Modival
+                thread::sleep(Duration::from_millis(100));
                 if stop_rec.try_recv().is_ok(){
                     return;
                 }

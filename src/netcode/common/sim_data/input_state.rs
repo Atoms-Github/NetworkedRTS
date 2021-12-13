@@ -42,7 +42,7 @@ pub enum InputChange {
     MouseMove(PointFloat)
 }
 
-impl InputChange{ // TODO2: Swap round. Should be state.apply_change(InputChange);
+impl InputChange{
     pub fn apply_to_state(&self, state: &mut InputState){
         match self{
             InputChange::KeyDownUp(code, is_pressed) => {
