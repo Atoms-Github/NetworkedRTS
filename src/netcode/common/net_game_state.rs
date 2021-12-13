@@ -90,7 +90,6 @@ impl NetGameState {
             match server_event{
                 ServerEvent::JoinPlayer(player_id, name, shade) => {
                     self.connected_players.insert(*player_id, ConnectedPlayerProperty{});
-                    assert!(sim_info.inputs_map.contains_key(player_id), "Player connected, but didn't have input state for that frame. Frame {}", self.get_simmed_frame_index() + 1);
                     self.game_state.player_connects(*player_id, name.clone(), shade.clone());
                 }
                 ServerEvent::DisconnectPlayer(player_id) => {

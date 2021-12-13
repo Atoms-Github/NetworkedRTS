@@ -97,27 +97,37 @@ impl Server {
                             self.net.send_msg(player_id, ExternalMsg::GameUpdate(owned_data),false);
                         }
                     },
-                    _ => {
-                        panic!("Unexpected message");
+                    ExternalMsg::PingTestQuery(client_time) => {
+                        let server_time = SystemTime::now();
+                        let response = ExternalMsg::PingTestResponse(
+                            NetMsgPingTestResponse{
+                                client_time,
+                                server_time
+                            }
+                        );
+                        self.net.send_msg(player_id, response, false);
+                    },
+                    other => {
+                        panic!("Unexpected message {:?}", other);
                     }
                 }
             }
         }
     }
-    fn on_new_head_frame(&mut self, frame: FrameIndex){
+    fn on_new_head_frame(&mut self, head_frame: FrameIndex){
         // Easy peasy when it comes to server's server events.
         // On head frame, send new one on head frame.
         // On event that needs scheduled, put it one frame after whatever we've got.
         {// Send new server event.
-            if self.data.get_server_events(frame).is_none(){
-                let new_data = SimDataPackage::new_single_server(frame, vec![]);
+            if self.data.get_server_events(head_frame).is_none(){
+                let new_data = SimDataPackage::new_single_server(head_frame, vec![]);
                 // Write the 1x package.
                 self.data.write_data(new_data);
 
                 // Now send out 20 latest packages.
                 let query = SimDataQuery{
                     query_type: SimDataOwner::Server,
-                    frame_offset: frame - HEAD_AHEAD_FRAME_COUNT,
+                    frame_offset: head_frame - HEAD_AHEAD_FRAME_COUNT,
                 };
                 let results = self.data.fulfill_query(&query, 20);
                 self.net.send_msg_all(ExternalMsg::GameUpdate(results), false);
@@ -132,8 +142,8 @@ impl Server {
                 // Lets just make it up.
                 // The 'tail' frame doesn't exist. All it is is literally the cutoff point.
                 let frames_to_get_input_in = HEAD_AHEAD_FRAME_COUNT;
-                // If someone is too slow:
-                if data_query.frame_offset < self.known_frame_zero.get_intended_current_frame() - frames_to_get_input_in{
+                // If someone is too slow: (This way around to avoid underflow).
+                if data_query.frame_offset + frames_to_get_input_in < head_frame{
                     if let SimDataOwner::Player(player) = data_query.query_type{
                         // Just make it up. :).
                         let their_last_inputs = self.data.get_last_input(player).cloned().unwrap_or_default();

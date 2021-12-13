@@ -95,6 +95,9 @@ impl ConfirmedData {
     pub fn get_player_list(&self) -> Vec<PlayerID>{
         return self.player_inputs.keys().cloned().collect();
     }
+    pub fn register_player(&mut self, player: PlayerID){
+        self.player_inputs.insert(player, Superstore::new(true));
+    }
     pub fn write_data(&mut self, data: SimDataPackage){
         match data{
             SimDataPackage::PlayerInputs(data, player_id) => {
@@ -114,7 +117,7 @@ impl ConfirmedData {
         self.write_data(package);
     }
     pub fn get_next_empty_server_events_frame(&self) -> FrameIndex{
-        return self.server_events.last_frame.unwrap_or_else(||{0});
+        return self.server_events.last_frame.unwrap_or_else(||{0}) + 1;
     }
     pub fn fulfill_query(&self, query: &SimDataQuery, number_of_items: usize) -> SimDataPackage {
         match query.query_type{
@@ -125,9 +128,10 @@ impl ConfirmedData {
                 })
             }
             SimDataOwner::Player(player_id) => {
-                let superstore = self.player_inputs.get(&player_id).expect("DataStore was queried for a player it didn't know existed.");
+                let store = self.player_inputs.get(&player_id);
+                assert!(store.is_some(), "DataStore was queried for a player it didn't know existed. {}", player_id);
                 SimDataPackage::PlayerInputs(SuperstoreData{
-                    data: superstore.clone_block(query.frame_offset, number_of_items),
+                    data: store.unwrap().clone_block(query.frame_offset, number_of_items),
                     frame_offset: query.frame_offset
                 }, player_id)
             }

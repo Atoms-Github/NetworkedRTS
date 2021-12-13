@@ -47,9 +47,11 @@ impl ClientDataStore{
         return results;
     }
     pub fn new(my_player_id: PlayerID) -> Self{
+        let mut confirmed_data = ConfirmedData::new();
+        confirmed_data.register_player(my_player_id);
         Self{
             my_player_id,
-            confirmed_data: ConfirmedData::new(),
+            confirmed_data,
             predicted_local: Superstore::new(false),
         }
     }

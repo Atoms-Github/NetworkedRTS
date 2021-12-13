@@ -86,6 +86,8 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + PartialEq + 'static> S
             }
             if let Some(last_frame) = &mut self.last_frame{
                 *last_frame = (*last_frame).max(abs_index);
+            }else{
+                self.last_frame = Some(abs_index);
             }
         }
     }
