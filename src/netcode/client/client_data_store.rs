@@ -19,11 +19,17 @@ impl ClientDataStore{
         for player in self.confirmed_data.get_player_list() {
             if let Some(input_state) = self.confirmed_data.get_input(frame, player){
                 player_inputs.insert(player, input_state.clone());
+            }else if let Some(input_state) = self.confirmed_data.get_last_input(player){
+                player_inputs.insert(player, input_state.clone());
             }
         }
         // Overwrite my own:
         if let Some(input_state) = self.predicted_local.get(frame){
             player_inputs.insert(self.my_player_id, input_state.clone());
+        }else if let Some(last_frame) = self.predicted_local.last_frame{
+            if let Some(input_state) = self.predicted_local.get(last_frame){
+                player_inputs.insert(self.my_player_id, input_state.clone());
+            }
         }
 
         return InfoForSim {
