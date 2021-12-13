@@ -4,7 +4,7 @@ use crossbeam_channel::*;
 
 use crate::netcode::*;
 use crate::netcode::common::sim_data::confirmed_data::*;
-use crate::netcode::common::time::timekeeping::*;
+use crate::netcode::common::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use std::sync::mpsc::channel;

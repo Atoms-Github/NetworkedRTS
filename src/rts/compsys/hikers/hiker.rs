@@ -96,7 +96,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                 HikerPathState::STATIONARY => {None}
             };
             if let Some(target) = straight_towards{
-                let dist_can_move = hiker.speed * crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
+                let dist_can_move = hiker.speed * crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS;
                 if (target.clone() - &position.pos).magnitude() < dist_can_move{
                     // We've made it to the target.
                     position.pos = target;

@@ -5,7 +5,7 @@ use anymap::AnyMap;
 use crate::ecs::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
-use crate::netcode::common::time::timekeeping::*;
+use crate::netcode::common::timekeeping::*;
 
 #[derive(Debug)]
 pub struct SuperbEcs{

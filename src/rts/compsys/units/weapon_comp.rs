@@ -10,7 +10,7 @@ use std::ops::Div;
 
 use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode};
 use crate::bibble::effect_resolver::revolver::Revolver;
-use crate::netcode::common::time::timekeeping::SpeedTimer;
+use crate::netcode::common::timekeeping::SpeedTimer;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WeaponComp {
@@ -53,7 +53,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
     // Increment time since shot.
     for (shooter_id, weapon, owned_shooter, position_shooter, orders)
     in CompIter4::<WeaponComp, OwnedComp, PositionComp, OrdersComp>::new(c) {
-        weapon.time_since_shot += crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
+        weapon.time_since_shot += crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS;
     }
     if let Some(arena) = c.find_arena(){
         let mut timer = SpeedTimer::new();

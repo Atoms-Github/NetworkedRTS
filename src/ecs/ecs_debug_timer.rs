@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::netcode::common::time::timekeeping::DT;
+use crate::netcode::common::timekeeping::DT;
 use std::time::Duration;
 
 #[derive(Default, Clone, Debug)]
@@ -45,7 +45,7 @@ impl EcsDebugTimer{
     }
     pub fn print_all(&self){
         println!(" ---- Times: ---- ");
-        let time_budget_ms = crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS / 20.0;
+        let time_budget_ms = crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS / 20.0;
         println!("Budget: {}ms", time_budget_ms);
 
         let mut total_duration = Duration::from_secs(0);

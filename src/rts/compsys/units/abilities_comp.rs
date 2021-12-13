@@ -57,7 +57,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
     for (unit_id, abilities)
     in CompIter1::<AbilitiesComp>::new(c) {
         for ability in &mut abilities.abilities{
-            ability.time_since_use += crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
+            ability.time_since_use += crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS;
         }
     }
 }

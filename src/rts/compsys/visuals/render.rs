@@ -10,7 +10,7 @@ use crate::bibble::data::data_types::AbilityID;
 use std::collections::BTreeMap;
 use winit::event::VirtualKeyCode;
 use std::fmt;
-use crate::netcode::common::time::timekeeping::DT;
+use crate::netcode::common::timekeeping::DT;
 use rand::Rng;
 use crate::rts::game::cool_batcher::{CoolBatcher, MyDrawParams};
 use crate::ecs::comp_store::CompStorage;

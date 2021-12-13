@@ -25,7 +25,7 @@ pub static LOBBY_SYS: System = System{
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     let scene = c.find_scene();
     for (lobby_id, lobby) in CompIter1::<LobbyManager>::new(c){
-        lobby.game_start_cooldown -= crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS;
+        lobby.game_start_cooldown -= crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS;
         // Check for game start on F1.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F1){

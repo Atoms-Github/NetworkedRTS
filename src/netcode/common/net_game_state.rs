@@ -18,7 +18,7 @@ use std::io::Write;
 use zip::write::FileOptions;
 use crate::netcode::common::sim_data::superstore_seg::{Cap, Superstore};
 use crate::ecs::bblocky::super_vec::SuperVec;
-use crate::netcode::common::sim_data::client_hasher::FramedHash;
+use crate::netcode::client::client_hasher::FramedHash;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
@@ -114,7 +114,7 @@ impl NetGameState {
         loop{
             let frame = self.simmed_frame_index + 1;
             let metadata = SimMetadata{
-                delta: crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS,
+                delta: crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS,
                 quality: SimQuality::DETERMA,
                 frame_index: frame
             };

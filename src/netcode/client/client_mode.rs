@@ -5,11 +5,11 @@ use std::time::{Duration};
 use crate::netcode::client::connect_net_seg::*;
 use crate::netcode::client::graphical_seg::*;
 use crate::netcode::client::logic_sim_header_seg::*;
-use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::external_msg::*;
 use crate::netcode::common::sim_data::input_state::*;
 use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::time::scheduler_segment::*;
-use crate::netcode::common::time::timekeeping::*;
+use crate::netcode::common::timekeeping::*;
 use crate::netcode::common::sim_data::superstore_seg::*;
 use crate::netcode::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
@@ -21,7 +21,7 @@ use crate::netcode::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
 use crate::netcode::common::simulation::logic_sim_header_seg::{HeadSimPacket, HEAD_AHEAD_FRAME_COUNT, HeaderThread};
 use crate::netcode::common::simulation::net_game_state::NetGameState;
-use crate::netcode::common::sim_data::client_hasher::ClientHasher;
+use crate::netcode::client::client_hasher::ClientHasher;
 
 
 struct Client {

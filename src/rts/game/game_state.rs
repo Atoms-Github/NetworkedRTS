@@ -16,7 +16,7 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
-use crate::netcode::common::time::timekeeping::DT;
+use crate::netcode::common::timekeeping::DT;
 use rand::Rng;
 
 pub const MAX_PLAYERS : usize = 16;

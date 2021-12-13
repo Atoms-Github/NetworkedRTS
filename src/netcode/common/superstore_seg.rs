@@ -10,7 +10,7 @@ use std::time::{Duration, SystemTime};
 use std::ops::Div;
 use std::ops::Sub;
 use serde::{Deserialize, Serialize};
-use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::external_msg::*;
 use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 use std::collections::vec_deque::*;
 use std::io::Seek;

@@ -4,4 +4,6 @@ pub mod graphical_seg;
 pub mod input_handler_seg;
 pub mod logic_sim_header_seg;
 pub mod client_data_store;
+pub mod client_hasher;
+pub mod logic_sim_header_seg;
 

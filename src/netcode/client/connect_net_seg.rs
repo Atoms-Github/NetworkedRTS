@@ -7,10 +7,10 @@ use std::ops::Div;
 use std::ops::Sub;
 use crossbeam_channel::*;
 
-use crate::netcode::common::network::external_msg::*;
+use crate::netcode::common::external_msg::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
-use crate::netcode::common::time::timekeeping::KnownFrameInfo;
+use crate::netcode::common::timekeeping::KnownFrameInfo;
 use crate::netcode::common::network::channel_threads::*;
 use bibble_tokio::NetClientTop;
 

@@ -22,7 +22,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
     for (worker_id, life, owned, worker) in
     CompIter3::<LifeComp, OwnedComp, WorkerComp>::new(c) {
         let resources_comp = c.get_mut::<OwnsResourcesComp>(owned.owner).unwrap();
-        resources_comp.gain_block(&worker.resource_gain_per_ms, crate::netcode::common::time::timekeeping::FRAME_DURATION_MILLIS);
+        resources_comp.gain_block(&worker.resource_gain_per_ms, crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS);
     }
 
 }
