@@ -18,6 +18,7 @@ use std::io::Write;
 use zip::write::FileOptions;
 use crate::netcode::common::sim_data::superstore_seg::{Cap, Superstore};
 use crate::ecs::bblocky::super_vec::SuperVec;
+use crate::netcode::common::sim_data::client_hasher::FramedHash;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
@@ -38,7 +39,7 @@ impl Debug for NetGameState{
 }
 
 impl NetGameState {
-    pub fn get_hash(&self) -> HashType{
+    pub fn get_hash(&self) -> FramedHash{
         let mut args_str: Vec<String> = env::args().collect();
         let mode = args_str[1].clone();
         let filename = format!("/states/{}/{}.zip",mode, self.simmed_frame_index);
@@ -63,7 +64,11 @@ impl NetGameState {
         }
         let mut s = DefaultHasher::new();
         self.hash(&mut s);
-        s.finish()
+        let hash_num = s.finish();
+        return FramedHash{
+            frame: self.simmed_frame_index,
+            hash: hash_num
+        };
     }
     pub fn get_simmed_frame_index(&self) -> FrameIndex{
         return self.simmed_frame_index;

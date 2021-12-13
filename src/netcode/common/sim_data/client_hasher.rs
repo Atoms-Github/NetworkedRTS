@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::netcode::common::simulation::net_game_state::NetGameState;
 use serde::*;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct FramedHash{
     pub frame: FrameIndex,
     pub hash: HashType,

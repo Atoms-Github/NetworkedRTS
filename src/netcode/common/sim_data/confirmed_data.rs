@@ -35,7 +35,7 @@ pub struct SimDataQuery {
     pub query_type: SimDataOwner,
     pub frame_offset: FrameIndex,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum SimDataPackage{
     ServerEvents(SuperstoreData<ServerEvents>),
     PlayerInputs(SuperstoreData<InputState>, PlayerID)

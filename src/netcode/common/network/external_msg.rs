@@ -18,7 +18,7 @@ use crate::netcode::common::sim_data::net_game_state::{ConnectedPlayerProperty, 
 use crate::pub_types::{FrameIndex, Shade};
 use crate::netcode::common::sim_data::client_hasher::FramedHash;
 
-#[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum ExternalMsg {
     ConnectionInitQuery,
     ConnectionInitResponse(NetMsgGreetingResponse),
