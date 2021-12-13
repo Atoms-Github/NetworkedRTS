@@ -65,7 +65,7 @@ impl Client {
         thread::spawn(move ||{
             client.core_loop(rx_input);
         });
-        HeaderThread::start(rx_head, my_id);
+        HeaderThread::start(tx_input, rx_head, my_id);
     }
     fn on_new_head_frame(&mut self, head_frame: FrameIndex){
         let old_tail_frame = self.game_state.get_simmed_frame_index();

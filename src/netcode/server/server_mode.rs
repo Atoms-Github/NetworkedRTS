@@ -144,7 +144,7 @@ impl Server {
 
                         self.add_confirmed_data(new_data_package);
                     }else{
-                        assert!(false, "Server shouldn't be waiting for the server ...")
+                        assert!(false, "Server shouldn't be waiting for the server ... {}", data_query.frame_offset)
                     }
                 }else{
                     break;

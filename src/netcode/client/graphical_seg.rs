@@ -19,6 +19,9 @@ use crate::rts::GameState;
 use std::path::Path;
 use std::borrow::Borrow;
 use ggez::conf::{WindowMode, FullscreenType};
+use winit::platform::windows::EventLoopExtWindows;
+use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::input_state::InputChange;
 
 pub struct GraphicalIn {
     render_head_rec: Receiver<NetGameState>,
@@ -29,15 +32,9 @@ pub struct GraphicalIn {
     fullscreen: bool,
     window_mode: conf::WindowMode,
 }
-pub struct GraphicalEx {
-    pub input_rec: Receiver<InputChange>,
-    pub graphical_in: GraphicalIn,
-}
-impl GraphicalEx{
-    pub fn new(head_render_handle: Receiver<NetGameState>, my_player_id: PlayerID) -> GraphicalEx{
-        let (input_sink, input_rec) = unbounded();
 
-
+impl GraphicalIn {
+    pub fn start(inputs: Sender<InputChange>, head_render_handle: Receiver<NetGameState>, my_player_id: PlayerID) -> !{
         let mut texts = BTreeMap::new();
         let text = Text::new("Hello, World!");
         // Store the text in `App`s map, for drawing in main loop.
@@ -49,36 +46,26 @@ impl GraphicalEx{
         window_mode = window_mode.dimensions(1440.0, 810.0);
         window_mode.resizable = true;
         // window_mode.resize_on_scale_factor_change = true;
+        let mut graphical_in = GraphicalIn{
+            render_head_rec: head_render_handle,
+            my_player_id,
+            input_sink: inputs,
+            texts,
+            resources: None,
+            fullscreen: false,
+            window_mode
+        };
 
-        GraphicalEx{
-            input_rec,
-            graphical_in: GraphicalIn{
-                render_head_rec: head_render_handle,
-                my_player_id,
-                input_sink,
-                texts,
-                resources: None,
-                fullscreen: false,
-                window_mode
-            }
-        }
-    }
-}
-use winit::platform::windows::EventLoopExtWindows;
-use crate::netcode::common::net_game_state::NetGameState;
-use crate::netcode::common::input_state::InputChange;
 
-impl GraphicalIn {
-    pub fn start(mut self) -> !{
         let cb = ContextBuilder::new("Oh my literal pogger", "Atoms")
-            .window_setup(conf::WindowSetup::default().title("LiteralPoggyness")).window_mode(self.window_mode.clone())
+            .window_setup(conf::WindowSetup::default().title("LiteralPoggyness")).window_mode(graphical_in.window_mode.clone())
             .add_resource_path("");
 
         let (mut ctx, events_loop) = cb.build().unwrap();
 
 
-        self.resources = Some(GameState::gen_render_resources(&mut ctx));
-        event::run(ctx, events_loop, self);
+        graphical_in.resources = Some(GameState::gen_render_resources(&mut ctx));
+        event::run(ctx, events_loop, graphical_in);
     }
 }
 

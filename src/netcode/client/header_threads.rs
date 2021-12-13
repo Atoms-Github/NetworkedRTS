@@ -7,8 +7,9 @@ use crate::netcode::common::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use std::sync::mpsc::channel;
-use crate::netcode::client::graphical_seg::GraphicalEx;
 use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::client::graphical_seg::GraphicalIn;
+use crate::netcode::common::input_state::InputChange;
 
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
@@ -23,7 +24,7 @@ pub struct HeaderThread {
     output_states: Sender<NetGameState>,
 }
 impl HeaderThread {
-    pub fn start(new_heads: Receiver<HeadSimPacket>, my_player_id: PlayerID) {
+    pub fn start(inputs: Sender<InputChange>, new_heads: Receiver<HeadSimPacket>, my_player_id: PlayerID) {
         let (tx_output_states, rx_output_states) = unbounded();
         thread::spawn(move ||{
             HeaderThread {
@@ -31,7 +32,7 @@ impl HeaderThread {
                 output_states: tx_output_states,
             }.start_loop();
         });
-        GraphicalEx::new(rx_output_states, my_player_id);
+        GraphicalIn::start(inputs, rx_output_states, my_player_id);
     }
     pub fn start_loop(mut self) -> !{
         loop{
