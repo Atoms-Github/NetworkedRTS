@@ -34,6 +34,7 @@ pub struct SuperstoreData<T> {
 pub struct Superstore<T :Clone + Default + Send + Debug + Sync + PartialEq + 'static>{
     confirmed_data: bool,
     data: HashMap<FrameIndex, T>,
+    pub last_frame: Option<FrameIndex>,
 }
 
 

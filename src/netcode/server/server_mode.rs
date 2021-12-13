@@ -21,12 +21,15 @@ use crate::netcode::common::sim_data::input_state::InputChange;
 use crate::netcode::common::sim_data::client_hasher::FramedHash;
 use crate::netcode::common::simulation::logic_sim_header_seg::HEAD_AHEAD_FRAME_COUNT;
 use crate::netcode::common::sim_data::confirmed_data::SimDataOwner;
+use std::collections::HashSet;
+
 
 pub struct Server {
     net: NetHubTop<ExternalMsg>,
     data: ConfirmedData,
     game_state: NetGameState,
     known_frame_zero: KnownFrameInfo,
+    init_box: HashSet<PlayerID>,
 }
 
 
@@ -39,21 +42,26 @@ impl Server {
             net,
             data: ConfirmedData::new(),
             game_state,
-            known_frame_zero: KnownFrameInfo::new_from_args(0, SystemTime::now())
+            known_frame_zero: KnownFrameInfo::new_from_args(0, SystemTime::now()),
+            init_box: Default::default()
         };
         server.core_loop();
     }
     fn on_new_net_msg(&mut self, message: OutMsg<ExternalMsg>){
         match net_event{
-            NetHubFrontMsgOut::NewPlayer(player_id) => {}
-            NetHubFrontMsgOut::PlayerDiscon(player_id) => {
-                log::info!("Player disconnected! --------------------");
-                self.data.server_boot_player(player_id, self.seg_logic_tail.game_state.get_simmed_frame_index());
-
+            OutMsg::PlayerConnected(player_id) => {}
+            OutMsg::PlayerDisconnected(player_id) => {
+                log::info!("Player disconnected!");
+                if self.init_box.remove(&player_id){
+                    for package in self.data.server_disconnect_player(
+                        player_id, self.game_state.get_simmed_frame_index()){
+                        self.add_confirmed_data(package);
+                    }
+                }
             }
-            NetHubFrontMsgOut::NewMsg(msg, player_id) => {
+            OutMsg::NewFax(player, msg) => {
                 match msg{
-                    ExternalMsg::ConnectionInitQuery(greeting) => {
+                    ExternalMsg::ConnectionInitQuery => {
                         log::info!("Received initialization request for player with ID: {}", player_id);
 
                         let game_state = self.seg_logic_tail.game_state.clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
@@ -66,8 +74,12 @@ impl Server {
                         let response = ExternalMsg::ConnectionInitResponse(msg);
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
                     },
-                    ExternalMsg::WorldDownloaded(downloaded_info) => {
-                        self.data.schedule_server_event(ServerEvent::JoinPlayer(player_id, downloaded_info.player_name, downloaded_info.color));
+                    ExternalMsg::WorldDownloaded{player_name, color} => {
+                        if self.init_box.insert(player_id){
+                            for package in self.data.server_connect_player(player_id){
+                                self.add_confirmed_data(package);
+                            }
+                        }
                     },
                     ExternalMsg::GameUpdate(update_info) => {
                         log::debug!("Server learned: {:?}", update_info);
@@ -91,6 +103,17 @@ impl Server {
         }
     }
     fn on_new_head_frame(&mut self, frame: FrameIndex){
+        // Easy peasy when it comes to server's server events.
+        // On head frame, send new one on head frame.
+        // On event that needs scheduled, put it one frame after whatever we've got.
+        {// Send new server event.
+            if self.data.get_server_events(frame).is_none(){
+                let new_data = SimDataPackage::new_single_server(frame, vec![]);
+                self.add_confirmed_data(new_data);
+            }
+        }
+
+
         { // Fabricate missing data until we make as much progress as we need: (:
             loop{
                 let data_query = self.game_state.sim_tail_far_as_pos(&self.data);
@@ -104,14 +127,11 @@ impl Server {
                         // Just make it up. :).
                         let their_last_inputs = self.data.get_last_input(player).cloned().unwrap_or_default();
 
-                        let new_data_package = SimDataPackage::PlayerInputs(SuperstoreData{
-                            data: vec![their_last_inputs.clone()],
-                            frame_offset: data_query.frame_offset
-                        }, player);
+                        let new_data_package = SimDataPackage::new_single_player(
+                                data_query.frame_offset, player, their_last_inputs.clone());
                         log::info!("Fabricated missing inputs for {} on {}", player, data_query.frame_offset);
 
-                        self.data.write_data(new_data_package.clone());
-                        self.net.send_msg_all(ExternalMsg::GameUpdate(new_data_package), false);
+                        self.add_confirmed_data(new_data_package);
                     }else{
                         assert!(false, "Server shouldn't be waiting for the server ...")
                     }
@@ -128,10 +148,13 @@ impl Server {
             let game_state = &self.seg_logic_tail.game_state;
             self.net.send_msg_all(ExternalMsg::NewHash(hash), false);
         }
-
+    }
+    fn add_confirmed_data(&mut self, new_data: SimDataPackage){
+        self.data.write_data(new_data.clone());
+        self.net.send_msg_all(ExternalMsg::GameUpdate(new_data), false);
     }
     pub fn core_loop(mut self){
-        let head_frames = self.known_frame.start_frame_stream_from_now();
+        let head_frames = self.known_frame_zero.start_frame_stream_from_now();
         loop{
             crossbeam_channel::select! {
                 recv(self.net.up) -> msg =>{

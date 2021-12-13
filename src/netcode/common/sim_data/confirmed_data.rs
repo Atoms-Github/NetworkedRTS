@@ -10,7 +10,7 @@ use crate::pub_types::*;
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use crossbeam_channel::*;
 use std::thread;
-use nalgebra::sup;
+use nalgebra::{sup, DimAdd};
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -47,13 +47,31 @@ impl SimDataPackage{
             SimDataPackage::PlayerInputs(inputs, _) => {inputs.data.len()}
         }
     }
+    pub fn get_frame(&self) -> FrameIndex{
+        match self{
+            SimDataPackage::ServerEvents(events) => {events.frame_offset}
+            SimDataPackage::PlayerInputs(inputs, _) => {inputs.frame_offset}
+        }
+    }
+    pub fn new_single_server(frame: FrameIndex, events: ServerEvents) -> Self{
+        Self::ServerEvents(SuperstoreData{
+            data: vec![events],
+            frame_offset: frame
+        })
+    }
+    pub fn new_single_player(frame: FrameIndex, player: PlayerID, input: InputState) -> Self{
+        Self::PlayerInputs(SuperstoreData{
+            data: vec![input],
+            frame_offset: frame
+        }, player)
+    }
 }
 
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ConfirmedData {
-    player_inputs: HashMap<PlayerID, Superstore<InputState>>,
-    server_events: Superstore<ServerEvents>,
+    pub player_inputs: HashMap<PlayerID, Superstore<InputState>>,
+    pub server_events: Superstore<ServerEvents>,
 }
 impl ConfirmedData {
     pub fn new() -> Self {
@@ -75,6 +93,11 @@ impl ConfirmedData {
             return superstore.last();
         }
         return None;
+    }
+    pub fn get_last_input_frame(&self, player_id: PlayerID) -> Option<FrameIndex>{
+        if let Some(superstore) = self.player_inputs.get(&player_id){
+            return superstore.last_frame();
+        }
     }
     pub fn get_next_empty(&self, player_id: PlayerID) -> Option<FrameIndex>{
         return Some(self.player_inputs.get(&player_id)?.get_next_empty_frame());
@@ -149,30 +172,39 @@ impl ConfirmedData {
             }
         }
     }
-    pub fn schedule_server_event(&mut self, server_event: ServerEvent) -> FrameIndex{
-        let event_frame = self.get_next_empty_server_events_frame();
 
-        log::info!("Server scheduled a new server event on frame {}! {:?}", event_frame, server_event);
-
-        let events_on_frame = vec![server_event];
-        let data = SuperstoreData{
-            data: vec![events_on_frame],
-            frame_offset: event_frame
-        };
-        let package = SimDataPackage::ServerEvents(data);
-        self.write_data(package);
-        return event_frame;
+    pub fn server_connect_player(&mut self, player_id: PlayerID) -> Vec<SimDataPackage>{
+        let join = SimDataPackage::ServerEvents(SuperstoreData{ // Breaking
+            data: vec![vec![ServerEvent::JoinPlayer(player_id)]],
+            frame_offset: self.get_next_empty_server_events_frame()
+        });
+        return vec![join];
     }
-    pub fn server_boot_player(&mut self, player_id: PlayerID, tail_last_simmed: FrameIndex){
-        let frame_booted = self.schedule_server_event(ServerEvent::DisconnectPlayer(player_id));
+    pub fn server_disconnect_player(&mut self, player_id: PlayerID, tail_last_simmed: FrameIndex) -> Vec<SimDataPackage>{
+        let kick_event = SimDataPackage::ServerEvents(SuperstoreData{
+            data: vec![vec![ServerEvent::DisconnectPlayer(player_id)]],
+            frame_offset: self.get_next_empty_server_events_frame()
+        });
+        let mut from_frame = 0;
         if let Some(superstore) = self.player_inputs.get_mut(&player_id){
-            let frame_to_fill_from = superstore.get_next_empty_frame();
-
-            // Now to fill up that player's inputs with garbo.
-            for frame_index in frame_to_fill_from..(frame_booted + 1){
-                self.write_input_data_single(player_id, InputState::new(), frame_index)
+            if let Some(frame) = superstore.last_frame{
+                from_frame = frame + 1;
             }
         }
+        from_frame = from_frame.max(tail_last_simmed + 1);
+
+        let mut dummy_inputs = vec![];
+        // Now to fill up that player's inputs with garbo.
+        for frame_index in frame_to_fill_from..(kick_event.get_frame()){
+            if let Some(input) = self.get_last_input(player_id){
+                dummy_inputs.add(input);
+            }
+        }
+        let empty_messages = SimDataPackage::PlayerInputs(SuperstoreData{
+            data: dummy_inputs,
+            frame_offset: frame_to_fill_from
+        }, player_id);
+        return vec![kick_event, empty_messages];
     }
 }
 
