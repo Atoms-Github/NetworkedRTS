@@ -28,7 +28,7 @@ pub struct SuperstoreData<T> {
     pub frame_offset: FrameIndex
 }
 impl<T> SuperstoreData<T>{
-    pub fn trim_earlier(&self, earliest_frame: FrameIndex) -> SuperstoreData<T>{
+    pub fn trim_earlier(self, earliest_frame: FrameIndex) -> SuperstoreData<T>{
         // Yes, this could be optimised.
         let mut output = vec![];
         for (relative, item) in self.data.into_iter().enumerate(){

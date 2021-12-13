@@ -83,7 +83,7 @@ impl NetGameState {
         return net_state;
     }
     pub fn simulate_any(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
-        self.game_state.simulate_tick(sim_info.inputs_map, sim_meta);
+        self.game_state.simulate_tick(sim_info.inputs_map.clone(), sim_meta);
 
         // Update this at the end of the frame, because players have no inputs the frame they connect.
         for server_event in &sim_info.server_events{
@@ -121,12 +121,12 @@ impl NetGameState {
             if let Some(events) = data.get_server_events(frame){
                 let mut player_inputs: HashMap<PlayerID, InputState> = Default::default();
 
-                for (player, properties) in self.connected_players {
-                    if let Some(input_state) = data.get_input(frame, player){
-                        player_inputs.insert(player, input_state.clone());
+                for (player, properties) in &self.connected_players {
+                    if let Some(input_state) = data.get_input(frame, *player){
+                        player_inputs.insert(*player, input_state.clone());
                     }else{
                         return SimDataQuery {
-                            query_type: SimDataOwner::Player(player),
+                            query_type: SimDataOwner::Player(*player),
                             frame_offset: frame,
                         };
                     }
