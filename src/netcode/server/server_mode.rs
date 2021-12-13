@@ -14,7 +14,7 @@ use crate::rts::GameState;
 use bibble_tokio::{NetHubTop, OutMsg};
 use crate::netcode::client::client_hasher::FramedHash;
 use std::collections::HashSet;
-use crate::netcode::common::confirmed_data::{ConfirmedData, SimDataPackage, SimDataOwner};
+use crate::netcode::common::confirmed_data::{ConfirmedData, SimDataPackage, SimDataOwner, SimDataQuery};
 use crate::netcode::common::net_game_state::NetGameState;
 use crate::netcode::client::header_threads::HEAD_AHEAD_FRAME_COUNT;
 
@@ -111,7 +111,16 @@ impl Server {
         {// Send new server event.
             if self.data.get_server_events(frame).is_none(){
                 let new_data = SimDataPackage::new_single_server(frame, vec![]);
-                self.add_confirmed_data(new_data);
+                // Write the 1x package.
+                self.data.write_data(new_data);
+
+                // Now send out 20 latest packages.
+                let query = SimDataQuery{
+                    query_type: SimDataOwner::Server,
+                    frame_offset: frame - HEAD_AHEAD_FRAME_COUNT,
+                };
+                let results = self.data.fulfill_query(&query, 20);
+                self.net.send_msg_all(ExternalMsg::GameUpdate(results), false);
             }
         }
 
