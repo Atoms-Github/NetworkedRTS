@@ -4,9 +4,8 @@ use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQu
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
-use crate::netcode::{InfoForSim, ConnStatusChangeType, InputState};
+use crate::netcode::{InfoForSim, InputState};
 use std::hash::{Hash, Hasher};
-use crate::netcode::common::sim_data::confirmed_data::{ServerEvent, JoinType, ConfirmedData, SimDataQuery, SimDataOwner};
 
 use std::sync::Arc;
 use std::fmt::Debug;
@@ -16,9 +15,10 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use zip::write::FileOptions;
-use crate::netcode::common::sim_data::superstore_seg::{Cap, Superstore};
 use crate::ecs::bblocky::super_vec::SuperVec;
 use crate::netcode::client::client_hasher::FramedHash;
+use crate::netcode::common::confirmed_data::{ServerEvent, ConfirmedData, SimDataOwner, SimDataQuery};
+use crate::netcode::common::input_state::InputState;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {

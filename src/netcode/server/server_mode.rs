@@ -6,22 +6,17 @@ use std::time::{SystemTime, Duration};
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use crate::netcode::*;
-use crate::netcode::common::logic::logic_sim_tailer_seg::*;
 use crate::netcode::common::external_msg::*;
-use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::timekeeping::*;
 
 use crate::netcode::*;
-use crate::netcode::common::sim_data::confirmed_data::SimDataOwner::Player;
-use crate::netcode::common::sim_data::superstore_seg::SuperstoreData;
 use crate::rts::GameState;
-use crate::netcode::common::simulation::net_game_state::NetGameState;
 use bibble_tokio::{NetHubTop, OutMsg};
-use crate::netcode::common::sim_data::input_state::InputChange;
 use crate::netcode::client::client_hasher::FramedHash;
-use crate::netcode::common::simulation::logic_sim_header_seg::HEAD_AHEAD_FRAME_COUNT;
-use crate::netcode::common::sim_data::confirmed_data::SimDataOwner;
 use std::collections::HashSet;
+use crate::netcode::common::confirmed_data::{ConfirmedData, SimDataPackage, SimDataOwner};
+use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::client::header_threads::HEAD_AHEAD_FRAME_COUNT;
 
 
 pub struct Server {
@@ -48,7 +43,7 @@ impl Server {
         server.core_loop();
     }
     fn on_new_net_msg(&mut self, message: OutMsg<ExternalMsg>){
-        match net_event{
+        match message{
             OutMsg::PlayerConnected(player_id) => {}
             OutMsg::PlayerDisconnected(player_id) => {
                 log::info!("Player disconnected!");
@@ -59,12 +54,12 @@ impl Server {
                     }
                 }
             }
-            OutMsg::NewFax(player, msg) => {
+            OutMsg::NewFax(player_id, msg) => {
                 match msg{
                     ExternalMsg::ConnectionInitQuery => {
                         log::info!("Received initialization request for player with ID: {}", player_id);
 
-                        let game_state = self.seg_logic_tail.game_state.clone();
+                        let game_state = self.game_state.clone();
 
                         let msg = NetMsgGreetingResponse {
                             assigned_player_id: player_id,
@@ -72,7 +67,7 @@ impl Server {
                             game_state,
                         };
                         let response = ExternalMsg::ConnectionInitResponse(msg);
-                        self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(response, player_id, true)).unwrap();
+                        self.net.send_msg(player_id, response, true);
                     },
                     ExternalMsg::WorldDownloaded{player_name, color} => {
                         if self.init_box.insert(player_id){
@@ -83,7 +78,7 @@ impl Server {
                     },
                     ExternalMsg::GameUpdate(update_info) => {
                         log::debug!("Server learned: {:?}", update_info);
-                        self.data.write_data(update_info.clone());
+                        self.data.write_data(update_info.clone()); // TODO:.
                         self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToAllExcept(ExternalMsg::GameUpdate(update_info),player_id, false)).unwrap();
                     },
                     ExternalMsg::InputQuery(query) => {
@@ -92,7 +87,7 @@ impl Server {
                             log::info!("Failed to fulfil query {:?}", query);
                         }else{
                             log::debug!("Responded to {}'s req for {:?} with {:?} items", player_id, query, owned_data);
-                            self.seg_net_hub.down_sink.send(NetHubFrontMsgIn::MsgToSingle(ExternalMsg::GameUpdate(owned_data),player_id, false)).unwrap();
+                            self.net.send_msg(player_id, ExternalMsg::GameUpdate(owned_data),false);
                         }
                     },
                     _ => {
@@ -139,13 +134,9 @@ impl Server {
                     break;
                 }
             }
-            if let Some(missing_datas) = self.seg_logic_tail.catchup_simulation(&self.data, current_sim_frame){
-                self.missing_data_handler.handle_requests(missing_datas);
-            }
         }
         { // Send hash:
             let hash = self.game_state.get_hash();
-            let game_state = &self.seg_logic_tail.game_state;
             self.net.send_msg_all(ExternalMsg::NewHash(hash), false);
         }
     }

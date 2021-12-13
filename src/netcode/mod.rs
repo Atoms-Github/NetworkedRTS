@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize};
 pub use crate::netcode::common::sim_data::input_state::InputState;
 pub use crate::netcode::common::sim_data::input_state::ConnStatusChangeType;
 use crate::netcode::netcode_types::ServerEvents;
+use crate::netcode::common::input_state::InputState;
 
 mod server;
 mod client;

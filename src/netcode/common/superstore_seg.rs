@@ -17,11 +17,9 @@ use std::io::Seek;
 use crate::netcode::client::input_handler_seg::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
-use crate::netcode::common::utils::util_functions::vec_replace_or_end;
 use std::collections::{BTreeMap, HashMap};
 use std::collections::btree_map::Range;
 use std::fmt::Debug;
-use crate::netcode::common::sim_data::confirmed_data::JoinType;
 use mopa::Any;
 
 
@@ -42,7 +40,8 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + PartialEq + 'static> S
     pub fn new(confirmed_data: bool) -> Self{
         Self{
             confirmed_data,
-            data: Default::default()
+            data: Default::default(),
+            last_frame: None
         }
     }
     pub fn get(&self, index: FrameIndex) -> Option<&T>{
@@ -64,10 +63,14 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + PartialEq + 'static> S
     }
     pub fn write_data(&mut self, new_data: SuperstoreData<T>){
         for (i, item) in new_data.data.into_iter().enumerate(){
+            let abs_index = i + new_data.frame_offset;
             // Clone is better than two hashmap lookups.
-            let existing = self.data.insert(i + new_data.frame_offset, item.clone());
+            let existing = self.data.insert(abs_index, item.clone());
             if self.confirmed_data && existing.is_some(){
                 assert_eq!(existing.unwrap(), item, "Data should've been confirmed!");
+            }
+            if let Some(last_frame) = &mut self.last_frame{
+                *last_frame = (*last_frame).max(abs_index);
             }
         }
     }

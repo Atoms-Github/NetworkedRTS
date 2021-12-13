@@ -1,6 +1,5 @@
 use std::sync::{Arc, RwLock};
-use crate::netcode::InputState;
-use crate::netcode::common::sim_data::confirmed_data::ServerEvent;
+use crate::netcode::common::confirmed_data::ServerEvent;
 
 
 pub type ArcRw<T> = Arc<RwLock<T>>;

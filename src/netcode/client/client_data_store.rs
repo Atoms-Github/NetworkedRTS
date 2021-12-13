@@ -1,8 +1,9 @@
-use crate::netcode::common::sim_data::confirmed_data::{ConfirmedData, SimDataQuery, SimDataPackage};
-use crate::netcode::common::sim_data::superstore_seg::Superstore;
-use crate::netcode::{InputState, InfoForSim};
 use crate::pub_types::{FrameIndex, PlayerID};
 use std::collections::HashMap;
+use crate::netcode::common::input_state::InputState;
+use crate::netcode::common::confirmed_data::{ConfirmedData, SimDataQuery, SimDataPackage};
+use crate::netcode::common::superstore_seg::Superstore;
+use crate::netcode::InfoForSim;
 
 pub struct ClientDataStore{
     pub my_player_id: PlayerID,
@@ -37,7 +38,7 @@ impl ClientDataStore{
         let mut results = self.confirmed_data.fulfill_query(query, item_count);
         // Now modify results with self, if required.
         if let SimDataPackage::PlayerInputs(data, player) = &mut results{
-            if player == self.my_player_id{
+            if *player == self.my_player_id{
                 let predicted_block = self.predicted_local.clone_block(query.frame_offset, item_count);
                 data.data = predicted_block;
             }

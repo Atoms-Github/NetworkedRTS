@@ -14,7 +14,6 @@ use std::time::SystemTime;
 use ggez::graphics::Text;
 use std::collections::BTreeMap;
 use nalgebra::Point2;
-use crate::netcode::common::sim_data::net_game_state::{ConnectedPlayerProperty, NetGameState};
 use std::sync::Arc;
 use crate::rts::game::render_resources::RenderResources;
 use crate::rts::GameState;
@@ -67,7 +66,8 @@ impl GraphicalEx{
     }
 }
 use winit::platform::windows::EventLoopExtWindows;
-use crate::netcode::common::simulation::net_game_state::NetGameState;
+use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::input_state::InputChange;
 
 impl GraphicalIn {
     pub fn start(mut self) -> !{

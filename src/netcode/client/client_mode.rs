@@ -4,14 +4,9 @@ use std::time::{Duration};
 
 use crate::netcode::client::connect_net_seg::*;
 use crate::netcode::client::graphical_seg::*;
-use crate::netcode::client::logic_sim_header_seg::*;
+use crate::netcode::client::header_threads::*;
 use crate::netcode::common::external_msg::*;
-use crate::netcode::common::sim_data::input_state::*;
-use crate::netcode::common::sim_data::confirmed_data::*;
-use crate::netcode::common::time::scheduler_segment::*;
 use crate::netcode::common::timekeeping::*;
-use crate::netcode::common::sim_data::superstore_seg::*;
-use crate::netcode::client::input_handler_seg::*;
 use ggez::input::keyboard::KeyCode;
 use crate::pub_types::{FrameIndex, PlayerID, Shade, HashType};
 use ggez::input::gamepad::gamepad;
@@ -19,9 +14,11 @@ use crate::rts::GameState;
 use std::sync::Arc;
 use crate::netcode::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
-use crate::netcode::common::simulation::logic_sim_header_seg::{HeadSimPacket, HEAD_AHEAD_FRAME_COUNT, HeaderThread};
-use crate::netcode::common::simulation::net_game_state::NetGameState;
 use crate::netcode::client::client_hasher::ClientHasher;
+use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::input_state::{InputState, InputChange};
+use crate::netcode::common::superstore_seg::SuperstoreData;
+use crate::netcode::common::confirmed_data::{SimDataQuery, SimDataOwner};
 
 
 struct Client {
@@ -42,11 +39,12 @@ impl Client {
 
         let mut net = ClientNet::start(connection_ip.clone());
         let mut welcome_info = net.get_synced_greeting();
+        let my_id = welcome_info.assigned_player_id;
         log::info!("Downloaded game state which has simmed {}", welcome_info.game_state.get_simmed_frame_index());
 
         net.client.send_msg(ExternalMsg::WorldDownloaded { player_name: player_name.clone(), color }, true);
 
-        let mut data = ClientDataStore::new();
+        let mut data = ClientDataStore::new(welcome_info.assigned_player_id);
 
         let (tx_head, rx_head) = unbounded();
         let (tx_input, rx_input) = unbounded();
@@ -67,7 +65,7 @@ impl Client {
         thread::spawn(move ||{
             client.core_loop(rx_input);
         });
-        HeaderThread::start(rx_head);
+        HeaderThread::start(rx_head, my_id);
     }
     fn on_new_head_frame(&mut self, head_frame: FrameIndex){
         let old_tail_frame = self.game_state.get_simmed_frame_index();
@@ -93,7 +91,7 @@ impl Client {
             };
             self.head_handle.send(head_packet).unwrap();
         }
-        self.hasher.add_state(&self.game_state);
+        self.hasher.add_framed(self.game_state.get_hash());
 
         self.data.predicted_local.write_data(SuperstoreData{
             data: vec![self.curret_input.clone()],
@@ -103,7 +101,7 @@ impl Client {
             query_type: SimDataOwner::Player(self.player_id),
             frame_offset: head_frame - HEAD_AHEAD_FRAME_COUNT
         }, 20);
-        self.net.client.send_msg(ExternalMsg::GameUpdate(my_last_20));
+        self.net.client.send_msg(ExternalMsg::GameUpdate(my_last_20), false);
     }
     fn on_new_net_msg(&mut self, message: ExternalMsg){
         match message{

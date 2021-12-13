@@ -3,13 +3,12 @@ use std::sync::{Arc, RwLock};
 use crossbeam_channel::*;
 
 use crate::netcode::*;
-use crate::netcode::common::sim_data::confirmed_data::*;
 use crate::netcode::common::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use std::sync::mpsc::channel;
 use crate::netcode::client::graphical_seg::GraphicalEx;
-use crate::netcode::common::simulation::net_game_state::NetGameState;
+use crate::netcode::common::net_game_state::NetGameState;
 
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
