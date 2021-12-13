@@ -19,7 +19,7 @@ use crate::rts::GameState;
 use std::sync::Arc;
 use crate::netcode::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
-use crate::netcode::common::simulation::logic_sim_header_seg::{HeadSimPacket, HEAD_AHEAD_FRAME_COUNT, LogicSimHeaderEx};
+use crate::netcode::common::simulation::logic_sim_header_seg::{HeadSimPacket, HEAD_AHEAD_FRAME_COUNT, HeaderThread};
 use crate::netcode::common::simulation::net_game_state::NetGameState;
 use crate::netcode::common::sim_data::client_hasher::ClientHasher;
 
@@ -67,7 +67,7 @@ impl Client {
         thread::spawn(move ||{
             client.core_loop(rx_input);
         });
-        LogicSimHeaderEx::start_loop(rx_head);
+        HeaderThread::start(rx_head);
     }
     fn on_new_head_frame(&mut self, head_frame: FrameIndex){
         let old_tail_frame = self.game_state.get_simmed_frame_index();

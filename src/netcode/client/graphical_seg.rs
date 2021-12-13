@@ -67,6 +67,8 @@ impl GraphicalEx{
     }
 }
 use winit::platform::windows::EventLoopExtWindows;
+use crate::netcode::common::simulation::net_game_state::NetGameState;
+
 impl GraphicalIn {
     pub fn start(mut self) -> !{
         let cb = ContextBuilder::new("Oh my literal pogger", "Atoms")
