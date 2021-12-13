@@ -64,7 +64,7 @@ impl Server {
                     ExternalMsg::ConnectionInitQuery => {
                         log::info!("Received initialization request for player with ID: {}", player_id);
 
-                        let game_state = self.seg_logic_tail.game_state.clone(); // pointless_optimum this shouldn't need to be cloned to be serialized.
+                        let game_state = self.seg_logic_tail.game_state.clone();
 
                         let msg = NetMsgGreetingResponse {
                             assigned_player_id: player_id,
@@ -76,7 +76,7 @@ impl Server {
                     },
                     ExternalMsg::WorldDownloaded{player_name, color} => {
                         if self.init_box.insert(player_id){
-                            for package in self.data.server_connect_player(player_id){
+                            for package in self.data.server_connect_player(player_id, player_name, color){
                                 self.add_confirmed_data(package);
                             }
                         }

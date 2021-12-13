@@ -15,13 +15,8 @@ use nalgebra::{sup, DimAdd};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub enum ServerEvent{
-    JoinPlayer(PlayerID, String, Shade, JoinType),
+    JoinPlayer(PlayerID, String, Shade),
     DisconnectPlayer(PlayerID),
-}
-#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq)]
-pub enum JoinType{
-    Pioneer,
-    Reconnect,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -173,9 +168,9 @@ impl ConfirmedData {
         }
     }
 
-    pub fn server_connect_player(&mut self, player_id: PlayerID) -> Vec<SimDataPackage>{
-        let join = SimDataPackage::ServerEvents(SuperstoreData{ // Breaking
-            data: vec![vec![ServerEvent::JoinPlayer(player_id)]],
+    pub fn server_connect_player(&mut self, player_id: PlayerID, name: String, color: Shade) -> Vec<SimDataPackage>{
+        let join = SimDataPackage::ServerEvents(SuperstoreData{
+            data: vec![vec![ServerEvent::JoinPlayer(player_id, name, color)]],
             frame_offset: self.get_next_empty_server_events_frame()
         });
         return vec![join];
