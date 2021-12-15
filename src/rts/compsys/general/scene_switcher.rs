@@ -102,18 +102,19 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     x += 50.0;
                 }
                 // Map selection buttons.
-                x = 250.0;
-                let mut y = 400.0;
+                let size = 150.0;
+                x = size;
+                let mut y = size + 150.0;
                 for map_entry in std::fs::read_dir("resources/images/jigsaws").unwrap(){
                     let map_entry = map_entry.unwrap();
                     let new_map_pending = PendingEntity::new_map_selection_button(
                         map_entry.file_name().to_str().unwrap().to_string().clone(),
-                    PointFloat::new(x, y), x == 50.0 && y == 400.0);
+                    PointFloat::new(x, y), x == size && y == size + 150.0);
                     ent_changes.new_entities.push(new_map_pending);
-                    x += 250.0;
+                    x += size;
                     if x > 1500.0{
-                        x = 250.0;
-                        y += 250.0;
+                        x = size;
+                        y += size;
                     }
                 }
                 // Spawn lobby.
