@@ -109,7 +109,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
                     let map_entry = map_entry.unwrap();
                     let new_map_pending = PendingEntity::new_map_selection_button(
                         map_entry.file_name().to_str().unwrap().to_string().clone(),
-                    PointFloat::new(x, y), x == size && y == size + 150.0);
+                    PointFloat::new(x, y), x == size && y == size + 150.0, size);
                     ent_changes.new_entities.push(new_map_pending);
                     x += size;
                     if x > 1500.0{

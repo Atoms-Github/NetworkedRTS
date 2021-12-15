@@ -156,12 +156,12 @@ impl PendingEntity{
             }
         )
     }
-    pub fn new_map_selection_button(map: String, position: PointFloat, already_selected: bool) -> Self{
+    pub fn new_map_selection_button(map: String, position: PointFloat, already_selected: bool, size: f32) -> Self{
         Self::new6(
             RenderComp{ z: 150, texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
-            SizeComp{ size: PointFloat::new(250.0, 250.0)},
+            SizeComp{ size: PointFloat::new(size, size)},
             PositionComp{ pos: position },
             ClickableComp {
                 clicking_on: None
