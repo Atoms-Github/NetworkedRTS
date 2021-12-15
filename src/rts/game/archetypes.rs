@@ -5,6 +5,7 @@ use crate::rts::compsys::*;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT};
 use crate::bibble::data::data_types::{WeaponID, GameData, RaceID};
 use ggez::graphics::Color;
+use crate::rts::game::z_values::ZValue;
 
 impl PendingEntity{
     // pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
@@ -58,7 +59,7 @@ impl PendingEntity{
                 keep_alive: true
             },
             RenderComp{
-                z: 255,
+                z: ZValue::Cursor.g(),
                 texture: RenderTexture::Color(shade.0, shade.1, shade.2, 1.0),
                 shape: RenderShape::Rectangle,
                 only_render_owner: false
@@ -69,7 +70,8 @@ impl PendingEntity{
     pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat) -> Self{
         Self::new5(
             JigsawMatComp{
-                jigsaw_name
+                jigsaw_name,
+                next_jigsaw_z: ZValue::GamePiece.g() + 1
             },
             IgnoreHoverComp{
                 useless: false
@@ -81,7 +83,7 @@ impl PendingEntity{
                 pos: PointFloat::new(size.x / 2.0 - JIGSAW_PIECE_SIZE / 2.0, size.y / 2.0 - JIGSAW_PIECE_SIZE / 2.0),
             },
             RenderComp{
-                z: 5,
+                z: ZValue::Arena.g(),
                 texture: RenderTexture::Color(0.05,0.05,0.05,0.2),
                 shape: RenderShape::Rectangle,
                 only_render_owner: false
@@ -95,7 +97,7 @@ impl PendingEntity{
                 size: PointFloat::new(JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE),
             },
             RenderComp{
-                z: 100,
+                z: ZValue::GamePiece.g(),
                 texture: RenderTexture::Jigsaw(image.clone(), coords.clone()),
                 shape: RenderShape::Rectangle,
                 only_render_owner: false
@@ -127,7 +129,7 @@ impl PendingEntity{
     // }
     pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{
         Self::new5(
-            RenderComp{ z: 140, texture: RenderTexture::Color(1.0,1.0,1.0,0.5), shape: RenderShape::Rectangle,
+            RenderComp{ z: ZValue::SelectionBox.g(), texture: RenderTexture::Color(1.0,1.0,1.0,0.5), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
             SizeComp{ size: PointFloat::new(40.0, 40.0)},
@@ -140,7 +142,7 @@ impl PendingEntity{
     }
     pub fn new_race_selection_button(race: RaceID, position: PointFloat, image: String) -> Self{
         Self::new6(
-            RenderComp{ z: 150, texture: RenderTexture::Image(image), shape: RenderShape::Rectangle,
+            RenderComp{ z: ZValue::UI.g(), texture: RenderTexture::Image(image), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
             SizeComp{ size: PointFloat::new(50.0, 50.0)},
@@ -158,7 +160,7 @@ impl PendingEntity{
     }
     pub fn new_map_selection_button(map: String, position: PointFloat, already_selected: bool, size: f32) -> Self{
         Self::new6(
-            RenderComp{ z: 150, texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
+            RenderComp{ z: ZValue::UI.g(), texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
                 only_render_owner: false
             },
             SizeComp{ size: PointFloat::new(size, size)},

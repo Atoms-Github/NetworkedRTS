@@ -14,10 +14,11 @@ use crate::netcode::common::timekeeping::DT;
 use rand::Rng;
 use crate::rts::game::cool_batcher::{CoolBatcher, MyDrawParams};
 use crate::ecs::comp_store::CompStorage;
+use crate::rts::game::z_values::ZValue;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
-    pub z: u8,
+    pub z: u16,
     pub texture: RenderTexture,
     pub shape: RenderShape,
     pub only_render_owner: bool,
@@ -48,7 +49,8 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     for (arena_id, arena_comp) in CompIter1::<ArenaComp>::new(&ecs.c){
         let screen_pos = player_camera.game_space_to_screen_space(arena_comp.get_centre());
         let screen_size = player_camera.game_size_to_screen_size(arena_comp.get_size());
-        cool_batcher.add_rectangle(&screen_pos, &screen_size, graphics::Color::from_rgb(200,200,200), 20);
+        cool_batcher.add_rectangle(
+            &screen_pos, &screen_size, graphics::Color::from_rgb(200,200,200), ZValue::Arena.g());
     }
 
     // Draw arena boxes.
@@ -65,7 +67,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             cool_batcher.add_rectangle_rect(MyDrawParams{
                 pos: small_top_left_screen,
                 size: small_size.clone(),
-            }, color, 50);
+            }, color, ZValue::ArenaBoxes.g());
         }
     }
     // Draw entities.
@@ -121,7 +123,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             let bar_centre = screen_pos.clone() + PointFloat::new(0.0, -7.0);
             cool_batcher.add_progress_bar(&bar_centre, 5.0, life_comp.life,
                                           life_comp.max_life, Color::from_rgb(0,200,0),
-                                          Color::from_rgb(255,0,0), 150);
+                                          Color::from_rgb(255,0,0), ZValue::InGameUI.g());
         }
         if let Some(orders) = ecs.c.get::<OrdersComp>(entity_id){
             if let OrderState::CHANNELLING(channel_time) = &orders.state{
@@ -136,7 +138,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
 
                 cool_batcher.add_progress_bar(&bar_centre, 5.0, current_width,
                                               max_width, Color::from_rgb(52, 210, 235),
-                                              Color::from_rgb(0,0,0), 150);
+                                              Color::from_rgb(0,0,0), ZValue::InGameUI.g());
             }
         }
 
@@ -160,7 +162,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
             cool_batcher.add_rectangle_rect(MyDrawParams{
                 pos: screen_pos.clone(),
                 size: border_size
-            }, border_color, 100);
+            }, border_color, ZValue::InGameUIBelow.g());
         }
     }
     // // Draw names.
@@ -174,11 +176,14 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
     for (entity_id, player) in CompIter1::<PlayerComp>::new(&ecs.c){
         if player.connected{
             y += 50.0;
-            cool_batcher.add_text(PointFloat::new(20.0, y), player.name.clone(), Color::from_rgb(0,0,0), 210);
+            cool_batcher.add_text(PointFloat::new(20.0, y),
+                                  player.name.clone(), Color::from_rgb(0,0,0), ZValue::UI.g());
             if player.alive{
-                cool_batcher.add_text(PointFloat::new(150.0, y), "Alive".to_string(), Color::from_rgb(66, 245, 194), 210);
+                cool_batcher.add_text(PointFloat::new(150.0, y),
+                                      "Alive".to_string(), Color::from_rgb(66, 245, 194), ZValue::UI.g());
             }else{
-                cool_batcher.add_text(PointFloat::new(150.0, y), "Ded".to_string(), Color::from_rgb(230,0,0), 210);
+                cool_batcher.add_text(PointFloat::new(150.0, y),
+                                      "Ded".to_string(), Color::from_rgb(230,0,0), ZValue::UI.g());
             }
         }
     }
@@ -207,14 +212,14 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                     size: PointFloat::new(40.0,40.0),
                 };
                 cool_batcher.add_rectangle_rect(my_params,
-                graphics::Color::from_rgb(255,204,0), 190);
+                                                graphics::Color::from_rgb(255,204,0), ZValue::UI.g());
             }
         }
         cool_batcher.add_rectangle(&screen_pos, &PointFloat::new(30.0,30.0),
                                    Color::from(ability_mould.button_info.color), 192);
         cool_batcher.add_text(screen_pos, hotkey.my_to_string(), Color::from_rgb(0,0,0), 193);
         cool_batcher.add_text(screen_pos.clone() + PointFloat::new(0.0,-30.0),
-                              ability_mould.cost.to_string(), Color::from_rgb(0,0,200), 193);
+                              ability_mould.cost.to_string(), Color::from_rgb(0,0,200), ZValue::AboveUI.g());
 
     }
     // Draw resources.
@@ -224,7 +229,8 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                 let on_screen_pos = PointFloat::new(50.0 + res_index as f32 * 100.0, 50.0);
 
                 let res_count = owns_resources.get_counti(res_index).to_string();
-                cool_batcher.add_text(on_screen_pos, res_count, graphics::Color::from((255, 255, 255)), 200);
+                cool_batcher.add_text(on_screen_pos, res_count,
+                                      graphics::Color::from((255, 255, 255)), ZValue::UI.g());
             }
         }
     }

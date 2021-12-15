@@ -13,6 +13,7 @@ use rand::Rng;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct JigsawMatComp{
     pub jigsaw_name: String,
+    pub next_jigsaw_z: ZType,
 }
 
 
@@ -22,7 +23,7 @@ pub static JIGSAW_MAT_SYS: System = System{
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     let scene = c.find_scene();
-    for (mat_id, mat_comp) in CompIter1::<JigsawMatComp>::new(c){
+    if let Some(mat_comp) = c.find_jigsaw_mat(){
         // Check for jigsaw end on F3.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F3){

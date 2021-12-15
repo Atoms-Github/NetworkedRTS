@@ -16,7 +16,7 @@ struct BatcherImage{
 }
 #[derive(Default)]
 pub struct CoolBatcher{
-    layers: HashMap<u8, RenderLayer>,
+    layers: HashMap<ZType, RenderLayer>,
 }
 
 pub struct MyDrawParams{
@@ -44,34 +44,34 @@ impl CoolBatcher{
     pub fn new() -> Self{
         return Self::default()
     }
-    pub fn add_rectangle_rect(&mut self, rect: MyDrawParams, color: Color, z: u8){
+    pub fn add_rectangle_rect(&mut self, rect: MyDrawParams, color: Color, z: ZType){
         self.layers
             .entry(z)
             .or_default().rectangles.push((rect, color));
     }
-    pub fn add_rectangle(&mut self, position: &PointFloat, size: &PointFloat, color: Color, z: u8){
+    pub fn add_rectangle(&mut self, position: &PointFloat, size: &PointFloat, color: Color, z: ZType){
         self.add_rectangle_rect(MyDrawParams{
             pos: position.clone(),
             size: size.clone()
         }, color, z)
     }
-    pub fn add_progress_bar(&mut self, centre: &PointFloat, height: f32, value: f32, max: f32, color_value: Color, color_max: Color, z: u8){
+    pub fn add_progress_bar(&mut self, centre: &PointFloat, height: f32, value: f32, max: f32, color_value: Color, color_max: Color, z: ZType){
         self.add_rectangle_rect(MyDrawParams{
             pos: centre.clone(),
             size: PointFloat::new(value, height)
-        }, color_value, z + 1);
+        }, color_value, z + 1); // TODO: This may become an issue. Shouldn't be adding to Z randomly.
         self.add_rectangle_rect(MyDrawParams{
             pos: centre.clone(),
             size: PointFloat::new(max, height)
         }, color_max, z);
 
     }
-    pub fn add_circle(&mut self, position: &PointFloat, size: f32, color: Color, z: u8){
+    pub fn add_circle(&mut self, position: &PointFloat, size: f32, color: Color, z: ZType){
         self.layers
             .entry(z)
             .or_default().circles.push((position.clone(), size, color));
     }
-    pub fn add_image(&mut self, filename: String, draw_param: MyDrawParams, z: u8){
+    pub fn add_image(&mut self, filename: String, draw_param: MyDrawParams, z: ZType){
         self.layers
             .entry(z)
             .or_default().images
@@ -79,7 +79,7 @@ impl CoolBatcher{
             .or_default()
             .push((draw_param, None));
     }
-    pub fn add_image_part(&mut self, filename: String, draw_param: MyDrawParams, part: Rect, z: u8){
+    pub fn add_image_part(&mut self, filename: String, draw_param: MyDrawParams, part: Rect, z: ZType){
         self.layers
             .entry(z)
             .or_default().images
@@ -87,7 +87,7 @@ impl CoolBatcher{
             .or_default()
             .push((draw_param, Some(part)));
     }
-    pub fn add_text(&mut self, position: PointFloat, text: String, color: Color, z: u8){
+    pub fn add_text(&mut self, position: PointFloat, text: String, color: Color, z: ZType){
         self.layers
             .entry(z)
             .or_default().texts.push((position, text, color));

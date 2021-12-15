@@ -5,7 +5,7 @@ use crate::ecs::comp_store::CompStorage;
 use crate::rts::compsys::*;
 use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::pub_types::PointFloat;
-
+use crate::rts::game::z_values::ZValue;
 
 
 impl<'a> Revolver<'a>{
@@ -80,7 +80,7 @@ impl<'a> Revolver<'a>{
     }
     pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, radius: f32, pending: &mut PendingEntity){
         pending.add_comp(RenderComp{
-            z: 120,
+            z: ZValue::GamePiece.g(),
             texture: RenderTexture::Image(mould.image.clone()),
             shape: RenderShape::Rectangle,
             only_render_owner: false

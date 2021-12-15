@@ -8,4 +8,5 @@ pub mod grid;
 pub mod scaled_grid;
 pub mod shortcuts;
 pub mod pathgrinder;
+pub mod z_values;
 
