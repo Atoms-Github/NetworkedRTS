@@ -1,9 +1,9 @@
 use crate::pub_types::{FrameIndex, PlayerID};
 use std::collections::HashMap;
-use crate::netcode::common::input_state::InputState;
-use crate::netcode::common::confirmed_data::{ConfirmedData, SimDataQuery, SimDataPackage};
-use crate::netcode::common::superstore_seg::Superstore;
-use crate::netcode::InfoForSim;
+use crate::common::input_state::InputState;
+use crate::common::confirmed_data::{ConfirmedData, SimDataQuery, SimDataPackage};
+use crate::common::superstore_seg::Superstore;
+use crate::InfoForSim;
 
 pub struct ClientDataStore{
     pub my_player_id: PlayerID,

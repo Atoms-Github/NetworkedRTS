@@ -2,14 +2,14 @@ use std::thread;
 use std::sync::{Arc, RwLock};
 use crossbeam_channel::*;
 
-use crate::netcode::*;
-use crate::netcode::common::timekeeping::*;
-use crate::netcode::netcode_types::*;
+use crate::*;
+use crate::common::timekeeping::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
 use std::sync::mpsc::channel;
-use crate::netcode::common::net_game_state::{NetGameState, GameState};
-use crate::netcode::client::graphical_seg::GraphicalIn;
-use crate::netcode::common::input_state::InputChange;
+use crate::common::net_game_state::{NetGameState, GameState};
+use crate::client::graphical_seg::GraphicalIn;
+use crate::common::input_state::InputChange;
 
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;

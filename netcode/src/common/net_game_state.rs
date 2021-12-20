@@ -1,10 +1,9 @@
 use serde::{Serialize, Deserialize};
-use crate::rts::GameStateJigsaw;
-use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQuality, SimMetadata, Shade};
+use crate::pub_types::{PlayerID, FrameIndex, HashType, SimQuality, SimMetadata, Shade};
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
-use crate::netcode::{InfoForSim, InputState, PlayerInputs};
+use crate::{InfoForSim, InputState, PlayerInputs};
 use std::hash::{Hash, Hasher};
 
 use std::sync::Arc;
@@ -15,17 +14,14 @@ use std::path::Path;
 use std::fs::File;
 use std::io::Write;
 use zip::write::FileOptions;
-use crate::ecs::bblocky::super_vec::SuperVec;
-use crate::netcode::client::client_hasher::FramedHash;
-use crate::netcode::common::confirmed_data::{ServerEvent, ConfirmedData, SimDataOwner, SimDataQuery};
-use crate::netcode::common::superstore_seg::Superstore;
+use crate::client::client_hasher::FramedHash;
+use crate::common::confirmed_data::{ServerEvent, ConfirmedData, SimDataOwner, SimDataQuery};
+use crate::common::superstore_seg::Superstore;
 use serde::de::DeserializeOwned;
-use crate::bibble::data::data_types::Deserializer;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
 }
-pub type UsingGameState = GameStateJigsaw;
 
 #[derive(Clone, Serialize, Deserialize, Hash)]
 pub struct NetGameState<T> {
@@ -40,8 +36,10 @@ pub trait GameState : Clone + Serialize + DeserializeOwned + Hash + Debug + Send
     fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade);
     fn player_disconnects(&mut self, player_id: PlayerID);
     fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata);
-    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr);
-    fn gen_render_resources(ctx: &mut Context) -> RenderResourcesPtr;
+    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &Arc<Self::Resources>);
+    fn gen_render_resources(ctx: &mut Context) -> Arc<Self::Resources>;
+
+    type Resources;
 }
 impl<T : 'static + GameState> Debug for NetGameState<T>{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -117,7 +115,7 @@ impl<T : 'static + GameState> NetGameState<T> {
         assert_eq!(sim_meta.frame_index, self.simmed_frame_index + 1);
         self.simulate_any(sim_info, sim_meta);
     }
-    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
+    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &Arc<T::Resources>){
         self.game_state.render(ctx, player_id, res)
     }
 
@@ -125,7 +123,7 @@ impl<T : 'static + GameState> NetGameState<T> {
         loop{
             let frame = self.simmed_frame_index + 1;
             let metadata = SimMetadata{
-                delta: crate::netcode::common::timekeeping::FRAME_DURATION_MILLIS,
+                delta: crate::common::timekeeping::FRAME_DURATION_MILLIS,
                 quality: SimQuality::DETERMA,
                 frame_index: frame
             };

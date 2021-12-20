@@ -2,23 +2,22 @@ use crossbeam_channel::*;
 use std::thread;
 use std::time::{Duration};
 
-use crate::netcode::client::connect_net_seg::*;
-use crate::netcode::client::graphical_seg::*;
-use crate::netcode::client::header_threads::*;
-use crate::netcode::common::external_msg::*;
-use crate::netcode::common::timekeeping::*;
+use crate::client::connect_net_seg::*;
+use crate::client::graphical_seg::*;
+use crate::client::header_threads::*;
+use crate::common::external_msg::*;
+use crate::common::timekeeping::*;
 use ggez::input::keyboard::KeyCode;
 use crate::pub_types::{FrameIndex, PlayerID, Shade, HashType};
 use ggez::input::gamepad::gamepad;
-use crate::rts::GameStateJigsaw;
 use std::sync::Arc;
-use crate::netcode::client::client_data_store::ClientDataStore;
+use crate::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
-use crate::netcode::client::client_hasher::ClientHasher;
-use crate::netcode::common::net_game_state::{NetGameState, GameState};
-use crate::netcode::common::input_state::{InputState, InputChange};
-use crate::netcode::common::superstore_seg::SuperstoreData;
-use crate::netcode::common::confirmed_data::{SimDataQuery, SimDataOwner};
+use crate::client::client_hasher::ClientHasher;
+use crate::common::net_game_state::{NetGameState, GameState};
+use crate::common::input_state::{InputState, InputChange};
+use crate::common::superstore_seg::SuperstoreData;
+use crate::common::confirmed_data::{SimDataQuery, SimDataOwner};
 
 
 pub struct Client<T : 'static + GameState> {

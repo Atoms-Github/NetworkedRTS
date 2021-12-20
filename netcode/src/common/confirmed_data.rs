@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
-use crate::netcode::*;
-use crate::netcode::netcode_types::*;
+use crate::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
 
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 use crossbeam_channel::*;
 use std::thread;
-use nalgebra::{sup, DimAdd};
-use crate::netcode::common::superstore_seg::{SuperstoreData, Superstore};
-use crate::netcode::common::input_state::InputState;
+use nalgebra::{DimAdd};
+use crate::common::superstore_seg::{SuperstoreData, Superstore};
+use crate::common::input_state::InputState;
 
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

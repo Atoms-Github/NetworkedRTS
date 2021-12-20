@@ -1,24 +1,25 @@
-use std::collections::HashMap;
-use crate::pub_types::{PlayerID, Shade};
-use serde::{Serialize, Deserialize};
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![feature(core_intrinsics)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_unsafe)] // TODO2: Investigate the need for this.
+#![feature(drain_filter)]
+#![allow(unused_attributes)]
 
-
-use crate::netcode::netcode_types::ServerEvents;
-use crate::netcode::common::input_state::InputState;
-use crate::netcode::common::net_game_state::GameState;
+use crate::common::input_state::InputState;
+use crate::common::net_game_state::GameState;
 
 mod server;
 mod client;
-pub(crate) mod common;
+mod common;
 mod netcode_types;
+mod utils;
 
-pub type PlayerInputs = HashMap<PlayerID, InputState>;
+pub mod pub_types;
+pub use pub_types::*;
+use nalgebra::U2;
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct InfoForSim {
-    pub inputs_map: PlayerInputs,
-    pub server_events: ServerEvents
-}
 
 
 

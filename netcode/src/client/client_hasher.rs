@@ -1,7 +1,7 @@
 use crate::pub_types::{FrameIndex, HashType};
 use std::collections::HashMap;
 use serde::*;
-use crate::netcode::common::net_game_state::NetGameState;
+use crate::common::net_game_state::NetGameState;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct FramedHash{

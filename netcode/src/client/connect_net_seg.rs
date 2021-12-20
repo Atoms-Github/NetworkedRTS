@@ -7,12 +7,13 @@ use std::ops::Div;
 use std::ops::Sub;
 use crossbeam_channel::*;
 
-use crate::netcode::common::external_msg::*;
-use crate::netcode::netcode_types::*;
+use crate::common::external_msg::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
-use crate::netcode::common::timekeeping::KnownFrameInfo;
+use crate::common::timekeeping::KnownFrameInfo;
 use bibble_tokio::NetClientTop;
-use crate::netcode::common::net_game_state::GameState;
+use crate::common::net_game_state::GameState;
+type ThreadCloser = ();
 
 pub struct ClientNet<T : 'static + GameState> {
     pub client: NetClientTop<ExternalMsg<T>>,
@@ -94,9 +95,6 @@ impl<T : 'static + GameState> ClientNet<T> {
                     ping_results.push(full_sample);
                 }
                 ExternalMsg::ConnectionInitResponse(info) =>{
-                    if crate::DEBUG_MSGS_MAIN {
-                        log::info!("Received connection init response: {:?}", info);
-                    }
                     opt_greetings = Some(info);
                 }
                 ExternalMsg::GameUpdate(game_data) => {

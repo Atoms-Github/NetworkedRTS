@@ -6,29 +6,26 @@ use ggez::{ContextBuilder, event};
 use ggez::event::{EventHandler, KeyMods, MouseButton, EventLoop};
 use ggez::input::keyboard::KeyCode;
 
-use crate::netcode::netcode_types::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
-use crate::netcode::*;
+use crate::*;
 use std::time::SystemTime;
 use ggez::graphics::Text;
 use std::collections::BTreeMap;
 use nalgebra::Point2;
 use std::sync::Arc;
-use crate::rts::game::render_resources::RenderResources;
-use crate::rts::GameStateJigsaw;
 use std::path::Path;
 use std::borrow::Borrow;
 use ggez::conf::{WindowMode, FullscreenType};
-use winit::platform::windows::EventLoopExtWindows;
-use crate::netcode::common::net_game_state::{NetGameState, GameState};
-use crate::netcode::common::input_state::InputChange;
+use crate::common::net_game_state::{NetGameState, GameState};
+use crate::common::input_state::InputChange;
 
 pub struct GraphicalIn<T : 'static + GameState> {
     render_head_rec: Receiver<NetGameState<T>>,
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
     texts: BTreeMap<&'static str, Text>,
-    resources: Option<RenderResourcesPtr>, // Yes, this can be refactored.
+    resources: Option<Arc<T::Resources>>, // Yes, this can be refactored.
     fullscreen: bool,
     window_mode: conf::WindowMode,
 }
@@ -64,7 +61,7 @@ impl<T : 'static + GameState> GraphicalIn<T> {
         let (mut ctx, events_loop) = cb.build().unwrap();
 
 
-        graphical_in.resources = Some(GameStateJigsaw::gen_render_resources(&mut ctx));
+        graphical_in.resources = Some(T::gen_render_resources(&mut ctx));
         event::run(ctx, events_loop, graphical_in);
     }
 }

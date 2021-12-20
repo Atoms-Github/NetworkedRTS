@@ -6,17 +6,14 @@ use std::time::SystemTime;
 use byteorder::ByteOrder;
 use serde::{Deserialize, Serialize};
 
-use crate::netcode::*;
-use crate::netcode::common::timekeeping::*;
-use std::intrinsics::add_with_overflow;
+use crate::*;
+use crate::common::timekeeping::*;
 use crossbeam_channel::*;
-use crate::netcode::common::util_functions::gen_fake_address;
 use crate::pub_types::{FrameIndex, Shade};
-use crate::netcode::client::client_hasher::FramedHash;
-use crate::netcode::common::confirmed_data::{SimDataPackage, SimDataQuery};
-use crate::netcode::common::net_game_state::{NetGameState, GameState};
-use std::fmt::Debug;
-use crate::bibble::data::data_types::__private::Formatter;
+use crate::client::client_hasher::FramedHash;
+use crate::common::confirmed_data::{SimDataPackage, SimDataQuery};
+use crate::common::net_game_state::{NetGameState, GameState};
+use std::fmt::{Debug, Formatter};
 
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
 pub enum ExternalMsg<T>{
@@ -50,7 +47,7 @@ pub struct NetMsgGreetingResponse<T> {
     pub known_frame: KnownFrameInfo,
 }
 impl<T : Debug> Debug for NetMsgGreetingResponse<T>{
-    fn fmt(&self, f: &mut Formatter<'_>) -> crate::bibble::data::data_types::__private::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ANetMsgGreetingResponse").finish()
     }
 }

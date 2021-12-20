@@ -1,7 +1,7 @@
 use crossbeam_channel::*;
 use std::thread;
 use std::time::{SystemTime, Duration};
-use crate::netcode::netcode_types::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
 use serde::*;
 
@@ -124,9 +124,6 @@ impl DT{
 
     pub fn stop(self) -> Duration{
         let time_since = SystemTime::now().duration_since(self.time).unwrap();
-        if crate::DEBUG_MSGS_TIMERS{
-            log::info!("TIMER {} -> {:?}", self.name, time_since);
-        }
         return time_since;
     }
     pub fn stop_fmt(self) -> String{
@@ -136,8 +133,5 @@ impl DT{
     pub fn stop_warn(self, micro_seconds_limit: u128){
 
         let duration = SystemTime::now().duration_since(self.time).unwrap();
-        if crate::DEBUG_MSGS_TIMERS && duration.as_micros() >= micro_seconds_limit{
-            log::warn!("SLOWTIMER {} -> {:?}", self.name, duration);
-        }
     }
 }

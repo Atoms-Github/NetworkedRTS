@@ -4,10 +4,10 @@ use ggez::event::{KeyCode};
 
 //use ggez::input::mouse::MouseButton;
 use ggez::input::mouse::MouseButton;
-use crate::netcode::netcode_types::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
 use serde_big_array::*;
-use nalgebra::{VectorN, U2};
+use nalgebra::{U2, SVector};
 
 // big_array! { BigArray; }
 
@@ -137,7 +137,7 @@ impl InputState{
         self.set_keyid_pressed(code as usize, pressed)
     }
 
-    pub fn get_directional(&self) -> VectorN<f32, U2>{
+    pub fn get_directional(&self) -> SVector<f32, 2>{
         let mut x = 0.0;
         let mut y = 0.0;
 

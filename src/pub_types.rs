@@ -8,39 +8,20 @@ use ggez::graphics::Color;
 use serde::*;
 
 
-pub type PlayerID = u32;
+
+
+
+
+
 pub type PointFloat = nalgebra::VectorN<f32, U2>;
 pub type PointInt = nalgebra::VectorN<i32, U2>;
-pub type HashType = u64;
 pub type ZType = u16;
-pub type FrameIndex = usize;
 pub type RenderResourcesPtr = Arc<RenderResources>;
 pub type GridBox = nalgebra::Vector2<i32>;
 
-pub struct SimMetadata{
-    pub delta: f32,
-    pub quality: SimQuality,
-    pub frame_index: FrameIndex,
-}
 
-#[derive(PartialEq)]
-pub enum SimQuality{
-    DETERMA,
-    HEAD
-}
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Copy)]
-pub struct Shade(pub f32, pub f32, pub f32);
 
-impl Shade{
-    pub fn to_color(&self) -> Color{
-        Color{
-            r: self.0,
-            g: self.1,
-            b: self.2,
-            a: 1.0
-        }
-    }
-}
+
 
 pub trait MyPoint{
     fn to_point(&self) -> Point2<f32>;

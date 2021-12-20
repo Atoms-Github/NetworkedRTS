@@ -10,11 +10,11 @@ use std::time::{Duration, SystemTime};
 use std::ops::Div;
 use std::ops::Sub;
 use serde::{Deserialize, Serialize};
-use crate::netcode::common::external_msg::*;
+use crate::common::external_msg::*;
 use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 use std::collections::vec_deque::*;
 use std::io::Seek;
-use crate::netcode::netcode_types::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
 use std::collections::{BTreeMap, HashMap};
 use std::collections::btree_map::Range;
@@ -108,18 +108,18 @@ impl<T:Clone + Default + Send +  std::fmt::Debug + Sync + PartialEq + 'static> S
 // use std::ops::Div;
 // use std::ops::Sub;
 // use serde::{Deserialize, Serialize};
-// use crate::netcode::common::network::external_msg::*;
+// use crate::common::network::external_msg::*;
 // use std::sync::{RwLock, Arc, RwLockWriteGuard, Mutex};
 // use std::collections::vec_deque::*;
 // use std::io::Seek;
-// use crate::netcode::client::input_handler_seg::*;
-// use crate::netcode::netcode_types::*;
+// use crate::client::input_handler_seg::*;
+// use crate::netcode_types::*;
 // use crate::pub_types::*;
-// use crate::netcode::common::utils::util_functions::vec_replace_or_end;
+// use crate::common::utils::util_functions::vec_replace_or_end;
 // use std::collections::BTreeMap;
 // use std::collections::btree_map::Range;
 // use std::fmt::Debug;
-// use crate::netcode::common::sim_data::confirmed_data::JoinType;
+// use crate::common::sim_data::confirmed_data::JoinType;
 // use mopa::Any;
 //
 //

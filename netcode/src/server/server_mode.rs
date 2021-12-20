@@ -3,20 +3,19 @@ use std::sync::{Arc, RwLock};
 use crossbeam_channel::*;
 use std::thread;
 use std::time::{SystemTime, Duration};
-use crate::netcode::netcode_types::*;
+use crate::netcode_types::*;
 use crate::pub_types::*;
-use crate::netcode::*;
-use crate::netcode::common::external_msg::*;
-use crate::netcode::common::timekeeping::*;
+use crate::*;
+use crate::common::external_msg::*;
+use crate::common::timekeeping::*;
 
-use crate::netcode::*;
-use crate::rts::GameStateJigsaw;
+use crate::*;
 use bibble_tokio::{NetHubTop, OutMsg};
-use crate::netcode::client::client_hasher::FramedHash;
+use crate::client::client_hasher::FramedHash;
 use std::collections::HashSet;
-use crate::netcode::common::confirmed_data::{ConfirmedData, SimDataPackage, SimDataOwner, SimDataQuery};
-use crate::netcode::common::net_game_state::{NetGameState, GameState};
-use crate::netcode::client::header_threads::HEAD_AHEAD_FRAME_COUNT;
+use crate::common::confirmed_data::{ConfirmedData, SimDataPackage, SimDataOwner, SimDataQuery};
+use crate::common::net_game_state::{NetGameState, GameState};
+use crate::client::header_threads::HEAD_AHEAD_FRAME_COUNT;
 
 
 pub struct Server<T : 'static + GameState> {
