@@ -18,4 +18,3 @@ pub use noneffects::*;
 pub use serde::*;
 
 pub use winit::event::VirtualKeyCode;
-pub use crate::rts::compsys::ResourceBlock;

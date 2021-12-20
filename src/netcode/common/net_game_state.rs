@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use crate::rts::GameState;
+use crate::rts::GameStateJigsaw;
 use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQuality, SimMetadata};
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;
@@ -23,10 +23,11 @@ use crate::netcode::common::superstore_seg::Superstore;
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
 }
+pub type UsingGameState = GameStateJigsaw;
 
 #[derive(Clone, Serialize, Deserialize, Hash)]
 pub struct NetGameState {
-    pub game_state: GameState,
+    pub game_state: GameStateJigsaw,
     // players: BTreeMap<PlayerID, NetPlayerProperty>,
     connected_players: BTreeMap<PlayerID, ConnectedPlayerProperty>, // I.e Those who's connect events has already been simmed.
     simmed_frame_index: FrameIndex,
@@ -75,7 +76,7 @@ impl NetGameState {
     }
     pub fn new() -> Self {
         let mut net_state = Self {
-            game_state: GameState::new(),
+            game_state: GameStateJigsaw::new(),
             connected_players: Default::default(),
             simmed_frame_index: 0,
         };

@@ -1,8 +1,8 @@
-use super::*;
-use nalgebra::{Point, Point2};
 use serde::*;
 use crate::pub_types::PointFloat;
-use crate::rts::compsys::{ResourceBlock, PlotFlooring};
+use crate::bibble::data::data_types::*;
+use crate::rts::compsys::*;
+use nalgebra::Point2;
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

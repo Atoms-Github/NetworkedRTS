@@ -2,42 +2,17 @@
 pub use serde::{Serialize, Deserialize};
 pub use crate::ecs::eid_manager::GlobalEntityID;
 
-pub use clickshooter_game::*;
-pub mod clickshooter_game;
-
-pub use general::*;
-pub mod general;
-
-pub use structures::*;
-pub mod structures;
-
-pub use hikers::*;
-pub mod hikers;
-
-pub use input::*;
-pub mod input;
-
-pub use players::*;
-pub mod players;
-
 pub use jigsaw::*;
 pub mod jigsaw;
 
-pub use the_map::*;
-pub mod the_map;
+pub mod bibble;
+pub use bibble::*;
 
-pub use visuals::*;
-pub mod visuals;
+pub mod common;
+pub use common::*;
 
-pub use units::*;
-pub mod units;
-
-pub use effects::*;
-pub mod effects;
-
-pub use lobby::*;
-pub mod lobby;
-
+pub mod clickshooter;
+pub use clickshooter::*;
 
 pub use crate::rts::game::game_state::*;
 pub use crate::pub_types::*;

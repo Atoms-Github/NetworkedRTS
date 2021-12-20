@@ -61,19 +61,19 @@ pub fn global_get_systems() -> Vec<System>{
 
 
 #[derive(Clone, Serialize, Deserialize, Hash, Debug)]
-pub struct GameState {
+pub struct GameStateJigsaw {
     ecs: ActiveEcs,
 }
 
 
 
-impl Default for GameState {
+impl Default for GameStateJigsaw {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl GameState {
+impl GameStateJigsaw {
     pub fn new() -> Self {
         Self{
             ecs: ActiveEcs::new(global_get_systems()),

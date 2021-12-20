@@ -10,7 +10,7 @@ use crate::netcode::common::external_msg::*;
 use crate::netcode::common::timekeeping::*;
 
 use crate::netcode::*;
-use crate::rts::GameState;
+use crate::rts::GameStateJigsaw;
 use bibble_tokio::{NetHubTop, OutMsg};
 use crate::netcode::client::client_hasher::FramedHash;
 use std::collections::HashSet;

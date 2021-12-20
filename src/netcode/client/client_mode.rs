@@ -10,7 +10,7 @@ use crate::netcode::common::timekeeping::*;
 use ggez::input::keyboard::KeyCode;
 use crate::pub_types::{FrameIndex, PlayerID, Shade, HashType};
 use ggez::input::gamepad::gamepad;
-use crate::rts::GameState;
+use crate::rts::GameStateJigsaw;
 use std::sync::Arc;
 use crate::netcode::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;

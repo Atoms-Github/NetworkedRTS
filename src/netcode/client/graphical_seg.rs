@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 use nalgebra::Point2;
 use std::sync::Arc;
 use crate::rts::game::render_resources::RenderResources;
-use crate::rts::GameState;
+use crate::rts::GameStateJigsaw;
 use std::path::Path;
 use std::borrow::Borrow;
 use ggez::conf::{WindowMode, FullscreenType};
@@ -64,7 +64,7 @@ impl GraphicalIn {
         let (mut ctx, events_loop) = cb.build().unwrap();
 
 
-        graphical_in.resources = Some(GameState::gen_render_resources(&mut ctx));
+        graphical_in.resources = Some(GameStateJigsaw::gen_render_resources(&mut ctx));
         event::run(ctx, events_loop, graphical_in);
     }
 }

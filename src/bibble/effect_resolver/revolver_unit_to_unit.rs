@@ -1,5 +1,5 @@
 pub use crate::bibble::data::data_types::*;
-use crate::rts::GameState;
+use crate::rts::GameStateJigsaw;
 use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
 use crate::bibble::effect_resolver::revolver::Revolver;
