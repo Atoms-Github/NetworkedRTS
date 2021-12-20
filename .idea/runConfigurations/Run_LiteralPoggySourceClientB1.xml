@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="true">
-    <option name="command" value="run --package literal_poggy_source --bin literal_poggy_source --release Client +name Atoms +ip 127.0.0.1" />
+    <option name="command" value="run --package main --bin main --release Client +name Atoms +ip 127.0.0.1" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

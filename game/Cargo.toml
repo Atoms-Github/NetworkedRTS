@@ -1,0 +1,41 @@
+[package]
+name = "game"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+snap = "0.2"
+mint = "*"
+walkdir = "2.3.2"
+itertools = "0.10.1"
+chrono = "*"
+anymap = "*"
+ggez = {version = "0.6.0"}
+nalgebra = {version = "*", features = ["mint", "serde-serialize"] }
+bincode = "*"
+log = { version = "*", features = ["max_level_debug", "release_max_level_info"] }
+env_logger = "*"
+mopa = "*"
+serde_closure = "*"
+lazy_static = "*"
+image = "0.23.14"
+glob = "*"
+bresenham = "0.1.1"
+rand = "0.7"
+byteorder = "1.3.2"
+serde = { version = "1.0", features = ["derive"] }
+bimap = "*"
+rdxsort = "0.3.0"
+crossbeam-channel = "0.5.0"
+serde-big-array = {path = "C:\\_C_\\Home\\Produce\\Code\\Projects\\Rust\\OtherPeeps\\serde-big-array"}
+bibble_tokio = {path = "C:\\_C_\\Home\\Produce\\Code\\Projects\\Rust\\BigYoshis\\BibbleTokio"}
+simple-logging = "*"
+log4rs = "*"
+zip = "0.5.13"
+
+[dependencies.winit]
+version = "0.24" # To match ggez.
+# cherry-pick individual features
+features = ["serde"]

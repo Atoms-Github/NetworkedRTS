@@ -56,6 +56,7 @@ use crate::rts::GameStateJigsaw;
 
 
 fn main() {
+
     let args = crate::args::Args::gather();
     let address = args.ip + ":1616";
     Builder::new()
