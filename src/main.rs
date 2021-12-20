@@ -52,6 +52,7 @@ use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::config::{Appender, Config, Root};
+use crate::rts::GameStateJigsaw;
 
 
 fn main() {
@@ -86,10 +87,10 @@ fn main() {
 
     match args.launch_type{
         LaunchType::CLIENT => {
-            crate::netcode::client_main(args.player_name.unwrap(), address, 0);
+            crate::netcode::client_main::<GameStateJigsaw>(args.player_name.unwrap(), address, 0);
         }
         LaunchType::SERVER => {
-            crate::netcode::server_main(address);
+            crate::netcode::server_main::<GameStateJigsaw>(address);
         }
     }
 }

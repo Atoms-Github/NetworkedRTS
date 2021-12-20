@@ -20,11 +20,11 @@ use std::path::Path;
 use std::borrow::Borrow;
 use ggez::conf::{WindowMode, FullscreenType};
 use winit::platform::windows::EventLoopExtWindows;
-use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::net_game_state::{NetGameState, GameState};
 use crate::netcode::common::input_state::InputChange;
 
-pub struct GraphicalIn {
-    render_head_rec: Receiver<NetGameState>,
+pub struct GraphicalIn<T : 'static + GameState> {
+    render_head_rec: Receiver<NetGameState<T>>,
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
     texts: BTreeMap<&'static str, Text>,
@@ -33,8 +33,8 @@ pub struct GraphicalIn {
     window_mode: conf::WindowMode,
 }
 
-impl GraphicalIn {
-    pub fn start(inputs: Sender<InputChange>, head_render_handle: Receiver<NetGameState>, my_player_id: PlayerID) -> !{
+impl<T : 'static + GameState> GraphicalIn<T> {
+    pub fn start(inputs: Sender<InputChange>, head_render_handle: Receiver<NetGameState<T>>, my_player_id: PlayerID) -> !{
         let mut texts = BTreeMap::new();
         let text = Text::new("Hello, World!");
         // Store the text in `App`s map, for drawing in main loop.
@@ -69,7 +69,7 @@ impl GraphicalIn {
     }
 }
 
-impl EventHandler<GameError> for GraphicalIn {
+impl<T : 'static + GameState> EventHandler<GameError> for GraphicalIn<T> {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         Ok(())
     }

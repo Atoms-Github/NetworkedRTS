@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 use crate::netcode::common::timekeeping::DT;
 use rand::Rng;
+use crate::netcode::common::net_game_state::GameState;
 
 pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
@@ -73,13 +74,13 @@ impl Default for GameStateJigsaw {
     }
 }
 
-impl GameStateJigsaw {
-    pub fn new() -> Self {
+impl GameState for GameStateJigsaw {
+    fn new() -> Self {
         Self{
             ecs: ActiveEcs::new(global_get_systems()),
         }
     }
-    pub fn init(&mut self){
+    fn init(&mut self){
         //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
         for player_index in 0..MAX_PLAYERS{
             let mut pending = PendingEntity::new_player(player_index as GlobalEntityID);
@@ -87,7 +88,7 @@ impl GameStateJigsaw {
         }
         assert_eq!(self.ecs.c.create_entity(PendingEntity::new_scene_manager()), SCENE_MAN_ENT_ID)
     }
-    pub fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade){
+    fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade){
         let player_ent_id = player_id as GlobalEntityID;
 
         self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
@@ -98,7 +99,7 @@ impl GameStateJigsaw {
         let cursor = PendingEntity::new_cursor(player_ent_id, color);
         self.ecs.c.create_entity(cursor);
     }
-    pub fn player_disconnects(&mut self, player_id: PlayerID){
+    fn player_disconnects(&mut self, player_id: PlayerID){
         self.ecs.c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;
         let mut my_cursor = None;
         for (cursor_id, cursor_comp, position) in CompIter2::<CursorComp, PositionComp>::new(&self.ecs.c){
@@ -110,7 +111,7 @@ impl GameStateJigsaw {
             self.ecs.c.delete_entity(cursor);
         }
     }
-    pub fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata){
+    fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata){
         for (player_id, input_state) in inputs{
             if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(player_id as GlobalEntityID){
                 existing_player.inputs.update_input_state(input_state);
@@ -118,14 +119,14 @@ impl GameStateJigsaw {
         }
         self.ecs.sim_systems(sim_meta);
     }
-    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
+    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
         let timer = DT::start("RenderTime");
         crate::rts::compsys::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
         if crate::DEBUG_MSGS_ITS_LAGGING && rand::thread_rng().gen_bool(0.1){
             timer.stop();
         }
     }
-    pub fn gen_render_resources(ctx: &mut Context) -> RenderResourcesPtr {
+    fn gen_render_resources(ctx: &mut Context) -> RenderResourcesPtr {
         let mut resources = RenderResources::load(ctx);
 
         return Arc::new(resources);

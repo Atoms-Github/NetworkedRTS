@@ -7,24 +7,24 @@ use crate::netcode::common::timekeeping::*;
 use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use std::sync::mpsc::channel;
-use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::net_game_state::{NetGameState, GameState};
 use crate::netcode::client::graphical_seg::GraphicalIn;
 use crate::netcode::common::input_state::InputChange;
 
 
 pub const HEAD_AHEAD_FRAME_COUNT: usize = 20;
 
-pub struct HeadSimPacket{
-    pub game_state: NetGameState,
+pub struct HeadSimPacket<T : 'static + GameState>{
+    pub game_state: NetGameState<T>,
     pub sim_data: Vec<InfoForSim>,
 }
 
-pub struct HeaderThread {
-    head_sim_packets_rec: Receiver<HeadSimPacket>,
-    output_states: Sender<NetGameState>,
+pub struct HeaderThread<T : 'static + GameState> {
+    head_sim_packets_rec: Receiver<HeadSimPacket<T>>,
+    output_states: Sender<NetGameState<T>>,
 }
-impl HeaderThread {
-    pub fn start(inputs: Sender<InputChange>, new_heads: Receiver<HeadSimPacket>, my_player_id: PlayerID) {
+impl<T : 'static + GameState> HeaderThread<T> {
+    pub fn start(inputs: Sender<InputChange>, new_heads: Receiver<HeadSimPacket<T>>, my_player_id: PlayerID) {
         let (tx_output_states, rx_output_states) = unbounded();
         thread::spawn(move ||{
             HeaderThread {
@@ -41,22 +41,23 @@ impl HeaderThread {
             let head_sim_packet = crate::utils::pull_latest(&mut self.head_sim_packets_rec);
             log::trace!("Head got frame {}", head_sim_packet.game_state.get_simmed_frame_index());
 
-            let new_head = calculate_new_head(head_sim_packet);
+            let new_head = self.calculate_new_head(head_sim_packet);
             self.output_states.send(new_head).unwrap();
 
         }
     }
-}
-fn calculate_new_head(mut sim_packet: HeadSimPacket) -> NetGameState {
-    for sim_info in sim_packet.sim_data{
-        let metadata = SimMetadata{
-            delta: FRAME_DURATION_MILLIS,
-            quality: SimQuality::HEAD,
-            frame_index: sim_packet.game_state.get_simmed_frame_index() + 1,
-        };
+    fn calculate_new_head(&self, mut sim_packet: HeadSimPacket<T>) -> NetGameState<T> {
+        for sim_info in sim_packet.sim_data{
+            let metadata = SimMetadata{
+                delta: FRAME_DURATION_MILLIS,
+                quality: SimQuality::HEAD,
+                frame_index: sim_packet.game_state.get_simmed_frame_index() + 1,
+            };
 
-        sim_packet.game_state.simulate(sim_info, &metadata );
+            sim_packet.game_state.simulate(sim_info, &metadata );
+        }
+        return sim_packet.game_state;
     }
-    return sim_packet.game_state;
 }
+
 

@@ -14,12 +14,14 @@ use crate::netcode::common::util_functions::gen_fake_address;
 use crate::pub_types::{FrameIndex, Shade};
 use crate::netcode::client::client_hasher::FramedHash;
 use crate::netcode::common::confirmed_data::{SimDataPackage, SimDataQuery};
-use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::net_game_state::{NetGameState, GameState};
+use std::fmt::Debug;
+use crate::bibble::data::data_types::__private::Formatter;
 
 #[derive(Serialize, Deserialize, Clone, Debug)] // Serializing and deserializing enums with data does store which enum it is - we don't need to store the data and enum separately.
-pub enum ExternalMsg {
+pub enum ExternalMsg<T>{
     ConnectionInitQuery,
-    ConnectionInitResponse(NetMsgGreetingResponse),
+    ConnectionInitResponse(NetMsgGreetingResponse<T>),
     NewHash(FramedHash),
     GameUpdate(SimDataPackage),
     WorldDownloaded{
@@ -41,11 +43,16 @@ pub struct NetMsgPingTestResponse{
 pub struct NetMsgGreetingQuery {
 
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct NetMsgGreetingResponse {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct NetMsgGreetingResponse<T> {
     pub assigned_player_id: PlayerID,
-    pub game_state: NetGameState,
+    pub game_state: NetGameState<T>,
     pub known_frame: KnownFrameInfo,
+}
+impl<T : Debug> Debug for NetMsgGreetingResponse<T>{
+    fn fmt(&self, f: &mut Formatter<'_>) -> crate::bibble::data::data_types::__private::fmt::Result {
+        f.debug_struct("ANetMsgGreetingResponse").finish()
+    }
 }
 
 

@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::netcode::netcode_types::ServerEvents;
 use crate::netcode::common::input_state::InputState;
+use crate::netcode::common::net_game_state::GameState;
 
 mod server;
 mod client;
@@ -20,10 +21,10 @@ pub struct InfoForSim {
 
 
 
-pub fn server_main(hosting_ip: String){
-    server::server_mode::server_main(hosting_ip);
+pub fn server_main<T : 'static + GameState>(hosting_ip: String){
+    server::server_mode::server_main::<T>(hosting_ip);
 }
-pub fn client_main(player_name: String, connection_ip: String, preferred_port: i32){
+pub fn client_main<T : 'static + GameState>(player_name: String, connection_ip: String, preferred_port: i32){
     let lower_name = player_name.to_lowercase();
     let my_color : Shade = match &lower_name[..]{
         "atoms" => {
@@ -66,7 +67,7 @@ pub fn client_main(player_name: String, connection_ip: String, preferred_port: i
             Shade(0.0,0.0,0.0)
         }
     };
-    client::client_mode::Client::go(player_name, my_color, connection_ip, preferred_port);
+    client::client_mode::Client::<T>::go(player_name, my_color, connection_ip, preferred_port);
 }
 
 

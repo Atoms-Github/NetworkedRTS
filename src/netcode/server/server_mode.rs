@@ -15,23 +15,23 @@ use bibble_tokio::{NetHubTop, OutMsg};
 use crate::netcode::client::client_hasher::FramedHash;
 use std::collections::HashSet;
 use crate::netcode::common::confirmed_data::{ConfirmedData, SimDataPackage, SimDataOwner, SimDataQuery};
-use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::net_game_state::{NetGameState, GameState};
 use crate::netcode::client::header_threads::HEAD_AHEAD_FRAME_COUNT;
 
 
-pub struct Server {
-    net: NetHubTop<ExternalMsg>,
+pub struct Server<T : 'static + GameState> {
+    net: NetHubTop<ExternalMsg<T>>,
     data: ConfirmedData,
-    game_state: NetGameState,
+    game_state: NetGameState<T>,
     known_frame_zero: KnownFrameInfo,
     init_box: HashSet<PlayerID>,
 }
 
 
-impl Server {
+impl<T: 'static + GameState> Server<T> {
     pub fn start(hosting_ip: String){
         let net = bibble_tokio::start_server(hosting_ip.clone());
-        let game_state = NetGameState::new();
+        let game_state = NetGameState::<T>::new();
 
         let mut server = Server {
             net,
@@ -42,7 +42,7 @@ impl Server {
         };
         server.core_loop();
     }
-    fn on_new_net_msg(&mut self, message: OutMsg<ExternalMsg>){
+    fn on_new_net_msg(&mut self, message: OutMsg<ExternalMsg<T>>){
         match message{
             OutMsg::PlayerConnected(player_id) => {}
             OutMsg::PlayerDisconnected(player_id) => {
@@ -185,10 +185,10 @@ impl Server {
     }
 }
 
-pub fn server_main(hosting_ip: String){
+pub fn server_main<T : 'static + GameState>(hosting_ip: String){
     log::info!("Starting as server. Going to host on {}", hosting_ip);
 
-    let server = Server::start(hosting_ip);
+    let server = Server::<T>::start(hosting_ip);
 
     log::info!("Server finished.");
 }

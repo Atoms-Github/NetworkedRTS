@@ -15,29 +15,29 @@ use std::sync::Arc;
 use crate::netcode::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
 use crate::netcode::client::client_hasher::ClientHasher;
-use crate::netcode::common::net_game_state::NetGameState;
+use crate::netcode::common::net_game_state::{NetGameState, GameState};
 use crate::netcode::common::input_state::{InputState, InputChange};
 use crate::netcode::common::superstore_seg::SuperstoreData;
 use crate::netcode::common::confirmed_data::{SimDataQuery, SimDataOwner};
 
 
-pub struct Client {
+pub struct Client<T : 'static + GameState> {
     player_id: PlayerID,
-    net: ClientNet,
+    net: ClientNet<T>,
     player_name: String,
     color: Shade,
     data: ClientDataStore,
     hasher: ClientHasher,
-    game_state: NetGameState,
-    head_handle: Sender<HeadSimPacket>,
+    game_state: NetGameState<T>,
+    head_handle: Sender<HeadSimPacket<T>>,
     curret_input: InputState,
     known_frame: KnownFrameInfo,
 }
-impl Client {
+impl<T : 'static + GameState> Client<T> {
     pub fn go(player_name: String, color: Shade, connection_ip: String, preferred_port: i32){
         log::info!("Starting as client.");
 
-        let mut net = ClientNet::start(connection_ip.clone());
+        let mut net = ClientNet::<T>::start(connection_ip.clone());
         let mut welcome_info = net.get_synced_greeting();
         let my_id = welcome_info.assigned_player_id;
         log::info!("Downloaded game state which has simmed {}", welcome_info.game_state.get_simmed_frame_index());
@@ -103,7 +103,7 @@ impl Client {
         }, 20);
         self.net.client.send_msg(ExternalMsg::GameUpdate(my_last_20), false);
     }
-    fn on_new_net_msg(&mut self, message: ExternalMsg){
+    fn on_new_net_msg(&mut self, message: ExternalMsg<T>){
         match message{
             ExternalMsg::GameUpdate(update) => {
                 self.data.confirmed_data.write_data(update);

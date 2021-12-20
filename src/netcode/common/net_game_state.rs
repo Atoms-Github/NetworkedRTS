@@ -1,10 +1,10 @@
 use serde::{Serialize, Deserialize};
 use crate::rts::GameStateJigsaw;
-use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQuality, SimMetadata};
+use crate::pub_types::{PlayerID, FrameIndex, HashType, RenderResourcesPtr, SimQuality, SimMetadata, Shade};
 use std::collections::{HashMap, BTreeMap};
 use std::collections::hash_map::DefaultHasher;
 use ggez::Context;
-use crate::netcode::{InfoForSim, InputState};
+use crate::netcode::{InfoForSim, InputState, PlayerInputs};
 use std::hash::{Hash, Hasher};
 
 use std::sync::Arc;
@@ -19,6 +19,8 @@ use crate::ecs::bblocky::super_vec::SuperVec;
 use crate::netcode::client::client_hasher::FramedHash;
 use crate::netcode::common::confirmed_data::{ServerEvent, ConfirmedData, SimDataOwner, SimDataQuery};
 use crate::netcode::common::superstore_seg::Superstore;
+use serde::de::DeserializeOwned;
+use crate::bibble::data::data_types::Deserializer;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
@@ -26,20 +28,29 @@ pub struct ConnectedPlayerProperty {
 pub type UsingGameState = GameStateJigsaw;
 
 #[derive(Clone, Serialize, Deserialize, Hash)]
-pub struct NetGameState {
-    pub game_state: GameStateJigsaw,
+pub struct NetGameState<T> {
+    pub game_state: T,
     // players: BTreeMap<PlayerID, NetPlayerProperty>,
     connected_players: BTreeMap<PlayerID, ConnectedPlayerProperty>, // I.e Those who's connect events has already been simmed.
     simmed_frame_index: FrameIndex,
 }
-impl Debug for NetGameState{
-        fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-            f.debug_tuple("ItsAGameState")
-             .finish()
-        }
+pub trait GameState : Clone + Serialize + DeserializeOwned + Hash + Debug + Send{
+    fn new() -> Self;
+    fn init(&mut self);
+    fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade);
+    fn player_disconnects(&mut self, player_id: PlayerID);
+    fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata);
+    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr);
+    fn gen_render_resources(ctx: &mut Context) -> RenderResourcesPtr;
+}
+impl<T : 'static + GameState> Debug for NetGameState<T>{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("ItsAGameState")
+         .finish()
+    }
 }
 
-impl NetGameState {
+impl<T : 'static + GameState> NetGameState<T> {
     pub fn get_hash(&self) -> FramedHash{
         let mut args_str: Vec<String> = env::args().collect();
         let mode = args_str[1].clone();
@@ -76,7 +87,7 @@ impl NetGameState {
     }
     pub fn new() -> Self {
         let mut net_state = Self {
-            game_state: GameStateJigsaw::new(),
+            game_state: T::new(),
             connected_players: Default::default(),
             simmed_frame_index: 0,
         };

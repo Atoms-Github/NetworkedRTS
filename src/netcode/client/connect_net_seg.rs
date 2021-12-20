@@ -12,9 +12,10 @@ use crate::netcode::netcode_types::*;
 use crate::pub_types::*;
 use crate::netcode::common::timekeeping::KnownFrameInfo;
 use bibble_tokio::NetClientTop;
+use crate::netcode::common::net_game_state::GameState;
 
-pub struct ClientNet {
-    pub client: NetClientTop<ExternalMsg>,
+pub struct ClientNet<T : 'static + GameState> {
+    pub client: NetClientTop<ExternalMsg<T>>,
 }
 struct FullPingSample{
     c_send_time: SystemTime,
@@ -22,10 +23,10 @@ struct FullPingSample{
     c_receive_time: SystemTime
 }
 pub const TIME_SAMPLES_REQUIRED : usize = 2;
-impl ClientNet {
+impl<T : 'static + GameState> ClientNet<T> {
     pub fn start(conn_address: String) -> Self{
         Self{
-            client: bibble_tokio::start_client::<ExternalMsg>(conn_address)
+            client: bibble_tokio::start_client::<ExternalMsg<T>>(conn_address)
         }
     }
     fn start_ping_sender_thread(&self) -> Sender<ThreadCloser>{
@@ -72,7 +73,7 @@ impl ClientNet {
             // If server is fast, then we need to pull it back to convert it into local client time.
     }
     // This is the data gathering step.
-    fn gather_ping_and_init_data(&mut self) -> (Vec<FullPingSample>, NetMsgGreetingResponse){
+    fn gather_ping_and_init_data(&mut self) -> (Vec<FullPingSample>, NetMsgGreetingResponse<T>){
         let mut ping_request_stopper = self.start_ping_sender_thread(); // Asks for ping samples.
 
         self.client.send_msg(ExternalMsg::ConnectionInitQuery, true);
@@ -110,7 +111,7 @@ impl ClientNet {
         ping_request_stopper.send(()).unwrap();
         (ping_results, opt_greetings.unwrap())
     }
-    pub fn get_synced_greeting(&mut self) -> NetMsgGreetingResponse {
+    pub fn get_synced_greeting(&mut self) -> NetMsgGreetingResponse<T> {
         let (ping_data, mut greeting) = self.gather_ping_and_init_data();
 
         greeting.known_frame = self.calculate_local_time(ping_data, greeting.known_frame);
