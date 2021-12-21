@@ -5,8 +5,10 @@ use crate::ecs::GlobalEntityID;
 use crate::ecs::superb_ecs::{EntStructureChanges, System};
 use crate::pub_types::PointFloat;
 use crate::rts::compsys::*;
+use netcode::ServerEvent;
 
 use crate::bibble::data::data_types::AbilityID;
+use crate::pub_types::common::input_state::InputState;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct InputComp{

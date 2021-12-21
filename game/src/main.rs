@@ -86,10 +86,10 @@ fn main() {
 
     match args.launch_type{
         LaunchType::CLIENT => {
-            crate::netcode::client_main::<GameStateJigsaw>(args.player_name.unwrap(), address, 0);
+            netcode::client_main::<GameStateJigsaw>(args.player_name.unwrap(), address, 0);
         }
         LaunchType::SERVER => {
-            crate::netcode::server_main::<GameStateJigsaw>(address);
+            netcode::server_main::<GameStateJigsaw>(address);
         }
     }
 }

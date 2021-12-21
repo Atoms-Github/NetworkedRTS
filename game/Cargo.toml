@@ -37,6 +37,6 @@ log4rs = "*"
 zip = "0.5.13"
 
 [dependencies.winit]
-version = "0.24" # To match ggez.
+version = "0.25" # To match ggez.
 # cherry-pick individual features
 features = ["serde"]

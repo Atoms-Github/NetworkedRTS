@@ -12,13 +12,14 @@ use crate::common::net_game_state::GameState;
 
 mod server;
 mod client;
-mod common;
-mod netcode_types;
+pub mod common;
 mod utils;
 
 mod pub_types;
 pub use pub_types::*;
 use nalgebra::U2;
+
+
 
 
 

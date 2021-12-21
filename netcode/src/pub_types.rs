@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use crate::common::input_state::InputState;
 use ggez::graphics::Color;
-use crate::common::confirmed_data::ServerEvent;
 use std::sync::{Arc, RwLock};
 use nalgebra::U2;
 
@@ -13,6 +12,7 @@ pub type ArcRw<T> = Arc<RwLock<T>>;
 pub type ServerEvents = Vec<ServerEvent>;
 pub type PointFloat = nalgebra::VectorN<f32, U2>;
 pub use crate::common::timekeeping::DT;
+pub use crate::common::confirmed_data::ServerEvent;
 
 
 pub struct SimMetadata{

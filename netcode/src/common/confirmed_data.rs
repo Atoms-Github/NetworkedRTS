@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::*;
-use crate::netcode_types::*;
 use crate::pub_types::*;
 
 use std::sync::{Arc, RwLock, RwLockReadGuard};

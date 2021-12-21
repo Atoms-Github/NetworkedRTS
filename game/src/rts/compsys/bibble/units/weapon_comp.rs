@@ -10,6 +10,7 @@ use std::ops::Div;
 
 use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode};
 use crate::bibble::effect_resolver::revolver::Revolver;
+use crate::pub_types::common::timekeeping::SpeedTimer;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WeaponComp {

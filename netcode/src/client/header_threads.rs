@@ -4,7 +4,6 @@ use crossbeam_channel::*;
 
 use crate::*;
 use crate::common::timekeeping::*;
-use crate::netcode_types::*;
 use crate::pub_types::*;
 use std::sync::mpsc::channel;
 use crate::common::net_game_state::{NetGameState, GameState};

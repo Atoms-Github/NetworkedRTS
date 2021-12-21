@@ -16,6 +16,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 use rand::Rng;
+use netcode::common::net_game_state::GameState;
 
 pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
@@ -128,6 +129,8 @@ impl GameState for GameStateJigsaw {
 
         return Arc::new(resources);
     }
+
+    type Resources = RenderResources;
 }
 
 

@@ -6,7 +6,6 @@ use ggez::{ContextBuilder, event};
 use ggez::event::{EventHandler, KeyMods, MouseButton, EventLoop};
 use ggez::input::keyboard::KeyCode;
 
-use crate::netcode_types::*;
 use crate::pub_types::*;
 use crate::*;
 use std::time::SystemTime;
