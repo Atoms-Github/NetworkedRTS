@@ -16,7 +16,7 @@ mod common;
 mod netcode_types;
 mod utils;
 
-pub mod pub_types;
+mod pub_types;
 pub use pub_types::*;
 use nalgebra::U2;
 

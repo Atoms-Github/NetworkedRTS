@@ -8,6 +8,7 @@ use crate::netcode_types::*;
 use crate::pub_types::*;
 use serde_big_array::*;
 use nalgebra::{U2, SVector};
+use winit::event::VirtualKeyCode;
 
 // big_array! { BigArray; }
 
@@ -31,7 +32,7 @@ pub enum ConnStatusChangeType {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum InputChange {
-    KeyDownUp(KeyCode, bool),
+    KeyDownUp(VirtualKeyCode, bool),
     MouseWheelEvent(f32),
     NewMousePosition(f32, f32),
     MouseUpDown(MouseButton, bool),
