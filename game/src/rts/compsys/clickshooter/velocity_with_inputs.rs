@@ -1,4 +1,4 @@
-use crate::rts::game::game_state::*;
+use crate::rts::compsys::jigsaw::jigsaw_game_state::*;
 use crate::rts::compsys::*;
 use crate::ecs::comp_store::CompStorage;
 use crate::ecs::superb_ecs::{System, EntStructureChanges};

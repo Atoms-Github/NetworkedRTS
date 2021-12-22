@@ -1,6 +1,6 @@
 use crate::ecs::comp_store::*;
 use crate::utils::{TypeIdNum, gett};
-use crate::rts::game::game_state::UsingRenderResources;
+use crate::rts::compsys::jigsaw::jigsaw_game_state::UsingRenderResources;
 use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;

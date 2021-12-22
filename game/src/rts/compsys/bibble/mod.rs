@@ -9,19 +9,11 @@ pub use units::*;
 pub use visuals::*;
 
 pub mod hikers;
-
 pub mod input;
-
 pub mod players;
-
-
 pub mod the_map;
-
 pub mod visuals;
-
 pub mod units;
-
 pub mod effects;
-
 pub mod lobby;
 pub mod structures;

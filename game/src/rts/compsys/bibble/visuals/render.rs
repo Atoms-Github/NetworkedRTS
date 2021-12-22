@@ -3,7 +3,7 @@ use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
 use crate::utils::gett;
 use crate::rts::compsys::*;
 use crate::ecs::{ActiveEcs, GlobalEntityID};
-use crate::rts::game::game_state::UsingRenderResources;
+use crate::rts::compsys::jigsaw::jigsaw_game_state::UsingRenderResources;
 use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 use crate::bibble::data::data_types::AbilityID;

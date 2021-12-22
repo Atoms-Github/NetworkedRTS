@@ -166,7 +166,7 @@ struct ECSVisitor {
 use std::fmt::{Write, Debug};
 use std::fmt;
 use crate::utils::{TypeIdNum, gett};
-use crate::rts::game::game_state::UsingRenderResources;
+use crate::rts::compsys::jigsaw::jigsaw_game_state::UsingRenderResources;
 use std::marker::PhantomData;
 use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
@@ -198,7 +198,7 @@ impl<'de> Visitor<'de> for ECSVisitor
         let comp_store = bincode::deserialize::<CompStorage>(bytes).unwrap();
 
         return Ok(SuperbEcs{
-            systems: crate::rts::game::game_state::global_get_systems(),
+            systems: crate::rts::compsys::jigsaw::jigsaw_game_state::global_get_systems(),
             c: comp_store,
             debug_times: Default::default()
         });
