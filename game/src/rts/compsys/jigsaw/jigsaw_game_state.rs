@@ -1,13 +1,13 @@
 use netcode::*;
 use ggez::{*};
 use std::sync::Arc;
-use crate::ecs::{ActiveEcs, GlobalEntityID};
+use crate::ecs::{GlobalEntityID};
 use ggez::graphics::{DrawParam, Text};
 use nalgebra::Point2;
 use crate::ecs::pending_entity::PendingEntity;
 use serde_closure::internal::std::future::Pending;
 pub use crate::utils::gett;
-use crate::ecs::superb_ecs::System;
+use crate::ecs::superb_ecs::{System, EcsConfig, SuperbEcs, EntStructureChanges};
 use crate::rts::compsys::player::{PlayerComp};
 use crate::rts::compsys::*;
 use crate::bibble::data::data_types::{GameData, RaceID};
@@ -17,13 +17,24 @@ use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 use rand::Rng;
 use netcode::common::net_game_state::GameState;
+use crate::ecs::bblocky::comp_registration::{SuperbFunctions, FunctionMap};
+use crate::ecs::comp_store::CompStorage;
 
 pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingRenderResources = Arc<RenderResources>;
 
-pub fn global_get_systems() -> Vec<System>{
+fn sys<C>(    run: fn(&mut CompStorage<C> /* Could add read only version here. */, &mut EntStructureChanges<C>, &SimMetadata),
+           name: &'static str,) -> System<C>{
+    System{
+        run,
+        name
+    }
+
+
+}
+pub fn global_get_systems() -> Vec<System<GameStateJigsaw>>{
     vec![
         INPUT_PREPROC.clone(),
         BUTTON_SYS.clone(),
@@ -52,7 +63,7 @@ pub fn global_get_systems() -> Vec<System>{
         JIGSAW_PIECE_SYS.clone(),
         JIGSAW_MAT_SYS.clone(),
         CURSOR_SYS.clone(),
-        JIGSAW_PLAYER_SYS.clone(),
+        jigsaw_player_sys(),
         UI_SYS.clone(),
         SCENE_SWITCHER_SYS.clone(),
     ]
@@ -61,7 +72,18 @@ pub fn global_get_systems() -> Vec<System>{
 
 #[derive(Clone, Serialize, Deserialize, Hash, Debug)]
 pub struct GameStateJigsaw {
-    ecs: ActiveEcs,
+    ecs: SuperbEcs<Self>,
+}
+
+impl EcsConfig for GameStateJigsaw{
+    fn get_systems<C>() -> Vec<System<C>> {
+        todo!()
+    }
+
+    fn get_functions() -> &'static FunctionMap {
+        return &crate::ecs::bblocky::comp_registration::FUNCTION_MAP;
+        todo!()
+    }
 }
 
 
@@ -75,7 +97,7 @@ impl Default for GameStateJigsaw {
 impl GameState for GameStateJigsaw {
     fn new() -> Self {
         Self{
-            ecs: ActiveEcs::new(global_get_systems()),
+            ecs: SuperbEcs::new(),
         }
     }
     fn init(&mut self){

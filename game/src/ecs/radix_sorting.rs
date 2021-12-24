@@ -8,8 +8,8 @@ struct SortEnt{
     pub value: u16,
 }
 
-pub fn go(store: &CompStorage, entities: Vec<GlobalEntityID>,
-          sort_by: fn(&CompStorage, GlobalEntityID) -> u16) -> Vec<GlobalEntityID>{
+pub fn go<C>(store: &CompStorage<C>, entities: Vec<GlobalEntityID>,
+          sort_by: fn(&CompStorage<C>, GlobalEntityID) -> u16) -> Vec<GlobalEntityID>{
     let sortable = entities.iter().map(|id| {
         let value = sort_by(store, *id);
         SortEnt{

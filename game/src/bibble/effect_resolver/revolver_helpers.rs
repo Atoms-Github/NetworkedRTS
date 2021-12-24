@@ -8,7 +8,7 @@ use crate::pub_types::PointFloat;
 use crate::rts::game::z_values::ZValue;
 
 
-impl<'a> Revolver<'a>{
+impl<'a, C> Revolver<'a, C>{
     pub fn spawn_seeker_proj(&mut self, data: &GameData, mould: &SeekingProjectileMould, shooter: GlobalEntityID, target: GlobalEntityID){
         let owner = self.c.get_unwrap::<OwnedComp>(shooter).owner;
         let position = self.c.get_unwrap::<PositionComp>(shooter).pos.clone();
@@ -78,7 +78,7 @@ impl<'a> Revolver<'a>{
         self.add_actor(data, &mould.actor, mould.radius, &mut pending);
         self.changes.new_entities.push(pending);
     }
-    pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, radius: f32, pending: &mut PendingEntity){
+    pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, radius: f32, pending: &mut PendingEntity<C>){
         pending.add_comp(RenderComp{
             z: ZValue::GamePiece.g(),
             texture: RenderTexture::Image(mould.image.clone()),

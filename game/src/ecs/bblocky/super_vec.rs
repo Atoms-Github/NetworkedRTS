@@ -18,18 +18,19 @@ use crate::unsafe_utils::very_bad_function;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use crate::bibble::data::data_types::__private::Formatter;
+use crate::ecs::superb_ecs::EcsConfig;
 
 
 #[derive(PartialEq)]
-pub struct SuperVec {
+pub struct SuperVec<C> {
     item_size: usize,
     data: Vec<u8>,
     item_type: TypeIdNum,
     debug_name: String,
 }
-impl Debug for SuperVec{
+impl<C> Debug for SuperVec<C>{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = C::get_functions().get(self.item_type);
         let mut items = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -45,9 +46,9 @@ impl Debug for SuperVec{
 }
 
 
-impl SuperVec {
+impl<C> SuperVec<C> {
     pub fn new(item_type: TypeIdNum) -> Self{
-        let functions = FUNCTION_MAP.get(item_type);
+        let functions = C::get_functions().get(item_type);
         Self{
             item_size: functions.item_size,
             data: vec![],
@@ -64,7 +65,7 @@ impl SuperVec {
         assert_eq!(self.data.len() % self.item_size, 0);
         return self.data.len() / self.item_size;
     }
-    pub fn push_super_any(&mut self, mut item: SuperAny){
+    pub fn push_super_any(&mut self, mut item: SuperAny<C>){
         assert_eq!(self.item_size, item.list.item_size);
         assert_eq!(self.item_type, item.list.item_type);
         let mut bytes = item.list.move_as_bytes(0);
@@ -118,9 +119,9 @@ impl SuperVec {
         return self.get(index).map(|item| unsafe {very_bad_function(item)});
     }
 }
-impl Clone for SuperVec {
+impl<C : EcsConfig> Clone for SuperVec<C> {
     fn clone(&self) -> Self {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = C::get_functions().get(self.item_type);
         let mut data = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -135,9 +136,9 @@ impl Clone for SuperVec {
         }
     }
 }
-impl Hash for SuperVec{
+impl<C : EcsConfig> Hash for SuperVec<C>{
     fn hash<H: Hasher>(&self, state: &mut H) {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = C::get_functions().get(self.item_type);
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
             let serialized_bytes = (functions.meme_ser)(bytes);
@@ -145,7 +146,7 @@ impl Hash for SuperVec{
         }
     }
 }
-impl Drop for SuperVec{
+impl<C> Drop for SuperVec<C>{
     fn drop(&mut self) {
         // Dealocate all memory referenced.
         for i in 0..self.len(){
@@ -159,12 +160,13 @@ struct SuperVecPortable{
     data: Vec<Vec<u8>>,
     item_type_when_deser: TypeIdNum,
 }
-impl Serialize for SuperVec{
+impl<C : EcsConfig> Serialize for SuperVec<C>{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
     {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = C::get_functions().get(self.item_type);
+
         let mut items = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -181,7 +183,7 @@ impl Serialize for SuperVec{
 }
 
 struct SuperVecVisitor {}
-impl<'de> Deserialize<'de> for SuperVec
+impl<'de, C : EcsConfig> Deserialize<'de> for SuperVec<C>
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where
@@ -189,7 +191,7 @@ impl<'de> Deserialize<'de> for SuperVec
     {
         let portable = SuperVecPortable::deserialize(deserializer).unwrap();
 
-        let functions = FUNCTION_MAP.get(portable.item_type_when_deser);
+        let functions = C::get_functions().get(portable.item_type_when_deser);
         let mut data = vec![];
         for serialized in portable.data{
             let mut forgotten_item = (functions.meme_deser_and_forget)(&serialized);

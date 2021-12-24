@@ -4,20 +4,22 @@ use crate::bibble::data::data_types::{GameData, AbilityID, AbilitySingleTargetTy
 use crate::ecs::GlobalEntityID;
 use crate::rts::compsys::{MyGlobalEntityID, TechTreeComp, AbilityTargetInstance, OwnedComp};
 use crate::bibble::data::data_types::AbilityTargetType;
+use crate::pub_types::RtsComps;
+use crate::rts::GameStateJigsaw;
 
-pub struct Revolver<'a>{
-    pub changes: EntStructureChanges,
-    pub c: &'a CompStorage
+pub struct Revolver<'a, C>{
+    pub changes: EntStructureChanges<C>,
+    pub c: &'a RtsComps
 }
 
-impl<'a> Revolver<'a>{
-    pub fn new(c: &'a CompStorage) -> Self{
+impl<'a, C> Revolver<'a, C>{
+    pub fn new(c: &'a RtsComps) -> Self{
         Self{
             changes: EntStructureChanges { new_entities: vec![], deleted_entities: vec![] },
             c
         }
     }
-    pub fn end(self) -> EntStructureChanges{
+    pub fn end(self) -> EntStructureChanges<C>{
         return self.changes;
     }
 

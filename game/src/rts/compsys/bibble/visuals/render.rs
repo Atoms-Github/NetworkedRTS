@@ -2,7 +2,7 @@ use ggez::{graphics, Context};
 use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
 use crate::utils::gett;
 use crate::rts::compsys::*;
-use crate::ecs::{ActiveEcs, GlobalEntityID};
+use crate::ecs::{GlobalEntityID};
 use crate::rts::compsys::jigsaw::jigsaw_game_state::UsingRenderResources;
 use nalgebra::Point2;
 use crate::rts::compsys::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
@@ -36,7 +36,7 @@ pub enum RenderShape{
 }
 
 
-pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, player_entity_id: GlobalEntityID){
+pub fn render(ecs: &mut JigsawComps, ctx: &mut Context, res: &RenderResourcesPtr, player_entity_id: GlobalEntityID){
     let mut cool_batcher = CoolBatcher::new();
 
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();

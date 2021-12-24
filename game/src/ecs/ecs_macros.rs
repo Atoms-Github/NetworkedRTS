@@ -7,6 +7,10 @@ use std::slice::Iter;
 use crate::ecs::superb_ecs::SuperbEcs;
 use crate::ecs::pending_entity::PendingEntity;
 
+#[macro_export]
+macro_rules! msystem {
+    () => ()
+}
 
 
 
@@ -17,7 +21,7 @@ macro_rules! comp_iter_def {
         pub struct $query_name<'a, $($type_name: 'static + Send,)+> {
             $($type_name: PhantomData<$type_name>,)+
             ecs: &'a CompStorage,
-            vec: Vec<GlobalEntityID>
+            vec: Vec<GlobalEntityID>,
         }// C:/Users/tomul/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust/library/core/src/slice/iter.rs:66
         impl<'a, $($type_name: 'static + Send,)+> $query_name<'a, $($type_name,)+>{
             pub fn new(ecs: &'a CompStorage) -> Self{

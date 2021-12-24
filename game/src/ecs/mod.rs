@@ -10,4 +10,3 @@ pub mod ecs_debug_timer;
 pub mod bblocky;
 
 pub type GlobalEntityID = usize;
-pub type ActiveEcs = SuperbEcs;

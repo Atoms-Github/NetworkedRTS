@@ -10,9 +10,9 @@ use crate::ecs::bblocky::super_any::SuperAny;
 use crate::ecs::bblocky::super_vec::SuperVec;
 use crate::pub_types::ZType;
 
-pub type SingleComp = SuperAny;
-pub type MyBlock = SuperVec;
-pub type Column = Vec<MyBlock>;
+pub type SingleComp<C> = SuperAny<C>;
+pub type MyBlock<C> = SuperVec<C>;
+pub type Column<C> = Vec<MyBlock<C>>;
 
 pub type CompositionID = usize;
 pub type GenerationNum = usize;
@@ -28,8 +28,8 @@ pub struct InternalEntity {
 }
 
 #[derive(Clone, Default, Serialize, Deserialize, Hash, Debug)]
-pub struct CompStorage {
-    columns: BTreeMap<TypeIdNum, Column>,
+pub struct CompStorage<C> {
+    columns:BTreeMap<TypeIdNum, Column<C>>,
     internal_entities: Box<GlorifiedHashMap>, // Box to avoid stack overflow.
     composition_ids: BTreeMap<TypesSet, CompositionID>,
     next_composition_id: CompositionID,
@@ -38,7 +38,7 @@ pub struct CompStorage {
 pub struct DeleteResult{
 
 }
-impl CompStorage{
+impl<C> CompStorage<C>{
     // TODO: Swap get and get unwrap, and call them get and get_maybe.
     pub fn get_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
         self.get::<T>(entity_id).unwrap()
@@ -108,7 +108,7 @@ impl CompStorage{
 
         return new_composition_id;
     }
-    pub fn create_entity(&mut self, pending_entity: PendingEntity) -> InternalIndex{
+    pub fn create_entity(&mut self, pending_entity: PendingEntity<C>) -> InternalIndex{
         let types_set = pending_entity.hash_types();
         let composition_id = self.get_composition_id(types_set.clone());
 
@@ -163,7 +163,7 @@ impl CompStorage{
         return found_entities;
     }
     pub fn query_sorted(&self, must_include: Vec<TypeIdNum>,
-                        sort_by: fn(&CompStorage, GlobalEntityID) -> ZType) -> Vec<GlobalEntityID>{
+                        sort_by: fn(&CompStorage<C>, GlobalEntityID) -> ZType) -> Vec<GlobalEntityID>{
         let mut unsorted = self.query(must_include);
         return super::radix_sorting::go(self, unsorted, sort_by)
     }
@@ -173,21 +173,21 @@ impl CompStorage{
         }
         self.global_ids_as_comps.get_mut(composition_id).unwrap().push(global_id);
     }
-    fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut MyBlock{
+    fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut MyBlock<C>{
         let column = self.get_column_mut_or_make_key(type_id);
         for new_block_index in column.len()..(composition_id + 1){
             column.push(SuperVec::new(type_id));
         }
         return column.get_mut(composition_id).unwrap();
     }
-    fn get_column<T : 'static>(&self) -> Option<&Column>{
+    fn get_column<T : 'static>(&self) -> Option<&Column<C>>{
         self.columns.get(&crate::utils::gett::<T>())
     }
-    fn get_column_mut_or_make<T : 'static>(&mut self) -> &mut Column{
+    fn get_column_mut_or_make<T : 'static>(&mut self) -> &mut Column<C>{
         let key = crate::utils::gett::<T>();
         return self.get_column_mut_or_make_key(key);
     }
-    fn get_column_mut_or_make_key(&mut self, type_id: TypeIdNum) -> &mut Column{
+    fn get_column_mut_or_make_key(&mut self, type_id: TypeIdNum) -> &mut Column<C>{
         if self.columns.get(&type_id).is_none(){
             self.columns.insert(type_id, vec![]);
         }

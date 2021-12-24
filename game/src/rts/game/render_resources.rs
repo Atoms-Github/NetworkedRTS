@@ -1,7 +1,7 @@
 use netcode::*;
 use ggez::{*};
 use std::sync::Arc;
-use crate::ecs::{ActiveEcs, GlobalEntityID};
+use crate::ecs::{GlobalEntityID};
 use ggez::graphics::{DrawParam, Text};
 use nalgebra::Point2;
 use crate::ecs::pending_entity::PendingEntity;

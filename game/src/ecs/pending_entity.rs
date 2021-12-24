@@ -8,11 +8,11 @@ use super::comp_store::SingleComp;
 use crate::ecs::bblocky::super_any::SuperAny;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct PendingEntity{
-    data: BTreeMap<TypeIdNum, SingleComp>,
+pub struct PendingEntity<C>{
+    data: BTreeMap<TypeIdNum, SingleComp<C>>,
 }
 
-impl PendingEntity {
+impl<C> PendingEntity<C> {
     pub fn new() -> Self{
         Self::default()
     }
@@ -23,13 +23,13 @@ impl PendingEntity {
         }
         return types;
     }
-    pub fn iter(&self) -> std::collections::btree_map::Iter<TypeIdNum, SingleComp>{ // Optimum make it return move instead of reference (then clone).
+    pub fn iter(&self) -> std::collections::btree_map::Iter<TypeIdNum, SingleComp<C>>{ // Optimum make it return move instead of reference (then clone).
         return self.data.iter();
     }
     pub fn add_comp<T: 'static + Send>(&mut self, value: T) {
         assert!(self.set_comp(value).is_none(), "Pending entity already contained that component type!");
     }
-    pub fn set_comp<T: 'static + Send>(&mut self, value: T) -> Option<SingleComp> {
+    pub fn set_comp<T: 'static + Send>(&mut self, value: T) -> Option<SingleComp<C>> {
         let bytes = unsafe {crate::unsafe_utils::struct_as_u8_slice(&value)}.to_vec();
         return self.data.insert(crate::utils::gett::<T>(), SuperAny::new(value));
     }

@@ -23,10 +23,10 @@ use super::comp_registration::*;
 
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SuperAny {
-    pub list: SuperVec,
+pub struct SuperAny<C> {
+    pub list: SuperVec<C>,
 }
-impl SuperAny {
+impl<C> SuperAny<C> {
     pub fn new<T : 'static + Send>(item: T) -> Self{
         Self{
             list: SuperVec::new_and_push(item),

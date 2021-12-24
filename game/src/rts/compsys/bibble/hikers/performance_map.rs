@@ -17,7 +17,7 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 
 pub static PERFORMANCE_MAP: System = System{
     run,
-    name: "orders"
+    name: "performance_map"
 };
 fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
     if let Some(arena) = c.find_arena(){

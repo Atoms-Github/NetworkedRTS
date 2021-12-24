@@ -7,11 +7,12 @@ use mint::Point2;
 use ggez::graphics::Color;
 use serde::*;
 pub use netcode::*;
+use crate::ecs::comp_store::CompStorage;
+use crate::rts::GameStateJigsaw;
 
 
-
-
-
+pub type JigsawComps = CompStorage<GameStateJigsaw>;
+pub type RtsComps = CompStorage<GameStateJigsaw>;
 pub type PointFloat = nalgebra::VectorN<f32, U2>;
 pub type PointInt = nalgebra::VectorN<i32, U2>;
 pub type ZType = u16;

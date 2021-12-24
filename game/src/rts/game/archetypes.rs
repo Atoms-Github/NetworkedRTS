@@ -8,7 +8,7 @@ use crate::bibble::data::data_types::{WeaponID, GameData, RaceID};
 use ggez::graphics::Color;
 use crate::rts::game::z_values::ZValue;
 
-impl PendingEntity{
+impl<C> PendingEntity<C>{
     // pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> Self{
     //     Self::new7(
     //         RenderComp{ colour: (100,50,50) },
