@@ -18,11 +18,6 @@ impl JigsawPieceComp{
                                self.coords.y as f32 * JIGSAW_PIECE_SIZE);
     }
 }
-impl JigsawPieceComp{
-    pub fn get_nearby_connected(&self, c: CompStorage) -> Vec<GlobalEntityID>{
-        vec![]
-    }
-}
 
 pub static JIGSAW_PIECE_SYS: System = System{
     run,
