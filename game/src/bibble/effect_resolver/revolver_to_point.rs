@@ -9,7 +9,7 @@ use crate::ecs::ecs_macros::{CompIter3, CompIter2};
 use crate::utils;
 use crate::rts::compsys::the_map::arena::PlotFlooring;
 
-impl<'a> Revolver<'a>{
+impl<'a, C> Revolver<'a, C>{
     pub fn revolve_to_point(&mut self, data: &GameData, effect: &EffectToPoint, target: &PointFloat, owner: GlobalEntityID){
         match effect{
             EffectToPoint::SPAWN_UNIT(unit_id) => {

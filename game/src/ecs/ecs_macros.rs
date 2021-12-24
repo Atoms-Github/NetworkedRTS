@@ -12,19 +12,19 @@ macro_rules! msystem {
     () => ()
 }
 
-
-
 #[macro_export] // Can remove.
 macro_rules! comp_iter_def {
-	($query_name:ident, $get_name:ident, $get_name_unwrap:ident, $new_name:ident, $($type_name:ident),+) => {
+    // comp_iter_def!(CompIter1, get1, get1_unwrap, new1, A);
+	($query_name:ident/*CompIter1*/, $get_name:ident/*get1*/, $get_name_unwrap:ident/*get1_unwrap*/,
+    $new_name:ident/*new1*/, $($type_name:ident)/*A*/,+) => {
         #[allow(non_snake_case)]
-        pub struct $query_name<'a, $($type_name: 'static + Send,)+> {
+        pub struct $query_name<'a, Z, $($type_name: 'static + Send,)+> {
             $($type_name: PhantomData<$type_name>,)+
-            ecs: &'a CompStorage,
+            ecs: &'a CompStorage<Z>,
             vec: Vec<GlobalEntityID>,
         }// C:/Users/tomul/.rustup/toolchains/nightly-x86_64-pc-windows-gnu/lib/rustlib/src/rust/library/core/src/slice/iter.rs:66
-        impl<'a, $($type_name: 'static + Send,)+> $query_name<'a, $($type_name,)+>{
-            pub fn new(ecs: &'a CompStorage) -> Self{
+        impl<'a, Z, $($type_name: 'static + Send,)+> $query_name<'a, Z, $($type_name,)+>{
+            pub fn new(ecs: &'a CompStorage<Z>) -> Self{
                 let mut my_vec = ecs.query(vec![$(gett::<$type_name>()),+]).iter().as_slice().to_vec();
                 Self{
                     $($type_name: Default::default(),)+
@@ -33,7 +33,7 @@ macro_rules! comp_iter_def {
                 }
             }
         }
-        impl<'a, $($type_name: 'static + Send,)+> Iterator for $query_name<'a, $($type_name,)+>{
+        impl<'a, Z, $($type_name: 'static + Send,)+> Iterator for $query_name<'a, Z, $($type_name,)+>{
             type Item = (GlobalEntityID, $(&'a mut $type_name),+);
             fn next(&mut self) -> Option<Self::Item> {
                 let entity_id = self.vec.pop()?;
@@ -45,7 +45,7 @@ macro_rules! comp_iter_def {
             }
         }
         #[allow(unused_parens)]
-        impl CompStorage{
+        impl<Z> CompStorage<Z>{
             pub fn $get_name<$($type_name : 'static + Send),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
                 return ($(self.get_mut::<$type_name>(entity_id)),+ );
             }
@@ -54,7 +54,7 @@ macro_rules! comp_iter_def {
             }
         }
         #[allow(unused_parens, non_snake_case)]
-        impl PendingEntity{
+        impl <Z> PendingEntity<Z>{
             pub fn $new_name<$($type_name : 'static + Send),+>($($type_name: $type_name),+) -> Self{
                 let mut pending = Self::new();
                 $(pending.add_comp($type_name);)+

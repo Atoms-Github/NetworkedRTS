@@ -5,7 +5,7 @@ use crate::ecs::comp_store::CompStorage;
 use crate::bibble::effect_resolver::revolver::Revolver;
 
 
-impl<'a> Revolver<'a> {
+impl<'a, C> Revolver<'a, C> {
     pub fn revolve_unit_to_unit(&mut self, data: &GameData, effect: &EffectUnitToUnit, source: GlobalEntityID, target: GlobalEntityID) {
         match effect {
             EffectUnitToUnit::INSTA_AFFECT_TARGET(to_unit) => {

@@ -7,7 +7,7 @@ use crate::bibble::effect_resolver::revolver::Revolver;
 use crate::pub_types::PointFloat;
 
 
-impl<'a> Revolver<'a>{
+impl<'a, C> Revolver<'a, C>{
     pub fn revolve_unit_to_point(&mut self, data: &GameData, effect: &EffectUnitToPoint, source: GlobalEntityID,
                                  target: &PointFloat){
         let owner = self.c.get1_unwrap::<OwnedComp>(source).owner;

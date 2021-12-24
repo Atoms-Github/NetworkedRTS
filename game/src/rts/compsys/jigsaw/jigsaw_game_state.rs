@@ -59,7 +59,6 @@ pub fn global_get_systems() -> Vec<System<GameStateJigsaw>>{
         LOSS_SYS.clone(),
         NO_LEAVE_MAP.clone(),
         LOBBY_SYS.clone(),
-        UI_SYS.clone(),
         JIGSAW_PIECE_SYS.clone(),
         JIGSAW_MAT_SYS.clone(),
         CURSOR_SYS.clone(),

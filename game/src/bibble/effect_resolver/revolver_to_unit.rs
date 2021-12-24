@@ -6,7 +6,7 @@ use crate::rts::compsys::*;
 use crate::bibble::effect_resolver::revolver::Revolver;
 
 
-impl<'a> Revolver<'a>{
+impl<'a, C> Revolver<'a, C>{
     pub fn revolve_to_unit(&mut self, data: &GameData, effect: &EffectToUnit, target: GlobalEntityID){
         match effect{
             EffectToUnit::DAMAGE(damage) => {
