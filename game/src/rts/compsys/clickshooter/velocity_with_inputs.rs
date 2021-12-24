@@ -9,11 +9,13 @@ pub struct VelocityWithInputsComp {
     pub speed: f32,
 }
 
-pub static VELOCITY_WITH_INPUTS_SYS: System = System{
-    run,
-    name: "velocity_with_inputs"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn velocity_with_inputs_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "velocity_with_inputs"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     for (ent, velocity, velocity_with_inputs, owned) in
     CompIter3::<VelocityComp, VelocityWithInputsComp, OwnedComp>::new(c){
         let my_inputs = &c.get::<InputComp>(owned.owner).unwrap().inputs.primitive;

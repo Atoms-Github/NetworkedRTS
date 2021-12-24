@@ -15,11 +15,13 @@ use nalgebra::{distance, distance_squared};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
 
-pub static NO_LEAVE_MAP: System = System{
-    run,
-    name: "orders"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn leave_map_no_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "leave_map_no"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     if let Some(arena) = c.find_arena(){
         for (unit_id, position)
         in CompIter1::<PositionComp>::new(c) {

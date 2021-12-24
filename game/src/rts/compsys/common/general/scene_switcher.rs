@@ -38,11 +38,13 @@ pub enum SceneType{
     None,
 }
 
-pub static SCENE_SWITCHER_SYS: System = System{
-    run,
-    name: "scene_switcher"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn scene_switcher_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "scene_switcher"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     let scene = c.get_mut_unwrap::<SceneManager>(SCENE_MAN_ENT_ID);
     // Update current connected player count:
     scene.connected_players = 0;
@@ -176,7 +178,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
     }
 }
 
-fn spawn_player_ingame(ent_changes: &mut EntStructureChanges, c: &CompStorage, player_id: GlobalEntityID, race: RaceID, arena: &mut ArenaComp){
+fn spawn_player_ingame<C>(ent_changes: &mut EntStructureChanges<C>, c: &CompStorage<C>, player_id: GlobalEntityID, race: RaceID, arena: &mut ArenaComp){
     let spawn_point = get_player_spawn(player_id, arena, c.find_scene().connected_players as f32);
 
     let mut revolver = Revolver::new(c);

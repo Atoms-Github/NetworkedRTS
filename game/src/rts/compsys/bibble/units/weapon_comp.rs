@@ -18,11 +18,13 @@ pub struct WeaponComp {
     pub wep_ability_id: AbilityID,
 }
 
-pub static WEAPON_SYS: System = System{
-    run,
-    name: "weapon"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn weapon_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "weapon"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
 
     // Check for move commands.
     for (player_id, inputs) in CompIter1::<InputComp>::new(c) {

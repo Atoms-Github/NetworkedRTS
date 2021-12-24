@@ -15,11 +15,13 @@ use crate::bibble::data::data_types::{EffectToPoint, UnitID};
 pub struct SelBoxComp{
     pub starting_pos: PointFloat
 }
-pub static SELECTION_BOX_SYS: System = System{
-    run,
-    name: "selection_box"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn selection_box_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "selection_box"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     let scene = c.find_scene();
     if scene.current == SceneType::InJigsaw{
         return;
@@ -52,7 +54,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
     revolver.end().move_into(ent_changes);
 }
 
-fn check_delete_box(c: &CompStorage, ent_changes: &mut EntStructureChanges,  player_id: GlobalEntityID) {
+fn check_delete_box<C>(c: &CompStorage<C>, ent_changes: &mut EntStructureChanges<C>,  player_id: GlobalEntityID) {
     let input = c.get1_unwrap::<InputComp>(player_id);
     if input.inputs.mouse_event == RtsMouseEvent::MouseUp {
         if let Some(box_id) = get_box(c, player_id){
@@ -63,7 +65,7 @@ fn check_delete_box(c: &CompStorage, ent_changes: &mut EntStructureChanges,  pla
     }
 }
 
-fn check_create_box(c: &CompStorage, ent_changes: &mut EntStructureChanges, player_id: GlobalEntityID, input: &mut InputComp) {
+fn check_create_box<C>(c: &CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, player_id: GlobalEntityID, input: &mut InputComp) {
     let input = c.get1_unwrap::<InputComp>(player_id);
     // if input.hovered_entity.is_none() {
         if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Left) {
@@ -74,7 +76,7 @@ fn check_create_box(c: &CompStorage, ent_changes: &mut EntStructureChanges, play
         }
     // }
 }
-fn get_box(c: &CompStorage, player_id: GlobalEntityID) -> Option<GlobalEntityID>{
+fn get_box<C>(c: &CompStorage<C>, player_id: GlobalEntityID) -> Option<GlobalEntityID>{
     for (box_id, sel, size, position, owner) in CompIter4::<SelBoxComp, SizeComp, PositionComp, OwnedComp>::new(c) {
         if owner.owner == player_id {
             return Some(box_id);
@@ -82,7 +84,7 @@ fn get_box(c: &CompStorage, player_id: GlobalEntityID) -> Option<GlobalEntityID>
     }
     return None;
 }
-fn deselect_all(c: &CompStorage, player_id: GlobalEntityID) {
+fn deselect_all<C>(c: &CompStorage<C>, player_id: GlobalEntityID) {
     for (box_id, sel, owner) in CompIter2::<SelectableComp, OwnedComp>::new(c) {
         if owner.owner == player_id {
             sel.is_selected = false;
@@ -90,7 +92,7 @@ fn deselect_all(c: &CompStorage, player_id: GlobalEntityID) {
     }
 }
 
-fn select_units_in_box(c: &CompStorage, box_id: GlobalEntityID) -> bool{
+fn select_units_in_box<C>(c: &CompStorage<C>, box_id: GlobalEntityID) -> bool{
     let (owned_box, position_box, size_box) = c.get3_unwrap::<OwnedComp, PositionComp, SizeComp>(box_id);
 
     let sel_box_rect = size_box.get_as_rect(position_box);

@@ -19,10 +19,12 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use crate::bibble::data::data_types::__private::Formatter;
 use crate::ecs::superb_ecs::EcsConfig;
+use std::marker::PhantomData;
 
 
 #[derive(PartialEq)]
 pub struct SuperVec<C> {
+    phantom: PhantomData<C>,
     item_size: usize,
     data: Vec<u8>,
     item_type: TypeIdNum,

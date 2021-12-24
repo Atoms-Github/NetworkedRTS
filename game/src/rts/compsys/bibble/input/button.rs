@@ -10,11 +10,13 @@ pub struct ClickableComp {
     pub clicking_on: Option<GlobalEntityID>
 }
 
-pub static BUTTON_SYS: System = System{
-    run,
-    name: "button"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn button_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "button"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     // Clear all clicking ons.
     for (button_id, button) in CompIter1::<ClickableComp>::new(c){
         button.clicking_on = None;

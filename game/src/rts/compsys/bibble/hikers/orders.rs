@@ -68,11 +68,13 @@ impl OrdersComp{
     }
 }
 
-pub static ORDERS_SYS: System = System{
-    run,
-    name: "orders"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn orders_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "orders"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
 
     // Check for dead target.
     for (unit_id, owned, orders, position, hiker)

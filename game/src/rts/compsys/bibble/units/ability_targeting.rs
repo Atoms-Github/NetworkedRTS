@@ -11,11 +11,13 @@ use std::ops::Div;
 use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode, AbilityTargetType};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
-pub static ABILITY_TARGETING: System = System{
-    run,
-    name: "ability_targeting"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn ability_targeting_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "ability_targeting"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     // Check for starting ability targetting:
     for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
         if let RtsKeyEvent::KeyDown(down_key) = input.inputs.key_event{

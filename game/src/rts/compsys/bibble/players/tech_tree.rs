@@ -14,16 +14,16 @@ pub struct TechTreeComp {
 }
 
 pub trait MyGlobalEntityID{
-    fn get_owner_tech_tree<'a>(&self, c: &'a CompStorage) -> &'a mut GameData;
-    fn get_player_tech_tree<'a>(&self, c: &'a CompStorage) -> &'a mut GameData;
+    fn get_owner_tech_tree<'a, C>(&self, c: &'a CompStorage<C>) -> &'a mut GameData;
+    fn get_player_tech_tree<'a, C>(&self, c: &'a CompStorage<C>) -> &'a mut GameData;
 
 }
 impl MyGlobalEntityID for GlobalEntityID{
-    fn get_owner_tech_tree<'a>(&self, c: &'a CompStorage) -> &'a mut GameData{
+    fn get_owner_tech_tree<'a, C>(&self, c: &'a CompStorage<C>) -> &'a mut GameData{
         let owner = c.get::<OwnedComp>(*self).unwrap().owner;
         return &mut c.get_mut::<TechTreeComp>(owner).unwrap().tree;
     }
-    fn get_player_tech_tree<'a>(&self, c: &'a CompStorage) -> &'a mut GameData{
+    fn get_player_tech_tree<'a, C>(&self, c: &'a CompStorage<C>) -> &'a mut GameData{
         return &mut c.get_mut::<TechTreeComp>(*self).unwrap().tree;
     }
 }

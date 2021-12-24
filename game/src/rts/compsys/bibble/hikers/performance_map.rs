@@ -15,11 +15,13 @@ use nalgebra::{distance, distance_squared};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
 
-pub static PERFORMANCE_MAP: System = System{
-    run,
-    name: "performance_map"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn performance_map_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "performance_map"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     if let Some(arena) = c.find_arena(){
         arena.clear_performance_map();
         for (unit_id, position, owned, life)

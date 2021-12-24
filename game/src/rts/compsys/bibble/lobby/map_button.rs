@@ -17,11 +17,13 @@ pub struct MapButtonComp {
     pub map: String,
 }
 
-pub static MAP_BUTTON_SYS: System = System{
-    run,
-    name: "map_button_sys"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn map_button_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "map_button"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     for (button_id, button, map_button, render) in CompIter3::<ClickableComp, MapButtonComp, RenderComp>::new(c){
         if let Some(player_id) = button.clicking_on{
             for (map_button_id, map_button) in CompIter1::<MapButtonComp>::new(c){

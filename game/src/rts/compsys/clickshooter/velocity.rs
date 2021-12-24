@@ -8,11 +8,13 @@ pub struct VelocityComp {
     pub vel: PointFloat,
 }
 
-pub static VELOCITY_SYS: System = System{
-    run,
-    name: "velocity"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn velocity_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "velocity"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     for (entity_id, velocity, position) in CompIter2::<VelocityComp, PositionComp>::new(c){
         position.pos += &velocity.vel;
     }

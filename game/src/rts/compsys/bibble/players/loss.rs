@@ -11,11 +11,13 @@ use std::ops::Div;
 use crate::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode, AbilityTargetType};
 use crate::bibble::effect_resolver::revolver::Revolver;
 
-pub static LOSS_SYS: System = System{
-    run,
-    name: "loss"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn loss_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "loss"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     let scene = c.find_scene();
 
     if scene.current == SceneType::InGame{

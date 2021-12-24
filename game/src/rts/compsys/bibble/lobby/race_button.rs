@@ -16,11 +16,13 @@ pub struct RaceButtonComp {
     pub race: RaceID,
 }
 
-pub static RACE_BUTTON_SYS: System = System{
-    run,
-    name: "race_button_sys"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn race_button_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "race_button"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     for (button_id, button, race_button) in CompIter2::<ClickableComp, RaceButtonComp>::new(c){
         if let Some(player_id) = button.clicking_on{
             c.get_mut_unwrap::<PlayerComp>(player_id).race = race_button.race;

@@ -18,11 +18,13 @@ pub struct LobbyManager{ // Means keep when scene changes.
     pub game_start_cooldown: f32,
 }
 
-pub static LOBBY_SYS: System = System{
-    run,
-    name: "lobby"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn lobby_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "lobby"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     let scene = c.find_scene();
     for (lobby_id, lobby) in CompIter1::<LobbyManager>::new(c){
         lobby.game_start_cooldown -= meta.delta;

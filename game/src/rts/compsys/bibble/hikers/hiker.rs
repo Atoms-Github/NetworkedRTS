@@ -65,11 +65,13 @@ impl HikerComp{
 }
 
 
-pub static HIKER_SYS: System = System{
-    run,
-    name: "hiker"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn hiker_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "hiker"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     if let Some(arena) = c.find_arena(){
         // Calculating waypoints.
         for (unit_id, hiker, position, order) in

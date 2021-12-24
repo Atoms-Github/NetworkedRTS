@@ -14,11 +14,13 @@ pub struct WorkerComp {
 }
 
 
-pub static WORKER_SYS: System = System{
-    run,
-    name: "worker"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn worker_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "worker"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     for (worker_id, life, owned, worker) in
     CompIter3::<LifeComp, OwnedComp, WorkerComp>::new(c) {
         let resources_comp = c.get_mut::<OwnsResourcesComp>(owned.owner).unwrap();

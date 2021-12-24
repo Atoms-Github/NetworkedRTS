@@ -17,11 +17,13 @@ pub struct HikerCollisionComp {
     pub radius: f32,
     pub fly: bool,
 }
-pub static HIKER_COLLISION_SYS: System = System{
-    run,
-    name: "hiker_collision"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn hiker_collision_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "hiker_collision"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     do_bops(c);
     // Do walls:
     if let Some(arena) = c.find_arena(){
@@ -50,7 +52,7 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
     }
 }
 
-fn do_bops(c: &mut CompStorage) {
+fn do_bops<C>(c: &mut CompStorage<C>) {
     let unit_ids = c.query(vec![
         crate::utils::gett::<HikerCollisionComp>(),
         crate::utils::gett::<HikerComp>(),

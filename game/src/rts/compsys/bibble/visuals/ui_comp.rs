@@ -19,11 +19,13 @@ pub enum AnchorCorner{
     TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT,
 }
 
-pub static UI_SYS: System = System{
-    run,
-    name: "ui"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn ui_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "ui"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     // // Increment time since use timers.
     // for (ui_id, ui, position, owned_comp)
     // in CompIter2::<UIComp, PositionComp>::new(c) {

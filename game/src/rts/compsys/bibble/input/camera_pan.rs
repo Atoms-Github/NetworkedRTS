@@ -13,7 +13,7 @@ pub struct CameraComp{
 }
 
 impl CameraComp{
-    pub fn get_as_screen_transform(&self, ecs: &CompStorage, entity_id: GlobalEntityID) -> (PointFloat, PointFloat){
+    pub fn get_as_screen_transform<C>(&self, ecs: &CompStorage<C>, entity_id: GlobalEntityID) -> (PointFloat, PointFloat){
         let position_comp  = ecs.get::<PositionComp>(entity_id).unwrap();
         let size_comp  = &ecs.get::<SizeComp>(entity_id).unwrap();
 
@@ -36,11 +36,13 @@ impl CameraComp{
     }
 }
 
-pub static CAMERA_PAN_SYS: System = System{
-    run,
-    name: "camera_pan"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn camera_pan_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "camera_pan"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
         if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
             input.is_panning = true;

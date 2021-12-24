@@ -17,11 +17,13 @@ pub struct JigsawMatComp{
 }
 
 
-pub static JIGSAW_MAT_SYS: System = System{
-    run,
-    name: "jigsaw_mat"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn jigsaw_mat_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "jigsaw_mat"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
     let scene = c.find_scene();
     if let Some(mat_comp) = c.find_jigsaw_mat(){
         // Check for jigsaw end on F3.

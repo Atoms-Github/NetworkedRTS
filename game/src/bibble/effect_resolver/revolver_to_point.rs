@@ -42,7 +42,7 @@ impl<'a, C> Revolver<'a, C>{
                 }
             }
             EffectToPoint::EFFECT_NEARBY_UNITS(effect, range) => {
-                for (unit_id, position, life) in CompIter2::<PositionComp, LifeComp>::new(self.c){
+                for (unit_id, position, life) in CompIter2::<C, PositionComp, LifeComp>::new(self.c){
                     if (position.pos.clone() - target).magnitude() < *range{
                         self.revolve_to_unit(data, effect, unit_id);
                     }

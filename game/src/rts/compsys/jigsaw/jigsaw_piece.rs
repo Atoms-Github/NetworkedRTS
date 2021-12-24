@@ -19,11 +19,13 @@ impl JigsawPieceComp{
     }
 }
 
-pub static JIGSAW_PIECE_SYS: System = System{
-    run,
-    name: "jigsaw_piece"
-};
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+pub fn jigsaw_piece_sys<C>() -> System<C>{
+    System{
+        run,
+        name: "jigsaw_piece"
+    }
+}
+fn run<C>(c: &mut CompStorage<C>, ent_changes: &mut EntStructureChanges<C>, meta: &SimMetadata){
 
 }
 
