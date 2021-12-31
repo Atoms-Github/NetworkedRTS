@@ -27,58 +27,6 @@ use crate::bibble::data::data_types::__private::Formatter;
 // use super::my_benchmark::BenchStruct;
 
 
-lazy_static! {
-    pub static ref FUNCTION_MAP: FunctionMap = {
-        let mut map = FunctionMap::default();
-        map.register_type::<TestStructA>();
-        map.register_type::<TestStructB>();
-        map.register_type::<TestStructC>();
-        map.register_type::<TestComp0>();
-        map.register_type::<TestComp1>();
-        map.register_type::<ShootMouseComp>();
-        map.register_type::<VelocityComp>();
-        map.register_type::<VelocityWithInputsComp>();
-        map.register_type::<PositionComp>();
-        map.register_type::<RadiusComp>();
-        map.register_type::<SizeComp>();
-        map.register_type::<CollisionComp>();
-        map.register_type::<HikerComp>();
-        map.register_type::<HikerCollisionComp>();
-        map.register_type::<LifeComp>();
-        map.register_type::<OrdersComp>();
-        map.register_type::<SelectableComp>();
-        map.register_type::<CameraComp>();
-        map.register_type::<InputComp>();
-        map.register_type::<SelectableComp>();
-        map.register_type::<SelBoxComp>();
-        map.register_type::<OwnedComp>();
-        map.register_type::<OwnsResourcesComp>();
-        map.register_type::<PlayerComp>();
-        map.register_type::<ArenaComp>();
-        map.register_type::<AbilitiesComp>();
-        map.register_type::<WeaponComp>();
-        map.register_type::<WorkerComp>();
-        map.register_type::<RenderComp>();
-        map.register_type::<TechTreeComp>();
-        map.register_type::<SeekingProjComp>();
-        map.register_type::<SceneManager>();
-        map.register_type::<ScenePersistent>();
-        map.register_type::<LobbyManager>();
-        map.register_type::<ClickableComp>();
-        map.register_type::<RaceButtonComp>();
-        map.register_type::<MapButtonComp>();
-        map.register_type::<UIComp>();
-        map.register_type::<UnitStructureComp>();
-        map.register_type::<JigsawPieceComp>();
-        map.register_type::<JigsawPlayerComp>();
-        map.register_type::<JigsawMatComp>();
-        map.register_type::<CursorComp>();
-        map.register_type::<IgnoreHoverComp>();
-        // map.register_type::<BenchStruct>();
-
-        map
-    };
-}
 
 pub struct EcsConfig{
     pub functions: FunctionMap,
@@ -91,7 +39,6 @@ pub struct FunctionMap{
 }
 impl Hash for FunctionMap{
     fn hash<H: Hasher>(&self, state: &mut H) {
-        todo!()
     }
 }
 impl Debug for FunctionMap{

@@ -5,18 +5,33 @@ use anymap::AnyMap;
 use crate::ecs::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
+use std::fmt::{Debug, Formatter};
+use crate::pub_types::{SimMetadata, SimQuality};
+use std::hash::{Hash, Hasher};
+use crate::ecs::ecs_debug_timer::EcsDebugTimer;
+use crate::ecs::bblocky::comp_registration::EcsConfig;
+use rand::Rng;
+use crate::ecs::pending_entity::PendingEntity;
+use crate::ecs::GlobalEntityID;
+use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SuperbEcs{
+    #[serde(skip)]
     systems: Vec<System>,
     pub c: CompStorage,
+    #[serde(skip)]
     debug_times: EcsDebugTimer,
 }
 impl SuperbEcs{
-    pub fn new(systems: Vec<System>) -> Self{
+    pub fn post_deserialize(&mut self, config: EcsConfig){
+        self.systems = config.systems.clone();
+        self.c.post_deserialize(config);
+    }
+    pub fn new(config: EcsConfig) -> Self{
         Self{
-            systems,
-            c: Default::default(),
+            systems: config.systems,
+            c: CompStorage::new(config.functions),
             debug_times: Default::default()
         }
     }
@@ -62,6 +77,7 @@ impl Clone for SuperbEcs{
         }
     }
 }
+#[derive(Clone)]
 pub struct System{
     pub run: fn(&mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges, &SimMetadata),
     pub name: &'static str,
@@ -91,126 +107,5 @@ impl EntStructureChanges{
         for del_entity in self.deleted_entities{
             other.deleted_entities.push(del_entity);
         }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ------------------------------
-//  GARBAGE BELOW HERE.
-// ------------------------------
-
-impl Clone for System {
-    fn clone(&self) -> Self {
-        Self{
-            run: self.run,
-            name: self.name.clone(),
-        }
-    }
-}
-
-impl Serialize for SuperbEcs{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-    {
-        let bytes = bincode::serialize(&self.c).unwrap();
-        serializer.serialize_bytes(bytes.as_slice())
-        // let mut state = serializer.serialize_struct("Ecs", 1)?;
-        // state.serialize_field("storage", &self.comp_storage)?;
-        // state.end()
-    }
-}
-
-
-
-struct ECSVisitor {
-}
-
-use std::fmt::{Write, Debug};
-use std::fmt;
-use crate::utils::{TypeIdNum, gett};
-use crate::rts::compsys::jigsaw::jigsaw_game_state::UsingRenderResources;
-use std::marker::PhantomData;
-use crate::ecs::GlobalEntityID;
-use std::slice::Iter;
-use crate::ecs::pending_entity::PendingEntity;
-use crate::pub_types::{SimMetadata, SimQuality};
-use crate::ecs::ecs_debug_timer::EcsDebugTimer;
-use rand::Rng;
-use std::hash::{Hash, Hasher};
-use crate::bibble::data::data_types::__private::Formatter;
-
-impl ECSVisitor {
-    fn new() -> Self {
-        ECSVisitor {}
-    }
-}
-trait TraitTest{
-
-}
-impl<'de> Visitor<'de> for ECSVisitor
-{
-    type Value = SuperbEcs;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("An ECS")
-    }
-
-    fn visit_bytes<E>(self, bytes: &[u8]) -> Result<Self::Value, E>
-    {
-        let comp_store = bincode::deserialize::<CompStorage>(bytes).unwrap();
-
-        return Ok(SuperbEcs{
-            systems: crate::rts::compsys::jigsaw::jigsaw_game_state::global_get_systems(),
-            c: comp_store,
-            debug_times: Default::default()
-        });
-    }
-}
-
-impl<'de> Deserialize<'de> for SuperbEcs
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
-    {
-        deserializer.deserialize_bytes(ECSVisitor::new())
     }
 }

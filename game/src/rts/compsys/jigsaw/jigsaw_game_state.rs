@@ -7,16 +7,17 @@ use nalgebra::Point2;
 use crate::ecs::pending_entity::PendingEntity;
 use serde_closure::internal::std::future::Pending;
 pub use crate::utils::gett;
-use crate::ecs::superb_ecs::System;
+use crate::ecs::superb_ecs::{System, SuperbEcs};
 use crate::rts::compsys::player::{PlayerComp};
 use crate::rts::compsys::*;
-use crate::bibble::data::data_types::{GameData, RaceID};
+use crate::bibble::data::data_types::{GameData, RaceID, Deserializer};
 use crate::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use crate::rts::game::render_resources::RenderResources;
 use rand::Rng;
 use netcode::common::net_game_state::GameState;
+use crate::ecs::bblocky::comp_registration::{EcsConfig, FunctionMap};
 
 pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
@@ -59,7 +60,7 @@ pub fn global_get_systems() -> Vec<System>{
 }
 
 
-#[derive(Clone, Serialize, Deserialize, Hash, Debug)]
+#[derive(Clone, Serialize, Hash, Debug)]
 pub struct GameStateJigsaw {
     ecs: ActiveEcs,
 }
@@ -75,7 +76,7 @@ impl Default for GameStateJigsaw {
 impl GameState for GameStateJigsaw {
     fn new() -> Self {
         Self{
-            ecs: ActiveEcs::new(global_get_systems()),
+            ecs: ActiveEcs::new(get_config()),
         }
     }
     fn init(&mut self){
@@ -131,4 +132,68 @@ impl GameState for GameStateJigsaw {
     }
 
     type Resources = RenderResources;
+}
+fn get_functions() -> FunctionMap{
+    let mut map = FunctionMap::default();
+    map.register_type::<ShootMouseComp>();
+    map.register_type::<VelocityComp>();
+    map.register_type::<VelocityWithInputsComp>();
+    map.register_type::<PositionComp>();
+    map.register_type::<RadiusComp>();
+    map.register_type::<SizeComp>();
+    map.register_type::<CollisionComp>();
+    map.register_type::<HikerComp>();
+    map.register_type::<HikerCollisionComp>();
+    map.register_type::<LifeComp>();
+    map.register_type::<OrdersComp>();
+    map.register_type::<SelectableComp>();
+    map.register_type::<CameraComp>();
+    map.register_type::<InputComp>();
+    map.register_type::<SelectableComp>();
+    map.register_type::<SelBoxComp>();
+    map.register_type::<OwnedComp>();
+    map.register_type::<OwnsResourcesComp>();
+    map.register_type::<PlayerComp>();
+    map.register_type::<ArenaComp>();
+    map.register_type::<AbilitiesComp>();
+    map.register_type::<WeaponComp>();
+    map.register_type::<WorkerComp>();
+    map.register_type::<RenderComp>();
+    map.register_type::<TechTreeComp>();
+    map.register_type::<SeekingProjComp>();
+    map.register_type::<SceneManager>();
+    map.register_type::<ScenePersistent>();
+    map.register_type::<LobbyManager>();
+    map.register_type::<ClickableComp>();
+    map.register_type::<RaceButtonComp>();
+    map.register_type::<MapButtonComp>();
+    map.register_type::<UIComp>();
+    map.register_type::<UnitStructureComp>();
+    map.register_type::<JigsawPieceComp>();
+    map.register_type::<JigsawPlayerComp>();
+    map.register_type::<JigsawMatComp>();
+    map.register_type::<CursorComp>();
+    map.register_type::<IgnoreHoverComp>();
+    // map.register_type::<BenchStruct>();
+    map
+}
+fn get_config() -> EcsConfig{
+    EcsConfig{
+        functions: get_functions(),
+        systems: global_get_systems()
+    }
+}
+impl<'de> Deserialize<'de> for GameStateJigsaw{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
+        let e = ActiveEcs::deserialize(deserializer);
+        match e{
+            Ok(mut ecs) => {
+                ecs.post_deserialize(get_config());
+                Ok(Self{
+                    ecs
+                })
+            }
+            Err(err) => {Err(err)}
+        }
+    }
 }

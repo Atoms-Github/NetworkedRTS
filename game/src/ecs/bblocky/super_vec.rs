@@ -146,6 +146,12 @@ impl SuperVec {
     pub fn get_mut<T : 'static>(&mut self, index: usize) -> Option<&mut T>{
         return self.get(index).map(|item| unsafe {very_bad_function(item)});
     }
+    pub fn get_functions(&self) -> &SuperbFunctions{
+        match &self.functions{
+            SuperVecData::Serialized(_) => {panic!()}
+            SuperVecData::Runtime(functions) => {functions}
+        }
+    }
 }
 impl Clone for SuperVec {
     fn clone(&self) -> Self {
@@ -167,7 +173,7 @@ impl Clone for SuperVec {
 }
 impl Hash for SuperVec{
     fn hash<H: Hasher>(&self, state: &mut H) {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = self.get_functions();
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
             let serialized_bytes = (functions.meme_ser)(bytes);
