@@ -9,7 +9,6 @@ pub struct Args{
 pub enum LaunchType{
     CLIENT, SERVER
 }
-// E
 impl Args{
     pub fn gather() -> Self{
         let mut args: Vec<String> = env::args().collect();

@@ -9,6 +9,7 @@ use crate::ecs::bblocky::*;
 use crate::ecs::bblocky::super_any::SuperAny;
 use crate::ecs::bblocky::super_vec::SuperVec;
 use crate::pub_types::ZType;
+use crate::ecs::bblocky::comp_registration::{EcsConfig, FunctionMap};
 
 pub type SingleComp = SuperAny;
 pub type MyBlock = SuperVec;
@@ -29,6 +30,8 @@ pub struct InternalEntity {
 
 #[derive(Clone, Default, Serialize, Deserialize, Hash, Debug)]
 pub struct CompStorage {
+    #[serde(skip)]
+    functions: FunctionMap,
     columns: BTreeMap<TypeIdNum, Column>,
     internal_entities: Box<GlorifiedHashMap>, // Box to avoid stack overflow.
     composition_ids: BTreeMap<TypesSet, CompositionID>,
@@ -39,6 +42,14 @@ pub struct DeleteResult{
 
 }
 impl CompStorage{
+    pub fn post_deserialize(&mut self, config: EcsConfig){
+        for (a,b) in &mut self.columns{
+            for c in b{
+                c.post_deserialize(&config);
+            }
+        }
+        self.functions = config.functions;
+    }
     // TODO: Swap get and get unwrap, and call them get and get_maybe.
     pub fn get_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
         self.get::<T>(entity_id).unwrap()
@@ -174,9 +185,10 @@ impl CompStorage{
         self.global_ids_as_comps.get_mut(composition_id).unwrap().push(global_id);
     }
     fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut MyBlock{
+        let functions = self.functions.get(type_id).clone();
         let column = self.get_column_mut_or_make_key(type_id);
         for new_block_index in column.len()..(composition_id + 1){
-            column.push(SuperVec::new(type_id));
+            column.push(SuperVec::new_from_fn(type_id, functions.clone()));
         }
         return column.get_mut(composition_id).unwrap();
     }

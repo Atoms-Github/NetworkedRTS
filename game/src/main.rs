@@ -7,6 +7,7 @@
 #![feature(drain_filter)]
 #![allow(unused_attributes)]
 #![allow(non_camel_case_types)]
+#![allow(deprecated)] // TODO:
 
 #[macro_use]
 extern crate mopa;

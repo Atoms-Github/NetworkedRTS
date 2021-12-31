@@ -26,10 +26,16 @@ pub struct SuperVec {
     data: Vec<u8>,
     item_type: TypeIdNum,
     debug_name: String,
+    functions: SuperVecData,
+}
+#[derive(PartialEq, Clone)]
+enum SuperVecData{
+    Serialized(Vec<Vec<u8>>),
+    Runtime(SuperbFunctions)
 }
 impl Debug for SuperVec{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
         let mut items = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -46,17 +52,40 @@ impl Debug for SuperVec{
 
 
 impl SuperVec {
-    pub fn new(item_type: TypeIdNum) -> Self{
-        let functions = FUNCTION_MAP.get(item_type);
+    pub fn post_deserialize(&mut self, config: &EcsConfig){
+        let functions = config.functions.get(self.item_type);
+        let mut data = vec![];
+        let serialized_data = crate::utils::unwrap!(SuperVecData::Serialized, &self.functions);
+        for serialized in serialized_data{
+            let mut forgotten_item = (functions.meme_deser_and_forget)(&serialized);
+            data.append(&mut forgotten_item);
+        }
+
+        self.data = data;
+        self.functions = SuperVecData::Runtime(functions.clone());
+        self.debug_name = functions.debug_name.clone();
+    }
+    pub fn new_from_fn(id: TypeIdNum, functions: SuperbFunctions) -> Self{
         Self{
             item_size: functions.item_size,
             data: vec![],
-            item_type,
-            debug_name: functions.debug_name.clone()
+            item_type: id,
+            debug_name: functions.debug_name.clone(),
+            functions: SuperVecData::Runtime(functions),
         }
     }
-    pub fn new_and_push<T : 'static + Send>(item: T) -> Self{
-        let mut vec = Self::new(gett::<T>());
+    pub fn new<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>() -> Self{
+        let functions = get_functions::<T>();
+        Self{
+            item_size: functions.item_size,
+            data: vec![],
+            item_type: gett::<T>(),
+            debug_name: functions.debug_name.clone(),
+            functions: SuperVecData::Runtime(functions),
+        }
+    }
+    pub fn new_and_push<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>(item: T) -> Self{
+        let mut vec = Self::new::<T>();
         vec.push(item);
         return vec;
     }
@@ -101,7 +130,7 @@ impl SuperVec {
     }
     /// Properly deallocates all data referenced to by the item in position INDEX.
     pub fn drop_items_refs(&self, index: usize){
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
         (functions.deallocate_refed_mem)(self.get_as_bytes(index));
     }
 
@@ -120,7 +149,7 @@ impl SuperVec {
 }
 impl Clone for SuperVec {
     fn clone(&self) -> Self {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
         let mut data = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -132,6 +161,7 @@ impl Clone for SuperVec {
             data,
             item_type: self.item_type,
             debug_name: self.debug_name.clone(),
+            functions: self.functions.clone(),
         }
     }
 }
@@ -164,7 +194,7 @@ impl Serialize for SuperVec{
         where
             S: Serializer,
     {
-        let functions = FUNCTION_MAP.get(self.item_type);
+        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
         let mut items = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -188,18 +218,12 @@ impl<'de> Deserialize<'de> for SuperVec
             D: Deserializer<'de>,
     {
         let portable = SuperVecPortable::deserialize(deserializer).unwrap();
-
-        let functions = FUNCTION_MAP.get(portable.item_type_when_deser);
-        let mut data = vec![];
-        for serialized in portable.data{
-            let mut forgotten_item = (functions.meme_deser_and_forget)(&serialized);
-            data.append(&mut forgotten_item);
-        }
         return Ok(Self{
             item_size: portable.item_size_when_deser,
-            data,
+            data: vec![],
             item_type: portable.item_type_when_deser,
-            debug_name: functions.debug_name.clone(),
+            debug_name: "".to_string(),
+            functions: SuperVecData::Serialized(portable.data),
         });
     }
 }
