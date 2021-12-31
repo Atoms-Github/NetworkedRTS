@@ -9,7 +9,7 @@ use serde::de::DeserializeOwned;
 use crate::ecs::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
-use std::fmt::Write;
+use std::fmt::{Write, Debug};
 use std::fmt;
 use super::comp_registration::*;
 use crate::ecs::bblocky::super_vec::SuperVec;
@@ -22,12 +22,12 @@ use crate::ecs::comp_store::*;
 use super::comp_registration::*;
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct SuperAny {
     pub list: SuperVec,
 }
 impl SuperAny {
-    pub fn new<T : 'static + Send>(item: T) -> Self{
+    pub fn new<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>(item: T) -> Self{
         Self{
             list: SuperVec::new_and_push(item),
         }

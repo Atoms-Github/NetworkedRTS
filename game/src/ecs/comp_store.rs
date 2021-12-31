@@ -9,6 +9,7 @@ use crate::ecs::bblocky::*;
 use crate::ecs::bblocky::super_any::SuperAny;
 use crate::ecs::bblocky::super_vec::SuperVec;
 use crate::pub_types::ZType;
+use crate::ecs::bblocky::comp_registration::BloodBank;
 
 pub type SingleComp = SuperAny;
 pub type MyBlock = SuperVec;
@@ -19,7 +20,7 @@ pub type GenerationNum = usize;
 pub type InternalIndex = usize;
 pub type TypesSet = BTreeSet<TypeIdNum>;
 
-#[derive(Clone, Serialize, Default, Deserialize, Debug, Hash, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug, Hash, PartialEq)]
 pub struct InternalEntity {
     pub comp_types: TypesSet,
     pub global_id: GlobalEntityID,
@@ -27,8 +28,9 @@ pub struct InternalEntity {
     internal_index: InternalIndex,
 }
 
-#[derive(Clone, Default, Serialize, Deserialize, Hash, Debug)]
+#[derive(Clone, Hash, Debug)]
 pub struct CompStorage {
+    blood_bank: &'static BloodBank,
     columns: BTreeMap<TypeIdNum, Column>,
     internal_entities: Box<GlorifiedHashMap>, // Box to avoid stack overflow.
     composition_ids: BTreeMap<TypesSet, CompositionID>,
@@ -39,6 +41,17 @@ pub struct DeleteResult{
 
 }
 impl CompStorage{
+    pub fn new(blood_bank: &'static BloodBank) -> Self{
+        Self{
+            blood_bank,
+            columns: Default::default(),
+            internal_entities: Box::new(Default::default()),
+            composition_ids: Default::default(),
+            next_composition_id: 0,
+            global_ids_as_comps: vec![]
+        }
+    }
+
     // TODO: Swap get and get unwrap, and call them get and get_maybe.
     pub fn get_unwrap<T : 'static>(&self, entity_id: GlobalEntityID) -> &T{
         self.get::<T>(entity_id).unwrap()
@@ -176,7 +189,7 @@ impl CompStorage{
     fn get_block_or_make(&mut self, type_id: TypeIdNum, composition_id: CompositionID) -> &mut MyBlock{
         let column = self.get_column_mut_or_make_key(type_id);
         for new_block_index in column.len()..(composition_id + 1){
-            column.push(SuperVec::new(type_id));
+            column.push(SuperVec::new_from_blood(self.blood_bank, type_id));
         }
         return column.get_mut(composition_id).unwrap();
     }
@@ -196,6 +209,80 @@ impl CompStorage{
 
 }
 
+
+
+
+
+
+
+
+
+impl CompStorage{
+    pub fn from_bytes(&self, bytes: &Vec<u8>, blood_bank: &'static BloodBank) -> Self{
+        let portable = bincode::deserialize::<CompStoragePortable>(bytes).unwrap();
+
+        let mut columns = BTreeMap::<TypeIdNum, Column>::new();
+
+        for (t, data) in portable.columns{
+            columns.insert(t, );
+        }
+
+        let blood = blood_bank.get(portable.item_type_when_deser);
+        let mut data = vec![];
+        for serialized in portable.data{
+            let mut forgotten_item = (blood.meme_deser_and_forget)(&serialized);
+            data.append(&mut forgotten_item);
+        }
+
+        Self{
+            blood_bank,
+            columns,
+            internal_entities: portable.internal_entities,
+            composition_ids: portable.composition_ids,
+            next_composition_id: portable.next_composition_id,
+            global_ids_as_comps: portable.global_ids_as_comps,
+        }
+    }
+}
+
+#[derive(Serialize, Clone, Deserialize)]
+struct CompStoragePortable{
+    columns: BTreeMap<TypeIdNum, Vec<Vec<u8>>>,
+    internal_entities: Box<GlorifiedHashMap>, // Box to avoid stack overflow.
+    composition_ids: BTreeMap<TypesSet, CompositionID>,
+    next_composition_id: CompositionID,
+    global_ids_as_comps: Vec<Vec<GlobalEntityID>>, // (Pretty much a column<GlobalEntityID>)
+}
+impl Serialize for CompStorage{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        let functions = FUNCTION_MAP.get(self.item_type);
+        let mut items = vec![];
+        for i in 0..self.len(){
+            let bytes = self.get_as_bytes(i);
+            let serialized_bytes = (functions.meme_ser)(bytes);
+            items.push(serialized_bytes);
+        }
+        let portable = CompStoragePortable{
+            columns: Default::default(),
+            internal_entities: self.internal_entities,
+            composition_ids: self.composition_ids,
+            next_composition_id: 0,
+            global_ids_as_comps: vec![]
+        };
+        portable.serialize(serializer)
+    }
+}
+
+
+
+
+
+
+
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct TestComp1 {
     value: usize,
@@ -205,163 +292,163 @@ pub struct TestComp1 {
 pub struct TestComp0 {
     value: usize,
 }
-#[cfg(test)]
-pub mod ecs_tests {
-    use super::*;
-
-
-
-    #[test]
-    fn test_delete_123() {
-        let mut ecs = CompStorage::default();
-        let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp0{ value: 0});
-        let id0 = ecs.create_entity(pending_entity);
-
-        let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp0{ value: 1 });
-        let id1 = ecs.create_entity(pending_entity);
-
-        let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp0{ value: 2});
-        let id2 = ecs.create_entity(pending_entity);
-
-        assert_eq!(ecs.get::<TestComp0>(id1).unwrap().value, 1);
-        ecs.delete_entity(id0);
-
-        assert_eq!(ecs.get::<TestComp0>(id1).unwrap().value, 1);
-        assert_eq!(ecs.get::<TestComp0>(id2).unwrap().value, 2);
-
-        ecs.delete_entity(id1);
-
-        assert_eq!(ecs.get::<TestComp0>(id2).unwrap().value, 2);
-
-        ecs.delete_entity(id2);
-
-
-        assert!(ecs.get::<TestComp0>(id2).is_none());
-    }
-    #[test]
-    fn test_delete_21() {
-        let mut ecs = CompStorage::default();
-        let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
-        let id0 = ecs.create_entity(pending_entity);
-
-        let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp1{ value: 2, value2: 2.2 });
-        let id1 = ecs.create_entity(pending_entity);
-
-        ecs.delete_entity(id1);
-
-        assert_eq!(ecs.get::<TestComp1>(id0).unwrap().value, 1);
-
-        ecs.delete_entity(id0);
-
-        assert!(ecs.get::<TestComp1>(id1).is_none());
-    }
-    #[test]
-    fn test_delete_then_query() {
-        let mut ecs = CompStorage::default();
-        let mut pending_entity = PendingEntity::new();
-        pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
-        let id0 = ecs.create_entity(pending_entity);
-
-        ecs.delete_entity(id0);
-
-        for ent_id in ecs.query(vec![
-            crate::utils::gett::<TestComp1>()
-        ]){
-            if ecs.get::<TestComp1>(ent_id).is_none(){
-                let woah = 2;
-            }
-        }
-        for ent_id in ecs.query(vec![
-            crate::utils::gett::<TestComp1>()
-        ]){
-        }
-
-
-
-
-
-        for ent_id in ecs.query(vec![
-            crate::utils::gett::<TestComp1>()
-
-        ]){
-            let crash = ecs.get::<TestComp1>(ent_id).unwrap();
-        }
-
-
-    }
-
-    // impl Component for TestComp1 {}
-    // impl SerdeObject for TestComp1 {
-    //     fn my_clone(&self) -> Box<dyn SerdeObject> {
-    //         Box::new(self.clone())
-    //     }
-    //     fn my_ser(&self) -> Vec<u8> {
-    //         return bincode::serialize(self).unwrap();
-    //     }
-    // }
-    // #[derive(Clone, Serialize, Deserialize)]
-    // pub struct TestComp2 {
-    //     value: f32
-    // }
-    // impl Component for TestComp2 {}
-    // impl SerdeObject for TestComp2 {
-    //     fn my_clone(&self) -> Box<dyn SerdeObject> {
-    //         Box::new(self.clone())
-    //     }
-    //     fn my_ser(&self) -> Vec<u8> {
-    //         return bincode::serialize(self).unwrap();
-    //     }
-    // }
-    // #[derive(Clone, Serialize, Deserialize)]
-    // pub struct TestComp3 {
-    //     value: usize
-    // }
-    // impl Component for TestComp3 {}
-    // impl SerdeObject for TestComp3 {
-    //     fn my_clone(&self) -> Box<dyn SerdeObject> {
-    //         Box::new(self.clone())
-    //     }
-    //     fn my_ser(&self) -> Vec<u8> {
-    //         return bincode::serialize(self).unwrap();
-    //     }
-    // }
-    // fn new_entity() -> (HolyEcs, GlobalEntityID){
-    //     let mut ecs = HolyEcs::new();
-    //     let mut new_entity_comps = SerdeAnyMap::new();
-    //     new_entity_comps.insert(TestComp3{value : TEST_COMP_3_VALUE});
-    //     new_entity_comps.insert(TestComp2{value : 3.2});
-    //
-    //     let new_entity_id = ecs.new_entity(new_entity_comps);
-    //     assert_eq!(new_entity_id, 0);
-    //     return (ecs, new_entity_id);
-    // }
-    // #[test]
-    // fn ecs_new_entity() {
-    //     new_entity();
-    // }
-    // #[test]
-    // fn ecs_query_positive() {
-    //     let (mut ecs, entity_id) = new_entity();
-    //     let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp2>()]);
-    //     assert_eq!(1, query_results.len());
-    //     assert_eq!(entity_id, *query_results.get(0).unwrap());
-    // }
-    // #[test]
-    // fn ecs_query_negative() {
-    //     let (mut ecs, entity_id) = new_entity();
-    //     let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp1>(), crate::utils::get_type_id::<TestComp3>()]);
-    //     assert_eq!(0, query_results.len());
-    // }
-    // #[test]
-    // fn ecs_get_comp() {
-    //     let (mut ecs, entity_id) = new_entity();
-    //     let value = ecs.get_mut::<TestComp3>(entity_id).unwrap();
-    //     assert_eq!(value.value, TEST_COMP_3_VALUE);
-    // }
-
-}
+// #[cfg(test)]
+// pub mod ecs_tests {
+//     use super::*;
+//
+//
+//
+//     #[test]
+//     fn test_delete_123() {
+//         let mut ecs = CompStorage::default();
+//         let mut pending_entity = PendingEntity::new();
+//         pending_entity.add_comp(TestComp0{ value: 0});
+//         let id0 = ecs.create_entity(pending_entity);
+//
+//         let mut pending_entity = PendingEntity::new();
+//         pending_entity.add_comp(TestComp0{ value: 1 });
+//         let id1 = ecs.create_entity(pending_entity);
+//
+//         let mut pending_entity = PendingEntity::new();
+//         pending_entity.add_comp(TestComp0{ value: 2});
+//         let id2 = ecs.create_entity(pending_entity);
+//
+//         assert_eq!(ecs.get::<TestComp0>(id1).unwrap().value, 1);
+//         ecs.delete_entity(id0);
+//
+//         assert_eq!(ecs.get::<TestComp0>(id1).unwrap().value, 1);
+//         assert_eq!(ecs.get::<TestComp0>(id2).unwrap().value, 2);
+//
+//         ecs.delete_entity(id1);
+//
+//         assert_eq!(ecs.get::<TestComp0>(id2).unwrap().value, 2);
+//
+//         ecs.delete_entity(id2);
+//
+//
+//         assert!(ecs.get::<TestComp0>(id2).is_none());
+//     }
+//     #[test]
+//     fn test_delete_21() {
+//         let mut ecs = CompStorage::default();
+//         let mut pending_entity = PendingEntity::new();
+//         pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
+//         let id0 = ecs.create_entity(pending_entity);
+//
+//         let mut pending_entity = PendingEntity::new();
+//         pending_entity.add_comp(TestComp1{ value: 2, value2: 2.2 });
+//         let id1 = ecs.create_entity(pending_entity);
+//
+//         ecs.delete_entity(id1);
+//
+//         assert_eq!(ecs.get::<TestComp1>(id0).unwrap().value, 1);
+//
+//         ecs.delete_entity(id0);
+//
+//         assert!(ecs.get::<TestComp1>(id1).is_none());
+//     }
+//     #[test]
+//     fn test_delete_then_query() {
+//         let mut ecs = CompStorage::default();
+//         let mut pending_entity = PendingEntity::new();
+//         pending_entity.add_comp(TestComp1{ value: 1, value2: 1.1 });
+//         let id0 = ecs.create_entity(pending_entity);
+//
+//         ecs.delete_entity(id0);
+//
+//         for ent_id in ecs.query(vec![
+//             crate::utils::gett::<TestComp1>()
+//         ]){
+//             if ecs.get::<TestComp1>(ent_id).is_none(){
+//                 let woah = 2;
+//             }
+//         }
+//         for ent_id in ecs.query(vec![
+//             crate::utils::gett::<TestComp1>()
+//         ]){
+//         }
+//
+//
+//
+//
+//
+//         for ent_id in ecs.query(vec![
+//             crate::utils::gett::<TestComp1>()
+//
+//         ]){
+//             let crash = ecs.get::<TestComp1>(ent_id).unwrap();
+//         }
+//
+//
+//     }
+//
+//     // impl Component for TestComp1 {}
+//     // impl SerdeObject for TestComp1 {
+//     //     fn my_clone(&self) -> Box<dyn SerdeObject> {
+//     //         Box::new(self.clone())
+//     //     }
+//     //     fn my_ser(&self) -> Vec<u8> {
+//     //         return bincode::serialize(self).unwrap();
+//     //     }
+//     // }
+//     // #[derive(Clone, Serialize, Deserialize)]
+//     // pub struct TestComp2 {
+//     //     value: f32
+//     // }
+//     // impl Component for TestComp2 {}
+//     // impl SerdeObject for TestComp2 {
+//     //     fn my_clone(&self) -> Box<dyn SerdeObject> {
+//     //         Box::new(self.clone())
+//     //     }
+//     //     fn my_ser(&self) -> Vec<u8> {
+//     //         return bincode::serialize(self).unwrap();
+//     //     }
+//     // }
+//     // #[derive(Clone, Serialize, Deserialize)]
+//     // pub struct TestComp3 {
+//     //     value: usize
+//     // }
+//     // impl Component for TestComp3 {}
+//     // impl SerdeObject for TestComp3 {
+//     //     fn my_clone(&self) -> Box<dyn SerdeObject> {
+//     //         Box::new(self.clone())
+//     //     }
+//     //     fn my_ser(&self) -> Vec<u8> {
+//     //         return bincode::serialize(self).unwrap();
+//     //     }
+//     // }
+//     // fn new_entity() -> (HolyEcs, GlobalEntityID){
+//     //     let mut ecs = HolyEcs::new();
+//     //     let mut new_entity_comps = SerdeAnyMap::new();
+//     //     new_entity_comps.insert(TestComp3{value : TEST_COMP_3_VALUE});
+//     //     new_entity_comps.insert(TestComp2{value : 3.2});
+//     //
+//     //     let new_entity_id = ecs.new_entity(new_entity_comps);
+//     //     assert_eq!(new_entity_id, 0);
+//     //     return (ecs, new_entity_id);
+//     // }
+//     // #[test]
+//     // fn ecs_new_entity() {
+//     //     new_entity();
+//     // }
+//     // #[test]
+//     // fn ecs_query_positive() {
+//     //     let (mut ecs, entity_id) = new_entity();
+//     //     let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp2>()]);
+//     //     assert_eq!(1, query_results.len());
+//     //     assert_eq!(entity_id, *query_results.get(0).unwrap());
+//     // }
+//     // #[test]
+//     // fn ecs_query_negative() {
+//     //     let (mut ecs, entity_id) = new_entity();
+//     //     let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp1>(), crate::utils::get_type_id::<TestComp3>()]);
+//     //     assert_eq!(0, query_results.len());
+//     // }
+//     // #[test]
+//     // fn ecs_get_comp() {
+//     //     let (mut ecs, entity_id) = new_entity();
+//     //     let value = ecs.get_mut::<TestComp3>(entity_id).unwrap();
+//     //     assert_eq!(value.value, TEST_COMP_3_VALUE);
+//     // }
+//
+// }

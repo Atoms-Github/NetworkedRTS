@@ -12,11 +12,15 @@ pub struct SuperbEcs{
     pub c: CompStorage,
     debug_times: EcsDebugTimer,
 }
+pub struct EcsConfig{
+    pub functions: &'static BloodBank,
+    pub systems: Vec<System>
+}
 impl SuperbEcs{
-    pub fn new(systems: Vec<System>) -> Self{
+    pub fn new(config: EcsConfig) -> Self{
         Self{
-            systems,
-            c: Default::default(),
+            systems: config.systems,
+            c: CompStorage::new(config.functions),
             debug_times: Default::default()
         }
     }
@@ -106,32 +110,6 @@ impl EntStructureChanges{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ------------------------------
 //  GARBAGE BELOW HERE.
 // ------------------------------
@@ -176,6 +154,7 @@ use crate::ecs::ecs_debug_timer::EcsDebugTimer;
 use rand::Rng;
 use std::hash::{Hash, Hasher};
 use crate::bibble::data::data_types::__private::Formatter;
+use crate::ecs::bblocky::comp_registration::BloodBank;
 
 impl ECSVisitor {
     fn new() -> Self {

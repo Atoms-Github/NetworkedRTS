@@ -6,7 +6,9 @@ use crate::ecs::GlobalEntityID;
 use std::slice::Iter;
 use crate::ecs::superb_ecs::SuperbEcs;
 use crate::ecs::pending_entity::PendingEntity;
-
+use serde::*;
+use serde::de::DeserializeOwned;
+use std::fmt::Debug;
 
 
 
@@ -29,7 +31,7 @@ macro_rules! comp_iter_def {
                 }
             }
         }
-        impl<'a, $($type_name: 'static + Send,)+> Iterator for $query_name<'a, $($type_name,)+>{
+        impl<'a, $($type_name: 'static + Serialize + Clone + DeserializeOwned + Send + Debug,)+> Iterator for $query_name<'a, $($type_name,)+>{
             type Item = (GlobalEntityID, $(&'a mut $type_name),+);
             fn next(&mut self) -> Option<Self::Item> {
                 let entity_id = self.vec.pop()?;
@@ -42,16 +44,16 @@ macro_rules! comp_iter_def {
         }
         #[allow(unused_parens)]
         impl CompStorage{
-            pub fn $get_name<$($type_name : 'static + Send),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
+            pub fn $get_name<$($type_name : 'static + Serialize + Clone + DeserializeOwned + Send + Debug),+>(&self, entity_id: GlobalEntityID) -> ($(Option<&mut $type_name>),+){
                 return ($(self.get_mut::<$type_name>(entity_id)),+ );
             }
-            pub fn $get_name_unwrap<$($type_name : 'static + Send),+>(&self, entity_id: GlobalEntityID) -> ($(&mut $type_name),+){
+            pub fn $get_name_unwrap<$($type_name : 'static + Serialize + Clone + DeserializeOwned + Send + Debug),+>(&self, entity_id: GlobalEntityID) -> ($(&mut $type_name),+){
                 return ($(self.get_mut::<$type_name>(entity_id).unwrap()),+ );
             }
         }
         #[allow(unused_parens, non_snake_case)]
         impl PendingEntity{
-            pub fn $new_name<$($type_name : 'static + Send),+>($($type_name: $type_name),+) -> Self{
+            pub fn $new_name<$($type_name : 'static + Serialize + Clone + DeserializeOwned + Send + Debug),+>($($type_name: $type_name),+) -> Self{
                 let mut pending = Self::new();
                 $(pending.add_comp($type_name);)+
                 return pending;

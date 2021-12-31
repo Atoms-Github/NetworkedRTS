@@ -5,7 +5,7 @@ use serde::*;
 use crate::rts::compsys::*;
 
 use crate::utils::*;
-use serde::de::DeserializeOwned;
+use serde::de::{DeserializeOwned, DeserializeSeed};
 use crate::ecs::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
@@ -20,12 +20,12 @@ use std::collections::hash_map::DefaultHasher;
 use crate::bibble::data::data_types::__private::Formatter;
 
 
-#[derive(PartialEq)]
 pub struct SuperVec {
     item_size: usize,
     data: Vec<u8>,
     item_type: TypeIdNum,
     debug_name: String,
+    blood: Blood
 }
 impl Debug for SuperVec{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -46,17 +46,28 @@ impl Debug for SuperVec{
 
 
 impl SuperVec {
-    pub fn new(item_type: TypeIdNum) -> Self{
-        let functions = FUNCTION_MAP.get(item_type);
+    pub fn new<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>() -> Self{
+        let blood = get_blood::<T>();
         Self{
-            item_size: functions.item_size,
+            item_size: blood.item_size,
             data: vec![],
-            item_type,
-            debug_name: functions.debug_name.clone()
+            item_type: gett::<T>(),
+            debug_name: blood.debug_name.clone(),
+            blood,
         }
     }
-    pub fn new_and_push<T : 'static + Send>(item: T) -> Self{
-        let mut vec = Self::new(gett::<T>());
+    pub fn new_from_blood(blood_bank: &BloodBank, type_id: TypeIdNum) -> Self{
+        let blood = blood_bank.get(type_id);
+        Self{
+            item_size: blood.item_size,
+            data: vec![],
+            item_type: type_id,
+            debug_name: blood.debug_name.clone(),
+            blood: blood.clone(),
+        }
+    }
+    pub fn new_and_push<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>(item: T) -> Self{
+        let mut vec = Self::new::<T>();
         vec.push(item);
         return vec;
     }
@@ -78,10 +89,10 @@ impl SuperVec {
         self.data.append(&mut as_bytes);
         std::mem::forget(item);
     }
-    pub fn get_as_bytes(&self, index: usize) -> &[u8]{
+    fn get_as_bytes(&self, index: usize) -> &[u8]{
         return &self.data[index * self.item_size..(index + 1) * self.item_size];
     }
-    pub fn move_as_bytes(&mut self, index: usize) -> Vec<u8>{
+    fn move_as_bytes(&mut self, index: usize) -> Vec<u8>{
         assert!(index < self.len());
         return self.data.drain(index * self.item_size..(index + 1) * self.item_size).collect();
     }
@@ -100,7 +111,7 @@ impl SuperVec {
         }
     }
     /// Properly deallocates all data referenced to by the item in position INDEX.
-    pub fn drop_items_refs(&self, index: usize){
+    fn drop_items_refs(&self, index: usize){
         let functions = FUNCTION_MAP.get(self.item_type);
         (functions.deallocate_refed_mem)(self.get_as_bytes(index));
     }
@@ -132,6 +143,7 @@ impl Clone for SuperVec {
             data,
             item_type: self.item_type,
             debug_name: self.debug_name.clone(),
+            blood: self.blood.clone(),
         }
     }
 }
@@ -159,6 +171,24 @@ struct SuperVecPortable{
     data: Vec<Vec<u8>>,
     item_type_when_deser: TypeIdNum,
 }
+impl SuperVec{
+    pub fn from_bytes(&self, bytes: &Vec<u8>, blood_bank: &BloodBank) -> Self{
+        let portable = bincode::deserialize::<SuperVecPortable>(bytes).unwrap();
+        let blood = blood_bank.get(portable.item_type_when_deser);
+        let mut data = vec![];
+        for serialized in portable.data{
+            let mut forgotten_item = (blood.meme_deser_and_forget)(&serialized);
+            data.append(&mut forgotten_item);
+        }
+        Self{
+            item_size: portable.item_size_when_deser,
+            data,
+            item_type: portable.item_type_when_deser,
+            debug_name: blood.debug_name.clone(),
+            blood: blood.clone(),
+        }
+    }
+}
 impl Serialize for SuperVec{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
@@ -177,29 +207,5 @@ impl Serialize for SuperVec{
             item_type_when_deser: self.item_type
         };
         portable.serialize(serializer)
-    }
-}
-
-struct SuperVecVisitor {}
-impl<'de> Deserialize<'de> for SuperVec
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
-    {
-        let portable = SuperVecPortable::deserialize(deserializer).unwrap();
-
-        let functions = FUNCTION_MAP.get(portable.item_type_when_deser);
-        let mut data = vec![];
-        for serialized in portable.data{
-            let mut forgotten_item = (functions.meme_deser_and_forget)(&serialized);
-            data.append(&mut forgotten_item);
-        }
-        return Ok(Self{
-            item_size: portable.item_size_when_deser,
-            data,
-            item_type: portable.item_type_when_deser,
-            debug_name: functions.debug_name.clone(),
-        });
     }
 }

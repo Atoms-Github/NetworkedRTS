@@ -6,6 +6,7 @@
 #![allow(unused_unsafe)] // TODO2: Investigate the need for this.
 #![feature(drain_filter)]
 #![allow(unused_attributes)]
+#![allow(deprecated)]
 
 use crate::common::input_state::InputState;
 use crate::common::net_game_state::GameState;

@@ -2,6 +2,7 @@ use crate::ecs::superb_ecs::SuperbEcs;
 
 pub mod superb_ecs;
 pub mod eid_manager;
+pub mod comp_store_serde;
 pub mod comp_store;
 pub mod pending_entity;
 pub mod radix_sorting;
