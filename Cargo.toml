@@ -1,13 +1,13 @@
 [workspace]
 
 members = [
-    "netcode",
-    "game",
-    "puzzlebros",
-    "pcommon",
-    "bibble",
-    "becs",
-    "utils"
+    "modules/netcode",
+    "modules/game",
+    "modules/puzzlebros",
+    "modules/pcommon",
+    "modules/bibble",
+    "modules/becs",
+    "modules/utils"
 ]
 
 #[profile.release]
