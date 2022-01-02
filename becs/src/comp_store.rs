@@ -1,15 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
-use crate::utils::TypeIdNum;
 use serde::*;
-use crate::ecs::eid_manager::{GlorifiedHashMap, GlobalEntityID};
-use anymap::AnyMap;
-use crate::ecs::pending_entity::PendingEntity;
-use mopa::Any;
-use crate::ecs::bblocky::*;
-use crate::ecs::bblocky::super_any::SuperAny;
-use crate::ecs::bblocky::super_vec::SuperVec;
-use crate::pub_types::ZType;
-use crate::ecs::bblocky::comp_registration::{EcsConfig, FunctionMap};
+use crate::eid_manager::{GlorifiedHashMap, GlobalEntityID};
+use crate::pending_entity::PendingEntity;
+use crate::bblocky::*;
+use crate::bblocky::super_any::SuperAny;
+use crate::bblocky::super_vec::SuperVec;
+use crate::bblocky::comp_registration::{EcsConfig, FunctionMap};
+use crate::utils::TypeIdNum;
+use crate::ZType;
 
 pub type SingleComp = SuperAny;
 pub type MyBlock = SuperVec;

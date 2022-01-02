@@ -56,7 +56,6 @@ fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMet
         weapon.time_since_shot += meta.delta;
     }
     if let Some(arena) = c.find_arena(){
-        let mut timer = SpeedTimer::new();
         // Check for queuing up 'shoot once' commands.
         for (shooter_id, weapon, owned_shooter, position_shooter, orders)
         in CompIter4::<WeaponComp, OwnedComp, PositionComp, OrdersComp>::new(c) {

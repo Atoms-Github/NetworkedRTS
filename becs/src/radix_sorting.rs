@@ -1,5 +1,5 @@
-use crate::ecs::GlobalEntityID;
-use crate::ecs::comp_store::CompStorage;
+use crate::{GlobalEntityID, ZType};
+use crate::comp_store::CompStorage;
 use rdxsort::{RdxSort, RdxSortTemplate};
 
 #[derive(Clone)]
@@ -9,7 +9,7 @@ struct SortEnt{
 }
 
 pub fn go(store: &CompStorage, entities: Vec<GlobalEntityID>,
-          sort_by: fn(&CompStorage, GlobalEntityID) -> u16) -> Vec<GlobalEntityID>{
+          sort_by: fn(&CompStorage, GlobalEntityID) -> ZType) -> Vec<GlobalEntityID>{
     let sortable = entities.iter().map(|id| {
         let value = sort_by(store, *id);
         SortEnt{

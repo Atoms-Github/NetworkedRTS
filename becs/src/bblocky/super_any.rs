@@ -2,23 +2,17 @@ use std::any::{TypeId, Any};
 use std::collections::HashMap;
 use serde::*;
 
-use crate::rts::compsys::*;
-
-use crate::utils::*;
 use serde::de::DeserializeOwned;
-use crate::ecs::comp_store::*;
+use crate::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use std::fmt::{Write, Debug};
 use std::fmt;
 use super::comp_registration::*;
-use crate::ecs::bblocky::super_vec::SuperVec;
+use crate::bblocky::super_vec::SuperVec;
 use serde::*;
 
-use crate::rts::compsys::*;
-
-use crate::utils::*;
-use crate::ecs::comp_store::*;
+use crate::comp_store::*;
 use super::comp_registration::*;
 
 

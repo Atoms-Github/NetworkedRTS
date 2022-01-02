@@ -6,7 +6,8 @@ members = [
     "puzzlebros",
     "pcommon",
     "bibble",
-    "becs"
+    "becs",
+    "utils"
 ]
 
 #[profile.release]

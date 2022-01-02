@@ -1,12 +1,11 @@
-use crate::ecs::comp_store::*;
-use crate::utils::{TypeIdNum, gett};
-use crate::rts::compsys::jigsaw::jigsaw_game_state::UsingRenderResources;
+use crate::comp_store::*;
 use std::marker::PhantomData;
-use crate::ecs::GlobalEntityID;
+use crate::GlobalEntityID;
 use std::slice::Iter;
-use crate::ecs::superb_ecs::SuperbEcs;
-use crate::ecs::pending_entity::PendingEntity;
+use crate::superb_ecs::SuperbEcs;
+use crate::pending_entity::PendingEntity;
 
+use crate::utils::gett;
 
 // T :
 

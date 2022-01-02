@@ -1,13 +1,10 @@
 use std::collections::BTreeSet;
-use crate::utils::TypeIdNum;
-use anymap::AnyMap;
 use serde::*;
 use std::convert::TryInto;
-use crate::ecs::comp_store::{InternalEntity};
+use crate::comp_store::{InternalEntity};
 
 use serde_big_array::*;
-use std::fmt::Debug;
-use crate::bibble::data::data_types::__private::Formatter;
+use std::fmt::{Debug, Formatter};
 
 pub type GlobalEntityID = usize;
 pub const MAX_ENTITIES :usize = 4096;
@@ -106,7 +103,7 @@ impl GlorifiedHashMap {
 
 #[cfg(test)]
 mod tests {
-    use crate::ecs::eid_manager::*;
+    use crate::eid_manager::*;
 
     #[test]
     fn basic() {

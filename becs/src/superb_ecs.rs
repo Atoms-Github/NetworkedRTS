@@ -1,20 +1,18 @@
 
 
 use serde::*;
-use anymap::AnyMap;
-use crate::ecs::comp_store::*;
+use crate::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
 use std::fmt::{Debug, Formatter};
-use crate::pub_types::{SimMetadata, SimQuality};
 use std::hash::{Hash, Hasher};
-use crate::ecs::ecs_debug_timer::EcsDebugTimer;
-use crate::ecs::bblocky::comp_registration::EcsConfig;
-use rand::Rng;
-use crate::ecs::pending_entity::PendingEntity;
-use crate::ecs::GlobalEntityID;
+use crate::ecs_debug_timer::EcsDebugTimer;
+use crate::bblocky::comp_registration::EcsConfig;
+use crate::pending_entity::PendingEntity;
+use crate::GlobalEntityID;
 
 use std::fmt;
+use netcode::{SimMetadata, SimQuality};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SuperbEcs{
@@ -57,10 +55,7 @@ impl SuperbEcs{
         }
         pending_changes.apply(&mut self.c);
 
-        if meta.quality == SimQuality::DETERMA && rand::thread_rng().gen_bool(0.1) && crate::DEBUG_MSGS_ITS_LAGGING{
-            self.debug_times.print_all();
-            println!("Entities: {}", self.c.get_entity_count());
-        }
+        self.debug_times.print_all();
     }
 
 }

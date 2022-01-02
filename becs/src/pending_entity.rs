@@ -1,13 +1,13 @@
 use std::collections::{BTreeMap, BTreeSet};
-use crate::utils::{TypeIdNum, gett};
 use serde::*;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use crate::ecs::comp_store::TypesSet;
+use crate::comp_store::TypesSet;
 use super::comp_store::SingleComp;
-use crate::ecs::bblocky::super_any::SuperAny;
+use crate::bblocky::super_any::SuperAny;
 use std::fmt::Debug;
 use serde::de::DeserializeOwned;
+use crate::utils::{TypeIdNum, gett};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PendingEntity{

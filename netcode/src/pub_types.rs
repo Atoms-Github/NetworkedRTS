@@ -11,7 +11,6 @@ pub type FrameIndex = usize;
 pub type ArcRw<T> = Arc<RwLock<T>>;
 pub type ServerEvents = Vec<ServerEvent>;
 pub type PointFloat = nalgebra::VectorN<f32, U2>;
-pub use crate::common::timekeeping::DT;
 pub use crate::common::confirmed_data::ServerEvent;
 
 

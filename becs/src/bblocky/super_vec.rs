@@ -2,22 +2,19 @@ use std::any::{TypeId, Any};
 use std::collections::HashMap;
 use serde::*;
 
-use crate::rts::compsys::*;
-
-use crate::utils::*;
 use serde::de::DeserializeOwned;
-use crate::ecs::comp_store::*;
+use crate::comp_store::*;
 use serde::ser::SerializeStruct;
 use serde::de::Visitor;
-use std::fmt::{Write, Debug};
+use std::fmt::{Write, Debug, Formatter};
 use std::fmt;
 use super::comp_registration::*;
-use crate::ecs::bblocky::super_any::SuperAny;
+use crate::bblocky::super_any::SuperAny;
 use std::clone::Clone;
-use crate::unsafe_utils::very_bad_function;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
-use crate::bibble::data::data_types::__private::Formatter;
+use crate::utils::{TypeIdNum, gett};
+use crate::unsafe_utils::very_bad_function;
 
 
 #[derive(PartialEq)]
@@ -35,7 +32,7 @@ enum SuperVecData{
 }
 impl Debug for SuperVec{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
+        let functions = bib_utils::unwrap!(SuperVecData::Runtime, &self.functions);
         let mut items = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -55,7 +52,7 @@ impl SuperVec {
     pub fn post_deserialize(&mut self, config: &EcsConfig){
         let functions = config.functions.get(self.item_type);
         let mut data = vec![];
-        let serialized_data = crate::utils::unwrap!(SuperVecData::Serialized, &self.functions);
+        let serialized_data = bib_utils::unwrap!(SuperVecData::Serialized, &self.functions);
         for serialized in serialized_data{
             let mut forgotten_item = (functions.meme_deser_and_forget)(&serialized);
             data.append(&mut forgotten_item);
@@ -130,7 +127,7 @@ impl SuperVec {
     }
     /// Properly deallocates all data referenced to by the item in position INDEX.
     pub fn drop_items_refs(&self, index: usize){
-        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
+        let functions = bib_utils::unwrap!(SuperVecData::Runtime, &self.functions);
         (functions.deallocate_refed_mem)(self.get_as_bytes(index));
     }
 
@@ -155,7 +152,7 @@ impl SuperVec {
 }
 impl Clone for SuperVec {
     fn clone(&self) -> Self {
-        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
+        let functions = bib_utils::unwrap!(SuperVecData::Runtime, &self.functions);
         let mut data = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
@@ -200,7 +197,7 @@ impl Serialize for SuperVec{
         where
             S: Serializer,
     {
-        let functions = crate::utils::unwrap!(SuperVecData::Runtime, &self.functions);
+        let functions = bib_utils::unwrap!(SuperVecData::Runtime, &self.functions);
         let mut items = vec![];
         for i in 0..self.len(){
             let bytes = self.get_as_bytes(i);
