@@ -9,6 +9,10 @@
       <sourceFolder url="file://$MODULE_DIR$/main/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/my_netcode/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/netcode/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/becs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/bibble/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pcommon/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/puzzlebros/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />

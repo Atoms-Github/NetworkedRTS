@@ -3,6 +3,10 @@
 members = [
     "netcode",
     "game",
+    "puzzlebros",
+    "pcommon",
+    "bibble",
+    "becs"
 ]
 
 #[profile.release]

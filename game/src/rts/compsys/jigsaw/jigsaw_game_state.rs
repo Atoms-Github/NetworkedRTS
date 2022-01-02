@@ -24,44 +24,11 @@ pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
 pub type UsingRenderResources = Arc<RenderResources>;
 
-pub fn global_get_systems() -> Vec<System>{
-    vec![
-        INPUT_PREPROC.clone(),
-        BUTTON_SYS.clone(),
-        RACE_BUTTON_SYS.clone(),
-        MAP_BUTTON_SYS.clone(),
-        PERFORMANCE_MAP.clone(),
-        CAMERA_PAN_SYS.clone(),
-        SEEKING_PROJECTILES_COMP.clone(),
-        SELECTION_BOX_SYS.clone(),
-        ABILITY_TARGETING.clone(),
-        ABILITIES_SYS.clone(),
-        VELOCITY_SYS.clone(),
-        ORDERS_SYS.clone(),
-        HIKER_SYS.clone(),
-        HIKER_COLLISION_SYS.clone(),
-        SHOOT_MOUSE_SYS.clone(),
-        COLLISION_SYS.clone(),
-        VELOCITY_WITH_INPUTS_SYS.clone(),
-        WORKER_SYS.clone(),
-        WEAPON_SYS.clone(),
-        LIFE_SYS.clone(),
-        LOSS_SYS.clone(),
-        NO_LEAVE_MAP.clone(),
-        LOBBY_SYS.clone(),
-        UI_SYS.clone(),
-        JIGSAW_PIECE_SYS.clone(),
-        JIGSAW_MAT_SYS.clone(),
-        CURSOR_SYS.clone(),
-        JIGSAW_PLAYER_SYS.clone(),
-        UI_SYS.clone(),
-        SCENE_SWITCHER_SYS.clone(),
-    ]
-}
 
 
-#[derive(Clone, Serialize, Hash, Debug)]
+#[derive(Clone, Serialize, Deserialize, Hash, Debug)]
 pub struct GameStateJigsaw {
+    #[serde(deserialize_with = "state_deserialize")]
     ecs: ActiveEcs,
 }
 
@@ -133,67 +100,92 @@ impl GameState for GameStateJigsaw {
 
     type Resources = RenderResources;
 }
-fn get_functions() -> FunctionMap{
-    let mut map = FunctionMap::default();
-    map.register_type::<ShootMouseComp>();
-    map.register_type::<VelocityComp>();
-    map.register_type::<VelocityWithInputsComp>();
-    map.register_type::<PositionComp>();
-    map.register_type::<RadiusComp>();
-    map.register_type::<SizeComp>();
-    map.register_type::<CollisionComp>();
-    map.register_type::<HikerComp>();
-    map.register_type::<HikerCollisionComp>();
-    map.register_type::<LifeComp>();
-    map.register_type::<OrdersComp>();
-    map.register_type::<SelectableComp>();
-    map.register_type::<CameraComp>();
-    map.register_type::<InputComp>();
-    map.register_type::<SelectableComp>();
-    map.register_type::<SelBoxComp>();
-    map.register_type::<OwnedComp>();
-    map.register_type::<OwnsResourcesComp>();
-    map.register_type::<PlayerComp>();
-    map.register_type::<ArenaComp>();
-    map.register_type::<AbilitiesComp>();
-    map.register_type::<WeaponComp>();
-    map.register_type::<WorkerComp>();
-    map.register_type::<RenderComp>();
-    map.register_type::<TechTreeComp>();
-    map.register_type::<SeekingProjComp>();
-    map.register_type::<SceneManager>();
-    map.register_type::<ScenePersistent>();
-    map.register_type::<LobbyManager>();
-    map.register_type::<ClickableComp>();
-    map.register_type::<RaceButtonComp>();
-    map.register_type::<MapButtonComp>();
-    map.register_type::<UIComp>();
-    map.register_type::<UnitStructureComp>();
-    map.register_type::<JigsawPieceComp>();
-    map.register_type::<JigsawPlayerComp>();
-    map.register_type::<JigsawMatComp>();
-    map.register_type::<CursorComp>();
-    map.register_type::<IgnoreHoverComp>();
-    // map.register_type::<BenchStruct>();
-    map
-}
 fn get_config() -> EcsConfig{
     EcsConfig{
-        functions: get_functions(),
-        systems: global_get_systems()
+        functions: {
+            let mut map = FunctionMap::default();
+            map.register_type::<ShootMouseComp>();
+            map.register_type::<VelocityComp>();
+            map.register_type::<VelocityWithInputsComp>();
+            map.register_type::<PositionComp>();
+            map.register_type::<RadiusComp>();
+            map.register_type::<SizeComp>();
+            map.register_type::<CollisionComp>();
+            map.register_type::<HikerComp>();
+            map.register_type::<HikerCollisionComp>();
+            map.register_type::<LifeComp>();
+            map.register_type::<OrdersComp>();
+            map.register_type::<SelectableComp>();
+            map.register_type::<CameraComp>();
+            map.register_type::<InputComp>();
+            map.register_type::<SelectableComp>();
+            map.register_type::<SelBoxComp>();
+            map.register_type::<OwnedComp>();
+            map.register_type::<OwnsResourcesComp>();
+            map.register_type::<PlayerComp>();
+            map.register_type::<ArenaComp>();
+            map.register_type::<AbilitiesComp>();
+            map.register_type::<WeaponComp>();
+            map.register_type::<WorkerComp>();
+            map.register_type::<RenderComp>();
+            map.register_type::<TechTreeComp>();
+            map.register_type::<SeekingProjComp>();
+            map.register_type::<SceneManager>();
+            map.register_type::<ScenePersistent>();
+            map.register_type::<LobbyManager>();
+            map.register_type::<ClickableComp>();
+            map.register_type::<RaceButtonComp>();
+            map.register_type::<MapButtonComp>();
+            map.register_type::<UIComp>();
+            map.register_type::<UnitStructureComp>();
+            map.register_type::<JigsawPieceComp>();
+            map.register_type::<JigsawPlayerComp>();
+            map.register_type::<JigsawMatComp>();
+            map.register_type::<CursorComp>();
+            map.register_type::<IgnoreHoverComp>();
+            // map.register_type::<BenchStruct>();
+            map
+        },
+        systems: vec![
+            INPUT_PREPROC.clone(),
+            BUTTON_SYS.clone(),
+            RACE_BUTTON_SYS.clone(),
+            MAP_BUTTON_SYS.clone(),
+            PERFORMANCE_MAP.clone(),
+            CAMERA_PAN_SYS.clone(),
+            SEEKING_PROJECTILES_COMP.clone(),
+            SELECTION_BOX_SYS.clone(),
+            ABILITY_TARGETING.clone(),
+            ABILITIES_SYS.clone(),
+            VELOCITY_SYS.clone(),
+            ORDERS_SYS.clone(),
+            HIKER_SYS.clone(),
+            HIKER_COLLISION_SYS.clone(),
+            SHOOT_MOUSE_SYS.clone(),
+            COLLISION_SYS.clone(),
+            VELOCITY_WITH_INPUTS_SYS.clone(),
+            WORKER_SYS.clone(),
+            WEAPON_SYS.clone(),
+            LIFE_SYS.clone(),
+            LOSS_SYS.clone(),
+            NO_LEAVE_MAP.clone(),
+            LOBBY_SYS.clone(),
+            JIGSAW_PIECE_SYS.clone(),
+            JIGSAW_MAT_SYS.clone(),
+            CURSOR_SYS.clone(),
+            JIGSAW_PLAYER_SYS.clone(),
+            UI_SYS.clone(),
+            SCENE_SWITCHER_SYS.clone(),
+        ]
     }
 }
-impl<'de> Deserialize<'de> for GameStateJigsaw{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-        let e = ActiveEcs::deserialize(deserializer);
-        match e{
-            Ok(mut ecs) => {
-                ecs.post_deserialize(get_config());
-                Ok(Self{
-                    ecs
-                })
-            }
-            Err(err) => {Err(err)}
+
+fn state_deserialize<'de, D>(deserializer: D) -> Result<SuperbEcs, D::Error> where D: Deserializer<'de> {
+    match SuperbEcs::deserialize(deserializer){
+        Ok(mut ecs) => {
+            ecs.post_deserialize(get_config());
+            Ok(ecs)
         }
+        Err(err) => {Err(err)}
     }
 }
