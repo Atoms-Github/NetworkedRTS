@@ -7,7 +7,8 @@ use crate::bblocky::super_any::SuperAny;
 use crate::bblocky::super_vec::SuperVec;
 use crate::bblocky::comp_registration::{EcsConfig, FunctionMap};
 use crate::utils::TypeIdNum;
-use crate::ZType;
+use crate::{ZType};
+use derivative::Derivative;
 
 pub type SingleComp = SuperAny;
 pub type MyBlock = SuperVec;
@@ -18,6 +19,14 @@ pub type GenerationNum = usize;
 pub type InternalIndex = usize;
 pub type TypesSet = BTreeSet<TypeIdNum>;
 
+#[derive(Clone, Serialize, Deserialize, Debug, Default)]
+pub struct EntStructureChanges{
+    pub new_entities: Vec<PendingEntity>,
+    pub deleted_entities: Vec<GlobalEntityID>,
+}
+
+
+
 #[derive(Clone, Serialize, Default, Deserialize, Debug, Hash, PartialEq)]
 pub struct InternalEntity {
     pub comp_types: TypesSet,
@@ -26,7 +35,9 @@ pub struct InternalEntity {
     internal_index: InternalIndex,
 }
 
-#[derive(Clone, Serialize, Deserialize, Hash, Debug)]
+#[derive(Derivative)]
+#[derivative(Hash)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct CompStorage {
     #[serde(skip)]
     functions: FunctionMap,
@@ -35,6 +46,8 @@ pub struct CompStorage {
     composition_ids: BTreeMap<TypesSet, CompositionID>,
     next_composition_id: CompositionID,
     global_ids_as_comps: Vec<Vec<GlobalEntityID>>, // (Pretty much a column<GlobalEntityID>)
+    #[derivative(Hash="ignore")]
+    pending_changes: EntStructureChanges,
 }
 pub struct DeleteResult{
 
@@ -47,7 +60,8 @@ impl CompStorage{
             internal_entities: Box::new(Default::default()),
             composition_ids: Default::default(),
             next_composition_id: 0,
-            global_ids_as_comps: vec![]
+            global_ids_as_comps: vec![],
+            pending_changes: EntStructureChanges::default(),
         }
     }
     pub fn post_deserialize(&mut self, config: EcsConfig){
@@ -78,7 +92,18 @@ impl CompStorage{
     pub fn get_mut<T : 'static>(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID) -> Option<&mut T>{
         return self.get::<T>(entity_id).map(|unmut|{unsafe{crate::unsafe_utils::very_bad_function(unmut)}});
     }
-    pub fn delete_entity(&mut self, entity_id: GlobalEntityID) -> bool{
+    pub fn flush_ent_changes(&mut self){
+        for new in self.pending_changes.new_entities.drain(..).collect::<Vec<PendingEntity>>(){
+            self.create_entity(new);
+        }
+        for delete in self.pending_changes.deleted_entities.drain(..).collect::<Vec<GlobalEntityID>>(){
+            self.delete_entity(delete);
+        }
+    }
+    pub fn req_delete_entity(&mut self, entity_id: GlobalEntityID){
+        self.pending_changes.deleted_entities.push(entity_id);
+    }
+    fn delete_entity(&mut self, entity_id: GlobalEntityID) -> bool{
         // What we want to do:
         // Find all the components that the entity has.
         // Find the entity's composition ID.
@@ -111,10 +136,6 @@ impl CompStorage{
             displaced_internal.internal_index = deleting_index;
         }
         return true;
-
-
-
-
     }
     pub fn get_composition_id(&mut self, types_hash: TypesSet) -> CompositionID{
         if let Some(composition_id) = self.composition_ids.get(&types_hash){
@@ -127,7 +148,10 @@ impl CompStorage{
 
         return new_composition_id;
     }
-    pub fn create_entity(&mut self, pending_entity: PendingEntity) -> InternalIndex{
+    fn req_create_entity(&mut self, pending_entity: PendingEntity){
+        self.pending_changes.new_entities.push(pending_entity);
+    }
+    fn create_entity(&mut self, pending_entity: PendingEntity) -> InternalIndex{
         let types_set = pending_entity.hash_types();
         let composition_id = self.get_composition_id(types_set.clone());
 
@@ -290,14 +314,14 @@ impl CompStorage{
 //         ecs.delete_entity(id0);
 //
 //         for ent_id in ecs.query(vec![
-//             crate::utils::gett::<TestComp1>()
+//             crate::bib_utils::gett::<TestComp1>()
 //         ]){
 //             if ecs.get::<TestComp1>(ent_id).is_none(){
 //                 let woah = 2;
 //             }
 //         }
 //         for ent_id in ecs.query(vec![
-//             crate::utils::gett::<TestComp1>()
+//             crate::bib_utils::gett::<TestComp1>()
 //         ]){
 //         }
 //
@@ -306,7 +330,7 @@ impl CompStorage{
 //
 //
 //         for ent_id in ecs.query(vec![
-//             crate::utils::gett::<TestComp1>()
+//             crate::bib_utils::gett::<TestComp1>()
 //
 //         ]){
 //             let crash = ecs.get::<TestComp1>(ent_id).unwrap();
@@ -367,14 +391,14 @@ impl CompStorage{
     // #[test]
     // fn ecs_query_positive() {
     //     let (mut ecs, entity_id) = new_entity();
-    //     let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp2>()]);
+    //     let query_results = ecs.query(vec![crate::bib_utils::get_type_id::<TestComp2>()]);
     //     assert_eq!(1, query_results.len());
     //     assert_eq!(entity_id, *query_results.get(0).unwrap());
     // }
     // #[test]
     // fn ecs_query_negative() {
     //     let (mut ecs, entity_id) = new_entity();
-    //     let query_results = ecs.query(vec![crate::utils::get_type_id::<TestComp1>(), crate::utils::get_type_id::<TestComp3>()]);
+    //     let query_results = ecs.query(vec![crate::bib_utils::get_type_id::<TestComp1>(), crate::bib_utils::get_type_id::<TestComp3>()]);
     //     assert_eq!(0, query_results.len());
     // }
     // #[test]

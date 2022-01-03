@@ -72,7 +72,7 @@ pub static ORDERS_SYS: System = System{
     run,
     name: "orders"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
     // Check for dead target.
     for (unit_id, owned, orders, position, hiker)

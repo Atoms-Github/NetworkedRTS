@@ -21,7 +21,7 @@ pub static HIKER_COLLISION_SYS: System = System{
     run,
     name: "hiker_collision"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     do_bops(c);
     // Do walls:
     if let Some(arena) = c.find_arena(){

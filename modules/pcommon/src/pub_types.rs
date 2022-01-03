@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use std::sync::Arc;
 use nalgebra::U2;
-use bibble::::render_resources::RenderResources;
 use mint::Point2;
 use ggez::graphics::Color;
 use serde::*;
@@ -14,8 +13,6 @@ pub use netcode::*;
 
 pub type PointFloat = nalgebra::VectorN<f32, U2>;
 pub type PointInt = nalgebra::VectorN<i32, U2>;
-pub type ZType = u16;
-pub type RenderResourcesPtr = Arc<RenderResources>;
 pub type GridBox = nalgebra::Vector2<i32>;
 
 

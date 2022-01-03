@@ -69,7 +69,7 @@ pub static HIKER_SYS: System = System{
     run,
     name: "hiker"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     if let Some(arena) = c.find_arena(){
         // Calculating waypoints.
         for (unit_id, hiker, position, order) in

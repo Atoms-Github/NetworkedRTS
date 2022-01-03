@@ -1,8 +1,4 @@
-use game::pub_types::PointFloat;
-use crate::ecs::GlobalEntityID;
-use crate::ecs::comp_store::CompStorage;
-use bibble::::*;
-use crate::ecs::superb_ecs::{System, EntStructureChanges};
+use crate::*;
 use std::ops::Div;
 
 use ggez::event::MouseButton;
@@ -40,13 +36,13 @@ pub static CAMERA_PAN_SYS: System = System{
     run,
     name: "camera_pan"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){
-        if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Middle){
+        if input.inputs.mouse_event == NiceMouseEvent::MouseDown(MouseButton::Middle){
             input.is_panning = true;
         }
         if input.is_panning{
-            if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
+            if input.inputs.mouse_event == NiceMouseEvent::MouseUp{
                 input.is_panning = false;
             }
             camera.translation -= input.inputs.mouse_moved.clone().div(camera.zoom);

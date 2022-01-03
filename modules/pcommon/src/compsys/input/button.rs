@@ -1,10 +1,7 @@
-use game::pub_types::PointFloat;
-use crate::ecs::GlobalEntityID;
-use crate::ecs::comp_store::CompStorage;
-use bibble::::*;
-use crate::ecs::superb_ecs::{System, EntStructureChanges};
+use crate::*;
+use winit::event::MouseButton;
 
-use ggez::event::MouseButton;
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ClickableComp {
     pub clicking_on: Option<GlobalEntityID>
@@ -14,13 +11,13 @@ pub static BUTTON_SYS: System = System{
     run,
     name: "button"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     // Clear all clicking ons.
     for (button_id, button) in CompIter1::<ClickableComp>::new(c){
         button.clicking_on = None;
     }
     for (player_id, input) in CompIter1::<InputComp>::new(c){
-        if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Left)
+        if input.inputs.mouse_event == NiceMouseEvent::MouseDown(MouseButton::Left)
         && input.mode == InputMode::None{
             if let Some(hovered_ent) = input.hovered_entity{
                 if let Some(button_comp) = c.get_mut::<ClickableComp>(hovered_ent){

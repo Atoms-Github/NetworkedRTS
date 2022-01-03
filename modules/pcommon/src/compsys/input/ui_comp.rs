@@ -1,10 +1,5 @@
+use crate::*;
 use ggez::event::MouseButton;
-
-use crate::ecs::comp_store::CompStorage;
-use crate::ecs::GlobalEntityID;
-use crate::ecs::superb_ecs::{EntStructureChanges, System};
-use game::pub_types::{PointFloat, PlayerID};
-use bibble::::*;
 use ggez::graphics::Rect;
 use std::ops::Div;
 
@@ -23,7 +18,7 @@ pub static UI_SYS: System = System{
     run,
     name: "ui"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     // // Increment time since use timers.
     // for (ui_id, ui, position, owned_comp)
     // in CompIter2::<UIComp, PositionComp>::new(c) {

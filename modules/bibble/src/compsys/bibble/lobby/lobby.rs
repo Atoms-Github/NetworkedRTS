@@ -22,7 +22,7 @@ pub static LOBBY_SYS: System = System{
     run,
     name: "lobby"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.find_scene();
     for (lobby_id, lobby) in CompIter1::<LobbyManager>::new(c){
         lobby.game_start_cooldown -= meta.delta;

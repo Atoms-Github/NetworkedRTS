@@ -21,7 +21,7 @@ pub static JIGSAW_PLAYER_SYS: System = System{
     run,
     name: "jigsaw_player"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let mut mat_comp = c.find_jigsaw_mat();
     for (player_id, player, jigsaw_player, input, camera) in CompIter4::<PlayerComp, JigsawPlayerComp, InputComp, CameraComp>::new(c){
         if !player.connected && mat_comp.is_none(){

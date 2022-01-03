@@ -1,6 +1,4 @@
-
-use crate::ecs::GlobalEntityID;
-use bibble::::*;
+use crate::*;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

@@ -1,19 +1,13 @@
-use bibble::::*;
-use crate::ecs::superb_ecs::{System, EntStructureChanges};
-
-use crate::ecs::comp_store::CompStorage;
-use crate::ecs::GlobalEntityID;
+use crate::*;
 use ggez::event::{MouseButton, KeyCode};
-use game::pub_types::PointFloat;
 use nalgebra::Point2;
-use rand::Rng;
 use crate::utils::gett;
 
 pub static INPUT_PREPROC: System = System{
     run,
     name: "input_preproc"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let entity_list = c.query_sorted(vec![gett::<PositionComp>(), gett::<SizeComp>(), gett::<RenderComp>()],
     |comp_store, entity| {comp_store.get_unwrap::<RenderComp>(entity).z});
 

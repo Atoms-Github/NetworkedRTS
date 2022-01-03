@@ -1,7 +1,7 @@
 use bibble::::data::data_types::{UnitID, EffectToUnit};
 use serde::*;
 
-#[repr(u16)]
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum EffectToPoint{
     DETONATE,

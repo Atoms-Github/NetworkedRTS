@@ -19,7 +19,7 @@ pub static SELECTION_BOX_SYS: System = System{
     run,
     name: "selection_box"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.find_scene();
     if scene.current == SceneType::InJigsaw{
         return;

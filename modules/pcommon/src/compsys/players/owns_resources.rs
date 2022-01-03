@@ -1,32 +1,29 @@
+use crate::*;
 use ggez::event::{KeyCode, MouseButton};
-use bibble::::RtsMouseEvent::{NoMouse, MouseUp};
-use bibble::::RtsKeyEvent::NoKey;
-use game::pub_types::PointFloat;
 
-use bibble::::*;
 use std::collections::HashMap;
 use std::hash::Hash;
 
 pub const RESOURCES_COUNT: usize = 3;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Default)]
-pub struct ResourceBlock<T : Hash + Serialize + DeserializeOwned + Copy> {
+pub struct ResourceBlock<T : Hash + Eq + Copy> {
     pub resources: HashMap<T, f32>
 }
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub struct OwnsResourcesComp<T : Hash + Serialize + DeserializeOwned + Copy> {
+pub struct OwnsResourcesComp<T : Hash + Eq + Copy> {
     resources: ResourceBlock<T>
 }
-impl<T : Hash + Serialize + DeserializeOwned + Copy> OwnsResourcesComp<T> {
+impl<T : Hash + Eq + Copy> OwnsResourcesComp<T> {
     pub fn gain_block(&mut self, block: &ResourceBlock<T>, delta: f32){
         for (k, v) in &block.resources{
-            *self.resources.resources.entry(k).or_insert(0.0) += v;
+            *self.resources.resources.entry(*k).or_insert(0.0) += v;
         }
     }
     pub fn gain(&mut self, res_type: T, amount: f32){
-        *self.resources.resources.entry(&res_type).or_insert(0.0) += v;
+        *self.resources.resources.entry(res_type).or_insert(0.0) += amount;
     }
     pub fn pay(&mut self, res_type: T, amount: f32){
-        *self.resources.resources.entry(&res_type).or_insert(0.0) -= v;
+        *self.resources.resources.entry(res_type).or_insert(0.0) -= amount;
     }
 
     pub fn try_pay(&mut self, res_type: T, amount: f32) -> bool{
@@ -42,7 +39,7 @@ impl<T : Hash + Serialize + DeserializeOwned + Copy> OwnsResourcesComp<T> {
         }
     }
     pub fn get_count(&mut self, res_type: T) -> f32{
-        return *self.resources.resources.entry(&res_type).or_insert(0.0);
+        return *self.resources.resources.entry(res_type).or_insert(0.0);
     }
 }
 

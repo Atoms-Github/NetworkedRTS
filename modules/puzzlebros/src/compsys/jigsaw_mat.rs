@@ -21,7 +21,7 @@ pub static JIGSAW_MAT_SYS: System = System{
     run,
     name: "jigsaw_mat"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.find_scene();
     if let Some(mat_comp) = c.find_jigsaw_mat(){
         // Check for jigsaw end on F3.

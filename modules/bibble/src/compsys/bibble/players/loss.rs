@@ -15,7 +15,7 @@ pub static LOSS_SYS: System = System{
     run,
     name: "loss"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.find_scene();
 
     if scene.current == SceneType::InGame{

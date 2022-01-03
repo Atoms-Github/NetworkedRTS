@@ -1,19 +1,13 @@
+use crate::*;
 
 use ggez::event::{KeyCode, MouseButton};
-use bibble::::RtsMouseEvent::{NoMouse, MouseUp};
-use bibble::::RtsKeyEvent::NoKey;
-use game::pub_types::PointFloat;
 
-use bibble::::*;
-use game::bibble::data::data_types::noneffects::RaceID;
 use ggez::graphics::Color;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct PlayerComp {
     pub name: String,
-    pub alive: bool,
     pub connected: bool,
-    pub race: RaceID,
     pub color: Shade,
 }
 

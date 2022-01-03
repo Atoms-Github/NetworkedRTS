@@ -26,14 +26,13 @@ use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use log::LevelFilter;
 
-use crate::args::*;
-use crate::pub_types::*;
+use pcommon::args::*;
+use pcommon::pub_types::*;
+
 use crate::rts::GameStateJigsaw;
 
 pub mod rts;
-pub mod pub_types;
 pub mod utils;
-pub mod args;
 
 
 pub const DEBUG_MSGS_ALL: bool = false;
@@ -47,7 +46,7 @@ pub const DEBUG_MSGS_PROCESS: bool = DEBUG_MSGS_ALL || true;
 
 fn main() {
 
-    let args = crate::args::Args::gather();
+    let args = pcommon::args::Args::gather();
     let address = args.ip + ":1616";
     Builder::new()
         .format(|buf, record| {

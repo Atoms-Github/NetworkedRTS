@@ -12,7 +12,8 @@ use crate::pending_entity::PendingEntity;
 use crate::GlobalEntityID;
 
 use std::fmt;
-use netcode::{SimMetadata, SimQuality};
+use netcode::{SimMetadata, SimQuality, PlayerInputs};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SuperbEcs{
@@ -37,27 +38,27 @@ impl SuperbEcs{
     pub fn set_systems(&mut self, systems: Vec<System>){
         self.systems = systems;
     }
-    pub fn sim_systems(&mut self, meta: &SimMetadata){
-        let mut pending_changes = EntStructureChanges{
-            new_entities: vec![],
-            deleted_entities: vec![]
-        };
-
+    pub fn sim_systems(&mut self, stat: &StaticFrameData){
         for system in &self.systems{
-            if meta.quality == SimQuality::DETERMA{
+            if stat.meta.quality == SimQuality::DETERMA{
                 self.debug_times.start_timer(String::from(system.name));
             }
-            (system.run)(&mut self.c, &mut pending_changes, meta);
+            (system.run)(&mut self.c, stat);
+            self.c.flush_ent_changes();
 
-            if meta.quality == SimQuality::DETERMA{
+            if stat.meta.quality == SimQuality::DETERMA{
                 self.debug_times.stop_timer(String::from(system.name));
             }
         }
-        pending_changes.apply(&mut self.c);
 
         self.debug_times.print_all();
     }
 
+}
+
+pub struct StaticFrameData<'a>{
+    meta: &'a SimMetadata,
+    inputs: &'a PlayerInputs
 }
 impl Hash for SuperbEcs{
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -75,33 +76,11 @@ impl Clone for SuperbEcs{
 }
 #[derive(Clone)]
 pub struct System{
-    pub run: fn(&mut CompStorage /* Could add read only version here. */, &mut EntStructureChanges, &SimMetadata),
+    pub run: fn(&mut CompStorage, &StaticFrameData),
     pub name: &'static str,
 }
 impl Debug for System{
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("System").field("Name: ", &self.name).finish()
-    }
-}
-pub struct EntStructureChanges{
-    pub new_entities: Vec<PendingEntity>,
-    pub deleted_entities: Vec<GlobalEntityID>,
-}
-impl EntStructureChanges{
-    pub fn apply(self, storage: &mut CompStorage){
-        for new_entity in self.new_entities{
-            storage.create_entity(new_entity);
-        }
-        for del_entity in self.deleted_entities{
-            storage.delete_entity(del_entity);
-        }
-    }
-    pub fn move_into(self, other: &mut Self){
-        for new_entity in self.new_entities{
-            other.new_entities.push(new_entity);
-        }
-        for del_entity in self.deleted_entities{
-            other.deleted_entities.push(del_entity);
-        }
     }
 }

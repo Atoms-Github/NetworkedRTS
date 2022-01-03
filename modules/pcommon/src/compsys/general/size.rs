@@ -1,8 +1,4 @@
-use game::pub_types::PointFloat;
-use crate::ecs::comp_store::CompStorage;
-use crate::ecs::eid_manager::GlobalEntityID;
-use bibble::::PositionComp;
-use bibble::::*;
+use crate::*;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

@@ -19,7 +19,7 @@ pub static NO_LEAVE_MAP: System = System{
     run,
     name: "orders"
 };
-fn run(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, meta: &SimMetadata){
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
     if let Some(arena) = c.find_arena(){
         for (unit_id, position)
         in CompIter1::<PositionComp>::new(c) {

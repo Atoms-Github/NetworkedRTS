@@ -6,3 +6,22 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+becs = {path="../becs"}
+bib_utils = {path= "../bib_utils" }
+netcode = {path= "../netcode" } # This one is temp-ish. If we need to, we can remove this, and just bridge the sim-metadata.
+
+
+
+mint = "*"
+bresenham = "*"
+bincode = "*"
+log = { version = "*", features = ["max_level_debug", "release_max_level_info"] }
+serde = { version = "1.0", features = ["derive"] }
+
+ggez = {version = "0.6.0"}
+nalgebra = {version = "*", features = ["mint", "serde-serialize"] }
+
+[dependencies.winit]
+version = "0.25" # To match ggez.
+# cherry-pick individual features
+features = ["serde"]
