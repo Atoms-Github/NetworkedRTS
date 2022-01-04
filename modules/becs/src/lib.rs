@@ -10,7 +10,6 @@
 #![allow(deprecated)] // TODO:
 
 
-use crate::superb_ecs::SuperbEcs;
 
 pub mod superb_ecs;
 pub mod eid_manager;
@@ -29,6 +28,7 @@ pub type ZType = u16;
 pub use comp_store::CompStorage;
 pub use superb_ecs::StaticFrameData;
 pub use superb_ecs::System;
+pub use superb_ecs::SuperbEcs;
 pub use ecs_macros::*;
 
 pub use netcode::SimMetadata;

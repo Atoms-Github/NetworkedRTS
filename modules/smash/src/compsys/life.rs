@@ -1,0 +1,22 @@
+use crate::*;
+
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct LifeComp{
+    pub life: f32,
+    pub max_life: f32,
+}
+
+pub static LIFE_SYS: System = System{
+    run,
+    name: "life"
+};
+fn run(c: &mut CompStorage, meta: &StaticFrameData){
+    for (unit_id, life) in CompIter1::<LifeComp>::new(c) {
+        if life.life <= 0.0{
+            c.req_delete_entity(unit_id);
+        }
+    }
+}
+
+

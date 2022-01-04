@@ -31,6 +31,7 @@ bimap = "*"
 rdxsort = "0.3.0"
 crossbeam-channel = "0.5.0"
 serde-big-array = {path = "C:\\_C_\\Home\\Produce\\Code\\Projects\\Rust\\OtherPeeps\\serde-big-array"}
+bib_utils = {path = "../bib_utils"}
 bibble_tokio = {path = "C:\\_C_\\Home\\Produce\\Code\\Projects\\Rust\\BigYoshis\\BibbleTokio"}
 simple-logging = "*"
 log4rs = "*"

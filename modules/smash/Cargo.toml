@@ -9,5 +9,7 @@ edition = "2021"
 bib_utils = {path="../bib_utils"}
 becs = {path="../becs"}
 netcode = {path="../netcode"}
+pcommon = {path="../pcommon"}
+ggez = "*"
 serde = "*"
 nalgebra = "*"

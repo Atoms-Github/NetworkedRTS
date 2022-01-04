@@ -1,8 +1,5 @@
-use crate::rts::compsys::jigsaw::jigsaw_game_state::*;
-use crate::rts::compsys::*;
-use crate::pub_types::PointFloat;
-use crate::ecs::superb_ecs::{System, EntStructureChanges};
-use crate::ecs::comp_store::CompStorage;
+use crate::*;
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct VelocityComp {
     pub vel: PointFloat,
