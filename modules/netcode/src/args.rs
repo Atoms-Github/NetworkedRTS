@@ -1,4 +1,5 @@
 use std::env;
+use crate::common::net_game_state::GameState;
 
 pub struct Args{
     pub launch_type: LaunchType,
@@ -61,6 +62,19 @@ impl Args{
             launch_type,
             ip: ip.unwrap(),
             player_name
+        }
+    }
+}
+pub fn simple_game<T : 'static + GameState>(){
+    let args = Args::gather();
+    let address = args.ip + ":1616";
+    log::info!("Starting!");
+    match args.launch_type{
+        LaunchType::CLIENT => {
+            crate::client_main::<T>(args.player_name.unwrap(), address, 0);
+        }
+        LaunchType::SERVER => {
+            crate::server_main::<T>(address);
         }
     }
 }

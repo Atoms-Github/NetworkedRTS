@@ -8,6 +8,11 @@
 #![allow(unused_attributes)]
 #![allow(deprecated)] // TODO
 
+use nalgebra::U2;
+
+pub use pub_types::*;
+pub use args::simple_game;
+
 use crate::common::input_state::InputState;
 use crate::common::net_game_state::GameState;
 
@@ -17,13 +22,7 @@ pub mod common;
 mod utils;
 
 mod pub_types;
-pub use pub_types::*;
-use nalgebra::U2;
-
-
-
-
-
+pub mod args;
 
 pub fn server_main<T : 'static + GameState>(hosting_ip: String){
     server::server_mode::server_main::<T>(hosting_ip);

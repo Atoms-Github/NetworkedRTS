@@ -45,9 +45,6 @@ pub const DEBUG_MSGS_TIMERS: bool = DEBUG_MSGS_ALL || false;
 pub const DEBUG_MSGS_PROCESS: bool = DEBUG_MSGS_ALL || true;
 
 fn main() {
-
-    let args = pcommon::args::Args::gather();
-    let address = args.ip + ":1616";
     Builder::new()
         .format(|buf, record| {
             if record.target().contains("poggy"){
@@ -70,19 +67,12 @@ fn main() {
     // log4rs::init_config(config).unwrap();
 
 
-    log::info!("Starting!");
 
 
 
 
-    match args.launch_type{
-        LaunchType::CLIENT => {
-            netcode::client_main::<GameStateJigsaw>(args.player_name.unwrap(), address, 0);
-        }
-        LaunchType::SERVER => {
-            netcode::server_main::<GameStateJigsaw>(address);
-        }
-    }
+
+
 }
 
 
