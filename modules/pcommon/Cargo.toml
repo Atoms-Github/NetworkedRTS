@@ -10,7 +10,10 @@ becs = {path="../becs"}
 bib_utils = {path= "../bib_utils" }
 netcode = {path= "../netcode" } # This one is temp-ish. If we need to, we can remove this, and just bridge the sim-metadata.
 
-
+lazy_static = "1.4.0"
+image = "*"
+walkdir = "*"
+itertools = "*"
 
 mint = "*"
 bresenham = "*"

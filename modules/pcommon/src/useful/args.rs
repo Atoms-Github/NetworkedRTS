@@ -51,10 +51,10 @@ impl Args{
             }
         }
         if ip.is_none(){
-            ip = Some(crate::utils::get_line_input("Connection / hosting IP not specified! Enter IP:"));
+            ip = Some(bib_utils::get_line_input("Connection / hosting IP not specified! Enter IP:"));
         }
         if player_name.is_none() && launch_type == LaunchType::CLIENT{
-            player_name = Some(crate::utils::get_line_input("Username not specified! Enter username:"));
+            player_name = Some(bib_utils::get_line_input("Username not specified! Enter username:"));
         }
 
         Self{

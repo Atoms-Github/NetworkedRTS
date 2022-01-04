@@ -17,8 +17,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         button.clicking_on = None;
     }
     for (player_id, input) in CompIter1::<InputComp>::new(c){
-        if input.inputs.mouse_event == NiceMouseEvent::MouseDown(MouseButton::Left)
-        && input.mode == InputMode::None{
+        if input.inputs.mouse_event == NiceMouseEvent::MouseDown(MouseButton::Left){
             if let Some(hovered_ent) = input.hovered_entity{
                 if let Some(button_comp) = c.get_mut::<ClickableComp>(hovered_ent){
                     button_comp.clicking_on = Some(player_id);

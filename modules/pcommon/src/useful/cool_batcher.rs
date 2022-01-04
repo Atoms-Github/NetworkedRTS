@@ -1,14 +1,14 @@
+use crate::*;
 use ggez::graphics::{Color, DrawParam, Image, DrawMode, Rect, MeshBuilder, Drawable, FilterMode, Text, draw};
 use std::collections::HashMap;
 use netcode::*;
-use game::pub_types::{PointFloat, RenderResourcesPtr};
 use ggez::{Context, graphics};
 use ggez::graphics::spritebatch::SpriteBatch;
-use itertools::Itertools;
 use mint::Point2;
-use netcode::*;
-use game::pub_types::*;
 use std::ops::Div;
+use std::ops::Mul;
+use becs::ZType;
+use itertools::Itertools;
 
 
 struct BatcherImage{
@@ -94,7 +94,7 @@ impl CoolBatcher{
             .entry(z)
             .or_default().texts.push((position, text, color));
     }
-    pub fn gogo_draw(self, ctx: &mut Context, res: &RenderResourcesPtr){
+    pub fn gogo_draw(self, ctx: &mut Context, res: &RenderResources){
         // Iterate spritebatches ordered by z and actually render each of them
         for (z, render_layer) in self.layers
             .into_iter()

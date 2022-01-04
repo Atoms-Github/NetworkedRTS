@@ -9,9 +9,6 @@ pub use netcode::*;
 
 
 
-
-
-pub type PointFloat = nalgebra::VectorN<f32, U2>;
 pub type PointInt = nalgebra::VectorN<i32, U2>;
 pub type GridBox = nalgebra::Vector2<i32>;
 
