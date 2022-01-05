@@ -43,7 +43,7 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_transform(&ecs.c, entity_id);
         match &render.shape{
             RenderShape::Circle => {
-                let radius = ecs.c.get_unwrap::<SizeComp>(entity_id).size.x; // TODO: Projecting?
+                let radius = on_screen_size.x;
                 match &render.texture{
                     RenderTexture::Color(r,g,b,a) => {
                         cool_batcher.add_circle(&on_screen_pos, radius, Color::new(*r,*g,*b,*a), render.z);

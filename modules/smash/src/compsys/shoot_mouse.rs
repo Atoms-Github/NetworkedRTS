@@ -15,11 +15,11 @@ pub static SHOOT_MOUSE_SYS: System = System{
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let mut changes = EntStructureChanges::new();
     for (id, shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
-        let input_state = &c.get::<InputComp>(owned.owner).unwrap().inputs.primitive;
+        let input_state = &c.get::<InputComp>(owned.owner).unwrap();
 
         if shoot.time_since_shot >= 1.0{
-            if input_state.get_mouse_pressed(MouseButton::Left){
-                let velocity_vec = (input_state.get_mouse_loc() - &position.pos).normalize().mul(6.0);
+            if input_state.inputs.primitive.get_mouse_pressed(MouseButton::Left){
+                let velocity_vec = (input_state.mouse_pos_game_world.clone() - &position.pos).normalize().mul(6.0);
 
                 
                 let mut new_entity = crate::archetypes::new_bullet(owned.owner, position.pos.clone());

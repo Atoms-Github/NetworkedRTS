@@ -42,6 +42,14 @@ impl GameState for GameStateSmash{
     }
 
     fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata) {
+        // TODO: Remove this:
+        for (player_id, input_state) in &inputs{
+            if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(*player_id as GlobalEntityID){
+                existing_player.inputs.update_input_state(input_state.clone());
+            }
+        }
+
+
         let data = StaticFrameData{
             meta: sim_meta,
             inputs: &inputs
