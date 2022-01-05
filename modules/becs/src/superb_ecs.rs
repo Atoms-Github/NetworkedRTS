@@ -43,6 +43,7 @@ impl SuperbEcs{
             if stat.meta.quality == SimQuality::DETERMA{
                 self.debug_times.start_timer(String::from(system.name));
             }
+            self.c.flush_ent_changes();
             (system.run)(&mut self.c, stat);
             self.c.flush_ent_changes();
 
@@ -51,14 +52,14 @@ impl SuperbEcs{
             }
         }
 
-        self.debug_times.print_all();
+        // self.debug_times.print_all();
     }
 
 }
 
 pub struct StaticFrameData<'a>{
-    meta: &'a SimMetadata,
-    inputs: &'a PlayerInputs
+    pub meta: &'a SimMetadata,
+    pub inputs: &'a PlayerInputs
 }
 impl Hash for SuperbEcs{
     fn hash<H: Hasher>(&self, state: &mut H) {

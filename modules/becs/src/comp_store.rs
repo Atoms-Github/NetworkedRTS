@@ -24,6 +24,22 @@ pub struct EntStructureChanges{
     pub new_entities: Vec<PendingEntity>,
     pub deleted_entities: Vec<GlobalEntityID>,
 }
+impl EntStructureChanges{
+    pub fn new() -> Self{
+        Self{
+            new_entities: vec![],
+            deleted_entities: vec![]
+        }
+    }
+    pub fn apply(self, c: &mut CompStorage){
+        for new in self.new_entities{
+            c.req_create_entity(new);
+        }
+        for del in self.deleted_entities{
+            c.req_delete_entity(del);
+        }
+    }
+}
 
 
 
@@ -148,7 +164,7 @@ impl CompStorage{
 
         return new_composition_id;
     }
-    fn req_create_entity(&mut self, pending_entity: PendingEntity){
+    pub fn req_create_entity(&mut self, pending_entity: PendingEntity){
         self.pending_changes.new_entities.push(pending_entity);
     }
     fn create_entity(&mut self, pending_entity: PendingEntity) -> InternalIndex{

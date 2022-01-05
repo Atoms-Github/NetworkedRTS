@@ -15,20 +15,32 @@ pub mod compsys;
 pub mod archetypes;
 
 pub use compsys::*;
-pub use archetypes::*;
 pub use serde::{Deserializer, Deserialize, Serialize};
 pub use netcode::*;
 pub use becs::*;
 pub use pcommon::*;
 
 
-
-
-
-
-
-
 use crate::game_state_smash::GameStateSmash;
+use ggez::input::gamepad::gilrs::ev::filter::FilterFn;
+use env_logger::Builder;
+
+use std::{env, thread};
+use std::io::Write;
+use std::str::FromStr;
+use std::time::Duration;
+
+use chrono::Local;
+use log::LevelFilter;
+
 fn main() {
+    Builder::new()
+        .format(|buf, record| {
+            if record.target().contains("poggy"){
+                return writeln!(buf, "{} [{}] {}", Local::now().format("%M:%S%.3f"), record.level(), record.args());
+            }
+            return std::io::Result::Ok(());
+        }).filter(None, LevelFilter::Info).init();
+
     netcode::simple_game::<GameStateSmash>()
 }

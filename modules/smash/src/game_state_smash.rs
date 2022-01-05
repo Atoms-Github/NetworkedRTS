@@ -3,8 +3,10 @@ use netcode::common::net_game_state::GameState;
 use std::sync::Arc;
 
 
+
 #[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct GameStateSmash{
+    #[serde(deserialize_with = "state_deserialize")]
     ecs: SuperbEcs
 }
 impl GameState for GameStateSmash{
@@ -14,33 +16,56 @@ impl GameState for GameStateSmash{
         }
     }
 
-    fn init(&mut self) {
-        todo!()
+    fn init(&mut self){
+        //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
+        for player_index in 0..8{
+            let mut pending = archetypes::new_player(player_index as GlobalEntityID);
+            self.ecs.c.req_create_entity(pending);
+        }
+        self.ecs.c.req_create_entity(crate::archetypes::new_arena());
     }
-
     fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade) {
-        todo!()
+        let player_ent_id = player_id as GlobalEntityID;
+        let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, PointFloat::new(0.0,0.0), color);
+        self.ecs.c.req_create_entity(pawn);
+        let cursor = pcommon::archetypes::new_cursor(player_ent_id, color, 100);
+        self.ecs.c.req_create_entity(cursor);
+
+
+        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
+        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
+        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
     }
 
     fn player_disconnects(&mut self, player_id: PlayerID) {
-        todo!()
+
     }
 
     fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata) {
-        todo!()
+        let data = StaticFrameData{
+            meta: sim_meta,
+            inputs: &inputs
+        };
+        self.ecs.sim_systems(&data);
     }
 
-    fn render(&mut self, ctx: &mut ggez::context::Context, player_id: PlayerID, res: &Arc<Self::Resources>) {
-        todo!()
+    fn render(&mut self, ctx: &mut ggez::Context, player_id: PlayerID, res: &Arc<Self::Resources>) {
+        pcommon::simples_render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
     }
 
-    fn gen_render_resources(ctx: &mut ggez::context::Context) -> Arc<Self::Resources> {
-        todo!()
+    fn gen_render_resources(ctx: &mut ggez::Context) -> Arc<Self::Resources> {
+        let mut resources = RenderResources::load(ctx);
+
+        return Arc::new(resources);
     }
 
     type Resources = RenderResources;
 }
 
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Eq, Hash, Copy)]
+pub enum SmashPlayerProperty {
+    Score,
+}
 fn get_config() -> EcsConfig{
     EcsConfig{
         functions: {
@@ -52,71 +77,31 @@ fn get_config() -> EcsConfig{
             map.register_type::<RadiusComp>();
             map.register_type::<SizeComp>();
             map.register_type::<CollisionComp>();
-            map.register_type::<HikerComp>();
-            map.register_type::<HikerCollisionComp>();
             map.register_type::<LifeComp>();
-            map.register_type::<OrdersComp>();
-            map.register_type::<SelectableComp>();
             map.register_type::<CameraComp>();
             map.register_type::<InputComp>();
-            map.register_type::<SelectableComp>();
-            map.register_type::<SelBoxComp>();
             map.register_type::<OwnedComp>();
-            map.register_type::<OwnsResourcesComp>();
+            map.register_type::<OwnsResourcesComp<SmashPlayerProperty>>();
             map.register_type::<PlayerComp>();
-            map.register_type::<ArenaComp>();
-            map.register_type::<AbilitiesComp>();
-            map.register_type::<WeaponComp>();
-            map.register_type::<WorkerComp>();
             map.register_type::<RenderComp>();
-            map.register_type::<TechTreeComp>();
-            map.register_type::<SeekingProjComp>();
-            map.register_type::<SceneManager>();
-            map.register_type::<ScenePersistent>();
-            map.register_type::<LobbyManager>();
             map.register_type::<ClickableComp>();
-            map.register_type::<RaceButtonComp>();
-            map.register_type::<MapButtonComp>();
             map.register_type::<UIComp>();
-            map.register_type::<UnitStructureComp>();
-            map.register_type::<JigsawPieceComp>();
-            map.register_type::<JigsawPlayerComp>();
-            map.register_type::<JigsawMatComp>();
             map.register_type::<CursorComp>();
             map.register_type::<IgnoreHoverComp>();
-            // map.register_type::<BenchStruct>();
             map
         },
         systems: vec![
             INPUT_PREPROC.clone(),
             BUTTON_SYS.clone(),
-            RACE_BUTTON_SYS.clone(),
-            MAP_BUTTON_SYS.clone(),
             PERFORMANCE_MAP.clone(),
             CAMERA_PAN_SYS.clone(),
-            SEEKING_PROJECTILES_COMP.clone(),
-            SELECTION_BOX_SYS.clone(),
-            ABILITY_TARGETING.clone(),
-            ABILITIES_SYS.clone(),
             VELOCITY_SYS.clone(),
-            ORDERS_SYS.clone(),
-            HIKER_SYS.clone(),
-            HIKER_COLLISION_SYS.clone(),
             SHOOT_MOUSE_SYS.clone(),
             COLLISION_SYS.clone(),
             VELOCITY_WITH_INPUTS_SYS.clone(),
-            WORKER_SYS.clone(),
-            WEAPON_SYS.clone(),
             LIFE_SYS.clone(),
-            LOSS_SYS.clone(),
-            NO_LEAVE_MAP.clone(),
-            LOBBY_SYS.clone(),
-            JIGSAW_PIECE_SYS.clone(),
-            JIGSAW_MAT_SYS.clone(),
             CURSOR_SYS.clone(),
-            JIGSAW_PLAYER_SYS.clone(),
             UI_SYS.clone(),
-            SCENE_SWITCHER_SYS.clone(),
         ]
     }
 }

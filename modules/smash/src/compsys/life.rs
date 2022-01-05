@@ -12,11 +12,13 @@ pub static LIFE_SYS: System = System{
     name: "life"
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
+    let mut changes = EntStructureChanges::new();
     for (unit_id, life) in CompIter1::<LifeComp>::new(c) {
         if life.life <= 0.0{
-            c.req_delete_entity(unit_id);
+            changes.deleted_entities.push(unit_id);
         }
     }
+    changes.apply(c);
 }
 
 

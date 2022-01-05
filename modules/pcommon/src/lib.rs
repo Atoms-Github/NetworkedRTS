@@ -20,6 +20,7 @@ pub use compsys::*;
 pub use useful::*;
 pub use pub_types::*;
 
+pub mod archetypes;
 pub mod compsys;
 
 #[cfg(test)]

@@ -19,7 +19,7 @@ impl RenderResources{
         // let image = ggez::graphics::Image::new(ctx, path).unwrap();
         let mut resources_dir = std::env::current_exe().unwrap();
         resources_dir.pop();
-        resources_dir.push("../../../../resources");
+        resources_dir.push("resources");
 
         let resources_dir_canon = std::fs::canonicalize(resources_dir.clone()).unwrap();
         let mut images_dir = resources_dir.clone();

@@ -13,3 +13,6 @@ pcommon = {path="../pcommon"}
 ggez = "*"
 serde = "*"
 nalgebra = "*"
+env_logger = "*"
+log = "*"
+chrono = "*"

@@ -71,7 +71,7 @@ impl CoolBatcher{
     pub fn add_circle(&mut self, position: &PointFloat, size: f32, color: Color, z: ZType){
         self.layers
             .entry(z)
-            .or_default().circles.push((position.clone(), size, color));
+            .or_default().circles.push((position.clone(), size / 2.0, color));
     }
     pub fn add_image(&mut self, filename: String, draw_param: MyDrawParams, z: ZType){
         self.layers
@@ -133,6 +133,16 @@ impl CoolBatcher{
                     let top_left_corner = (my_draw_params.pos - (my_draw_params.size.clone().div(2.0))).to_point();
                     let rect = ggez::graphics::Rect::new(top_left_corner.x, top_left_corner.y, my_draw_params.size.x, my_draw_params.size.y);
                     builder.rectangle(graphics::DrawMode::fill(), rect, color).unwrap();
+                }
+                builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
+            }
+            // Draw circles:
+            if render_layer.circles.len() > 0{
+                let mut builder = MeshBuilder::new();
+                for (pos, radius, color) in render_layer.circles.into_iter() {
+                    let top_left_corner = (pos /*- (PointFloat::new(radius / 2.0, radius / 2.0))*/).to_point();
+                    builder.circle(graphics::DrawMode::fill(),
+                                   top_left_corner, radius, 0.05, color).unwrap();
                 }
                 builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
             }
