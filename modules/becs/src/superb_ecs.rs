@@ -1,19 +1,20 @@
-
+use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
+use std::fmt;
+use std::hash::{Hash, Hasher};
 
 use serde::*;
-use crate::comp_store::*;
-use serde::ser::SerializeStruct;
 use serde::de::Visitor;
-use std::fmt::{Debug, Formatter};
-use std::hash::{Hash, Hasher};
-use crate::ecs_debug_timer::EcsDebugTimer;
-use crate::bblocky::comp_registration::EcsConfig;
-use crate::pending_entity::PendingEntity;
-use crate::GlobalEntityID;
+use serde::ser::SerializeStruct;
 
-use std::fmt;
-use netcode::{SimMetadata, SimQuality, PlayerInputs};
-use std::collections::HashMap;
+use netcode::{InfoForSim, PlayerInputs, SimMetadata, SimQuality};
+use netcode::common::net_game_state::StaticFrameData;
+
+use crate::bblocky::comp_registration::EcsConfig;
+use crate::comp_store::*;
+use crate::ecs_debug_timer::EcsDebugTimer;
+use crate::GlobalEntityID;
+use crate::pending_entity::PendingEntity;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SuperbEcs{
@@ -57,10 +58,6 @@ impl SuperbEcs{
 
 }
 
-pub struct StaticFrameData<'a>{
-    pub meta: &'a SimMetadata,
-    pub inputs: &'a PlayerInputs
-}
 impl Hash for SuperbEcs{
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.c.hash(state);

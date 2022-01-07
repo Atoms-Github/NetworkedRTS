@@ -1,6 +1,9 @@
-use crate::*;
-use ggez::event::{MouseButton, KeyCode};
+use ggez::event::{KeyCode, MouseButton};
 use nalgebra::Point2;
+
+use netcode::common::net_game_state::StaticFrameData;
+
+use crate::*;
 use crate::utils::gett;
 
 pub static INPUT_PREPROC: System = System{
@@ -15,6 +18,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         if !player.connected{
             continue;
         }
+        input.inputs.update_input_state(meta.sim_info.inputs_map.get(&(player_id as PlayerID)).unwrap().clone());
         input.mouse_pos_game_world = camera.screen_space_to_game_space(input.inputs.primitive.get_mouse_loc().clone());
         input.hovered_entity = None;
         for ent_id in &entity_list{

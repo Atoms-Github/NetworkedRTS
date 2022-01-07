@@ -1,8 +1,8 @@
-use crate::*;
-use netcode::common::net_game_state::GameState;
 use std::sync::Arc;
 
+use netcode::common::net_game_state::{GameState, StaticFrameData};
 
+use crate::*;
 
 #[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct GameStateSmash{
@@ -15,7 +15,6 @@ impl GameState for GameStateSmash{
             ecs: SuperbEcs::new(get_config())
         }
     }
-
     fn init(&mut self){
         //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
         for player_index in 0..8{
@@ -24,37 +23,22 @@ impl GameState for GameStateSmash{
         }
         self.ecs.c.req_create_entity(crate::archetypes::new_arena());
     }
-    fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade) {
-        let player_ent_id = player_id as GlobalEntityID;
-        let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, PointFloat::new(0.0,0.0), color);
-        self.ecs.c.req_create_entity(pawn);
-        let cursor = pcommon::archetypes::new_cursor(player_ent_id, color, 100);
-        self.ecs.c.req_create_entity(cursor);
+
+    fn simulate_tick(&mut self, stat: &StaticFrameData) {
+        self.ecs.sim_systems(&stat);
+
+        for (player_id, username, color) in stat.sim_info.get_connecting_players(){
+            let player_ent_id = player_id as GlobalEntityID;
+            let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, PointFloat::new(0.0,0.0), color);
+            self.ecs.c.req_create_entity(pawn);
+            let cursor = pcommon::archetypes::new_cursor(player_ent_id, color, 100);
+            self.ecs.c.req_create_entity(cursor);
 
 
-        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
-        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
-        self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
-    }
-
-    fn player_disconnects(&mut self, player_id: PlayerID) {
-
-    }
-
-    fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata) {
-        // TODO: Remove this:
-        for (player_id, input_state) in &inputs{
-            if let Some(existing_player) = self.ecs.c.get_mut::<InputComp>(*player_id as GlobalEntityID){
-                existing_player.inputs.update_input_state(input_state.clone());
-            }
+            self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
+            self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
+            self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
         }
-
-
-        let data = StaticFrameData{
-            meta: sim_meta,
-            inputs: &inputs
-        };
-        self.ecs.sim_systems(&data);
     }
 
     fn render(&mut self, ctx: &mut ggez::Context, player_id: PlayerID, res: &Arc<Self::Resources>) {

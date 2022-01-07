@@ -44,3 +44,29 @@ pub struct InfoForSim {
     pub inputs_map: PlayerInputs,
     pub server_events: ServerEvents
 }
+
+impl InfoForSim{
+    pub fn get_connecting_players(&self) -> Vec<(PlayerID, String, Shade)>{
+        let mut items = vec![];
+        for event in &self.server_events{
+            match event{
+                ServerEvent::JoinPlayer(a,b,c) => {
+                    items.push((*a,b.clone(),c.clone()));
+                }
+                ServerEvent::DisconnectPlayer(_) => {}
+            }
+        }
+        return items;
+    }
+    pub fn get_disconnecting_players(&self) -> Vec<PlayerID>{
+        let mut items = vec![];
+        for event in &self.server_events{
+            match event{
+                ServerEvent::JoinPlayer(a,b,c) => {
+                }
+                ServerEvent::DisconnectPlayer(id) => {items.push(*id)}
+            }
+        }
+        return items;
+    }
+}

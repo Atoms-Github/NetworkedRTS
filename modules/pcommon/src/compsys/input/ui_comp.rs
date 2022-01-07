@@ -1,7 +1,11 @@
-use crate::*;
+use std::ops::Div;
+
 use ggez::event::MouseButton;
 use ggez::graphics::Rect;
-use std::ops::Div;
+
+use netcode::common::net_game_state::StaticFrameData;
+
+use crate::*;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct UIComp {

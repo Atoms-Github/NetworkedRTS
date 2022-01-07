@@ -1,23 +1,24 @@
-use serde::{Serialize, Deserialize};
-use crate::pub_types::{PlayerID, FrameIndex, HashType, SimQuality, SimMetadata, Shade};
-use std::collections::{HashMap, BTreeMap};
+use std::{env, fmt, fs};
+use std::collections::{BTreeMap, HashMap};
 use std::collections::hash_map::DefaultHasher;
-use ggez::Context;
-use crate::{InfoForSim, InputState, PlayerInputs};
-use std::hash::{Hash, Hasher};
-
-use std::sync::Arc;
 use std::fmt::Debug;
-use serde::__private::Formatter;
-use std::{fmt, fs, env};
-use std::path::Path;
 use std::fs::File;
+use std::hash::{Hash, Hasher};
 use std::io::Write;
-use zip::write::FileOptions;
-use crate::client::client_hasher::FramedHash;
-use crate::common::confirmed_data::{ServerEvent, ConfirmedData, SimDataOwner, SimDataQuery};
-use crate::common::superstore_seg::Superstore;
+use std::path::Path;
+use std::sync::Arc;
+
+use ggez::Context;
+use serde::{Deserialize, Serialize};
+use serde::__private::Formatter;
 use serde::de::DeserializeOwned;
+use zip::write::FileOptions;
+
+use crate::{InfoForSim, InputState, PlayerInputs};
+use crate::client::client_hasher::FramedHash;
+use crate::common::confirmed_data::{ConfirmedData, ServerEvent, SimDataOwner, SimDataQuery};
+use crate::common::superstore_seg::Superstore;
+use crate::pub_types::{FrameIndex, HashType, PlayerID, Shade, SimMetadata, SimQuality};
 
 #[derive(Clone, Serialize, Deserialize, Debug, Hash)]
 pub struct ConnectedPlayerProperty {
@@ -33,9 +34,7 @@ pub struct NetGameState<T> {
 pub trait GameState : Clone + Serialize + DeserializeOwned + Hash + Debug + Send{
     fn new() -> Self;
     fn init(&mut self);
-    fn player_connects(&mut self, player_id: PlayerID, username: String, color: Shade);
-    fn player_disconnects(&mut self, player_id: PlayerID);
-    fn simulate_tick(&mut self, inputs: PlayerInputs, sim_meta: &SimMetadata);
+    fn simulate_tick(&mut self, stat: &StaticFrameData);
     fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &Arc<Self::Resources>);
     fn gen_render_resources(ctx: &mut Context) -> Arc<Self::Resources>;
 
@@ -93,17 +92,19 @@ impl<T : 'static + GameState> NetGameState<T> {
         return net_state;
     }
     pub fn simulate_any(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
-        self.game_state.simulate_tick(sim_info.inputs_map.clone(), sim_meta);
+        let stat = StaticFrameData{
+            meta: &sim_meta,
+            sim_info: &sim_info
+        };
+        self.game_state.simulate_tick(&stat);
 
         // Update this at the end of the frame, because players have no inputs the frame they connect.
         for server_event in &sim_info.server_events{
             match server_event{
                 ServerEvent::JoinPlayer(player_id, name, shade) => {
                     self.connected_players.insert(*player_id, ConnectedPlayerProperty{});
-                    self.game_state.player_connects(*player_id, name.clone(), shade.clone());
                 }
                 ServerEvent::DisconnectPlayer(player_id) => {
-                    self.game_state.player_disconnects(*player_id);
                     let existing = self.connected_players.remove(player_id);
                     assert!(existing.is_some());
                 }
@@ -178,4 +179,9 @@ impl<T : 'static + GameState> NetGameState<T> {
                   frame_index: frame
                       });
     }
+}
+
+pub struct StaticFrameData<'a>{
+    pub meta: &'a SimMetadata,
+    pub sim_info: &'a InfoForSim
 }

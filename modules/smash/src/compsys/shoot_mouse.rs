@@ -1,7 +1,11 @@
-use crate::*;
-use ggez::winit::event::MouseButton;
 use std::ops::Mul;
+
+use ggez::winit::event::MouseButton;
+
 use becs::pending_entity::PendingEntity;
+use netcode::common::net_game_state::StaticFrameData;
+
+use crate::*;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ShootMouseComp {

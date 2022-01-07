@@ -1,6 +1,8 @@
-use crate::*;
 use winit::event::MouseButton;
 
+use netcode::common::net_game_state::StaticFrameData;
+
+use crate::*;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ClickableComp {
