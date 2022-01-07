@@ -32,7 +32,7 @@ pub fn new_wasd_pawn(owner: GlobalEntityID, position: PointFloat, shade: Shade) 
         PositionComp{ pos: position },
         VelocityComp{ vel: PointFloat::new(0.0, 0.0) },
         OwnedComp { owner },
-        VelocityWithInputsComp{ speed: 2.0 },
+        VelocityWithInputsComp{ speed: 0.15 },
         LifeComp{ life: 100.0, max_life: 100.0 },
         CollisionComp{ useless: false },
     )
@@ -55,7 +55,7 @@ pub fn new_arena() -> PendingEntity{
             only_render_owner: false
         },
         ShootMouseComp{ time_since_shot: 0.0 },
-        SizeComp{ size: PointFloat::new(500.0, 500.0)},
+        SizeComp{ size: PointFloat::new(1000.0, 1000.0)},
         PositionComp{ pos: PointFloat::new(0.0, 0.0) },
     )
 }

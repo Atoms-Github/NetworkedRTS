@@ -22,6 +22,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         }
         let mut vector = my_inputs.get_directional() * speed;
         vector.y *= -1.0;
-        velocity.vel = vector;
+        velocity.vel += vector;
+        velocity.vel *= 0.99;
     }
 }
