@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="DebugServerClient" type="CompoundRunConfigurationType">
-    <toRun name="Run Server" type="CargoCommandRunConfiguration" />
-    <toRun name="Run LiteralPoggySourceClientB1 Debug" type="CargoCommandRunConfiguration" />
-    <method v="2" />
-  </configuration>
-</component>

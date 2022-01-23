@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="RTS_S_C2" type="CompoundRunConfigurationType">
-  <toRun name="RTS_C2" type="CargoCommandRunConfiguration" /><toRun name="RTS_C2" type="CargoCommandRunConfiguration" />
-    <toRun name="Run LiteralPoggySourceClientC2" type="CargoCommandRunConfiguration" />
-    <toRun name="Run Server" type="CargoCommandRunConfiguration" />
-    <toRun name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" />
-    <method v="2" />
-  </configuration>
-</component>

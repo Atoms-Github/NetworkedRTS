@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="S C4" type="CompoundRunConfigurationType">
+  <toRun name="S" type="CargoCommandRunConfiguration" /><toRun name="C1" type="CargoCommandRunConfiguration" /><toRun name="C2" type="CargoCommandRunConfiguration" /><toRun name="C3" type="CargoCommandRunConfiguration" /><toRun name="C4" type="CargoCommandRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>
