@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SMASH_S_C2" type="CompoundRunConfigurationType">
+  <toRun name="SMASH_C2" type="CargoCommandRunConfiguration" /><toRun name="SMASH_C2" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientC2" type="CargoCommandRunConfiguration" />
+    <toRun name="Run Server" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

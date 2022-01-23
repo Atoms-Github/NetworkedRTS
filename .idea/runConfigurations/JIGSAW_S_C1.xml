@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="JIGSAW_S_C1" type="CompoundRunConfigurationType">
+  <toRun name="JIGSAW_C1" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientC2" type="CargoCommandRunConfiguration" />
+    <toRun name="Run Server" type="CargoCommandRunConfiguration" />
+    <toRun name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>

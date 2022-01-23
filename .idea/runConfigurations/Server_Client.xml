@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Server+Client" type="CompoundRunConfigurationType">
-    <toRun name="RunSmashServer" type="CargoCommandRunConfiguration" />
-    <toRun name="Run SmashClient" type="CargoCommandRunConfiguration" />
-    <method v="2" />
-  </configuration>
-</component>

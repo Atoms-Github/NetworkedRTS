@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run LiteralPoggySourceClientB1" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="true">
-    <option name="command" value="run --package game --bin game --release Client +name Atoms +ip 127.0.0.1" />
+  <configuration default="false" name="SMASH_C2" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="false">
+    <option name="command" value="run --package smash --bin smash --release Client +name QuickToast +ip 127.0.0.1" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />
