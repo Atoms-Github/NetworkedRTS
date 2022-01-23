@@ -1,0 +1,229 @@
+
+
+What I could do:
+Make new project.
+Get GGEZImGUI, reliable server hub running.
+These channels are messy.
+How do we get instant-message return without channels?
+Wrappers on sockets with 'RecV1'?
+The only way it works with 0 turnaround is with channels.
+
+Why is it so messy? Because I need to re-define every network operation, and assign it a message enum type.
+How about handle.kick(playerId). That's what I want.
+
+So this handle can be a handle on the same thread as the main thread.
+But no, because it needs instant-reacting.
+
+Server only 'should' react instantly to:
+'New inputs'.
+
+
+Nah. Lets just fix the network issue for now.
+
+The root of the problem is:
+Server needs to react instantly to network, and also needs to react to other things.
+
+
+
+
+
+
+
+
+Their example uses quering every 100ms ...
+
+
+
+
+
+
+
+Nah. Let's fix the networking.
+
+
+
+
+
+
+
+What's the interface?
+
+Its a struct, held on the same thread as the server.
+It has 'send', 'send to all', 'send to all except' methods.
+Those translate internally to things within.
+
+That's the hub's Ex? Then we've also got the hub's In?
+
+Yeah. That's good, as it means we need fewer types of messages?
+A 'get all players' function would be good.
+How about the back doesn't know who's connected, just the front?
+
+So back says 'we've got a new dude'. Front says 'kick em!'.
+How does the back know how to kick, if it doesn't know who's connected?
+
+Ah! That might work!
+Front says 'kick em', back translates that into a poison along the TCP receiver thread.
+
+Lets refactor the existing into this nicer version?
+
+
+What's the interface for the front end? What if/when I want crossbeam channel recv?. Assuming crossbeam recv is ok, what's up:
+
+Back is threads:
+- 1 for listen new TCP connections: (Uses crossbeam channels for double recv).
+	On rec, send msg upwards, *then* create thread.
+- 1 for listen UDP messages.
+	On rec, send info upwards.
+- x for the TCP threads.
+	On rec, send info upwards, including disconnect.
+	
+Downwards: - Messages go straight to thread #1. New TCP connections one.
+Kick msg:
+Can tell thread handle to KYS.
+Send msg TCP:
+Can tell thread handle what to send:
+Send msg UDP:
+Clone UDP socket. Just straight send.
+
+Need to not allow UDP or TCP messages when 'disconnected'. This can be handled by higher level?
+Yeah. This is good since will always listen for TCP, since says 'connected' before listener thread made.
+
+Still need to remake input store to have better idea of when players connect and disconnect.
+
+
+Ok. Very nice. How is this different from existing system?
+
+
+Can we push together deserialization? Yeah. Since we're dropping invalid messages anyway. Messages stay as byte blobs for as long as possible. Even till top level, then generic server. Yeah. That's good.
+
+ExternalMsg needs from bytes and to bytes.
+I like it.
+
+Love it.
+What're the problems?
+
+Lets put this together into a module, and not expose the messy messages types!
+
+New project, then import!
+Yay!
+How would a wrapper work?
+
+
+
+
+Aim:
+	- Rock solid networking hub.
+	- No more double disconnects.
+	- Include tests to prevent thinggy.
+	- Confidently kick and accept connections.
+
+
+Assume everything is spamming.
+
+Slow catchup mechanism.
+
+
+
+
+
+Right fellas.
+What we doing?
+
+
+
+Caps.
+Wandering tail.
+ImGui.
+New project?
+
+Yeah :).
+Or, no?
+Not new project.
+Tho I could do with reasonable compile times.
+I guess I'm not going to get that.
+That's ok, since I'm going to tear it appart, then put it back together.
+Right.
+Timing.
+Server sims till 10 frames back, although it generates head or beyond. That's because there's 10 frames to get input in.
+That's the only server number. It doesn't care how fast the backwards cable is.
+
+
+
+
+Server:
+Input deadline adjustments:
+	Shorter = Clients can simulate further, as they're guaranteed to have inputs. Its an upper limit on how other pinggy clients can cause CPU lag for you.
+	Longer = Less likely for missed inputs.
+
+
+Yeah. There are plenty of bugs throughout that would cause desyncs. E.g. race condition in the server's scheduling what frame to put a new player?
+
+
+
+
+
+
+
+Right.
+What don't I like about serde things?
+a) Two 'new' methods. One 'from_bytes', one 'new'.
+b) Far too much "boilerplate" code to deserialize things.
+
+Hmm. This is all getting messy.
+
+
+
+
+
+
+
+
+
+Hmm. So, how do I do visibility?
+A) We have a pubTypes per module, which has pub(crate) for using a bunch of things.
+Yeah.
+That seems pretty perfect.
+Then every file in each module imports * from that file.
+Then there shouldn't ever be two options, as it should already have pub types.
+
+TODO:
+Tidy input component?
+
+So.
+What's common?
+InputPreProc.
+ButtonSys.
+PerformanceMap.
+CameraPanSys.
+Velocity.
+Lobby/SceneSwitcher?
+Cursor.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

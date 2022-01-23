@@ -21,7 +21,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (id, shoot,owned,position) in CompIter3::<ShootMouseComp, OwnedComp, PositionComp>::new(c){
         let input_state = &c.get::<InputComp>(owned.owner).unwrap();
 
-        if shoot.time_since_shot >= 1.0{
+        if shoot.time_since_shot >= 0.1{
             if input_state.inputs.primitive.get_mouse_pressed(MouseButton::Left){
                 let velocity_vec = (input_state.mouse_pos_game_world.clone() - &position.pos).normalize().mul(6.0);
 

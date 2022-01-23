@@ -1,0 +1,109 @@
+Spooky Bibble Things to investigate for perfection:
+	Networking disconnects should be better handled. Shouldn't run disconnect without a matching connect prior.
+	
+
+Addressed!:
+	Hash.
+	Memory leak.
+	Why is it only 1/20 frames that have an item hovered? (Cos there's 12 players).
+	
+
+
+Puzzle with your bros!:
+	RAM leak.
+	Puzzle border.
+	Pieces behind pieces.
+	Desync.
+	Spawn pieces around thing, not below.
+
+Building placement preview.
+Add behaviours.
+
+Done:
+	Add a single AOE ability.
+
+Nah:
+	Change everything to pretty triangles.
+
+
+
+
+
+Is there anything that violates the 'behaviours have no settings set on by caster' rule, with the exception of owner for damage?
+SC2 doesn't have this feature. Detector 10/11/12/20.
+InhibitorZone small, medium, large.
+Right.
+
+Behaviours have float storage :).
+
+
+I want to be able to represent some crazy things in this language. Its a DSL :-)
+
+-Unit cannon.
+-Interceptors.
+-Robots.
+-Rewarded for how much virus you clear?
+-Virus has 'take control of unit' button.
+Virus:
+	HasVirus behaviour.
+	Multiple players infect?
+
+
+What I'm thinking:
+	Each player has a SortedMap of FrameIndex -> ConnectionEvent. ConnectionEvent is Connect or Disconnect.
+	This won't work with normal requesting data stuff :(.
+	Yeah. 'Nothing' is supposed to be a real state.
+	I do need to send all the nothings.
+	How about, in the InputState struct, we also have 'NetworkState' thing? No. Disconnected players also need lists. This list is supposed to be for the server.
+	I feel its kinda gotta be a list of lists.
+	List of maps would work just as well, but wouldn't work better. Only advantage is that can't have two of the same player events in same frame.
+	Lets keep the base as a vector, as that's what we've already got setup.
+
+
+
+
+So. Server hub design 2.0.
+Life is an iterative process.
+Advantages:
+	- Simple interface.
+Disadvantages:
+	- Too many threads.
+	- Can send two disconnects, or two connects.
+	- Too much code. (front + back).
+	- Doesn't work.
+
+We shouldn't have a timer/heartbeat, as should be separate from other things.
+We do need a thread per socket, as we want to react instantly and pipe up instantly.
+How about:
+	Hold reference to the thread. When the thread returns, we disconnect. This thread is lifeblood.
+	4dish map, (more like 2 keys, 1 tuple value). PlayerID, IP, (tcp sink)
+	
+	
+How about:
+	Say: "Be gone!" to the complexity.
+	TCP is the bit that makes it awkward, so make a onion layer on TCP to make it act like a UDP thing (one rec, one push). Yeah. That sounds good.
+	Also, how about a single threaded layer on a UDP socket to say "get" -> ExternalMsg, and "push(ExternalMsg)"? It just does the decompression and deserialization for you.
+The reason it becomes such a thread mess is because there are 3 events that I need to listen for.
+I need to (instantly?) react to:
+	New connections.
+	Message from existing connection.
+	Message send request.
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
