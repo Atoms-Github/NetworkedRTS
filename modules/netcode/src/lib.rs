@@ -63,9 +63,6 @@ pub fn client_main<T : 'static + GameState>(player_name: String, connection_ip: 
         "guest4" => {
             Shade(0.588, 0.588, 0.588) // Light grey.
         }
-        "guest5" => {
-            Shade(0.588, 0.588, 0.588) // Beige.
-        }
         _ => {
             Shade(0.0,0.0,0.0)
         }
