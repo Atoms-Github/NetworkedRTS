@@ -4,7 +4,7 @@ members = [
     "modules/netcode",
     "modules/game",
     "modules/smash",
-    "modules/puzzlebros",
+    "modules/jigsaw",
     "modules/pcommon",
     "modules/bibble",
     "modules/becs",

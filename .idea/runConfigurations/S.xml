@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="S" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --package smash --bin smash --release Server +ip 127.0.0.1" />
+    <option name="command" value="run --package jigsaw --bin jigsaw --release Server +ip 127.0.0.1" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

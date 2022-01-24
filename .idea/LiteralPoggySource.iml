@@ -14,8 +14,8 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/game/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/netcode/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/pcommon/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/puzzlebros/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/bib_utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/jigsaw/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/smash/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />
