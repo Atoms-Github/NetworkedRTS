@@ -19,6 +19,7 @@ pub use serde::{Deserializer, Deserialize, Serialize};
 pub use netcode::*;
 pub use becs::*;
 pub use pcommon::*;
+pub use netcode::common::net_game_state::StaticFrameData;
 
 
 use crate::game_state_smash::GameStateSmash;

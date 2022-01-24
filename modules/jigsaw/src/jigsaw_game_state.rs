@@ -1,3 +1,4 @@
+use crate::*;
 use netcode::*;
 use ggez::{*};
 use std::sync::Arc;
@@ -8,13 +9,10 @@ use crate::ecs::pending_entity::PendingEntity;
 use serde_closure::internal::std::future::Pending;
 pub use crate::utils::gett;
 use crate::ecs::superb_ecs::{System, SuperbEcs};
-use bibble::::player::{PlayerComp};
-use bibble::::*;
 use game::bibble::data::data_types::{GameData, RaceID, Deserializer};
 use game::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
-use bibble::::render_resources::RenderResources;
 use rand::Rng;
 use netcode::common::net_game_state::GameState;
 use crate::ecs::bblocky::comp_registration::{EcsConfig, FunctionMap};
