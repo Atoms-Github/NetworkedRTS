@@ -32,6 +32,7 @@ use std::time::Duration;
 
 use chrono::Local;
 use log::LevelFilter;
+use crate::jigsaw_game_state::GameStateJigsaw;
 
 fn main() {
     Builder::new()

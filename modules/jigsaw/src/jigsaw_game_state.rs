@@ -2,20 +2,13 @@ use crate::*;
 use netcode::*;
 use ggez::{*};
 use std::sync::Arc;
-use crate::ecs::{ActiveEcs, GlobalEntityID};
 use ggez::graphics::{DrawParam, Text};
 use nalgebra::Point2;
-use crate::ecs::pending_entity::PendingEntity;
-use serde_closure::internal::std::future::Pending;
 pub use crate::utils::gett;
-use crate::ecs::superb_ecs::{System, SuperbEcs};
-use game::bibble::data::data_types::{GameData, RaceID, Deserializer};
-use game::bibble::effect_resolver::revolver::Revolver;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use rand::Rng;
 use netcode::common::net_game_state::GameState;
-use crate::ecs::bblocky::comp_registration::{EcsConfig, FunctionMap};
 
 pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
@@ -85,7 +78,7 @@ impl GameState for GameStateJigsaw {
     }
     fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
         let timer = DT::start("RenderTime");
-        super::super::bibble::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
+        super::bibble::render::render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
         if game::DEBUG_MSGS_ITS_LAGGING && rand::thread_rng().gen_bool(0.1){
             timer.stop();
         }
@@ -102,40 +95,19 @@ fn get_config() -> EcsConfig{
     EcsConfig{
         functions: {
             let mut map = FunctionMap::default();
-            map.register_type::<ShootMouseComp>();
-            map.register_type::<VelocityComp>();
-            map.register_type::<VelocityWithInputsComp>();
             map.register_type::<PositionComp>();
             map.register_type::<RadiusComp>();
             map.register_type::<SizeComp>();
-            map.register_type::<CollisionComp>();
-            map.register_type::<HikerComp>();
-            map.register_type::<HikerCollisionComp>();
-            map.register_type::<LifeComp>();
-            map.register_type::<OrdersComp>();
-            map.register_type::<SelectableComp>();
             map.register_type::<CameraComp>();
             map.register_type::<InputComp>();
-            map.register_type::<SelectableComp>();
-            map.register_type::<SelBoxComp>();
             map.register_type::<OwnedComp>();
-            map.register_type::<OwnsResourcesComp>();
             map.register_type::<PlayerComp>();
-            map.register_type::<ArenaComp>();
-            map.register_type::<AbilitiesComp>();
-            map.register_type::<WeaponComp>();
-            map.register_type::<WorkerComp>();
             map.register_type::<RenderComp>();
-            map.register_type::<TechTreeComp>();
-            map.register_type::<SeekingProjComp>();
             map.register_type::<SceneManager>();
             map.register_type::<ScenePersistent>();
             map.register_type::<LobbyManager>();
             map.register_type::<ClickableComp>();
-            map.register_type::<RaceButtonComp>();
-            map.register_type::<MapButtonComp>();
             map.register_type::<UIComp>();
-            map.register_type::<UnitStructureComp>();
             map.register_type::<JigsawPieceComp>();
             map.register_type::<JigsawPlayerComp>();
             map.register_type::<JigsawMatComp>();
