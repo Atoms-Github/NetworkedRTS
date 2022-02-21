@@ -80,7 +80,12 @@ impl<T : 'static + GameState> Client<T> {
         if new_tail_frame < intended_tail{
             self.net.client.send_msg(ExternalMsg::InputQuery(issue), false);
         }
-        if did_trail_progress{
+        // TODO: We're probably gonna need to re-make an area around this sort of
+        // code. We need to somehow represent lining up the framerate, and the server assigned head position.
+        // It isn't really possible, but something will have to do.
+        // We need a guarantee that the player's inputs will reach the server, regardless of framerate :).
+
+        if did_trail_progress || true{
             // Send head state:
             let gamestate = self.game_state.clone();
             let sim_data = self.data.get_head_sim_data(
