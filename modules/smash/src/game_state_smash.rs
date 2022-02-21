@@ -29,7 +29,8 @@ impl GameState for GameStateSmash{
 
         for (player_id, username, color) in stat.sim_info.get_connecting_players(){
             let player_ent_id = player_id as GlobalEntityID;
-            let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, PointFloat::new(0.0,0.0), color);
+            let spawnpoint = PointFloat::new(player_ent_id as f32 * 200.0,0.0);
+            let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, spawnpoint, color);
             self.ecs.c.req_create_entity(pawn);
             let cursor = pcommon::archetypes::new_cursor(player_ent_id, color, 100);
             self.ecs.c.req_create_entity(cursor);
