@@ -7,6 +7,7 @@ use super::comp_store::SingleComp;
 use crate::bblocky::super_any::SuperAny;
 use std::fmt::Debug;
 use serde::de::DeserializeOwned;
+use crate::EcsConfig;
 use crate::utils::{TypeIdNum, gett};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -24,6 +25,11 @@ impl PendingEntity {
             types.insert(*new_type);
         }
         return types;
+    }
+    pub fn post_deserialize(&mut self, config: &EcsConfig){
+        for(a,b) in &mut self.data{
+            b.list.post_deserialize(&config);
+        }
     }
     pub fn iter(&self) -> std::collections::btree_map::Iter<TypeIdNum, SingleComp>{ // Optimum make it return move instead of reference (then clone).
         return self.data.iter();
