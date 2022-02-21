@@ -1,15 +1,11 @@
+use crate::*;
 use std::collections::{BTreeSet};
-use crate::ecs::GlobalEntityID;
 use ggez::event::MouseButton;
 
-use crate::ecs::comp_store::CompStorage;
-use crate::ecs::superb_ecs::{EntStructureChanges, System};
-use game::pub_types::{PointFloat, PlayerID};
-use bibble::::*;
+use crate::bibble::*;
 use ggez::graphics::Rect;
 use std::ops::Div;
 use serde::*;
-use game::bibble::data::data_types::noneffects::RaceID;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RaceButtonComp {

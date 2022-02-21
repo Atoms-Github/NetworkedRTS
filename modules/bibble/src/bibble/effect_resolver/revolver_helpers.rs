@@ -1,11 +1,11 @@
-pub use bibble::::data::data_types::*;
+pub use crate::bibble::data::data_types::*;
 use crate::rts::GameStateJigsaw;
 use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
-use bibble::::*;
-use bibble::::effect_resolver::revolver::Revolver;
+use crate::bibble::*;
+use crate::bibble::effect_resolver::revolver::Revolver;
 use game::pub_types::PointFloat;
-use bibble::::z_values::ZValue;
+use crate::bibble::z_values::ZValue;
 
 
 impl<'a> Revolver<'a>{

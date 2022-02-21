@@ -1,3 +1,11 @@
+# Aims:
+# Use crate::*; in each file.
+# Generate mod files:
+#   Fill mod files with:
+#       Pub use file::*;
+#       pub mod file;
+
+
 
 import os
 

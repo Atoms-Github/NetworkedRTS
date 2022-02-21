@@ -2,11 +2,8 @@ use crate::ecs::pending_entity::PendingEntity;
 use crate::ecs::GlobalEntityID;
 use netcode::*;
 use game::pub_types::PointFloat;
-use bibble::::*;
-use bibble::::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT};
 use game::bibble::data::data_types::{WeaponID, GameData, RaceID};
 use ggez::graphics::Color;
-use bibble::::z_values::ZValue;
 
 impl PendingEntity{
 

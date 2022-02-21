@@ -1,19 +1,20 @@
+use crate::*;
 use ggez::{graphics, Context};
 use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
 use crate::utils::gett;
-use bibble::::*;
+use crate::bibble::*;
 use crate::ecs::{ActiveEcs, GlobalEntityID};
-use bibble::::jigsaw::jigsaw_game_state::UsingRenderResources;
+use crate::bibble::jigsaw::jigsaw_game_state::UsingRenderResources;
 use nalgebra::Point2;
-use bibble::::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
+use crate::bibble::owns_resources::{OwnsResourcesComp, RESOURCES_COUNT, ResourceType};
 use game::bibble::data::data_types::ability::AbilityID;
 use std::collections::BTreeMap;
 use winit::event::VirtualKeyCode;
 use std::fmt;
 use rand::Rng;
-use bibble::::cool_batcher::{CoolBatcher, MyDrawParams};
+use crate::bibble::cool_batcher::{CoolBatcher, MyDrawParams};
 use crate::ecs::comp_store::CompStorage;
-use bibble::::z_values::ZValue;
+use crate::bibble::z_values::ZValue;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{

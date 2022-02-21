@@ -1,15 +1,9 @@
+use crate::*;
 use ggez::event::MouseButton;
 
-use crate::ecs::comp_store::CompStorage;
-use crate::ecs::GlobalEntityID;
-use crate::ecs::superb_ecs::{EntStructureChanges, System};
-use game::pub_types::{PointFloat};
-use bibble::::*;
+use crate::bibble::*;
 use ggez::graphics::Rect;
 use std::ops::Div;
-
-use game::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode, AbilityTargetType};
-use game::bibble::effect_resolver::revolver::Revolver;
 
 pub static LOSS_SYS: System = System{
     run,

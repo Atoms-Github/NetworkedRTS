@@ -13,6 +13,14 @@ pub mod game;
 pub mod compsys;
 pub mod bibble;
 
+pub use compsys::*;
+pub use serde::{Deserializer, Deserialize, Serialize};
+pub use netcode::*;
+pub use becs::*;
+pub use pcommon::*;
+pub use netcode::common::net_game_state::StaticFrameData;
+
+
 fn main() {
     println!("Hello, world!");
 }

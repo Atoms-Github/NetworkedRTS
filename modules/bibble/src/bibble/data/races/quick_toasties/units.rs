@@ -1,7 +1,7 @@
-use bibble::::data::data_types::*;
+use crate::bibble::data::data_types::*;
 use nalgebra::Point2;
 use game::pub_types::PointFloat;
-use bibble::::ResourceBlock;
+use crate::bibble::ResourceBlock;
 
 
 pub fn units(data: &mut GameData){

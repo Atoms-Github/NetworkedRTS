@@ -1,4 +1,4 @@
-use bibble::::data::data_types::*;
+use crate::bibble::data::data_types::*;
 use nalgebra::Point2;
 
 

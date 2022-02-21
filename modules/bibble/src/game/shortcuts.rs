@@ -1,5 +1,4 @@
 use crate::ecs::comp_store::CompStorage;
-use bibble::::{ArenaComp, SceneManager, SCENE_MAN_ENT_ID, JigsawMatComp};
 use crate::utils::gett;
 
 pub trait MyCompStorage{

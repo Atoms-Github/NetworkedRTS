@@ -1,5 +1,5 @@
-use bibble::::data::data_types::{GameData, RaceID, RaceMould, EffectToPoint};
-use bibble::::data::data_types::*;
+use crate::bibble::data::data_types::{GameData, RaceID, RaceMould, EffectToPoint};
+use crate::bibble::data::data_types::*;
 
 mod units;
 mod weapons;

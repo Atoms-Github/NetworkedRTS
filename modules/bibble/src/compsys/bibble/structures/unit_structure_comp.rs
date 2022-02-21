@@ -1,4 +1,4 @@
-use game::bibble::data::data_types::noneffects::StructureFlavourInfo;
+use crate::*;
 use serde::*;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

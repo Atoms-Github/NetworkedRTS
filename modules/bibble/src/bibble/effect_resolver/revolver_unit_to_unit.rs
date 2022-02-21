@@ -1,8 +1,8 @@
-pub use bibble::::data::data_types::*;
+pub use crate::bibble::data::data_types::*;
 use crate::rts::GameStateJigsaw;
 use crate::ecs::GlobalEntityID;
 use crate::ecs::comp_store::CompStorage;
-use bibble::::effect_resolver::revolver::Revolver;
+use crate::bibble::effect_resolver::revolver::Revolver;
 
 
 impl<'a> Revolver<'a> {

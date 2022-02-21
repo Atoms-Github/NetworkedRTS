@@ -1,0 +1,37 @@
+Order is:
+
+1. Wait for new frame.
+2. Call key/mouse event handlers.
+3. Call update. Call render. Right after each other.
+5. Repeat.
+
+
+Issues:
+Sometimes lags. Shouldn't.
+Reasonably large ping on mouse moving.
+
+
+
+
+We can't do that!
+Its going to be jumping around!
+We can't use two different timers.
+
+If we base everything off the render one, and just use the other one as a recommendation for how far to sim, its not gonna work. If we get unlucky, we'll fall on one side, otherwise the other side.
+One launch in a thousand, say, will be 1 frame lag.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

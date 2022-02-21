@@ -1,9 +1,10 @@
 use crate::*;
 use becs::pending_entity::PendingEntity;
 use crate::game_state_smash::SmashPlayerProperty;
-
+use crate::compsys::LifeComp;
 
 pub fn new_bullet(owner: GlobalEntityID, position: PointFloat) -> PendingEntity{
+    let e: LifeComp;
     PendingEntity::new6(
         RenderComp{
             z: 100,
