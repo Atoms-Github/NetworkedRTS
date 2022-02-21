@@ -91,7 +91,17 @@ impl<T : 'static + GameState> NetGameState<T> {
         net_state.game_state.init();
         return net_state;
     }
-    pub fn simulate_any(&mut self, sim_info: InfoForSim, sim_meta: &SimMetadata){
+    pub fn simulate_any(&mut self, mut sim_info: InfoForSim, sim_meta: &SimMetadata){
+        if sim_meta.quality == SimQuality::HEAD{
+            // Head is done on a best-effort approach. Different collections of 'connected' players are queried through the process unfortunately.
+            // Some clients may be missing their inputs. (See issues near 21/02/2022)
+            // We're going to fix that, by just putting in blanks.
+            for (player_id, _) in &self.connected_players{
+                if !sim_info.inputs_map.contains_key(player_id){
+                    sim_info.inputs_map.insert(*player_id, InputState::new());
+                }
+            }
+        }
         let stat = StaticFrameData{
             meta: &sim_meta,
             sim_info: &sim_info

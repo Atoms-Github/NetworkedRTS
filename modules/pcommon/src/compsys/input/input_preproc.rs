@@ -18,6 +18,10 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         if !player.connected{
             continue;
         }
+
+        if meta.sim_info.inputs_map.get(&(player_id as PlayerID)).is_none(){
+            println!("GonnaCrash {}, {:?}, {:?}", player_id, meta.sim_info.server_events, meta.sim_info);
+        }
         input.inputs.update_input_state(meta.sim_info.inputs_map.get(&(player_id as PlayerID)).unwrap().clone());
         input.mouse_pos_game_world = camera.screen_space_to_game_space(input.inputs.primitive.get_mouse_loc().clone());
         input.hovered_entity = None;

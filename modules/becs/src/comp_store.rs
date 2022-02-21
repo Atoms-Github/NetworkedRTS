@@ -86,6 +86,8 @@ impl CompStorage{
                 c.post_deserialize(&config);
             }
         }
+        assert!(self.pending_changes.new_entities.len() == 0, "Why we be serializing pending?");
+        assert!(self.pending_changes.deleted_entities.len() == 0, "Why we be serializing deleting?");
         self.functions = config.functions;
     }
     // TODO: Swap get and get unwrap, and call them get and get_maybe.

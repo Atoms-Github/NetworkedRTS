@@ -28,6 +28,7 @@ impl GameState for GameStateSmash{
         self.ecs.sim_systems(&stat);
 
         for (player_id, username, color) in stat.sim_info.get_connecting_players(){
+            println!("{} connecting", player_id);
             let player_ent_id = player_id as GlobalEntityID;
             let spawnpoint = PointFloat::new(player_ent_id as f32 * 200.0,0.0);
             let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, spawnpoint, color);
