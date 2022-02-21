@@ -38,3 +38,7 @@ pub fn get_line_input(message: &str) -> String{
     }
     return s;
 }
+
+pub fn subtract_prevent_underflow(a: usize, b: usize) -> usize{
+    (a as i32 - b as i32).max(0) as usize
+}

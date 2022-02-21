@@ -12,6 +12,7 @@ use crate::*;
 use bibble_tokio::{NetHubTop, OutMsg};
 use crate::client::client_hasher::FramedHash;
 use std::collections::HashSet;
+use bib_utils::subtract_prevent_underflow;
 use crate::common::confirmed_data::{ConfirmedData, SimDataPackage, SimDataOwner, SimDataQuery};
 use crate::common::net_game_state::{NetGameState, GameState};
 use crate::client::header_threads::HEAD_AHEAD_FRAME_COUNT;
@@ -125,7 +126,7 @@ impl<T: 'static + GameState> Server<T> {
                 // Now send out 20 latest packages.
                 let query = SimDataQuery{
                     query_type: SimDataOwner::Server,
-                    frame_offset: head_frame - HEAD_AHEAD_FRAME_COUNT,
+                    frame_offset: subtract_prevent_underflow(head_frame, HEAD_AHEAD_FRAME_COUNT),
                 };
                 let results = self.data.fulfill_query(&query, 20);
                 self.net.send_msg_all(ExternalMsg::GameUpdate(results), false);

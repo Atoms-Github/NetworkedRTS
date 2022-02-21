@@ -13,6 +13,7 @@ use ggez::input::gamepad::gamepad;
 use std::sync::Arc;
 use crate::client::client_data_store::ClientDataStore;
 use std::collections::HashMap;
+use bib_utils::subtract_prevent_underflow;
 use crate::client::client_hasher::ClientHasher;
 use crate::common::net_game_state::{NetGameState, GameState};
 use crate::common::input_state::{InputState, InputChange};
@@ -75,7 +76,7 @@ impl<T : 'static + GameState> Client<T> {
 
         // I.e. we'll request data if we can't even make it to here.
         // The lower this is, the more work we're happy to do before complaining.
-        let intended_tail = head_frame - HEAD_AHEAD_FRAME_COUNT;
+        let intended_tail = subtract_prevent_underflow(head_frame, HEAD_AHEAD_FRAME_COUNT);
         if new_tail_frame < intended_tail{
             self.net.client.send_msg(ExternalMsg::InputQuery(issue), false);
         }
@@ -94,11 +95,11 @@ impl<T : 'static + GameState> Client<T> {
 
         self.data.predicted_local.write_data(SuperstoreData{
             data: vec![self.curret_input.clone()],
-            frame_offset: head_frame - 1
+            frame_offset: subtract_prevent_underflow(head_frame, 1)
         });
         let my_last_20 = self.data.fulfill_query(&SimDataQuery{
             query_type: SimDataOwner::Player(self.player_id),
-            frame_offset: head_frame - HEAD_AHEAD_FRAME_COUNT
+            frame_offset: subtract_prevent_underflow(head_frame, HEAD_AHEAD_FRAME_COUNT)
         }, 20);
         self.net.client.send_msg(ExternalMsg::GameUpdate(my_last_20), false);
     }

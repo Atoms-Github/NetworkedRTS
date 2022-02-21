@@ -84,6 +84,7 @@ fn get_config() -> EcsConfig{
             map
         },
         systems: vec![
+            PLAYER_DISCONNECT.clone(),
             INPUT_PREPROC.clone(),
             BUTTON_SYS.clone(),
             PERFORMANCE_MAP.clone(),
@@ -102,6 +103,7 @@ fn get_config() -> EcsConfig{
 fn state_deserialize<'de, D>(deserializer: D) -> Result<SuperbEcs, D::Error> where D: Deserializer<'de> {
     match SuperbEcs::deserialize(deserializer){
         Ok(mut ecs) => {
+            println!("Post deserialize!");
             ecs.post_deserialize(get_config());
             Ok(ecs)
         }

@@ -15,7 +15,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     |comp_store, entity| {comp_store.get_unwrap::<RenderComp>(entity).z});
 
     for (player_id, camera, input, player) in CompIter3::<CameraComp, InputComp, PlayerComp>::new(c){
-        if !player.connected || meta.sim_info.inputs_map.get(&(player_id as PlayerID)).is_none(){ // TODO HACK
+        if !player.connected{
             continue;
         }
         input.inputs.update_input_state(meta.sim_info.inputs_map.get(&(player_id as PlayerID)).unwrap().clone());

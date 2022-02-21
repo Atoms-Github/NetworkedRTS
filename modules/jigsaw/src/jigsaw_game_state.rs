@@ -117,6 +117,7 @@ fn get_config() -> EcsConfig{
             map
         },
         systems: vec![
+            PLAYER_DISCONNECT.clone(),
             INPUT_PREPROC.clone(),
             BUTTON_SYS.clone(),
             RACE_BUTTON_SYS.clone(),
