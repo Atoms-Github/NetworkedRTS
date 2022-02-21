@@ -28,7 +28,6 @@ impl GameState for GameStateSmash{
         self.ecs.sim_systems(&stat);
 
         for (player_id, username, color) in stat.sim_info.get_connecting_players(){
-            println!("{} connecting", player_id);
             let player_ent_id = player_id as GlobalEntityID;
             let spawnpoint = PointFloat::new(player_ent_id as f32 * 200.0,0.0);
             let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, spawnpoint, color);
@@ -36,11 +35,12 @@ impl GameState for GameStateSmash{
             let cursor = pcommon::archetypes::new_cursor(player_ent_id, color, 100);
             self.ecs.c.req_create_entity(cursor);
 
-
             self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
             self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
             self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
         }
+
+        self.ecs.c.flush_ent_changes();
     }
 
     fn render(&mut self, ctx: &mut ggez::Context, player_id: PlayerID, res: &mut Self::Resources) {
