@@ -91,3 +91,17 @@ fabric.properties
 
 #/target
 #**/*.rs.bk
+
+.idea/runConfigurations/C1.xml
+
+.idea/runConfigurations/C2.xml
+
+.idea/runConfigurations/C3.xml
+
+.idea/runConfigurations/C4.xml
+
+.idea/runConfigurations/C5.xml
+
+.idea/runConfigurations/C6.xml
+
+.idea/runConfigurations/S.xml
