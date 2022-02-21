@@ -94,7 +94,7 @@ impl CoolBatcher{
             .entry(z)
             .or_default().texts.push((position, text, color));
     }
-    pub fn gogo_draw(self, ctx: &mut Context, res: &RenderResources){
+    pub fn gogo_draw(self, ctx: &mut Context, res: &mut GgEzRenderResources){
         // Iterate spritebatches ordered by z and actually render each of them
         for (z, render_layer) in self.layers
             .into_iter()
@@ -102,7 +102,7 @@ impl CoolBatcher{
         {
             // Draw images:
             for (image_name, draw_params) in render_layer.images {
-                let image = res.images.get(&image_name).expect(format!("Can't find image {}", image_name).as_str()).clone();
+                let image = res.get_image(&image_name, ctx).clone();
                 let image_dimensions = PointFloat::new(image.dimensions().w, image.dimensions().h);
                 let mut sprite_batch = SpriteBatch::new(image);
 

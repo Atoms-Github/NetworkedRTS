@@ -41,17 +41,17 @@ impl GameState for GameStateSmash{
         }
     }
 
-    fn render(&mut self, ctx: &mut ggez::Context, player_id: PlayerID, res: &Arc<Self::Resources>) {
-        pcommon::simples_render(&mut self.ecs, ctx, res, player_id as GlobalEntityID);
+    fn render(&mut self, ctx: &mut ggez::Context, player_id: PlayerID, res: &mut Self::Resources) {
+        pcommon::simples_render(&mut self.ecs, ctx, &mut res.render, player_id as GlobalEntityID);
     }
 
-    fn gen_render_resources(ctx: &mut ggez::Context) -> Arc<Self::Resources> {
-        let mut resources = RenderResources::load(ctx);
+    fn gen_render_resources(ctx: &mut ggez::Context) -> Self::Resources {
+        let mut resources = Self::Resources::default();
 
-        return Arc::new(resources);
+        return resources;
     }
 
-    type Resources = RenderResources;
+    type Resources = GgEzResources;
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Eq, Hash, Copy)]

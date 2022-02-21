@@ -4,29 +4,19 @@ use lazy_static::lazy_static;
 use std::sync::Mutex;
 use std::path::Path;
 use std::fs;
+use crate::FileCache;
 
 
-
-lazy_static! {
-    pub static ref GAME_RESOURCES: Mutex<GameResources> = {
-        Mutex::new(GameResources{
-            loaded: Default::default(),
-        })
-    };
+#[derive(Default)]
+pub struct LogicResources {
+    images: FileCache<RgbaImage>,
 }
-
-
-pub struct GameResources{
-    loaded: HashMap<String, RgbaImage>,
-}
-impl GameResources{
-    pub fn get_image(&mut self, filename: String) -> &RgbaImage<>{
-        let filename = format!("./resources/images/{}", filename);
-        if !self.loaded.contains_key(&filename){
-            let loaded = open(filename.clone()).expect("Error loading image.");
-            let image = loaded.into_rgba8();
-            self.loaded.insert(filename.clone(), image);
-        }
-        return self.loaded.get(&filename).unwrap();
+impl LogicResources {
+    pub fn get_image(&mut self, filename: String) -> &RgbaImage{
+        let mut full = "images/".to_owned() + filename.as_str();
+        return self.images.get(&full, |bytes|{
+            let loaded = image::load_from_memory(bytes).expect("Can't parse image.");
+            loaded.into_rgba8()
+        });
     }
 }

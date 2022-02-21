@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use winit::event::VirtualKeyCode;
 use std::fmt;
 use becs::superb_ecs::SuperbEcs;
-use crate::render_resources::RenderResources;
+use crate::render_resources::GgEzRenderResources;
 use crate::cool_batcher::CoolBatcher;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -31,7 +31,7 @@ pub enum RenderShape{
 }
 
 
-pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResources, player_entity_id: GlobalEntityID){
+pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &mut GgEzRenderResources, player_entity_id: GlobalEntityID){
     let mut cool_batcher = CoolBatcher::new();
 
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();

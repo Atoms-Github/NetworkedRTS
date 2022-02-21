@@ -35,8 +35,8 @@ pub trait GameState : Clone + Serialize + DeserializeOwned + Hash + Debug + Send
     fn new() -> Self;
     fn init(&mut self);
     fn simulate_tick(&mut self, stat: &StaticFrameData);
-    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &Arc<Self::Resources>);
-    fn gen_render_resources(ctx: &mut Context) -> Arc<Self::Resources>;
+    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &mut Self::Resources);
+    fn gen_render_resources(ctx: &mut Context) -> Self::Resources;
 
     type Resources;
 }
@@ -116,7 +116,7 @@ impl<T : 'static + GameState> NetGameState<T> {
         assert_eq!(sim_meta.frame_index, self.simmed_frame_index + 1);
         self.simulate_any(sim_info, sim_meta);
     }
-    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &Arc<T::Resources>){
+    pub fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &mut T::Resources){
         self.game_state.render(ctx, player_id, res)
     }
 

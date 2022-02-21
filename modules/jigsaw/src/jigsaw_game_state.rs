@@ -13,7 +13,7 @@ use netcode::common::net_game_state::GameState;
 pub const MAX_PLAYERS : usize = 16;
 pub const SCENE_MAN_ENT_ID: GlobalEntityID = MAX_PLAYERS;
 
-pub type UsingRenderResources = Arc<RenderResources>;
+pub type UsingRenderResources = Arc<GgEzRenderResources>;
 
 
 
@@ -84,12 +84,12 @@ impl GameState for GameStateJigsaw {
         }
     }
     fn gen_render_resources(ctx: &mut Context) -> RenderResourcesPtr {
-        let mut resources = RenderResources::load(ctx);
+        let mut resources = GgEzRenderResources::load(ctx);
 
         return Arc::new(resources);
     }
 
-    type Resources = RenderResources;
+    type Resources = GgEzRenderResources;
 }
 fn get_config() -> EcsConfig{
     EcsConfig{

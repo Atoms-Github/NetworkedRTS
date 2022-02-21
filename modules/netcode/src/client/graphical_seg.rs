@@ -24,7 +24,7 @@ pub struct GraphicalIn<T : 'static + GameState> {
     my_player_id: PlayerID,
     input_sink: Sender<InputChange>,
     texts: BTreeMap<&'static str, Text>,
-    resources: Option<Arc<T::Resources>>, // Yes, this can be refactored.
+    resources: Option<T::Resources>, // Yes, this can be refactored.
     fullscreen: bool,
     window_mode: conf::WindowMode,
 }
@@ -73,7 +73,7 @@ impl<T : 'static + GameState> EventHandler<GameError> for GraphicalIn<T> {
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::Color::from_rgb(50,50,50));
         let mut render_state = crate::utils::pull_latest(&mut self.render_head_rec);
-        render_state.render(ctx, self.my_player_id, self.resources.as_ref().unwrap());
+        render_state.render(ctx, self.my_player_id, &mut self.resources.as_mut().unwrap());
 
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {}", fps));
