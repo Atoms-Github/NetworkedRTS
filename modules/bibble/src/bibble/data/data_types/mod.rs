@@ -4,11 +4,6 @@ pub mod effect_unittopoint;
 pub mod effect_unit;
 pub mod effect_point;
 
-mod effect_point;
-mod effect_unit;
-mod effect_unittounit;
-mod effect_unittopoint;
-mod game_data;
 pub mod ability;
 
 pub use effect_point::*;

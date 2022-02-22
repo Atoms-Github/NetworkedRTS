@@ -4,7 +4,6 @@ pub use data_types::*;
 use data_types::GameData;
 
 pub mod data_types;
-mod races;
 
 impl GameData{
     pub fn gen_game_data() -> Self{
