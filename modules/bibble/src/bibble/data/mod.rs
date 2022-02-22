@@ -1,3 +1,6 @@
+pub mod races;
+pub use races::*;
+pub use data_types::*;
 use data_types::GameData;
 
 pub mod data_types;
