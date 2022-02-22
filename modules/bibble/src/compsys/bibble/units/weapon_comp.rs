@@ -1,12 +1,8 @@
 use crate::*;
 use ggez::event::MouseButton;
 
-use game::pub_types::{PointFloat, PlayerID};
 use ggez::graphics::Rect;
 use std::ops::Div;
-
-use game::bibble::data::data_types::{WeaponID, AbilityID, VirtualKeyCode};
-use game::bibble::effect_resolver::revolver::Revolver;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WeaponComp {

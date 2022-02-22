@@ -3,7 +3,6 @@ use ggez::{graphics, Context};
 use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
 use nalgebra::Point2;
 use std::collections::BTreeMap;
-use winit::event::VirtualKeyCode;
 use std::fmt;
 use becs::superb_ecs::SuperbEcs;
 

@@ -1,7 +1,6 @@
 use crate::*;
 
 use ggez::event::MouseButton;
-use serde::*;
 use ggez::graphics::Color;
 
 pub const ARENA_PLOT_SIZE: f32 = 50.0;

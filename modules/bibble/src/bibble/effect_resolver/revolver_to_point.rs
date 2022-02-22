@@ -1,7 +1,5 @@
 use crate::*;
 pub use crate::bibble::data::data_types::*;
-use game::pub_types::PointFloat;
-use game::utils;
 
 impl<'a> Revolver<'a>{
     pub fn revolve_to_point(&mut self, data: &GameData, effect: &EffectToPoint, target: &PointFloat, owner: GlobalEntityID){

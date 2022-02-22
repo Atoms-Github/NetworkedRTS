@@ -5,7 +5,7 @@ use netcode::ServerEvent;
 
 use netcode::common::input_state::InputState;
 
-TODO: I've just copied straight from other version. Probs needs a fair amount of removal.
+// TODO: I've just copied straight from other version. Probs needs a fair amount of removal.
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RtsInputComp{

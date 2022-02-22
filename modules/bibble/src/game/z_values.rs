@@ -1,6 +1,5 @@
 use crate::*;
 use netcode::*;
-use game::pub_types::ZType;
 
 #[repr(u16)]
 #[derive(Copy, Clone)]

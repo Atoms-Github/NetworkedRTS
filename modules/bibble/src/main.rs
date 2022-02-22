@@ -24,6 +24,8 @@ pub use becs::*;
 pub use pcommon::*;
 pub use netcode::common::net_game_state::StaticFrameData;
 
+pub use ggez::winit::event::VirtualKeyCode;
+
 
 fn main() {
     println!("Hello, world!");

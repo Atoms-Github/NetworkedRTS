@@ -1,7 +1,6 @@
 use crate::*;
 use ggez::event::MouseButton;
 
-use game::pub_types::{PointFloat, PlayerID};
 use ggez::graphics::Rect;
 use std::ops::Div;
 

@@ -2,11 +2,8 @@ use crate::*;
 use ggez::{graphics, Context};
 use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
 use nalgebra::Point2;
-use game::bibble::data::data_types::ability::AbilityID;
 use std::collections::BTreeMap;
-use winit::event::VirtualKeyCode;
 use std::fmt;
-use rand::Rng;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
