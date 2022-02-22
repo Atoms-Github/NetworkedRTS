@@ -1,7 +1,6 @@
 use crate::*;
 use ggez::event::{KeyCode, MouseButton};
 
-use crate::bibble::*;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TechTreeComp {

@@ -1,8 +1,6 @@
 use crate::*;
 use serde::*;
 use game::pub_types::PointFloat;
-use crate::bibble::data::data_types::*;
-use crate::bibble::*;
 use nalgebra::Point2;
 
 #[repr(u16)]

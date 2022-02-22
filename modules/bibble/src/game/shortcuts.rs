@@ -1,6 +1,4 @@
 use crate::*;
-use crate::ecs::comp_store::CompStorage;
-use crate::utils::gett;
 
 pub trait MyCompStorage{
     fn find_arena(&self) -> Option<&mut ArenaComp>;

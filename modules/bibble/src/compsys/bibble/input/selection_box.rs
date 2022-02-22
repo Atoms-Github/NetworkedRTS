@@ -2,7 +2,6 @@ use crate::*;
 
 use ggez::event::{MouseButton, KeyCode};
 
-use crate::bibble::*;
 use ggez::graphics::Rect;
 use std::ops::Div;
 use std::future::Pending;

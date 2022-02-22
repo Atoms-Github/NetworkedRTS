@@ -1,6 +1,4 @@
 use crate::*;
-use crate::ecs::pending_entity::PendingEntity;
-use crate::ecs::GlobalEntityID;
 use netcode::*;
 use game::pub_types::PointFloat;
 use game::bibble::data::data_types::{WeaponID, GameData, RaceID};

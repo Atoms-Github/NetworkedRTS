@@ -1,14 +1,7 @@
 use crate::*;
 pub use crate::bibble::data::data_types::*;
-use crate::rts::GameStateJigsaw;
-use crate::ecs::GlobalEntityID;
-use crate::ecs::comp_store::CompStorage;
-use crate::bibble::{LifeComp, PositionComp, MyCompStorage};
-use crate::bibble::effect_resolver::revolver::Revolver;
 use game::pub_types::PointFloat;
-use crate::ecs::ecs_macros::{CompIter3, CompIter2};
 use game::utils;
-use crate::bibble::the_map::arena::PlotFlooring;
 
 impl<'a> Revolver<'a>{
     pub fn revolve_to_point(&mut self, data: &GameData, effect: &EffectToPoint, target: &PointFloat, owner: GlobalEntityID){

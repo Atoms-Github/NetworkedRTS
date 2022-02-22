@@ -1,14 +1,11 @@
 use crate::*;
 use ggez::{graphics, Context};
 use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
-use crate::utils::gett;
 use nalgebra::Point2;
 use std::collections::BTreeMap;
 use winit::event::VirtualKeyCode;
 use std::fmt;
 use becs::superb_ecs::SuperbEcs;
-use crate::render_resources::RenderResources;
-use crate::cool_batcher::CoolBatcher;
 
 
 pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResources, player_entity_id: GlobalEntityID){

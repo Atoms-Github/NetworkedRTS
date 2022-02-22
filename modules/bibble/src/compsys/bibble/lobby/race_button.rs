@@ -2,7 +2,6 @@ use crate::*;
 use std::collections::{BTreeSet};
 use ggez::event::MouseButton;
 
-use crate::bibble::*;
 use ggez::graphics::Rect;
 use std::ops::Div;
 use serde::*;

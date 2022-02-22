@@ -1,5 +1,4 @@
 use crate::*;
-use crate::ecs::GlobalEntityID;
 use game::pub_types::PointFloat;
 
 pub enum TargetInstance{
