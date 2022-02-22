@@ -1,12 +1,10 @@
-pub use shoot_mouse::*;
-pub use velocity::*;
-pub use collision::*;
-pub use velocity_with_inputs::*;
-pub use life::*;
-
-pub mod shoot_mouse;
-pub mod velocity;
 pub mod velocity_with_inputs;
-pub mod collision;
+pub use velocity_with_inputs::*;
+pub mod velocity;
+pub use velocity::*;
+pub mod shoot_mouse;
+pub use shoot_mouse::*;
 pub mod life;
-
+pub use life::*;
+pub mod collision;
+pub use collision::*;

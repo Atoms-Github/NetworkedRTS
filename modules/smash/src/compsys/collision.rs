@@ -1,6 +1,6 @@
+use crate::*;
 use netcode::common::net_game_state::StaticFrameData;
 
-use crate::*;
 use std::ops::Mul;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
