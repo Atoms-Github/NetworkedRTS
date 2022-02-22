@@ -1,9 +1,6 @@
 use crate::*;
-use crate::ecs::superb_ecs::EntStructureChanges;
-use crate::ecs::comp_store::CompStorage;
 use crate::bibble::data::data_types::{GameData, AbilityID, AbilitySingleTargetType};
-use crate::ecs::GlobalEntityID;
-use crate::bibble::{MyGlobalEntityID, TechTreeComp, AbilityTargetInstance, OwnedComp};
+use crate::bibble::{TechTreeComp, AbilityTargetInstance, OwnedComp};
 use crate::bibble::data::data_types::AbilityTargetType;
 
 pub struct Revolver<'a>{

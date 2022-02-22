@@ -1,9 +1,7 @@
 use nalgebra::{Point, Point2};
 use serde::*;
-use game::pub_types::PointFloat;
 use crate::bibble::data::data_types::*;
 use serde::de::Unexpected::Float;
-use crate::bibble::{PlotFlooring, ResourceBlock};
 
 pub fn gather(data: &mut GameData){
     // Race.

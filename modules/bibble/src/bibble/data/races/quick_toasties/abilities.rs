@@ -1,7 +1,5 @@
 use crate::bibble::data::data_types::*;
 use nalgebra::Point2;
-use winit::event::VirtualKeyCode;
-use game::pub_types::PointFloat;
 
 pub fn abilities(data: &mut GameData){
     data.abilities.insert(AbilityID::BAKE_DOUGH, AbilityMould{
