@@ -13,7 +13,9 @@ pub static PLAYER_DISCONNECT: System = System{
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for player_id in meta.sim_info.get_disconnecting_players(){
-        println!("Disconnecting player {}", player_id);
+        if meta.meta.quality == SimQuality::DETERMA{
+            println!("Disconnecting player {}", player_id);
+        }
         c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;
     }
 }

@@ -10,8 +10,6 @@ impl PendingEntity{
             CameraComp{ translation: PointFloat::new(0.0,0.0), zoom: 1.0 },
             InputComp{ is_panning: false, inputs: Default::default(), mode: InputMode::None, hovered_entity: None, mouse_pos_game_world: PointFloat::new(0.0, 0.0) },
             TechTreeComp{ tree: GameData::gen_game_data() },
-            ScenePersistent{ keep_alive: true },
-            JigsawPlayerComp{ held_item: None },
         )
     }
     pub fn new_scene_manager() -> Self{
@@ -23,54 +21,6 @@ impl PendingEntity{
     pub fn new_lobby(game_start_cooldown: f32) -> Self{
         Self::new1(
             LobbyManager{ game_start_cooldown },
-        )
-    }
-
-    pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat) -> Self{
-        Self::new5(
-            JigsawMatComp{
-                jigsaw_name,
-                next_jigsaw_z: ZValue::GamePiece.g() + 1
-            },
-            IgnoreHoverComp{
-                useless: false
-            },
-            SizeComp{
-                size: size.clone(),
-            },
-            PositionComp {
-                pos: PointFloat::new(size.x / 2.0 - JIGSAW_PIECE_SIZE / 2.0, size.y / 2.0 - JIGSAW_PIECE_SIZE / 2.0),
-            },
-            RenderComp{
-                z: ZValue::Arena.g(),
-                texture: RenderTexture::Color(0.05,0.05,0.05,0.2),
-                shape: RenderShape::Rectangle,
-                only_render_owner: false
-            }
-
-        )
-    }
-    pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -> Self{
-        Self::new5(
-            SizeComp{
-                size: PointFloat::new(JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE),
-            },
-            RenderComp{
-                z: ZValue::GamePiece.g(),
-                texture: RenderTexture::Jigsaw(image.clone(), coords.clone()),
-                shape: RenderShape::Rectangle,
-                only_render_owner: false
-            },
-            PositionComp{
-                pos: position,
-            },
-            ClickableComp{
-                clicking_on: None
-            },
-            JigsawPieceComp{
-                coords,
-                image
-            },
         )
     }
     pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> Self{

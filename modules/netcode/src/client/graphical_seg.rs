@@ -73,6 +73,7 @@ impl<T : 'static + GameState> EventHandler<GameError> for GraphicalIn<T> {
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, graphics::Color::from_rgb(50,50,50));
         let mut render_state = crate::utils::pull_latest(&mut self.render_head_rec);
+        // SIMULATE 20.5 FRAMES OF HEAD TO CALCULATE HEAD
         render_state.render(ctx, self.my_player_id, &mut self.resources.as_mut().unwrap());
 
         let fps = timer::fps(ctx);
@@ -83,6 +84,7 @@ impl<T : 'static + GameState> EventHandler<GameError> for GraphicalIn<T> {
             &fps_display,
             (Point2::new(200.0, 0.0), graphics::Color::WHITE),
         )?;
+
 
 
 

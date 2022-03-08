@@ -14,7 +14,7 @@ if __name__ == '__main__':
     run_configs_dir = "C:/_C_/Home/Produce/Code/Projects/Rust/BigYoshis/LiteralPoggySource/.idea/runConfigurations"
     if not os.path.exists(run_configs_dir):
         os.makedirs(run_configs_dir)
-    game = "bibble"
+    game = "smash"
     names = ["Atoms", "QuickToast", "Oberdiah", "Legend", "Numcake", "Shotekri", "ConnorHS", "Lain", "Guest1", "Guest2", "Guest3"]
     server = read_file("ServerTemplate.xml")
 
