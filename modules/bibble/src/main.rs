@@ -23,6 +23,7 @@ pub use netcode::*;
 pub use becs::*;
 pub use pcommon::*;
 pub use netcode::common::net_game_state::StaticFrameData;
+pub use nalgebra::Point2;
 
 pub use ggez::winit::event::VirtualKeyCode;
 

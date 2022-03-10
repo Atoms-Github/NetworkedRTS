@@ -1,7 +1,14 @@
 use crate::*;
 use serde::*;
-use game::pub_types::PointFloat;
 use nalgebra::Point2;
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Eq, Hash, Copy)]
+pub enum CommanderProperty {
+    White,
+    Orange,
+    Black
+}
+
 
 #[repr(u16)]
 #[derive(Serialize, Deserialize ,Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -52,7 +59,7 @@ pub struct UnitMould {
     pub weapons: Vec<AbilityID>,
     pub abilities: Vec<AbilityID>,
     pub unit_flavour: UnitFlavour,
-    pub periodic_gain: ResourceBlock,
+    pub periodic_gain: ResourceBlock<CommanderProperty>,
     pub life: f32,
 }
 impl UnitMould{

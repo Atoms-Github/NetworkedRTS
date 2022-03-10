@@ -22,7 +22,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                     // Delete everything owned by me.
                     for (entity, owned) in CompIter1::<OwnedComp>::new(c) {
                         if owned.owner == player_id{
-                            ent_changes.deleted_entities.push(entity);
+                            c.req_delete_entity(entity);
                         }
                     }
                 }

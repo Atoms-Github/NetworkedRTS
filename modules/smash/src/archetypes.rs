@@ -47,7 +47,7 @@ pub fn new_player(owner: GlobalEntityID) -> PendingEntity{
     )
 
 }
-pub fn new_arena() -> PendingEntity{
+pub fn new_stage() -> PendingEntity{
     PendingEntity::new4(
         RenderComp{
             z: 2,

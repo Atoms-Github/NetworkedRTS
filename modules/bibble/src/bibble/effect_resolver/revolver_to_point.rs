@@ -10,7 +10,7 @@ impl<'a> Revolver<'a>{
             }
             EffectToPoint::BUILD_BUILDING(unit_id) => {
                 let mould = data.units.get(&unit_id).unwrap();
-                let structure = crate::utils::unwrap!(UnitFlavour::STRUCTURE, &mould.unit_flavour);
+                let structure = bib_utils::unwrap!(UnitFlavour::STRUCTURE, &mould.unit_flavour);
                 let arena = self.c.find_arena().unwrap();
                 if let Some(plots) = arena.get_plot_boxes(target.clone(), structure.footprint.clone()){
                     let mut good_spawn = true;

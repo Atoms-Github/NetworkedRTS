@@ -6,7 +6,7 @@ use std::ops::Div;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct WorkerComp {
-    pub resource_gain_per_ms: ResourceBlock,
+    pub resource_gain_per_ms: ResourceBlock<CommanderProperty>,
 }
 
 

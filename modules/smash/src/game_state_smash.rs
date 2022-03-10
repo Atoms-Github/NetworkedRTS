@@ -16,12 +16,12 @@ impl GameState for GameStateSmash{
         }
     }
     fn init(&mut self){
-        //Reserve entity ids 0 to 8ish so player ID and entity IDs match up.
-        for player_index in 0..8{
+        self.ecs.c.req_create_entity(crate::archetypes::new_stage());
+        //Reserve entity ids 1 to 9ish so player ID and entity IDs match up.
+        for player_index in 1..9{
             let mut pending = archetypes::new_player(player_index as GlobalEntityID);
             self.ecs.c.req_create_entity(pending);
         }
-        self.ecs.c.req_create_entity(crate::archetypes::new_arena());
     }
 
     fn simulate_tick(&mut self, stat: &StaticFrameData) {
