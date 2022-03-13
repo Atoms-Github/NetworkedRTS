@@ -17,8 +17,8 @@ pub static WORKER_SYS: System = System{
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (worker_id, life, owned, worker) in
     CompIter3::<LifeComp, OwnedComp, WorkerComp>::new(c) {
-        let resources_comp = c.get_mut::<OwnsResourcesComp>(owned.owner).unwrap();
-        resources_comp.gain_block(&worker.resource_gain_per_ms, meta.delta);
+        let resources_comp = c.get_mut::<OwnsResourcesComp<CommanderProperty>>(owned.owner).unwrap();
+        resources_comp.gain_block(&worker.resource_gain_per_ms, meta.meta.delta);
     }
 
 }

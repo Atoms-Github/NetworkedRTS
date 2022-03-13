@@ -1,7 +1,6 @@
 use crate::*;
 use ggez::{graphics, Context};
 use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
-use crate::utils::gett;
 use nalgebra::Point2;
 use std::collections::BTreeMap;
 use winit::event::VirtualKeyCode;

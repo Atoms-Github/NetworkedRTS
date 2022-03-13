@@ -130,7 +130,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (unit_id, owned, orders, position, hiker)
     in CompIter4::<OwnedComp, OrdersComp, PositionComp, HikerComp>::new(c) {
         if orders.state == OrderState::MOVING{
-            let is_rare_frame = meta.frame_index % 10 == 0;
+            let is_rare_frame = meta.meta.frame_index % 10 == 0;
             let already_has_destination = hiker.get_destination().is_some();
             let mut destination_matches = false;
             if let Some(existing_destination) = hiker.get_destination(){

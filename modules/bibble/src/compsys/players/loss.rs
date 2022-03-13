@@ -11,7 +11,7 @@ pub static LOSS_SYS: System = System{
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.find_scene();
 
-    if scene.current == SceneType::InGame{
+    if scene.current == RtsSceneType::InGame{
         let mut alive_players = 0;
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if player.alive{

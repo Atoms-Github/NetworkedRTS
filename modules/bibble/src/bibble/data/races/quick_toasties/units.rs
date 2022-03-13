@@ -24,9 +24,7 @@ pub fn units(data: &mut GameData){
             movespeed: 0.3,
             fly: false
         }),
-        periodic_gain: ResourceBlock{
-            resource_counts: [0.0, 0.0, 0.0003]
-        },
+        periodic_gain: ResourceBlock::<CommanderProperty>::default().add_in_place(CommanderProperty::White, 0.0003),
         life: 30.0,
     });
 

@@ -16,9 +16,6 @@ pub static SELECTION_BOX_SYS: System = System{
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.find_scene();
-    if scene.current == SceneType::InJigsaw{
-        return;
-    }
     for (sel_box_id, sel_box, position, size, owned) in CompIter4::<SelBoxComp, PositionComp, SizeComp, OwnedComp>::new(c) {
         let mouse_pos = c.get::<InputComp>(owned.owner).unwrap().mouse_pos_game_world.clone();
         let box_size_vec = mouse_pos - &sel_box.starting_pos;
@@ -28,7 +25,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
     let mut revolver = Revolver::new(c);
 
-    for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
+    for (player_id , input) in CompIter1::<InputComp>::new(c) {
         let input = c.get1_unwrap::<InputComp>(player_id);
 
         let data = player_id.get_player_tech_tree(c);
@@ -47,22 +44,22 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     revolver.end().move_into(ent_changes);
 }
 
-fn check_delete_box(c: &CompStorage, ent_changes: &mut EntStructureChanges,  player_id: GlobalEntityID) {
+fn check_delete_box(c: &mut CompStorage, ent_changes: &mut EntStructureChanges,  player_id: GlobalEntityID) {
     let input = c.get1_unwrap::<InputComp>(player_id);
     if input.inputs.mouse_event == RtsMouseEvent::MouseUp {
         if let Some(box_id) = get_box(c, player_id){
-            ent_changes.deleted_entities.push(box_id);
+            c.req_delete_entity(box_id);
             let any_selected = select_units_in_box(c, box_id);
         }
         input.mode = InputMode::None;
     }
 }
 
-fn check_create_box(c: &CompStorage, ent_changes: &mut EntStructureChanges, player_id: GlobalEntityID, input: &mut InputComp) {
+fn check_create_box(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, player_id: GlobalEntityID, input: &mut InputComp) {
     let input = c.get1_unwrap::<InputComp>(player_id);
     // if input.hovered_entity.is_none() {
         if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Left) {
-            ent_changes.new_entities.push(PendingEntity::new_sel_box(player_id, input.mouse_pos_game_world.clone()));
+            c.req_create_entity(PendingEntity::new_sel_box(player_id, input.mouse_pos_game_world.clone()));
             input.mode = InputMode::SelectionBox;
 
             deselect_all(c, player_id)

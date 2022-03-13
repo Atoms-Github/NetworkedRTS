@@ -68,7 +68,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                 *route_calc_cooldown -= 1;
             }
             if let HikerPathState::PENDING_PATHFIND { route_calc_cooldown, destination } = hiker.state.clone(){
-                if route_calc_cooldown == 0 && meta.quality == SimQuality::DETERMA{ // On head, just never resolve.
+                if route_calc_cooldown == 0 && meta.meta.quality == SimQuality::DETERMA{ // On head, just never resolve.
                     let path = arena.pathfind(position.pos.clone(), destination.clone(), 10.0);
                     hiker.state = HikerPathState::GOT_PATH { path }
                 }
@@ -86,7 +86,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                 HikerPathState::STATIONARY => {None}
             };
             if let Some(target) = straight_towards{
-                let dist_can_move = hiker.speed * meta.delta;
+                let dist_can_move = hiker.speed * meta.meta.delta;
                 if (target.clone() - &position.pos).magnitude() < dist_can_move{
                     // We've made it to the target.
                     position.pos = target;

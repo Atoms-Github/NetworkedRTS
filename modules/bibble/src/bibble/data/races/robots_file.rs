@@ -128,9 +128,7 @@ pub fn gather(data: &mut GameData){
                 footprint: Point2::new(1,1),
                 required_under_material: PlotFlooring::PATH,
             }),
-            periodic_gain: ResourceBlock{
-                resource_counts: [0.0, 0.0, 0.0]
-            },
+            periodic_gain: ResourceBlock::<CommanderProperty>::default(),
             life: 200.0
         });
         data.abilities.insert(AbilityID::TRAIN_SCUTTLER, AbilityMould{
@@ -177,9 +175,7 @@ pub fn gather(data: &mut GameData){
                 footprint: Point2::new(0,0),
                 required_under_material: PlotFlooring::GREEN_RESOURCE,
             }),
-            periodic_gain: ResourceBlock{
-                resource_counts: [0.0, 0.0, 0.0015]
-            },
+            periodic_gain: ResourceBlock::<CommanderProperty>::default(),
             life: 100.0
         });
     }

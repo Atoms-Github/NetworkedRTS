@@ -50,7 +50,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (unit_id, abilities)
     in CompIter1::<AbilitiesComp>::new(c) {
         for ability in &mut abilities.abilities{
-            ability.time_since_use += meta.delta;
+            ability.time_since_use += meta.meta.delta;
         }
     }
 }

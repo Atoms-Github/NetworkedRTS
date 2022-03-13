@@ -7,6 +7,7 @@ use std::fmt;
 use becs::superb_ecs::SuperbEcs;
 
 
+// TODO: Half-need to copy to jigsaw.
 pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResources, player_entity_id: GlobalEntityID){
     let mut cool_batcher = CoolBatcher::new();
 

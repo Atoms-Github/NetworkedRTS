@@ -1,5 +1,5 @@
 use crate::*;
-
+use image::traits::Pixel;
 use ggez::event::MouseButton;
 use ggez::graphics::Color;
 use ggez::winit::dpi::Size::Logical;
