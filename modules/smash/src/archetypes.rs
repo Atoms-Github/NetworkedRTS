@@ -48,7 +48,7 @@ pub fn new_player(owner: GlobalEntityID) -> PendingEntity{
 
 }
 pub fn new_stage() -> PendingEntity{
-    PendingEntity::new4(
+    PendingEntity::new5(
         RenderComp{
             z: 2,
             texture: RenderTexture::Color(0.7,0.7,0.7,1.0),
@@ -58,5 +58,6 @@ pub fn new_stage() -> PendingEntity{
         ShootMouseComp{ time_since_shot: 0.0 },
         SizeComp{ size: PointFloat::new(1000.0, 1000.0)},
         PositionComp{ pos: PointFloat::new(0.0, 0.0) },
+        CommonOverseer::default(),
     )
 }

@@ -2,6 +2,7 @@ use crate::*;
 
 use ggez::event::MouseButton;
 use ggez::graphics::Color;
+use ggez::winit::dpi::Size::Logical;
 
 pub const ARENA_PLOT_SIZE: f32 = 50.0;
 pub const PERFORMANCE_MAP_BOX_SIZE: f32 = 100.0;
@@ -173,8 +174,8 @@ impl ArenaComp {
         }
     }
     pub fn load_map(&mut self, filepath: String){
-        let mut lock = bibble::::game_resources::GAME_RESOURCES.lock().unwrap();
-        let image = lock.get_image(filepath);
+        let mut unoptimised = LogicResources::default();
+        let image = unoptimised.get_image(filepath);
 
         let bottom_right_corner = GridBox::new(image.width() as i32 - 1, image.height() as i32 - 1);
         self.flooring.grid.resize_to_fit(&bottom_right_corner);

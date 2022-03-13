@@ -150,7 +150,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (unit_id, orders)
     in CompIter1::<OrdersComp>::new(c) {
         if let OrderState::CHANNELLING(channel_time) = &mut orders.state{
-            *channel_time += meta.delta;
+            *channel_time += meta.meta.delta;
         }
     }
 

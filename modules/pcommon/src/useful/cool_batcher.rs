@@ -1,5 +1,5 @@
 use crate::*;
-use ggez::graphics::{Color, DrawParam, Image, DrawMode, Rect, MeshBuilder, Drawable, FilterMode, Text, draw};
+use ggez::graphics::{Color, DrawParam, Image, DrawMode, Rect, MeshBuilder, Drawable, FilterMode, Text, draw, MeshBatch};
 use std::collections::HashMap;
 use netcode::*;
 use ggez::{Context, graphics};
@@ -7,8 +7,10 @@ use ggez::graphics::spritebatch::SpriteBatch;
 use mint::Point2;
 use std::ops::Div;
 use std::ops::Mul;
+use std::path::Path;
 use becs::ZType;
 use itertools::Itertools;
+use winit::event::VirtualKeyCode::M;
 
 
 struct BatcherImage{
@@ -144,6 +146,9 @@ impl CoolBatcher{
                     builder.circle(graphics::DrawMode::fill(),
                                    top_left_corner, radius, 0.05, color).unwrap();
                 }
+
+
+
                 builder.build(ctx).unwrap().draw(ctx, DrawParam::new()).unwrap();
             }
 

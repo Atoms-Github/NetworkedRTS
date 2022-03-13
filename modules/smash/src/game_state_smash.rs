@@ -32,12 +32,6 @@ impl GameState for GameStateSmash{
             let spawnpoint = PointFloat::new(player_ent_id as f32 * 200.0,0.0);
             let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, spawnpoint, color);
             self.ecs.c.req_create_entity(pawn);
-            let cursor = pcommon::archetypes::new_cursor(player_ent_id, color, 100);
-            self.ecs.c.req_create_entity(cursor);
-
-            self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;
-            self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().color = color;
-            self.ecs.c.get_mut::<PlayerComp>(player_ent_id).unwrap().connected = true;
         }
 
         self.ecs.c.flush_ent_changes();
@@ -85,6 +79,7 @@ fn get_config() -> EcsConfig{
             map
         },
         systems: vec![
+            PLAYER_CONNECT.clone(),
             PLAYER_DISCONNECT.clone(),
             INPUT_PREPROC.clone(),
             BUTTON_SYS.clone(),

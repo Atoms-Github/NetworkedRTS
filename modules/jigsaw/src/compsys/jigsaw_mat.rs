@@ -21,7 +21,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         // Check for jigsaw end on F3.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F3){
-                scene.next = SceneType::Lobby;
+                scene.next = JigsawSceneType::Lobby;
             }
         }
     }
