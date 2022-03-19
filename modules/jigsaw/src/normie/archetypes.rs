@@ -27,11 +27,11 @@ pub fn new_lobby() -> PendingEntity{
     )
 }
 
-pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat) -> PendingEntity{
+pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat, next_piece_z: ZType) -> PendingEntity{
     PendingEntity::new6(
         JigsawMatComp{
             jigsaw_name,
-            next_piece_z: JZValue::GamePiece.g() + 1
+            next_piece_z
         },
         UninteractableComp {
             useless: false
@@ -53,13 +53,13 @@ pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat) -> PendingEntity{
 
     )
 }
-pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -> PendingEntity{
+pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat, z: ZType) -> PendingEntity{
     PendingEntity::new5(
         SizeComp{
             size: PointFloat::new(JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE),
         },
         RenderComp{
-            z: JZValue::GamePiece.g(),
+            z,
             only_render_owner: false
         },
         PositionComp{

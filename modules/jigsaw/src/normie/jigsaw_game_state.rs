@@ -51,7 +51,7 @@ impl GameState for GameStateJigsaw {
         let mut batcher = CoolBatcher::new();
 
         pcommon::simple_render(&mut batcher, &mut self.ecs, player_id as GlobalEntityID);
-        jigsaw_render(&mut self.ecs, player_id as GlobalEntityID);
+        jigsaw_render(&mut batcher, &mut self.ecs, player_id as GlobalEntityID);
         batcher.gogo_draw(ctx, &mut res.render);
     }
     fn gen_resources(ctx: &mut ggez::Context) -> Self::Resources {

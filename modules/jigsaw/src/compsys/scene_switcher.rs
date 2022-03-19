@@ -73,7 +73,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                 let last_x = ((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32) - 1;
                 let last_y = ((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32) - 1;
                 let mut r = StdRng::seed_from_u64(222);
-
+                let mut piece_index = 0;
                 for x in 0..((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32){
                     for y in 0..((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32){
                         let coords = PointInt::new(x,y);
@@ -92,13 +92,17 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                         }
                         pos = attempted_location;
 
-                        c.req_create_entity(new_jigsaw_piece(mapname.clone(), coords,pos));
-
+                        c.req_create_entity(new_jigsaw_piece(mapname.clone(), coords,pos,
+                        JZValue::JigsawPieceHeld.g() + piece_index));
+                        piece_index += 1;
+                        println!("Spawning index: {:?}", JZValue::JigsawPieceHeld.g() + piece_index);
                     }
                 }
                 c.req_create_entity(new_jigsaw_mat(mapname.clone(),
                                                    PointFloat::new((last_x + 1) as f32 * JIGSAW_PIECE_SIZE,
-                                                                   (last_y + 1) as f32 * JIGSAW_PIECE_SIZE)));
+                                                                   (last_y + 1) as f32 * JIGSAW_PIECE_SIZE),
+                piece_index));
+                println!("Loading jigsaw with {} pieces", piece_index);
 
 
             }

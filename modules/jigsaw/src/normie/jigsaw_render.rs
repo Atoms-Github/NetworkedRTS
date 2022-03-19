@@ -6,9 +6,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use becs::superb_ecs::SuperbEcs;
 
-pub fn jigsaw_render(ecs: &mut SuperbEcs, player_entity_id: GlobalEntityID){
-    let mut cool_batcher = CoolBatcher::new();
-
+pub fn jigsaw_render(cool_batcher: &mut CoolBatcher, ecs: &mut SuperbEcs, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
     let player_input = ecs.c.get::<InputComp>(player_entity_id).unwrap();
 

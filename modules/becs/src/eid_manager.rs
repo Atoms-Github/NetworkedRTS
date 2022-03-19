@@ -7,8 +7,8 @@ use serde_big_array::*;
 use std::fmt::{Debug, Formatter};
 
 pub type GlobalEntityID = usize;
-pub const MAX_ENTITIES :usize = 512;
-// pub const MAX_ENTITIES :usize = 4096; // Can work on release mode.
+// pub const MAX_ENTITIES :usize = 512; // Debug mode.
+pub const MAX_ENTITIES :usize = 4096; // Can work on release mode.
 
 
 
