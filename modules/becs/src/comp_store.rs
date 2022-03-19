@@ -6,7 +6,7 @@ use crate::bblocky::*;
 use crate::bblocky::super_any::SuperAny;
 use crate::bblocky::super_vec::SuperVec;
 use crate::bblocky::comp_registration::{EcsConfig, FunctionMap};
-use crate::utils::TypeIdNum;
+use crate::utils::{gett, TypeIdNum};
 use crate::{ZType};
 use derivative::Derivative;
 
@@ -203,6 +203,11 @@ impl CompStorage{
     }
     pub fn get_entity_count(&self) -> usize{
         self.query(vec![]).len()
+    }
+    pub fn query_single_comp<T : 'static>(&self) -> Option<&mut T>{
+        let results = self.query(vec![gett::<T>()]);
+        assert_eq!(1, results.len());
+        return self.get_mut::<T>(results[0]);
     }
     pub fn query(&self, must_include: Vec<TypeIdNum>) -> Vec<GlobalEntityID>{
         let mut found_entities = vec![];

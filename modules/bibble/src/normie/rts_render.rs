@@ -20,7 +20,7 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
         let screen_size = player_camera.game_size_to_screen_size(arena_comp.get_size());
         // e
         cool_batcher.add_rectangle(
-            &screen_pos, &screen_size, graphics::Color::from_rgb(200,200,200), ZValue::Arena.g());
+            &screen_pos, &screen_size, graphics::Color::from_rgb(200,200,200), RZValue::Arena.g());
     }
 
     // Draw arena boxes.
@@ -37,7 +37,7 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
             cool_batcher.add_rectangle_rect(MyDrawParams{
                 pos: small_top_left_screen,
                 size: small_size.clone(),
-            }, color, ZValue::ArenaBoxes.g());
+            }, color, RZValue::ArenaBoxes.g());
         }
     }
     // Draw units.
@@ -48,7 +48,7 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
             let bar_centre = screen_pos.clone() + PointFloat::new(0.0, -7.0);
             cool_batcher.add_progress_bar(&bar_centre, 5.0, life_comp.life,
                                           life_comp.max_life, Color::from_rgb(0,200,0),
-                                          Color::from_rgb(255,0,0), ZValue::InGameUI.g());
+                                          Color::from_rgb(255,0,0), RZValue::InGameUI.g());
         }
         if let Some(orders) = ecs.c.get::<OrdersComp>(entity_id){
             if let OrderState::CHANNELLING(channel_time) = &orders.state{
@@ -63,7 +63,7 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
 
                 cool_batcher.add_progress_bar(&bar_centre, 5.0, current_width,
                                               max_width, Color::from_rgb(52, 210, 235),
-                                              Color::from_rgb(0,0,0), ZValue::InGameUI.g());
+                                              Color::from_rgb(0,0,0), RZValue::InGameUI.g());
             }
         }
 
@@ -87,7 +87,7 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
             cool_batcher.add_rectangle_rect(MyDrawParams{
                 pos: screen_pos.clone(),
                 size: border_size
-            }, border_color, ZValue::InGameUIBelow.g());
+            }, border_color, RZValue::InGameUIBelow.g());
         }
     }
     // // Draw names.
@@ -102,13 +102,13 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
         if player.connected{
             y += 50.0;
             cool_batcher.add_text(PointFloat::new(20.0, y),
-                                  player.name.clone(), Color::from_rgb(0,0,0), ZValue::UI.g());
+                                  player.name.clone(), Color::from_rgb(0,0,0), RZValue::UI.g());
             if player.alive{
                 cool_batcher.add_text(PointFloat::new(150.0, y),
-                                      "Alive".to_string(), Color::from_rgb(66, 245, 194), ZValue::UI.g());
+                                      "Alive".to_string(), Color::from_rgb(66, 245, 194), RZValue::UI.g());
             }else{
                 cool_batcher.add_text(PointFloat::new(150.0, y),
-                                      "Ded".to_string(), Color::from_rgb(230,0,0), ZValue::UI.g());
+                                      "Ded".to_string(), Color::from_rgb(230,0,0), RZValue::UI.g());
             }
         }
     }
@@ -137,14 +137,14 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
                     size: PointFloat::new(40.0,40.0),
                 };
                 cool_batcher.add_rectangle_rect(my_params,
-                                                graphics::Color::from_rgb(255,204,0), ZValue::UI.g());
+                                                graphics::Color::from_rgb(255,204,0), RZValue::UI.g());
             }
         }
         cool_batcher.add_rectangle(&screen_pos, &PointFloat::new(30.0,30.0),
                                    Color::from(ability_mould.button_info.color), 192);
         cool_batcher.add_text(screen_pos, hotkey.my_to_string(), Color::from_rgb(0,0,0), 193);
         cool_batcher.add_text(screen_pos.clone() + PointFloat::new(0.0,-30.0),
-                              ability_mould.cost.to_string(), Color::from_rgb(0,0,200), ZValue::AboveUI.g());
+                              ability_mould.cost.to_string(), Color::from_rgb(0,0,200), RZValue::AboveUI.g());
 
     }
     // Draw resources.
@@ -155,7 +155,7 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &RenderResour
 
                 let res_count = owns_resources.get_counti(res_index).to_string();
                 cool_batcher.add_text(on_screen_pos, res_count,
-                                      graphics::Color::from((255, 255, 255)), ZValue::UI.g());
+                                      graphics::Color::from((255, 255, 255)), RZValue::UI.g());
             }
         }
     }

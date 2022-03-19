@@ -11,8 +11,9 @@
 
 
 pub mod compsys;
-pub mod archetypes;
-pub mod jigsaw_game_state;
+
+pub mod normie;
+pub use normie::*;
 
 pub use compsys::*;
 pub use serde::{Deserializer, Deserialize, Serialize};

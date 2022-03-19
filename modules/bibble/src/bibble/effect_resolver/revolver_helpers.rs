@@ -74,7 +74,7 @@ impl<'a> Revolver<'a>{
     }
     pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, radius: f32, pending: &mut PendingEntity){
         pending.add_comp(RenderComp{
-            z: ZValue::GamePiece.g(),
+            z: RZValue::GamePiece.g(),
             texture: RenderTexture::Image(mould.image.clone()),
             shape: RenderShape::Rectangle,
             only_render_owner: false

@@ -9,7 +9,7 @@
 #![allow(non_camel_case_types)]
 #![allow(deprecated)] // TODO:
 
-pub mod game;
+pub mod normie;
 pub mod compsys;
 pub mod bibble;
 

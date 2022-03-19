@@ -4,13 +4,9 @@ use std::ops::Div;
 
 use ggez::event::MouseButton;
 
-pub const JIGSAW_PIECE_SIZE : f32 = 75.0;
-
-
-
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct JigsawPlayerComp{
-    pub held_item: Option<GlobalEntityID>
+    pub held_piece: Option<GlobalEntityID>
 }
 
 
@@ -20,20 +16,21 @@ pub static JIGSAW_PLAYER_SYS: System = System{
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let mut mat_comp = c.find_jigsaw_mat();
-    for (player_id, player, jigsaw_player, input, camera) in CompIter4::<PlayerComp, JigsawPlayerComp, InputComp, CameraComp>::new(c){
+    for (player_id, player, jigsaw_player, input, camera)
+    in CompIter4::<PlayerComp, JigsawPlayerComp, InputComp, CameraComp>::new(c){
         if !player.connected && mat_comp.is_none(){
             continue;
         }
-        if let Some(held_piece) = jigsaw_player.held_item.clone(){
-            if input.inputs.mouse_event == RtsMouseEvent::MouseUp{
+        if let Some(held_piece) = jigsaw_player.held_piece.clone(){
+            if input.inputs.mouse_event == NiceMouseEvent::MouseUp{
 
                 let held_render_comp = c.get_mut_unwrap::<RenderComp>(held_piece);
 
-                held_render_comp.z = mat_comp.as_ref().unwrap().next_jigsaw_z;
+                held_render_comp.z = mat_comp.as_ref().unwrap().next_piece_z;
 
-                mat_comp.as_mut().unwrap().next_jigsaw_z += 1;
-                if mat_comp.as_mut().unwrap().next_jigsaw_z >= ZValue::JigsawPieceHeld.g(){
-                    mat_comp.as_mut().unwrap().next_jigsaw_z = ZValue::GamePiece.g() + 1;
+                mat_comp.as_mut().unwrap().next_piece_z += 1;
+                if mat_comp.as_mut().unwrap().next_piece_z >= JZValue::JigsawPieceHeld.g(){
+                    mat_comp.as_mut().unwrap().next_piece_z = JZValue::GamePiece.g() + 1;
                 }
 
 
@@ -48,8 +45,8 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                         if coords_diff.x.abs() + coords_diff.y.abs() <= 1{
                             let actual_coords_place_diff = coords_diff.clone().map(|i| {i as f32 * JIGSAW_PIECE_SIZE}) as PointFloat;
                             if actual_coords_place_diff.dist(&real_dist) < JIGSAW_PIECE_SIZE / 3.0{
-                                render.z = ZValue::BelowGamePiece.g();
-                                held_render_comp.z = ZValue::BelowGamePiece.g();
+                                render.z = JZValue::BelowGamePiece.g();
+                                held_render_comp.z = JZValue::BelowGamePiece.g();
                                 // Teleport both to correct place.
                                 matched_pos.pos = matched_to_piece.get_correct_pos();
                                 actual_place.pos = correct_place.clone();
@@ -58,7 +55,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                     }
                 }
 
-                jigsaw_player.held_item = None;
+                jigsaw_player.held_piece = None;
 
             }
         }else{
@@ -66,12 +63,13 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
             CompIter4::<JigsawPieceComp, ClickableComp, PositionComp, RenderComp>::new(c){
                 if Some(player_id) == clickable.clicking_on
                 && jigsaw_piece.get_correct_pos() != pos.pos.clone(){
-                    jigsaw_player.held_item  = Some(piece_id);
-                    render.z = ZValue::JigsawPieceHeld.g();
+                    jigsaw_player.held_piece = Some(piece_id);
+                    render.z = JZValue::JigsawPieceHeld.g();
                 }
             }
         }
-        if let Some(held_piece) = jigsaw_player.held_item{
+        if let Some(held_piece) = jigsaw_player.held_piece {
+            // TODO0: Try just setting to world position.
             c.get_mut_unwrap::<PositionComp>(held_piece).pos += input.inputs.mouse_moved.clone().div(camera.zoom);
         }
 

@@ -1,46 +1,54 @@
-use std::sync::Arc;
-
-use netcode::common::net_game_state::{GameState, StaticFrameData};
-
 use crate::*;
+use netcode::*;
+use ggez::{*};
+use std::sync::Arc;
+use ggez::graphics::{DrawParam, Text};
+use nalgebra::Point2;
+pub use crate::utils::gett;
+use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
+use rand::Rng;
+use bib_utils::debug_timer::DT;
+use netcode::common::net_game_state::GameState;
 
-#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
-pub struct GameStateSmash{
+pub const MAX_PLAYERS : usize = 16;
+
+#[derive(Clone, Serialize, Deserialize, Hash, Debug)]
+pub struct GameStateJigsaw {
     #[serde(deserialize_with = "state_deserialize")]
-    ecs: SuperbEcs
+    ecs: SuperbEcs,
 }
-impl GameState for GameStateSmash{
+
+
+
+impl Default for GameStateJigsaw {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl GameState for GameStateJigsaw {
     fn new() -> Self {
         Self{
-            ecs: SuperbEcs::new(get_config())
+            ecs: ActiveEcs::new(get_config()),
         }
     }
     fn init(&mut self){
-        self.ecs.c.req_create_entity(crate::archetypes::new_stage());
+        self.ecs.c.req_create_entity(new_scene_manager());
         //Reserve entity ids 1 to 9ish so player ID and entity IDs match up.
         for player_index in 1..9{
             let mut pending = archetypes::new_player(player_index as GlobalEntityID);
             self.ecs.c.req_create_entity(pending);
         }
     }
-
     fn simulate_tick(&mut self, stat: &StaticFrameData) {
         self.ecs.sim_systems(&stat);
-
-        for (player_id, username, color) in stat.sim_info.get_connecting_players(){
-            let player_ent_id = player_id as GlobalEntityID;
-            let spawnpoint = PointFloat::new(player_ent_id as f32 * 200.0,0.0);
-            let pawn = crate::archetypes::new_wasd_pawn(player_ent_id, spawnpoint, color);
-            self.ecs.c.req_create_entity(pawn);
-        }
 
         self.ecs.c.flush_ent_changes();
     }
 
-    fn render(&mut self, ctx: &mut ggez::Context, player_id: PlayerID, res: &mut Self::Resources) {
-        pcommon::simples_render(&mut self.ecs, ctx, &mut res.render, player_id as GlobalEntityID);
+    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
     }
-
     fn gen_resources(ctx: &mut ggez::Context) -> Self::Resources {
         let mut resources = Self::Resources::default();
 
@@ -49,23 +57,13 @@ impl GameState for GameStateSmash{
 
     type Resources = GgEzResources;
 }
-
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Eq, Hash, Copy)]
-pub enum SmashPlayerProperty {
-    Score,
-}
 fn get_config() -> EcsConfig{
     EcsConfig{
         functions: {
             let mut map = FunctionMap::default();
-            map.register_type::<ShootMouseComp>();
-            map.register_type::<VelocityComp>();
-            map.register_type::<VelocityWithInputsComp>();
             map.register_type::<PositionComp>();
             map.register_type::<RadiusComp>();
             map.register_type::<SizeComp>();
-            map.register_type::<CollisionComp>();
-            map.register_type::<LifeComp>();
             map.register_type::<CameraComp>();
             map.register_type::<InputComp>();
             map.register_type::<OwnedComp>();
@@ -85,11 +83,14 @@ fn get_config() -> EcsConfig{
             BUTTON_SYS.clone(),
             PERFORMANCE_MAP.clone(),
             CAMERA_SYS.clone(),
-            VELOCITY_SYS.clone(),
-            SHOOT_MOUSE_SYS.clone(),
-            COLLISION_SYS.clone(),
-            VELOCITY_WITH_INPUTS_SYS.clone(),
-            LIFE_SYS.clone(),
+            JIGSAW_BUTTON_SYS.clone(),
+            JIGSAW_MAT_SYS.clone(),
+
+            JIGSAW_PIECE_SYS.clone(),
+            JIGSAW_PLAYER_SYS.clone(),
+            LOBBY_SYS.clone(),
+            JIGSAW_SCENE_SWITCHER_SYS.clone(),
+
             CURSOR_SYS.clone(),
             UI_SYS.clone(),
         ]
@@ -99,7 +100,6 @@ fn get_config() -> EcsConfig{
 fn state_deserialize<'de, D>(deserializer: D) -> Result<SuperbEcs, D::Error> where D: Deserializer<'de> {
     match SuperbEcs::deserialize(deserializer){
         Ok(mut ecs) => {
-            println!("Post deserialize!");
             ecs.post_deserialize(get_config());
             Ok(ecs)
         }

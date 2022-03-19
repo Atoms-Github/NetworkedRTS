@@ -27,3 +27,5 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
 }
 
+pub const JIGSAW_PIECE_SIZE : f32 = 75.0;
+

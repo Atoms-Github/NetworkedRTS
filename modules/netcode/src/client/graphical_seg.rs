@@ -60,7 +60,7 @@ impl<T : 'static + GameState> GraphicalIn<T> {
         let (mut ctx, events_loop) = cb.build().unwrap();
 
 
-        graphical_in.resources = Some(T::gen_render_resources(&mut ctx));
+        graphical_in.resources = Some(T::gen_resources(&mut ctx));
         event::run(ctx, events_loop, graphical_in);
     }
 }

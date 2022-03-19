@@ -1,11 +1,12 @@
 use crate::*;
 use std::ops::Mul;
 use std::ops::Div;
+use ggez::event::KeyCode;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct LobbyManager{ // Means keep when scene changes.
-    pub game_start_cooldown: f32,
+    pub chosen_jigsaw: String,
 }
 
 pub static LOBBY_SYS: System = System{
@@ -13,21 +14,13 @@ pub static LOBBY_SYS: System = System{
     name: "lobby"
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
-    let scene = c.find_scene();
+    let scene = c.query_single_comp::<JigsawSceneManager>().unwrap();
     for (lobby_id, lobby) in CompIter1::<LobbyManager>::new(c){
-        lobby.game_start_cooldown -= meta.delta;
         // Check for game start on F1.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
-            if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F1){
-                scene.next = RtsSceneType::InGame;
+            if input.inputs.primitive.is_keycode_pressed(KeyCode::F1) && !lobby.chosen_jigsaw.eq(""){
+                scene.next = JigsawSceneType::InJigsaw;
             }
         }
     }
-
 }
-
-
-
-
-
-

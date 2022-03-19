@@ -36,7 +36,7 @@ pub trait GameState : Clone + Serialize + DeserializeOwned + Hash + Debug + Send
     fn init(&mut self);
     fn simulate_tick(&mut self, stat: &StaticFrameData);
     fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &mut Self::Resources);
-    fn gen_render_resources(ctx: &mut Context) -> Self::Resources;
+    fn gen_resources(ctx: &mut Context) -> Self::Resources;
 
     type Resources;
 }

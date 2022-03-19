@@ -12,6 +12,16 @@ pub struct InputComp{
     pub hovered_entity: Option<GlobalEntityID>,
     pub mouse_pos_game_world: PointFloat,
 }
+impl Default for InputComp{
+    fn default() -> Self {
+        Self{
+            is_panning: false,
+            inputs: Default::default(),
+            hovered_entity: None,
+            mouse_pos_game_world: PointFloat::new(0.0, 0.0),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct NiceInputState { // A more processed version of the 'primative' input state.

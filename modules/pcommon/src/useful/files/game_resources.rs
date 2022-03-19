@@ -6,6 +6,10 @@ use std::path::Path;
 use std::fs;
 use crate::FileCache;
 
+lazy_static! {
+    pub static ref LOGIC_RESOURCES: Mutex<LogicResources> = Mutex::new(vec![]);
+}
+
 
 #[derive(Default)]
 pub struct LogicResources {

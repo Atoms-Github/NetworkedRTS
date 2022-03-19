@@ -37,7 +37,7 @@ pub fn new_lobby(game_start_cooldown: f32) -> PendingEntity{
 }
 pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> PendingEntity{
     PendingEntity::new5(
-        RenderComp{ z: ZValue::SelectionBox.g(), texture: RenderTexture::Color(1.0,1.0,1.0,0.5), shape: RenderShape::Rectangle,
+        RenderComp{ z: RZValue::SelectionBox.g(), texture: RenderTexture::Color(1.0, 1.0, 1.0, 0.5), shape: RenderShape::Rectangle,
             only_render_owner: false
         },
         SizeComp{ size: PointFloat::new(40.0, 40.0)},
@@ -50,7 +50,7 @@ pub fn new_sel_box(owner: GlobalEntityID, position: PointFloat) -> PendingEntity
 }
 pub fn new_race_selection_button(race: RaceID, position: PointFloat, image: String) -> PendingEntity{
     PendingEntity::new6(
-        RenderComp{ z: ZValue::UI.g(), texture: RenderTexture::Image(image), shape: RenderShape::Rectangle,
+        RenderComp{ z: RZValue::UI.g(), texture: RenderTexture::Image(image), shape: RenderShape::Rectangle,
             only_render_owner: false
         },
         SizeComp{ size: PointFloat::new(50.0, 50.0)},
@@ -68,7 +68,7 @@ pub fn new_race_selection_button(race: RaceID, position: PointFloat, image: Stri
 }
 pub fn new_map_selection_button(map: String, position: PointFloat, already_selected: bool, size: f32) -> PendingEntity{
     PendingEntity::new6(
-        RenderComp{ z: ZValue::UI.g(), texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
+        RenderComp{ z: RZValue::UI.g(), texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
             only_render_owner: false
         },
         SizeComp{ size: PointFloat::new(size, size)},
