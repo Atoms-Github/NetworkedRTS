@@ -1,8 +1,6 @@
 use crate::*;
 use ggez::graphics::Color;
 
-impl PendingEntity{
-
     pub fn new_player(owner: GlobalEntityID) -> Self{
         Self::new7(
             PlayerComp{ name: "NamelessWonder".to_string(), alive: true, connected: false, race: RaceID::ROBOTS, color: Shade(1.0,0.5,1.0) },
@@ -130,4 +128,3 @@ impl PendingEntity{
             arena,
         )
     }
-}
