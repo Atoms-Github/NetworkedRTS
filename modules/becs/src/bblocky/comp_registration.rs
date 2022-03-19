@@ -54,7 +54,8 @@ impl FunctionMap{
         return self.get(crack_type_id(type_id));
     }
     pub fn get(&self, type_id_num: TypeIdNum) -> &SuperbFunctions {
-        return self.map.get(&type_id_num).expect("Type wasn't registered!");
+        return self.map.get(&type_id_num).unwrap_or_else(|| panic!("Type wasn't registered!: {}", type_id_num));
+
     }
 }
 pub fn get_functions<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>() -> SuperbFunctions{

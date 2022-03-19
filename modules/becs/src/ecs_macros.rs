@@ -57,7 +57,9 @@ macro_rules! comp_iter_def {
         impl PendingEntity{
             pub fn $new_name<$($type_name : 'static + Serialize + Clone + DeserializeOwned + Send + Debug),+>($($type_name: $type_name),+) -> Self{
                 let mut pending = Self::new();
-                $(pending.add_comp($type_name);)+
+                $(
+                    pending.add_comp($type_name);
+                )+
                 return pending;
             }
         }

@@ -15,7 +15,7 @@ pub static JIGSAW_PLAYER_SYS: System = System{
     name: "jigsaw_player"
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
-    let mut mat_comp = c.find_jigsaw_mat();
+    let mut mat_comp = c.query_single_comp::<JigsawMatComp>();
     for (player_id, player, jigsaw_player, input, camera)
     in CompIter4::<PlayerComp, JigsawPlayerComp, InputComp, CameraComp>::new(c){
         if !player.connected && mat_comp.is_none(){
@@ -45,8 +45,8 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                         if coords_diff.x.abs() + coords_diff.y.abs() <= 1{
                             let actual_coords_place_diff = coords_diff.clone().map(|i| {i as f32 * JIGSAW_PIECE_SIZE}) as PointFloat;
                             if actual_coords_place_diff.dist(&real_dist) < JIGSAW_PIECE_SIZE / 3.0{
-                                render.z = JZValue::BelowGamePiece.g();
-                                held_render_comp.z = JZValue::BelowGamePiece.g();
+                                render.z = JZValue::StuckInPieces.g();
+                                held_render_comp.z = JZValue::StuckInPieces.g();
                                 // Teleport both to correct place.
                                 matched_pos.pos = matched_to_piece.get_correct_pos();
                                 actual_place.pos = correct_place.clone();

@@ -76,6 +76,8 @@ fn get_config() -> EcsConfig{
             map.register_type::<UIComp>();
             map.register_type::<CursorComp>();
             map.register_type::<UninteractableComp>();
+            map.register_type::<SimpleViewerComp>();
+            map.register_type::<ScenePersistent>();
             map
         },
         systems: vec![

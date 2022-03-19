@@ -15,7 +15,7 @@ pub static JIGSAW_MAT_SYS: System = System{
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.query_single_comp::<JigsawSceneManager>().unwrap();
-    if let Some(mat_comp) = c.find_jigsaw_mat(){
+    if let Some(mat_comp) = c.query_single_comp::<JigsawMatComp>(){
         // Check for jigsaw end on F3.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if input.inputs.primitive.is_keycode_pressed(KeyCode::F3){

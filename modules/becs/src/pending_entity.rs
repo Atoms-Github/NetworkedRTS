@@ -36,6 +36,8 @@ impl PendingEntity {
     }
     pub fn add_comp<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>(&mut self, value: T) {
         assert!(self.set_comp(value).is_none(), "Pending entity already contained that component type!");
+
+        // assert!(gett::<$type_name>() != 5434297715843079649, "Item: {}", std::any::type_name::<$type_name>());
     }
     pub fn set_comp<T : 'static + Serialize + Clone + DeserializeOwned + Send + Debug>(&mut self, value: T) -> Option<SingleComp> {
         let bytes = unsafe {crate::unsafe_utils::struct_as_u8_slice(&value)}.to_vec();

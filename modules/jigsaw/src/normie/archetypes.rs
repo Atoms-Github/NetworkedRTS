@@ -23,15 +23,15 @@ pub fn new_scene_manager() -> PendingEntity{
 }
 pub fn new_lobby() -> PendingEntity{
     PendingEntity::new1(
-        LobbyManager{ chosen_jigsaw: "".to_string() },
+        LobbyManagerComp { chosen_jigsaw: "".to_string() },
     )
 }
 
 pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat) -> PendingEntity{
-    PendingEntity::new5(
+    PendingEntity::new6(
         JigsawMatComp{
             jigsaw_name,
-            next_piece_z: ZValue::GamePiece.g() + 1
+            next_piece_z: JZValue::GamePiece.g() + 1
         },
         UninteractableComp {
             useless: false
@@ -43,10 +43,12 @@ pub fn new_jigsaw_mat(jigsaw_name: String, size: PointFloat) -> PendingEntity{
             pos: PointFloat::new(size.x / 2.0 - JIGSAW_PIECE_SIZE / 2.0, size.y / 2.0 - JIGSAW_PIECE_SIZE / 2.0),
         },
         RenderComp{
-            z: ZValue::Arena.g(),
+            z: JZValue::Mat.g(),
+            only_render_owner: false
+        },
+        SimpleViewerComp{
             texture: RenderTexture::Color(0.05,0.05,0.05,0.2),
             shape: RenderShape::Rectangle,
-            only_render_owner: false
         }
 
     )
@@ -57,9 +59,8 @@ pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -
             size: PointFloat::new(JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE),
         },
         RenderComp{
-            z: ZValue::GamePiece.g(),
-            texture: RenderTexture::Jigsaw(image.clone(), coords.clone()),
-            shape: RenderShape::Rectangle,
+            z: JZValue::GamePiece.g(),
+
             only_render_owner: false
         },
         PositionComp{
@@ -75,16 +76,21 @@ pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -
     )
 }
 pub fn new_jigsaw_selection_button(map: String, position: PointFloat, already_selected: bool, size: f32) -> PendingEntity{
-    PendingEntity::new6(
-        RenderComp{ z: ZValue::UI.g(), texture: RenderTexture::Image(map.clone()), shape: RenderShape::Rectangle,
+    PendingEntity::new7(
+        RenderComp{
+            z: JZValue::UI.g(),
             only_render_owner: false
+        },
+        SimpleViewerComp{
+            texture: RenderTexture::Image(map.clone()),
+            shape: RenderShape::Rectangle,
         },
         SizeComp{ size: PointFloat::new(size, size)},
         PositionComp{ pos: position },
         ClickableComp {
             clicking_on: None
         },
-        MapButtonComp{
+        JigsawButtonComp{
             selected: already_selected,
             map
         },

@@ -30,7 +30,7 @@ impl Default for GameStateJigsaw {
 impl GameState for GameStateJigsaw {
     fn new() -> Self {
         Self{
-            ecs: ActiveEcs::new(get_config()),
+            ecs: SuperbEcs::new(get_config()),
         }
     }
     fn init(&mut self){
@@ -47,7 +47,12 @@ impl GameState for GameStateJigsaw {
         self.ecs.c.flush_ent_changes();
     }
 
-    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &RenderResourcesPtr){
+    fn render(&mut self, ctx: &mut Context, player_id: PlayerID, res: &mut GgEzResources){
+        let mut batcher = CoolBatcher::new();
+
+        pcommon::simple_render(&mut batcher, &mut self.ecs, player_id as GlobalEntityID);
+        jigsaw_render(&mut self.ecs, player_id as GlobalEntityID);
+        batcher.gogo_draw(ctx, &mut res.render);
     }
     fn gen_resources(ctx: &mut ggez::Context) -> Self::Resources {
         let mut resources = Self::Resources::default();
@@ -67,13 +72,21 @@ fn get_config() -> EcsConfig{
             map.register_type::<CameraComp>();
             map.register_type::<InputComp>();
             map.register_type::<OwnedComp>();
-            map.register_type::<OwnsResourcesComp<SmashPlayerProperty>>();
+            map.register_type::<OwnsResourcesComp<JigsawPlayerProperty>>();
             map.register_type::<PlayerComp>();
             map.register_type::<RenderComp>();
             map.register_type::<ClickableComp>();
             map.register_type::<UIComp>();
             map.register_type::<CursorComp>();
             map.register_type::<UninteractableComp>();
+            map.register_type::<JigsawButtonComp>();
+            map.register_type::<JigsawMatComp>();
+            map.register_type::<JigsawPieceComp>();
+            map.register_type::<JigsawPlayerComp>();
+            map.register_type::<LobbyManagerComp>();
+            map.register_type::<JigsawSceneManager>();
+            map.register_type::<SimpleViewerComp>();
+            map.register_type::<ScenePersistent>();
             map
         },
         systems: vec![
@@ -85,12 +98,10 @@ fn get_config() -> EcsConfig{
             CAMERA_SYS.clone(),
             JIGSAW_BUTTON_SYS.clone(),
             JIGSAW_MAT_SYS.clone(),
-
             JIGSAW_PIECE_SYS.clone(),
             JIGSAW_PLAYER_SYS.clone(),
             LOBBY_SYS.clone(),
             JIGSAW_SCENE_SWITCHER_SYS.clone(),
-
             CURSOR_SYS.clone(),
             UI_SYS.clone(),
         ]

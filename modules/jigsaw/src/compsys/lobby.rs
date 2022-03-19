@@ -5,7 +5,7 @@ use ggez::event::KeyCode;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub struct LobbyManager{ // Means keep when scene changes.
+pub struct LobbyManagerComp { // Means keep when scene changes.
     pub chosen_jigsaw: String,
 }
 
@@ -15,7 +15,7 @@ pub static LOBBY_SYS: System = System{
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.query_single_comp::<JigsawSceneManager>().unwrap();
-    for (lobby_id, lobby) in CompIter1::<LobbyManager>::new(c){
+    for (lobby_id, lobby) in CompIter1::<LobbyManagerComp>::new(c){
         // Check for game start on F1.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if input.inputs.primitive.is_keycode_pressed(KeyCode::F1) && !lobby.chosen_jigsaw.eq(""){

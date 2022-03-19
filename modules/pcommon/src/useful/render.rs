@@ -13,12 +13,10 @@ use crate::cool_batcher::CoolBatcher;
 pub struct RenderComp{
     pub z: u16,
     pub only_render_owner: bool,
-    pub texture: RenderTexture,
-    pub shape: RenderShape,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub struct SimpleRenderComp{
+pub struct SimpleViewerComp {
     pub texture: RenderTexture,
     pub shape: RenderShape,
 }
@@ -43,22 +41,21 @@ pub fn simple_render(cool_batcher: &mut CoolBatcher, ecs: &mut SuperbEcs, player
     let player_input = ecs.c.get::<InputComp>(player_entity_id).unwrap();
 
     // Draw entities.
-    for (entity_id, position, render, size) in
-    CompIter3::<PositionComp, RenderComp, SizeComp>::new(&ecs.c){
+    for (entity_id, position, render, viewer, size) in
+    CompIter4::<PositionComp, RenderComp, SimpleViewerComp, SizeComp>::new(&ecs.c){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_transform(&ecs.c, entity_id);
-        match &render.shape{
+        match &viewer.shape{
             RenderShape::Circle => {
                 let radius = on_screen_size.x;
-                match &render.texture{
+                match &viewer.texture{
                     RenderTexture::Color(r,g,b,a) => {
                         cool_batcher.add_circle(&on_screen_pos, radius, Color::new(*r,*g,*b,*a), render.z);
                     }
                     RenderTexture::Image(_) => {panic!("Render image circle isn't supported! (yet loh)")}
-                    // RenderTexture::Jigsaw(_, _) => {panic!("Render jigsaw circle isn't supported! (yet loh)")}
                 }
             }
             RenderShape::Rectangle => {
-                match &render.texture{
+                match &viewer.texture{
                     RenderTexture::Color(r,g,b,a) => {
                         cool_batcher.add_rectangle_rect(MyDrawParams{
                             pos: on_screen_pos.clone(),
@@ -73,14 +70,6 @@ pub fn simple_render(cool_batcher: &mut CoolBatcher, ecs: &mut SuperbEcs, player
                         };
                         cool_batcher.add_image(image_name.clone(), my_draw_params, render.z);
                     }
-                    // RenderTexture::Jigsaw(landscape_name, piece_coords) => {
-                    //     let mut their_params = DrawParam::new();
-                    //     cool_batcher.add_image_part(landscape_name.clone(), MyDrawParams{
-                    //         pos: on_screen_pos.clone(),
-                    //         size: on_screen_size.clone(),
-                    //     }, Rect::new(piece_coords.x as f32 * JIGSAW_PIECE_SIZE,
-                    //                  piece_coords.y as f32 * JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE, JIGSAW_PIECE_SIZE), render.z);
-                    // }
                 }
             }
             RenderShape::Text(text) => {unimplemented!()}

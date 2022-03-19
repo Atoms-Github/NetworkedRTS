@@ -7,7 +7,7 @@ use std::fs;
 use crate::FileCache;
 
 lazy_static! {
-    pub static ref LOGIC_RESOURCES: Mutex<LogicResources> = Mutex::new(vec![]);
+    pub static ref LOGIC_RESOURCES: Mutex<LogicResources> = Mutex::new(LogicResources::default());
 }
 
 

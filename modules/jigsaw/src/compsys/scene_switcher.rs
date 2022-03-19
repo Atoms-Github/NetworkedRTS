@@ -4,7 +4,6 @@ use std::ops::Div;
 use log::logger;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
-use crate::jigsaw_game_state::SCENE_MAN_ENT_ID;
 
 
 
@@ -37,10 +36,9 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
         match scene.next{
             JigsawSceneType::Lobby => {
-                let mut x = 50.0;
                 // Map selection buttons.
                 let size = 150.0;
-                x = size;
+                let mut x = size;
                 let mut y = size + 150.0;
                 for map_entry in std::fs::read_dir("../../../../../../resources/images/jigsaws").unwrap(){
                     let map_entry = map_entry.unwrap();
@@ -93,17 +91,14 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                             }
                         }
                         pos = attempted_location;
-                        let pending_piece = PendingEntity::new_jigsaw_piece(mapname.clone(), coords,
-                                                                            pos);
 
-                        ent_changes.new_entities.push(pending_piece);
+                        c.req_create_entity(new_jigsaw_piece(mapname.clone(), coords,pos));
 
                     }
                 }
-                ent_changes.new_entities.push(
-                    PendingEntity::new_jigsaw_mat(mapname,
-                                                  PointFloat::new((last_x + 1) as f32 * JIGSAW_PIECE_SIZE,
-                                                                  (last_y + 1) as f32 * JIGSAW_PIECE_SIZE)));
+                c.req_create_entity(new_jigsaw_mat(mapname,
+                                                   PointFloat::new((last_x + 1) as f32 * JIGSAW_PIECE_SIZE,
+                                                                   (last_y + 1) as f32 * JIGSAW_PIECE_SIZE)));
 
 
             }

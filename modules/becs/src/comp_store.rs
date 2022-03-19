@@ -119,8 +119,9 @@ impl CompStorage{
             self.delete_entity(delete);
         }
     }
-    pub fn req_delete_entity(&mut self, entity_id: GlobalEntityID){
-        self.pending_changes.deleted_entities.push(entity_id);
+    pub fn req_delete_entity(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID){
+        let me = unsafe{crate::unsafe_utils::unsafe_const_cheat(self)};
+        me.pending_changes.deleted_entities.push(entity_id);
     }
     fn delete_entity(&mut self, entity_id: GlobalEntityID) -> bool{
         // What we want to do:
@@ -167,8 +168,9 @@ impl CompStorage{
 
         return new_composition_id;
     }
-    pub fn req_create_entity(&mut self, pending_entity: PendingEntity){
-        self.pending_changes.new_entities.push(pending_entity);
+    pub fn req_create_entity(& /*Unsafe loh*/self, pending_entity: PendingEntity){
+        let me = unsafe{crate::unsafe_utils::unsafe_const_cheat(self)};
+        me.pending_changes.new_entities.push(pending_entity);
     }
     fn create_entity(&mut self, pending_entity: PendingEntity) -> InternalIndex{
         let types_set = pending_entity.hash_types();
@@ -206,7 +208,10 @@ impl CompStorage{
     }
     pub fn query_single_comp<T : 'static>(&self) -> Option<&mut T>{
         let results = self.query(vec![gett::<T>()]);
-        assert_eq!(1, results.len());
+        if results.len() == 0{
+            return None;
+        }
+        assert_eq!(1, results.len(), "Found non-1 of {}", std::any::type_name::<T>());
         return self.get_mut::<T>(results[0]);
     }
     pub fn query(&self, must_include: Vec<TypeIdNum>) -> Vec<GlobalEntityID>{
