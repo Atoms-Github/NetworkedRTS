@@ -26,7 +26,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         input.mouse_pos_game_world = camera.screen_space_to_game_space(input.inputs.primitive.get_mouse_loc().clone());
         input.hovered_entity = None;
         for ent_id in &entity_list{
-            if c.get::<IgnoreHoverComp>(*ent_id).is_none(){
+            if c.get::<UninteractableComp>(*ent_id).is_none(){
                 let (screenpos, screensize) = camera.get_as_screen_transform(c, *ent_id);
                 let screen_rect = screenpos.to_ggez_rect(&screensize);
                 if screen_rect.contains(input.inputs.primitive.get_mouse_loc().to_point()){

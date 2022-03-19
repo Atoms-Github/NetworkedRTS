@@ -12,10 +12,18 @@ use crate::cool_batcher::CoolBatcher;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
     pub z: u16,
+    pub only_render_owner: bool,
     pub texture: RenderTexture,
     pub shape: RenderShape,
-    pub only_render_owner: bool,
 }
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct SimpleRenderComp{
+    pub texture: RenderTexture,
+    pub shape: RenderShape,
+}
+
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum RenderTexture{
     Color(f32, f32, f32, f32),
@@ -30,9 +38,7 @@ pub enum RenderShape{
 }
 
 
-pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &mut GgEzRenderResources, player_entity_id: GlobalEntityID){
-    let mut cool_batcher = CoolBatcher::new();
-
+pub fn simple_render(cool_batcher: &mut CoolBatcher, ecs: &mut SuperbEcs, player_entity_id: GlobalEntityID){
     let player_camera = ecs.c.get::<CameraComp>(player_entity_id).unwrap();
     let player_input = ecs.c.get::<InputComp>(player_entity_id).unwrap();
 
@@ -83,10 +89,6 @@ pub fn simples_render(ecs: &mut SuperbEcs, ctx: &mut Context, res: &mut GgEzRend
 
 
     let mut test_param = DrawParam::new();
-    // cool_batcher.add_image("factory.jpg".to_string(), test_param, 5);
-    cool_batcher.gogo_draw(ctx, res);
-
-
 }
 
 

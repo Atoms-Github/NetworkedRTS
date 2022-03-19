@@ -6,7 +6,7 @@ pub fn new_cursor(player: GlobalEntityID, shade: Shade, z: u16) -> PendingEntity
         CursorComp{
             player,
         },
-        IgnoreHoverComp{
+        UninteractableComp {
             useless: false
         },
         SizeComp{

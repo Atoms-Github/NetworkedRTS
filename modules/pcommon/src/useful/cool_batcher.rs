@@ -13,11 +13,6 @@ use itertools::Itertools;
 use winit::event::VirtualKeyCode::M;
 
 
-struct BatcherImage{
-    path: String,
-    top_left: PointFloat,
-    bottom_left: PointFloat,
-}
 #[derive(Default)]
 pub struct CoolBatcher{
     layers: HashMap<ZType, RenderLayer>,

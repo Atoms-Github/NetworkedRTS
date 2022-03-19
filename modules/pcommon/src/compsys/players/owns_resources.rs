@@ -4,7 +4,6 @@ use ggez::event::{KeyCode, MouseButton};
 use std::collections::HashMap;
 use std::hash::Hash;
 
-pub const RESOURCES_COUNT: usize = 3;
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ResourceBlock<T : Hash + Eq + Copy> {
     pub resources: HashMap<T, f32>
@@ -34,11 +33,6 @@ impl<T : Hash + Eq + Copy> Default for OwnsResourcesComp<T>{
     }
 }
 impl<T : Hash + Eq + Copy> OwnsResourcesComp<T> {
-    // pub fn new<B : Hash + Eq + Copy>() -> Self{
-    //     Self{
-    //         resources: ResourceBlock::<B>::default()
-    //     }
-    // }
     pub fn gain_block(&mut self, block: &ResourceBlock<T>, delta: f32){
         for (k, v) in &block.resources{
             *self.resources.resources.entry(*k).or_insert(0.0) += v;
@@ -66,12 +60,4 @@ impl<T : Hash + Eq + Copy> OwnsResourcesComp<T> {
     pub fn get_count(&mut self, res_type: T) -> f32{
         return *self.resources.resources.entry(res_type).or_insert(0.0);
     }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy)]
-pub enum ResourceType{
-    LIGHTNESS,
-    DARKNESS,
-    BLUENESS,
 }

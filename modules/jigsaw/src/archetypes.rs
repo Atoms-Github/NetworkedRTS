@@ -32,7 +32,7 @@ impl PendingEntity{
                 jigsaw_name,
                 next_jigsaw_z: ZValue::GamePiece.g() + 1
             },
-            IgnoreHoverComp{
+            UninteractableComp {
                 useless: false
             },
             SizeComp{

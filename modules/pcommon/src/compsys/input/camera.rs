@@ -36,9 +36,9 @@ impl CameraComp{
     }
 }
 
-pub static CAMERA_PAN_SYS: System = System{
+pub static CAMERA_SYS: System = System{
     run,
-    name: "camera_pan"
+    name: "camera"
 };
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (player_id, camera, input) in CompIter2::<CameraComp, InputComp>::new(c){

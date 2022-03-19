@@ -113,7 +113,7 @@ fn get_config() -> EcsConfig{
             map.register_type::<JigsawPlayerComp>();
             map.register_type::<JigsawMatComp>();
             map.register_type::<CursorComp>();
-            map.register_type::<IgnoreHoverComp>();
+            map.register_type::<UninteractableComp>();
             // map.register_type::<BenchStruct>();
             map
         },
@@ -124,7 +124,7 @@ fn get_config() -> EcsConfig{
             RACE_BUTTON_SYS.clone(),
             MAP_BUTTON_SYS.clone(),
             PERFORMANCE_MAP.clone(),
-            CAMERA_PAN_SYS.clone(),
+            CAMERA_SYS.clone(),
             SEEKING_PROJECTILES_COMP.clone(),
             SELECTION_BOX_SYS.clone(),
             ABILITY_TARGETING.clone(),

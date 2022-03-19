@@ -17,7 +17,8 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
             println!("Disconnecting player {}", player_id);
         }
         c.get_mut::<PlayerComp>(player_id as GlobalEntityID).unwrap().connected = false;
-
+        // TODO: Delete cursor?
+        
         if let Some(zero) = c.get_mut::<CommonOverseer>(0){
             zero.connected_players -= 1;
         }

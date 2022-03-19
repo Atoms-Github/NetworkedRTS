@@ -75,7 +75,7 @@ fn get_config() -> EcsConfig{
             map.register_type::<ClickableComp>();
             map.register_type::<UIComp>();
             map.register_type::<CursorComp>();
-            map.register_type::<IgnoreHoverComp>();
+            map.register_type::<UninteractableComp>();
             map
         },
         systems: vec![
@@ -84,7 +84,7 @@ fn get_config() -> EcsConfig{
             INPUT_PREPROC.clone(),
             BUTTON_SYS.clone(),
             PERFORMANCE_MAP.clone(),
-            CAMERA_PAN_SYS.clone(),
+            CAMERA_SYS.clone(),
             VELOCITY_SYS.clone(),
             SHOOT_MOUSE_SYS.clone(),
             COLLISION_SYS.clone(),

@@ -1,12 +1,9 @@
 use crate::*;
 
-
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct SizeComp{
     pub size: PointFloat,
 }
-
-
 
 impl SizeComp{
     pub fn set_abs(&mut self, new_size: &PointFloat){
