@@ -38,7 +38,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         }
     }
     // Check for stopping ability targeting.
-    for (player_id , input, resources_temp) in CompIter2::<InputComp, OwnsResourcesComp>::new(c) {
+    for (player_id , input) in CompIter1::<InputComp>::new(c) {
         if let InputMode::TargettingAbility(using_ability_id) = input.mode.clone(){
             if let RtsMouseEvent::MouseDown(mouse_button) = input.inputs.mouse_event{
                 match mouse_button{

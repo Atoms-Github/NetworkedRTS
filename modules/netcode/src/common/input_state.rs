@@ -130,6 +130,10 @@ impl InputState{
     pub fn is_keycode_pressed(&self, code: KeyCode) -> bool{
         self.is_keyid_pressed(code as usize)
     }
+    pub fn is_ctrl_held(&self) -> bool{
+        self.is_keycode_pressed(VirtualKeyCode::LControl)
+            || self.is_keycode_pressed(VirtualKeyCode::RControl)
+    }
     pub fn set_keyid_pressed(&mut self, key_id: usize, pressed: bool){
         self.keys_pressed[key_id] = pressed;
     }

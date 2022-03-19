@@ -1,6 +1,7 @@
 use crate::*;
 use std::ops::Mul;
 use std::ops::Div;
+use becs::unsafe_utils::unsafe_const_cheat;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -76,8 +77,8 @@ fn do_bops(c: &mut CompStorage) {
                     };
                     let bop_dist_1 = bop_fraction_for_1 * distance_too_close;
                     let bop_dist_2 = (1.0 - bop_fraction_for_1) * distance_too_close;
-                    apply_bop(bop_dist_1, unsafe { pcommon::unsafe_const_cheat(&position_1.pos) }, &position_2.pos);
-                    apply_bop(bop_dist_2, unsafe { pcommon::unsafe_const_cheat(&position_2.pos) }, &position_1.pos);
+                    apply_bop(bop_dist_1, unsafe {  unsafe_const_cheat(&position_1.pos) }, &position_2.pos);
+                    apply_bop(bop_dist_2, unsafe { unsafe_const_cheat(&position_2.pos) }, &position_1.pos);
                 }
             }
         }

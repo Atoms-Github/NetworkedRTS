@@ -15,7 +15,7 @@ pub static LOBBY_SYS: System = System{
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     let scene = c.find_scene();
     for (lobby_id, lobby) in CompIter1::<LobbyManager>::new(c){
-        lobby.game_start_cooldown -= meta.delta;
+        lobby.game_start_cooldown -= meta.meta.delta;
         // Check for game start on F1.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
             if input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F1){

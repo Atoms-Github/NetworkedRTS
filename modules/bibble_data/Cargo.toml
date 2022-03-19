@@ -1,0 +1,18 @@
+[package]
+name = "bibble_data"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bib_utils = {path="../bib_utils"}
+becs = {path="../becs"}
+netcode = {path="../netcode"}
+pcommon = {path="../pcommon"}
+ggez = "*"
+serde = "*"
+nalgebra = "*"
+env_logger = "*"
+log = "*"
+chrono = "*"

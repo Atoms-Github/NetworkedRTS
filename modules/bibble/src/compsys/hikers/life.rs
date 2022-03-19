@@ -15,7 +15,7 @@ pub static LIFE_SYS: System = System{
 fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (unit_id, life) in CompIter1::<LifeComp>::new(c) {
         if life.life <= 0.0{
-            ent_changes.deleted_entities.push(unit_id);
+            c.req_delete_entity(unit_id);
             if let Some(arena) = c.find_arena(){
                 if let Some(structure) = c.get::<UnitStructureComp>(unit_id){
                     if let Some(position) = c.get::<PositionComp>(unit_id){

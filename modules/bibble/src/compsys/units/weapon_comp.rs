@@ -76,9 +76,5 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
             }
         }
-
     }
-
-
-    revolver.end().move_into(ent_changes);
 }

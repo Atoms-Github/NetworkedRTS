@@ -109,7 +109,7 @@ impl CompStorage{
         return self.internal_entities.get(entity_id).is_some();
     }
     pub fn get_mut<T : 'static>(&/*Non-mut. Unsafe loh.*/self, entity_id: GlobalEntityID) -> Option<&mut T>{
-        return self.get::<T>(entity_id).map(|unmut|{unsafe{crate::unsafe_utils::very_bad_function(unmut)}});
+        return self.get::<T>(entity_id).map(|unmut|{unsafe{crate::unsafe_utils::unsafe_const_cheat(unmut)}});
     }
     pub fn flush_ent_changes(&mut self){
         for new in self.pending_changes.new_entities.drain(..).collect::<Vec<PendingEntity>>(){

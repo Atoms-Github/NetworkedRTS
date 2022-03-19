@@ -21,6 +21,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/pcommon/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/bib_utils/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/jigsaw/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/bibble_data/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/smash/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/benches" isTestSource="true" />

@@ -8,7 +8,8 @@ members = [
     "modules/pcommon",
     "modules/bibble",
     "modules/becs",
-    "modules/bib_utils"
+    "modules/bib_utils",
+    "modules/bibble_data",
 ]
 
 #[profile.release]

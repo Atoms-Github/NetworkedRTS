@@ -16,7 +16,7 @@ impl<'a> Revolver<'a>{
             }
         );
         self.add_actor(data, &mould.actor, mould.size, &mut pending);
-        self.changes.new_entities.push(pending);
+        self.c.req_create_entity(pending);
     }
     pub fn spawn_unit(&mut self, data: &GameData, mould: &UnitMould, position: &PointFloat, owner: GlobalEntityID){
         let mut abilities_comp = AbilitiesComp{
@@ -70,7 +70,7 @@ impl<'a> Revolver<'a>{
             });
         }
         self.add_actor(data, &mould.actor, mould.radius, &mut pending);
-        self.changes.new_entities.push(pending);
+        self.c.req_create_entity(pending);
     }
     pub fn add_actor(&mut self, data: &GameData, mould: &ActorMould, radius: f32, pending: &mut PendingEntity){
         pending.add_comp(RenderComp{

@@ -14,7 +14,7 @@ use std::clone::Clone;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use crate::utils::{TypeIdNum, gett};
-use crate::unsafe_utils::very_bad_function;
+use crate::unsafe_utils::unsafe_const_cheat;
 
 
 #[derive(PartialEq)]
@@ -141,7 +141,7 @@ impl SuperVec {
         }
     }
     pub fn get_mut<T : 'static>(&mut self, index: usize) -> Option<&mut T>{
-        return self.get(index).map(|item| unsafe {very_bad_function(item)});
+        return self.get(index).map(|item| unsafe { unsafe_const_cheat(item)});
     }
     pub fn get_functions(&self) -> &SuperbFunctions{
         match &self.functions{

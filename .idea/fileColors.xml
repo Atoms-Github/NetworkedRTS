@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SharedFileColors">
+    <fileColor scope="BibbleData" color="Yellow" />
+    <fileColor scope="Non-Project Files" color="Blue" />
+    <fileColor scope="Smash" color="6f0b17" />
+    <fileColor scope="Bibble" color="Blue" />
+    <fileColor scope="Puzzlebros" color="Green" />
+    <fileColor scope="Pcommon" color="5d185a" />
+    <fileColor scope="Netcode" color="515151" />
+    <fileColor scope="Becs" color="Orange" />
+    <fileColor scope="BibUtils" color="151515" />
+  </component>
+</project>

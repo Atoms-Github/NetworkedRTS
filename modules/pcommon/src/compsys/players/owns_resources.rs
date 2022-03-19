@@ -18,7 +18,7 @@ impl<T : Hash + Eq + Copy> Default for ResourceBlock<T>{
 }
 impl<T : Hash + Eq + Copy> ResourceBlock<T>{
     pub fn add_in_place(mut self, res_type: T, quantity: f32) -> Self{
-        *self.resources.resources.entry(res_type).or_insert(0.0) += quantity;
+        *self.resources.entry(res_type).or_insert(0.0) += quantity;
         return self;
     }
 }

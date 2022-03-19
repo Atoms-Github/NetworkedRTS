@@ -23,7 +23,7 @@ pub unsafe fn u8_slice_to_ref_mut<T>(bytes: &mut [u8]) -> &mut T {
     return value;
 }
 
-pub unsafe fn very_bad_function<T>(reference: &T) -> &mut T {
+pub unsafe fn unsafe_const_cheat<T>(reference: &T) -> &mut T {
     let const_ptr = reference as *const T;
     let mut_ptr = const_ptr as *mut T;
     &mut *mut_ptr

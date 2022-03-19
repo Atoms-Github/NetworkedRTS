@@ -32,11 +32,11 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         match input.mode.clone() {
             // Spawning it.
             InputMode::None => {
-                check_create_box(c, ent_changes, player_id, input);
+                check_create_box(c, player_id, input);
             }
             // Deleting it.
             InputMode::SelectionBox => {
-                check_delete_box(c, ent_changes, player_id);
+                check_delete_box(c, player_id);
             }
             _ => {}
         }
@@ -44,7 +44,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     revolver.end().move_into(ent_changes);
 }
 
-fn check_delete_box(c: &mut CompStorage, ent_changes: &mut EntStructureChanges,  player_id: GlobalEntityID) {
+fn check_delete_box(c: &mut CompStorage,  player_id: GlobalEntityID) {
     let input = c.get1_unwrap::<InputComp>(player_id);
     if input.inputs.mouse_event == RtsMouseEvent::MouseUp {
         if let Some(box_id) = get_box(c, player_id){
@@ -55,7 +55,7 @@ fn check_delete_box(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, 
     }
 }
 
-fn check_create_box(c: &mut CompStorage, ent_changes: &mut EntStructureChanges, player_id: GlobalEntityID, input: &mut InputComp) {
+fn check_create_box(c: &mut CompStorage, player_id: GlobalEntityID, input: &mut InputComp) {
     let input = c.get1_unwrap::<InputComp>(player_id);
     // if input.hovered_entity.is_none() {
         if input.inputs.mouse_event == RtsMouseEvent::MouseDown(MouseButton::Left) {

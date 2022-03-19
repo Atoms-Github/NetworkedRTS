@@ -1,5 +1,4 @@
 use crate::*;
-use image::traits::Pixel;
 use ggez::event::MouseButton;
 use ggez::graphics::Color;
 use ggez::winit::dpi::Size::Logical;
@@ -176,7 +175,6 @@ impl ArenaComp {
     pub fn load_map(&mut self, filepath: String){
         let mut unoptimised = LogicResources::default();
         let image = unoptimised.get_image(filepath);
-
         let bottom_right_corner = GridBox::new(image.width() as i32 - 1, image.height() as i32 - 1);
         self.flooring.grid.resize_to_fit(&bottom_right_corner);
         self.pathing.grid.resize_to_fit(&bottom_right_corner);

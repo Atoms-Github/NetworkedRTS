@@ -13,11 +13,12 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
     if scene.current == RtsSceneType::InGame{
         let mut alive_players = 0;
-        for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
-            if player.alive{
+        for (player_id , input, player, owns_commander
+        ) in CompIter3::<InputComp, PlayerComp, OwnsCommanderComp>::new(c) {
+            let mut commander = c.get_mut_unwrap::<CommanderComp>(owns_commander.ent_id.unwrap());
+            if commander.alive{
                 if (input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::F12)
-                    && (input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::LControl)
-                    || input.inputs.primitive.is_keycode_pressed(VirtualKeyCode::RControl)))
+                    && input.inputs.primitive.is_ctrl_held())
                     || !player.connected /* Concede on disconnect. */{
                     // Delete everything owned by me.
                     for (entity, owned) in CompIter1::<OwnedComp>::new(c) {
@@ -47,7 +48,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         };
         if alive_players < min_alive_players{
             scene.completed_rounds += 1;
-            scene.next = SceneType::Lobby;
+            scene.next = RtsSceneType::Lobby;
         }
     }
 
