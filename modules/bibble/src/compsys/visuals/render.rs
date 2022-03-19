@@ -4,6 +4,7 @@ use ggez::graphics::{DrawParam, Text, Color, Mesh, MeshBuilder, Drawable, Rect};
 use nalgebra::Point2;
 use std::collections::BTreeMap;
 use std::fmt;
+use crate::normie::RZValue;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct RenderComp{
@@ -90,6 +91,7 @@ pub fn render(ecs: &mut ActiveEcs, ctx: &mut Context, res: &RenderResourcesPtr, 
                     }
                     RenderTexture::Jigsaw(landscape_name, piece_coords) => {
                         let mut their_params = DrawParam::new();
+                        println!("Add image");
                         cool_batcher.add_image_part(landscape_name.clone(), MyDrawParams{
                             pos: on_screen_pos.clone(),
                             size: on_screen_size.clone(),

@@ -60,7 +60,6 @@ pub fn new_jigsaw_piece(image: String, coords: PointInt, position: PointFloat) -
         },
         RenderComp{
             z: JZValue::GamePiece.g(),
-
             only_render_owner: false
         },
         PositionComp{

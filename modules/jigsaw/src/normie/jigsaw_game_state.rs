@@ -90,9 +90,9 @@ fn get_config() -> EcsConfig{
             map
         },
         systems: vec![
+            INPUT_PREPROC.clone(),
             PLAYER_CONNECT.clone(),
             PLAYER_DISCONNECT.clone(),
-            INPUT_PREPROC.clone(),
             BUTTON_SYS.clone(),
             PERFORMANCE_MAP.clone(),
             CAMERA_SYS.clone(),

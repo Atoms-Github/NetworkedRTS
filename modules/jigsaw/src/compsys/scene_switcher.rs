@@ -36,14 +36,15 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
         match scene.next{
             JigsawSceneType::Lobby => {
+                let mut lock = pcommon::LOGIC_RESOURCES.lock().unwrap();
+
                 // Map selection buttons.
                 let size = 150.0;
                 let mut x = size;
                 let mut y = size + 150.0;
-                for map_entry in std::fs::read_dir("../../../../../../resources/images/jigsaws").unwrap(){
-                    let map_entry = map_entry.unwrap();
+                for map_entry in lock.iter_directory("resources/images/jigsaws".to_string()){
                     let new_map_pending = new_jigsaw_selection_button(
-                        map_entry.file_name().to_str().unwrap().to_string().clone(),
+                        format!("jigsaws/{}", map_entry),
                         PointFloat::new(x, y), x == size && y == size + 150.0, size);
                     c.req_create_entity(new_map_pending);
                     x += size;

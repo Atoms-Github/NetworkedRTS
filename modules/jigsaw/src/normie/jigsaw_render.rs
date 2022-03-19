@@ -28,7 +28,8 @@ pub fn jigsaw_render(ecs: &mut SuperbEcs, player_entity_id: GlobalEntityID){
         let (on_screen_pos, on_screen_size) = player_camera.get_as_screen_transform(&ecs.c, entity_id);
 
         let mut their_params = DrawParam::new();
-        cool_batcher.add_image_part(piece.image.clone(), MyDrawParams{
+        let full_image_name = format!("jigsaws/{}", piece.image);
+        cool_batcher.add_image_part(full_image_name, MyDrawParams{
             pos: on_screen_pos.clone(),
             size: on_screen_size.clone(),
         }, Rect::new(piece.coords.x as f32 * JIGSAW_PIECE_SIZE,
