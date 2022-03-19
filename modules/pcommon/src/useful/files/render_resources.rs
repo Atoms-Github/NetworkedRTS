@@ -29,7 +29,8 @@ impl GgEzRenderResources {
     pub fn get_image(&mut self, filename: &String, ctx: &mut Context) -> &graphics::Image{
         let mut full = "images/".to_owned() + filename.as_str();
         return self.images.get(&full, |bytes|{
-            graphics::Image::from_bytes(ctx, bytes).expect("Couldn't parse GGEZ image.")
+            let result = graphics::Image::from_bytes(ctx, bytes).expect("Couldn't parse GGEZ image.");
+            return result;
         });
     }
     // fn load_me(&mut self, ctx: &mut Context){

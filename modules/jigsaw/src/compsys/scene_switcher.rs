@@ -67,9 +67,8 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                         mapname = jigsaw_button_comp.map.clone();
                     }
                 }
-                let mut filepath = format!("jigsaws/{}", mapname);
                 let mut lock = pcommon::LOGIC_RESOURCES.lock().unwrap();
-                let image = lock.get_image(filepath);
+                let image = lock.get_image(mapname.clone());
 
                 let last_x = ((image.width() as f32 / JIGSAW_PIECE_SIZE) as i32) - 1;
                 let last_y = ((image.height() as f32 / JIGSAW_PIECE_SIZE) as i32) - 1;
@@ -97,7 +96,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
 
                     }
                 }
-                c.req_create_entity(new_jigsaw_mat(mapname,
+                c.req_create_entity(new_jigsaw_mat(mapname.clone(),
                                                    PointFloat::new((last_x + 1) as f32 * JIGSAW_PIECE_SIZE,
                                                                    (last_y + 1) as f32 * JIGSAW_PIECE_SIZE)));
 

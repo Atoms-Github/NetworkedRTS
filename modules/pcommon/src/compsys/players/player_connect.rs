@@ -19,7 +19,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
         }
 
         let player_ent_id = player_id as GlobalEntityID;
-        let cursor = new_cursor(player_ent_id, color, 100);
+        let cursor = new_cursor(player_ent_id, color);
         c.req_create_entity(cursor);
 
         c.get_mut::<PlayerComp>(player_ent_id).unwrap().name = username;

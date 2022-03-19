@@ -22,7 +22,6 @@ impl<T> FileCache<T>{
             return self.cache.get(query).unwrap();
         }
 
-        log::info!("Loading {}", query);
         let filename = format!("./resources/{}", query);
         let file_bytes = std::fs::read(&filename).unwrap_or_else(|e|{
             panic!("Failed to load a file. {:?}", &filename);

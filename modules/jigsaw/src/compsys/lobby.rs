@@ -18,7 +18,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
     for (lobby_id, lobby) in CompIter1::<LobbyManagerComp>::new(c){
         // Check for game start on F1.
         for (player_id , input, player) in CompIter2::<InputComp, PlayerComp>::new(c) {
-            if input.inputs.primitive.is_keycode_pressed(KeyCode::F1) && !lobby.chosen_jigsaw.eq(""){
+            if input.inputs.primitive.is_keycode_pressed(KeyCode::F1){
                 scene.next = JigsawSceneType::InJigsaw;
             }
         }

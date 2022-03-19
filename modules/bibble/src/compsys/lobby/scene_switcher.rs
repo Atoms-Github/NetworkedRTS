@@ -3,6 +3,7 @@ use std::ops::Mul;
 use std::ops::Div;
 use log::logger;
 use becs::utils::gett;
+use crate::normie::MyCompStorage;
 
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -76,7 +77,7 @@ fn run(c: &mut CompStorage, meta: &StaticFrameData){
                 let size = 150.0;
                 x = size;
                 let mut y = size + 150.0;
-                for map_entry in std::fs::read_dir("../../../../../../resources/images/jigsaws").unwrap(){
+                for map_entry in std::fs::read_dir("../../../../../../resources/images/jigsGOIBEFNJKNEaws").unwrap(){
                     let map_entry = map_entry.unwrap();
                     let new_map_pending = PendingEntity::new_map_selection_button(
                         map_entry.file_name().to_str().unwrap().to_string().clone(),

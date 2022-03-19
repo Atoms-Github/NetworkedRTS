@@ -1,7 +1,7 @@
 use crate::*;
 use becs::*;
 
-pub fn new_cursor(player: GlobalEntityID, shade: Shade, z: u16) -> PendingEntity{
+pub fn new_cursor(player: GlobalEntityID, shade: Shade) -> PendingEntity{
     PendingEntity::new6(
         CursorComp{
             player,
@@ -16,7 +16,7 @@ pub fn new_cursor(player: GlobalEntityID, shade: Shade, z: u16) -> PendingEntity
             pos: PointFloat::new(0.0,0.0),
         },
         RenderComp{
-            z,
+            z: CZValue::Cursor.g(),
             only_render_owner: false
         },
         SimpleViewerComp{
