@@ -1,5 +1,6 @@
 use crate::*;
 use std::collections::BTreeMap;
+use ggez::event::KeyCode;
 use serde::*;
 use super::*;
 
@@ -44,7 +45,7 @@ impl GameData{
             }),
             button_info: ButtonMould{
                 color: (255, 0, 0),
-                hotkey: VirtualKeyCode::Minus
+                hotkey: KeyCode::Minus
             },
             range,
             casting_time: 0.0,

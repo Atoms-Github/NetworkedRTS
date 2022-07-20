@@ -1,4 +1,6 @@
-
+use ggez::event::KeyCode;
+use ggez::winit::event::VirtualKeyCode;
+use nalgebra::Point2;
 use crate::*;
 
 pub fn gather(data: &mut GameData){
@@ -69,7 +71,7 @@ pub fn gather(data: &mut GameData){
                 ))),
                 graphic: AbilitySingleTargetGraphic::NOTHING
             }),
-            button_info: ButtonMould { color: (200, 0, 150), hotkey: VirtualKeyCode::H },
+            button_info: ButtonMould { color: (200, 0, 150), hotkey: KeyCode::H },
             range: 400.0,
             casting_time: 1500.0,
             cooldown: 10000.0
@@ -111,7 +113,7 @@ pub fn gather(data: &mut GameData){
             }),
             button_info: ButtonMould{
                 color: (150, 120, 200),
-                hotkey: VirtualKeyCode::F
+                hotkey: KeyCode::F
             },
             range: 0.0,
             casting_time: 2000.0,
@@ -136,7 +138,7 @@ pub fn gather(data: &mut GameData){
             targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_SPIDER))),
             button_info: ButtonMould{
                 color: (150, 120, 200),
-                hotkey: VirtualKeyCode::S
+                hotkey: KeyCode::S
             },
             range: 0.0,
             casting_time: 1000.0,
@@ -147,7 +149,7 @@ pub fn gather(data: &mut GameData){
             targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::ROBO_LOBBER))),
             button_info: ButtonMould{
                 color: (150, 200, 200),
-                hotkey: VirtualKeyCode::L
+                hotkey: KeyCode::L
             },
             range: 0.0,
             casting_time: 2000.0,
@@ -158,7 +160,7 @@ pub fn gather(data: &mut GameData){
             targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::CONSTRUCTOR))),
             button_info: ButtonMould{
                 color: (150, 120, 200),
-                hotkey: VirtualKeyCode::C
+                hotkey: KeyCode::C
             },
             range: 0.0,
             casting_time: 500.0,

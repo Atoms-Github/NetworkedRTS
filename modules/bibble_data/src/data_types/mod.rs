@@ -3,10 +3,12 @@ pub mod effect_unittounit;
 pub mod effect_unittopoint;
 pub mod effect_unit;
 pub mod effect_point;
+pub mod gameplay;
 
 pub mod ability;
 
 pub use effect_point::*;
+pub use gameplay::*;
 pub use effect_unit::*;
 pub use effect_unittounit::*;
 pub use effect_unittopoint::*;

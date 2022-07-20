@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 bib_utils = {path="../bib_utils"}
+bibble_data = {path="../bibble_data"}
 becs = {path="../becs"}
 netcode = {path="../netcode"}
 pcommon = {path="../pcommon"}

@@ -13,9 +13,10 @@ pub mod normie;
 pub mod compsys;
 pub mod bibble;
 
-pub use game::*;
+pub use bibble_data::*;
 pub use compsys::*;
 pub use bibble::*;
+pub use normie::*;
 
 pub use compsys::*;
 pub use serde::{Deserializer, Deserialize, Serialize};

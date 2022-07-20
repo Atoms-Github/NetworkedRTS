@@ -10,12 +10,13 @@
 #![allow(deprecated)] // TODO:
 
 pub(crate) use serde::*;
+pub(crate) use pcommon::ResourceBlock;
+pub(crate) use data_types::*;
 pub mod races;
 pub use data_types::*;
 use races::*;
-use data_types::GameData;
 
-pub mod data_types;
+mod data_types;
 
 impl GameData{
     pub fn gen_game_data() -> Self{

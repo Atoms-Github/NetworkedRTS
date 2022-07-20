@@ -1,3 +1,5 @@
+use ggez::event::KeyCode;
+use ggez::winit::event::VirtualKeyCode;
 use crate::*;
 
 pub fn abilities(data: &mut GameData){
@@ -6,7 +8,7 @@ pub fn abilities(data: &mut GameData){
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::DOUGH))),
         button_info: ButtonMould{
             color: (150, 120, 200),
-            hotkey: VirtualKeyCode::D
+            hotkey: KeyCode::D
         },
         range: 0.0,
         casting_time: 100.0,
@@ -17,7 +19,7 @@ pub fn abilities(data: &mut GameData){
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::BREAD))),
         button_info: ButtonMould{
             color: (150, 120, 200),
-            hotkey: VirtualKeyCode::B
+            hotkey: KeyCode::B
         },
         range: 0.0,
         casting_time: 800.0,
@@ -28,7 +30,7 @@ pub fn abilities(data: &mut GameData){
         targetting: AbilityTargetType::NoTarget(EffectToUnit::EFFECT_TO_POINT(EffectToPoint::SPAWN_UNIT(UnitID::DOUGH_LAUNCHER))),
         button_info: ButtonMould{
             color: (150, 120, 200),
-            hotkey: VirtualKeyCode::L
+            hotkey: KeyCode::L
         },
         range: 0.0,
         casting_time: 1000.0,
@@ -51,7 +53,7 @@ pub fn abilities(data: &mut GameData){
         }),
         button_info: ButtonMould{
             color: (255, 0, 0),
-            hotkey: VirtualKeyCode::Minus
+            hotkey: KeyCode::Minus
         },
         range: 400.0,
         casting_time: 0.0,
@@ -74,7 +76,7 @@ pub fn abilities(data: &mut GameData){
         }),
         button_info: ButtonMould{
             color: (255, 0, 0),
-            hotkey: VirtualKeyCode::Minus
+            hotkey: KeyCode::Minus
         },
         range: 3000.0,
         casting_time: 0.0,

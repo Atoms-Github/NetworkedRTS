@@ -1,4 +1,4 @@
-use crate::bibble::data::data_types::GameData;
+use crate::*;
 
 // mod robots;
 mod sans_races;

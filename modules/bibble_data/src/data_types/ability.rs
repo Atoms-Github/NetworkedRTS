@@ -1,6 +1,8 @@
+use ggez::event::KeyCode;
 use crate::*;
 use serde::*;
 use ggez::graphics::Color;
+use netcode::Shade;
 
 
 #[repr(u16)]
@@ -44,7 +46,7 @@ pub struct AbilityMould{
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ButtonMould{
     pub color: (u8, u8, u8),
-    pub hotkey: VirtualKeyCode,
+    pub hotkey: KeyCode,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum AbilityTargetType{

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SharedFileColors">
+    <fileColor scope="Artificer" color="Rose" />
     <fileColor scope="BibbleData" color="Yellow" />
     <fileColor scope="Non-Project Files" color="Blue" />
     <fileColor scope="Smash" color="6f0b17" />
